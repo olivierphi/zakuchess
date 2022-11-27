@@ -1,8 +1,9 @@
-from django_unicorn.components import UnicornView
 import chess
+from django.core.exceptions import SuspiciousOperation
+from django_unicorn.components import UnicornView
 
-from ...domain import PiecesView, SquareName, PieceId, PieceIdsPerSquare, PlayerCode
-from ...view_helpers import pieces_view_from_chess_board, ROOK_SQUARE_AFTER_CASTLING
+from ...domain import PIECES_VALUES, PieceIdsPerSquare, PiecesView, PieceSymbol, PlayerCode, SquareName
+from ...view_helpers import ROOK_SQUARE_AFTER_CASTLING, pieces_view_from_chess_board
 
 # Useful for quick tests:
 _FEN_WHITE_ABOUT_TO_PROMOTE = "rn1qkbnr/p1P2ppp/b2p4/1p2p3/8/1P6/P1P1PPPP/RNBQKBNR w KQkq - 0 6"
@@ -24,8 +25,11 @@ class ChessBoardView(UnicornView):
     active_player: PlayerCode = "w"
     selected_piece_square: SquareName | None = None
     selected_piece_available_targets: list[SquareName] = []
+    captured_pieces: dict[PlayerCode, list[PieceSymbol]] = {"w": [], "b": []}
+    score: int = 0
+    versus_ai: bool = True
 
-    def select_piece(self, square: SquareName):
+    def select_piece(self, square: SquareName) -> None:
         self.selected_piece_square = square
         square_index = chess.parse_square(square)
         print(f"select_piece({square=})  :: {square_index=}")
@@ -36,14 +40,18 @@ class ChessBoardView(UnicornView):
             if move.from_square == square_index:
                 self.selected_piece_available_targets.append(chess.square_name(move.to_square))
 
-    def move_piece_to(self, target_square: SquareName):
+    def move_piece_to(self, target_square: SquareName) -> None:
         assert self.selected_piece_square is not None
+
         board = self._board_from_current_fen()
         current_piece = board.piece_at(chess.parse_square(self.selected_piece_square))
+        if not current_piece:
+            raise SuspiciousOperation()
         current_piece_id = self.pieces_id_per_square[self.selected_piece_square]
         targeted_piece = board.piece_at(chess.parse_square(target_square))
         print(
-            f"move_piece_to({target_square=}) :: from {self.selected_piece_square} :: {current_piece_id=} {targeted_piece=}"
+            f"move_piece_to({target_square=})"
+            f":: from {self.selected_piece_square} :: {current_piece_id=} {targeted_piece=}"
         )
         # @link https://en.wikipedia.org/wiki/Algebraic_notation_(chess)
         # @link https://en.wikipedia.org/wiki/Universal_Chess_Interface
@@ -73,15 +81,43 @@ class ChessBoardView(UnicornView):
             self.pieces_id_per_square[target_rook_new_square] = target_rook_id
             del self.pieces_id_per_square[target_rook_previous_square]
 
+        if targeted_piece:
+            self.captured_pieces[self.active_player].append(targeted_piece.symbol())
+
         self.fen = board.fen()
         print(f"{self.fen=}")
         self.active_player = "w" if board.turn else "b"
         self.pieces_view = pieces_view_from_chess_board(board, self.pieces_id_per_square)
         self.selected_piece_square = None
         self.selected_piece_available_targets = []
+        self._calculate_score()
 
-    def rendered(self, html: str):
+        # if self.versus_ai and self.active_player == "b":
+        #     self.let_ai_play_next_move()
+
+    def rendered(self, html: str) -> None:
         self.call("updateChessBoardsSize")
 
     def _board_from_current_fen(self) -> chess.Board:
         return chess.Board(fen=self.fen)
+
+    def let_ai_play_next_move(self, depth: int = 2) -> None:
+        from lib.chess_engines.andoma import movegeneration
+
+        if not self.versus_ai:
+            raise SuspiciousOperation()
+
+        try:
+            move = movegeneration.next_move(depth, self._board_from_current_fen())
+        except IndexError:
+            # no best move found
+            raise SuspiciousOperation()
+
+        print(f"AI move: {move=} :: {depth=}")
+        self.selected_piece_square = chess.square_name(move.from_square)
+        self.move_piece_to(chess.square_name(move.to_square))
+
+    def _calculate_score(self) -> None:
+        w_gain = sum(PIECES_VALUES[piece] for piece in self.captured_pieces["w"])
+        b_gain = sum(PIECES_VALUES[piece.lower()] for piece in self.captured_pieces["b"])
+        self.score = w_gain - b_gain

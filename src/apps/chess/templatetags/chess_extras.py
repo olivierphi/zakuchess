@@ -14,3 +14,8 @@ def player_code_from_symbol(symbol: PieceSymbol) -> PlayerCode:
 @register.filter
 def piece_unicode_from_symbol(symbol: PieceSymbol) -> str:
     return UNICODE_PIECE_SYMBOLS[symbol]
+
+
+@register.filter(name="abs")
+def abs_(number: int | float) -> int | float:
+    return abs(number)

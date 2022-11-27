@@ -7,16 +7,34 @@ function updateChessBoardsSize():void {
     boardContainer.style.maxWidth = `${Math.round(availableHeight * 0.8)}px`
     const boardContainerWidth = boardContainer.getBoundingClientRect().width
     boardContainer.style.height = boardContainerWidth
-    // const boardFirstCell = boardContainer.querySelector(".square")!
-    // const boardCellsWidth = boardFirstCell.getBoundingClientRect().width
-    // for (const square of Array.from(boardContainer.querySelectorAll<HTMLElement>(".square"))) {
-    //   square.style.height = `${boardCellsWidth}px`
-    // }
   }
+}
+
+function startAiPiloting():void {
+  setInterval(triggerAiMoveIfNeeded, 1000)
+}
+
+let lastTriggerTime = 0
+function triggerAiMoveIfNeeded():void {
+  const chessBoardContainer = document.querySelector<HTMLElement>(".chess-board-container")
+  if (!chessBoardContainer) {
+    return
+  }
+  const now = (new Date()).getTime()
+  if (now - lastTriggerTime < 2000) {
+    return
+  }
+  const activePlayer = chessBoardContainer.dataset.activePlayer
+  if (activePlayer === "b") {
+    Unicorn.call("chess.chess-board", "let_ai_play_next_move")
+    lastTriggerTime = now
+  }
+  
 }
 
 window.updateChessBoardsSize = updateChessBoardsSize
 
 
 window.addEventListener("load", updateChessBoardsSize)
+window.addEventListener("load", startAiPiloting)
 window.addEventListener("resize", updateChessBoardsSize)

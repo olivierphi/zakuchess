@@ -1,4 +1,5 @@
 .chess-board-container {
+  margin: 0 auto;
   position: relative;
   
   $letters: [a, b, c, d, e, f, g, h];
@@ -110,4 +111,9 @@
     }
   }
   
+}
+
+.chess-board-captured-pieces {
+  max-width: 15rem;
+  margin: 0 auto;
 }

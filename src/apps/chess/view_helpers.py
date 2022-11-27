@@ -2,7 +2,7 @@ from collections.abc import Mapping
 
 import chess
 
-from .domain import PiecesView, PieceIdsPerSquare, SquareName, PieceId, PieceSymbol
+from .domain import PieceId, PieceIdsPerSquare, PiecesView, PieceSymbol, SquareName
 
 ROOK_SQUARE_AFTER_CASTLING: Mapping[SquareName, tuple[SquareName, SquareName]] = {
     # king new square: (rook previous square, rook new square)
