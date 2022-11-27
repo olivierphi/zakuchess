@@ -6,6 +6,9 @@ from ._base import *
 
 DEBUG = True
 
+DJANGO_VITE_DEV_SERVER_PORT = 5173
+DJANGO_VITE_DEV_MODE = True
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,

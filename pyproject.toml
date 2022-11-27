@@ -11,6 +11,7 @@ django-unicorn = "^0.49.2"
 django-environ = "^0.9.0"
 gunicorn = "^20.1.0"
 django-alive = "^1.2.1"
+django-vite = "^2.0.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.10.0"

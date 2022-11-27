@@ -4,4 +4,11 @@
     </h4>
     <button unicorn:click="clear_name">Clear Name</button><br>
     <button unicorn:click="increment_counter()">incr </button> {{ counter }}
+    <div class="chess-board board">
+        {% for letter in "abcdefgh"|make_list %}
+            {% for index in "12345678"|make_list %}
+                <div class="square {% if letter in 'bdfh'|make_list %}odd-row-square{% else %}even-row-square{% endif %}">{{ letter }}{{ index }}</div>
+            {% endfor %}
+        {% endfor %}
+    </div>
 </div>

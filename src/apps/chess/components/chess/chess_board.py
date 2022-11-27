@@ -10,3 +10,6 @@ class ChessBoardView(UnicornView):
 
     def clear_name(self):
         self.name = ""
+
+    def rendered(self, html: str):
+        self.call("updateChessBoardsSize")

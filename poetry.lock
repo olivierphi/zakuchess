@@ -183,6 +183,20 @@ docs = ["Sphinx (>=4.3.2,<5.0.0)", "furo (>=2021.11.23,<2022.0.0)", "linkify-it-
 minify = ["htmlmin (>=0.1.12,<0.2.0)"]
 
 [[package]]
+name = "django-vite"
+version = "2.0.2"
+description = "Integration of ViteJS in a Django project."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+Django = ">=1.11"
+
+[package.extras]
+dev = ["black", "flake8"]
+
+[[package]]
 name = "exceptiongroup"
 version = "1.0.4"
 description = "Backport of PEP 654 (exception groups)"
@@ -511,7 +525,7 @@ testing = ["coverage (>=6.2)", "coverage-enable-subprocess (>=1)", "flaky (>=3.7
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "7eb84ed59d03abc9a818f4803c5a0732518830ebaa5e9c30fc09b3a61c644795"
+content-hash = "86f42b73532bbc274b43b62953db285cd3fa422a957db3b20fb3a02d98837714"
 
 [metadata.files]
 asgiref = [
@@ -592,6 +606,10 @@ django-types = [
 django-unicorn = [
     {file = "django-unicorn-0.49.2.tar.gz", hash = "sha256:2a8c03d60261201b1c6f3a27d7973ff6d505fdb889e263b0c060c756f8dbd58b"},
     {file = "django_unicorn-0.49.2-py3-none-any.whl", hash = "sha256:e732a05a298c17be0e582cb983f3a713f8bae80f68c3aacb4f92220fffb68cd6"},
+]
+django-vite = [
+    {file = "django-vite-2.0.2.tar.gz", hash = "sha256:5a2e11a9f08a2a0a69c9a7c637a3254ad0c8dd01e07cb40de09a3a180ed99791"},
+    {file = "django_vite-2.0.2-py3-none-any.whl", hash = "sha256:f11f4747183b884ee4e6c2ea12f0aa96a846574ee7344c05ac96b4fa89309535"},
 ]
 exceptiongroup = [
     {file = "exceptiongroup-1.0.4-py3-none-any.whl", hash = "sha256:542adf9dea4055530d6e1279602fa5cb11dab2395fa650b8674eaec35fc4a828"},

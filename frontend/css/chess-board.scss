@@ -1,0 +1,30 @@
+.chess-board {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  border: solid green 1px;
+  
+  > .square {
+    width: 12%;
+    height: 12.5%;
+    border: solid black 1px;
+    
+    &:nth-child(even) {
+      &.odd-row-square {
+        background-color: gray;
+      }
+      &.even-row-square {
+        background-color: wheat;
+      }
+    }
+    &:nth-child(odd) {
+      &.odd-row-square {
+        background-color: wheat;
+      }
+      &.even-row-square {
+        background-color: gray;
+      }
+    }
+   
+  }
+}
