@@ -1,0 +1,10 @@
+/.env.local
+
+/db.sqlite3
+
+/.venv/
+
+# various tools' cache folders:
+.mypy_cache
+.pytest_cache
+.ruff_cache

@@ -1,0 +1,16 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  -  repo: https://github.com/psf/black
+     rev: 22.10.0
+     hooks:
+       - id: black
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.0.141
+    hooks:
+      - id: ruff
+        exclude: "^src/project/settings/.*\\.py$"
+  - repo: https://github.com/abravalheri/validate-pyproject
+    rev: v0.10.1
+    hooks:
+      - id: validate-pyproject
