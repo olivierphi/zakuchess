@@ -8,6 +8,7 @@ export default defineConfig({
   rollupOptions: {
       input: {
         "js/main.ts": "js/main.ts",
+        "css/main.scss": "css/main.scss",
         "css/chess-board.scss": "css/chess-board.scss",
       }
     }

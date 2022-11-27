@@ -1,14 +1,33 @@
+{% load chess_extras %}
 <div>
     <h4>
         Hello {{ name|title }}
     </h4>
     <button unicorn:click="clear_name">Clear Name</button><br>
     <button unicorn:click="increment_counter()">incr </button> {{ counter }}
-    <div class="chess-board board">
-        {% for letter in "abcdefgh"|make_list %}
-            {% for index in "12345678"|make_list %}
-                <div class="square {% if letter in 'bdfh'|make_list %}odd-row-square{% else %}even-row-square{% endif %}">{{ letter }}{{ index }}</div>
+    <div class="chess-board-container">
+        <div class="chess-board">
+            {% for letter in "abcdefgh"|make_list %}
+                {% for number in "12345678"|make_list %}
+                    <div class="square {{ letter }}{{ number }} {% if letter in 'bdfh'|make_list %}odd-row-square{% else %}even-row-square{% endif %}">{{ letter }}{{ number }}</div>
+                {% endfor %}
             {% endfor %}
-        {% endfor %}
+        </div>
+        <div class="chess-board-pieces">
+            {% for square, piece in pieces_view.items %}
+                <div class="piece {{ square }} {{ piece.piece }} {% if piece.piece|player_code_from_symbol == active_player %}active-player{% endif %} {% if square == selected_piece_square %}selected{% endif %} {{ piece.piece|player_code_from_symbol }}"
+                     unicorn:key="{{ piece.id }}"
+                     {% if piece.piece|player_code_from_symbol == active_player %}unicorn:click="select_piece('{{ square }}')"{% endif %}
+                >
+                    <div class="piece-display">{{ piece.piece|piece_unicode_from_symbol }}<small>#{{ piece.id }}</small></div>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="chess-board-available-targets" style="display: {% if selected_piece_available_targets %}block{% else %}none{% endif %}">
+            {% for square in selected_piece_available_targets %}
+                <div class="target {{ square }}" unicorn:click="move_piece_to('{{ square }}')">
+                </div>
+            {% endfor %}
+        </div>
     </div>
 </div>

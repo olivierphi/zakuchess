@@ -1,30 +1,114 @@
-.chess-board {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  border: solid green 1px;
+.chess-board-container {
+  position: relative;
   
-  > .square {
-    width: 12%;
-    height: 12.5%;
-    border: solid black 1px;
+  
+    $letters: [a, b, c, d, e, f, g, h];
+    $numbers: [1, 2, 3, 4, 5, 6, 7, 8];
+    $counter_x: 0;
+    $counter_y: 0;
+    @each $letter in $letters {
+      @each $number in $numbers {
+        .#{$letter}#{$number} {
+          position: absolute;          
+          top: 12.5% * $counter_y;
+          left: 0 + (12.5% * $counter_x);
+          width: 12.5%;
+          height: 12.5%;
+        }
+        $counter_x: $counter_x + 1;
+      }
+      $counter_x: 0;
+      $counter_y: $counter_y + 1;
+    }
+  
+  .chess-board {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     
-    &:nth-child(even) {
-      &.odd-row-square {
-        background-color: gray;
+    border: solid green 1px;
+    
+    > .square {
+      border: solid black 1px;
+      
+      &:nth-child(even) {
+        &.odd-row-square {
+          background-color: gray;
+        }
+        &.even-row-square {
+          background-color: wheat;
+        }
       }
-      &.even-row-square {
-        background-color: wheat;
+      &:nth-child(odd) {
+        &.odd-row-square {
+          background-color: wheat;
+        }
+        &.even-row-square {
+          background-color: gray;
+        }
       }
+     
     }
-    &:nth-child(odd) {
-      &.odd-row-square {
-        background-color: wheat;
-      }
-      &.even-row-square {
-        background-color: gray;
-      }
-    }
-   
   }
+  
+  .chess-board-pieces {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    border: dotted red 1px;
+    
+    .piece {
+      background-color: #ff000080;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: top 0.3s ease-out, left 0.3s ease-out;
+      
+      &.active-player {
+        box-shadow: 0 0 1px 1px #fff;
+        cursor: pointer;
+      }
+      
+      &.selected {
+        box-shadow: 0 0 10px 10px #fff;
+        z-index: 1;
+      }
+      
+      &.w {
+        color: white;
+      }
+      &.b {
+        color: black;
+      }
+      
+      .piece-display {
+        font-size: 2rem;
+        small {
+          font-size: 0.8rem;
+        }
+      }
+    }
+    
+  }
+  
+  .chess-board-available-targets {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    
+    pointer-events: none;
+    
+    .target {
+      pointer-events: auto;
+      cursor: pointer;
+      background-color: #ffff0030;
+    }
+  }
+  
 }

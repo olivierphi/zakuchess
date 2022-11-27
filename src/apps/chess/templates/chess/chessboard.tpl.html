@@ -4,9 +4,9 @@
   <head>
     {% unicorn_scripts %}
     {% vite_hmr_client %}
-      {% vite_asset 'js/main.ts' %}
-      {% vite_asset 'css/chess-board.scss' %}
-
+    {% vite_asset 'js/main.ts' %}
+    {% vite_asset 'css/main.scss' %}
+    {% vite_asset 'css/chess-board.scss' %}
   </head>
   <body>
     {% csrf_token %}

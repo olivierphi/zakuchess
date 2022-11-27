@@ -12,6 +12,7 @@ django-environ = "^0.9.0"
 gunicorn = "^20.1.0"
 django-alive = "^1.2.1"
 django-vite = "^2.0.2"
+chess = "^1.9.3"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.10.0"
@@ -22,6 +23,7 @@ pytest = "^7.2.0"
 django-types = "^0.16.0"
 pytest-django = "^4.5.2"
 pre-commit = "^2.20.0"
+ipython = "^8.6.0"
 
 [tool.black]
 line-length = 119
