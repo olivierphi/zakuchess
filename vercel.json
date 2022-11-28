@@ -1,0 +1,3 @@
+{
+  "rewrites": [{ "source": "/:path(.*)", "destination": "/api/django_entry_point" }]
+}

@@ -48,6 +48,10 @@ code-quality/mypy: ## Python's equivalent of TypeScript
 	@PYTHONPATH=${PYTHONPATH} ${PYTHON_BINS}/mypy src/ ${mypy_opts}
 
 
+.PHONY: deployment/export-poetry-deps-to-requirements
+deployment/export-poetry-deps-to-requirements:
+	${PYTHON_BINS}/poetry export > requirements.txt
+
 .venv: ## Initialises the Python virtual environment in a ".venv" folder
 	python -m venv .venv
 	${PYTHON_BINS}/pip install -U pip poetry
