@@ -4,6 +4,14 @@ import chess
 
 from .domain import PieceId, PieceIdsPerSquare, PiecesView, PieceSymbol, SquareName
 
+KINGS_CASTLING: tuple[tuple[SquareName, SquareName], ...] = (
+    # (king's previous quare, king's new square)
+    ("e1", "g1"),
+    ("e1", "c1"),
+    ("e8", "g8"),
+    ("e8", "c8"),
+)
+
 ROOK_SQUARE_AFTER_CASTLING: Mapping[SquareName, tuple[SquareName, SquareName]] = {
     # king new square: (rook previous square, rook new square)
     "g1": ("h1", "f1"),

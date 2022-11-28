@@ -3,11 +3,12 @@ from django.core.exceptions import SuspiciousOperation
 from django_unicorn.components import UnicornView
 
 from ...domain import PIECES_VALUES, PieceIdsPerSquare, PiecesView, PieceSymbol, PlayerCode, SquareName
-from ...view_helpers import ROOK_SQUARE_AFTER_CASTLING, pieces_view_from_chess_board
+from ...view_helpers import KINGS_CASTLING, ROOK_SQUARE_AFTER_CASTLING, pieces_view_from_chess_board
 
 # Useful for quick tests:
 _FEN_WHITE_ABOUT_TO_PROMOTE = "rn1qkbnr/p1P2ppp/b2p4/1p2p3/8/1P6/P1P1PPPP/RNBQKBNR w KQkq - 0 6"
 _FEN_WHITE_ABOUT_TO_EN_PASSANT = "rnbqkbnr/ppp1p1pp/8/3pPp2/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 3"
+_FEN_BLACK_ABOUT_TO_MOVE_KING = "r1b1kb1r/ppp1qppp/2np1n2/3P4/8/2N1BN2/PPP2PPP/R2QKB1R w KQkq - 2 7"
 
 _STARTING_FEN = chess.STARTING_FEN
 _STARTING_BOARD = chess.Board(fen=_STARTING_FEN)
@@ -32,13 +33,13 @@ class ChessBoardView(UnicornView):
     def select_piece(self, square: SquareName) -> None:
         self.selected_piece_square = square
         square_index = chess.parse_square(square)
-        print(f"select_piece({square=})  :: {square_index=}")
-        self.selected_piece_available_targets = []
         board = self._board_from_current_fen()
-        print(f"board.turn={'white' if board.turn else 'black'}")
+        print(f"select_piece({square=})  :: {square_index=} :: board.turn={'white' if board.turn else 'black'}")
+        self.selected_piece_available_targets = []
         for move in board.legal_moves:
             if move.from_square == square_index:
                 self.selected_piece_available_targets.append(chess.square_name(move.to_square))
+        print(f"{list(board.legal_moves)=} :: {self.selected_piece_available_targets=}")
 
     def move_piece_to(self, target_square: SquareName) -> None:
         assert self.selected_piece_square is not None
@@ -50,7 +51,8 @@ class ChessBoardView(UnicornView):
         current_piece_id = self.pieces_id_per_square[self.selected_piece_square]
         targeted_piece = board.piece_at(chess.parse_square(target_square))
         print(
-            f"move_piece_to({target_square=})"
+            f"board.turn={'white' if board.turn else 'black'} "
+            f":: move_piece_to({target_square=}) "
             f":: from {self.selected_piece_square} :: {current_piece_id=} {targeted_piece=}"
         )
         # @link https://en.wikipedia.org/wiki/Algebraic_notation_(chess)
@@ -74,12 +76,14 @@ class ChessBoardView(UnicornView):
 
         # Specific cases:
         if current_piece.piece_type == chess.KING and board.castling_rights != previous_castling_rights:
-            # Our King just castled!
-            # We also have to update the Rook's data in our `pieces_id_per_square` mapping
-            target_rook_previous_square, target_rook_new_square = ROOK_SQUARE_AFTER_CASTLING[target_square]
-            target_rook_id = self.pieces_id_per_square[target_rook_previous_square]
-            self.pieces_id_per_square[target_rook_new_square] = target_rook_id
-            del self.pieces_id_per_square[target_rook_previous_square]
+            king_movement = (self.selected_piece_square, target_square)
+            if king_movement in KINGS_CASTLING:
+                # Our King just castled!
+                # We also have to update the Rook's data in our `pieces_id_per_square` mapping
+                target_rook_previous_square, target_rook_new_square = ROOK_SQUARE_AFTER_CASTLING[target_square]
+                target_rook_id = self.pieces_id_per_square[target_rook_previous_square]
+                self.pieces_id_per_square[target_rook_new_square] = target_rook_id
+                del self.pieces_id_per_square[target_rook_previous_square]
 
         if targeted_piece:
             self.captured_pieces[self.active_player].append(targeted_piece.symbol())
