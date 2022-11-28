@@ -5,7 +5,7 @@ description = ""
 authors = ["Olivier Philippon <olivier@dunsap.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.9"
 Django = "^4.1.3"
 django-unicorn = "^0.49.2"
 django-environ = "^0.9.0"
@@ -27,10 +27,10 @@ ipython = "^8.6.0"
 
 [tool.black]
 line-length = 119
-target-version = ['py310']
+target-version = ['py39']
 
 [tool.isort]
-py_version = 310
+py_version = 39
 profile = "black"
 line_length = 119
 multi_line_output = 3
@@ -39,14 +39,14 @@ combine_as_imports = true
 
 [tool.ruff]
 line-length = 119
-target-version = "py310"
+target-version = "py39"
 exclude = [
      'src/project/settings',
 ]
 
 [tool.mypy]
 # @link https://mypy.readthedocs.io/en/stable/config_file.html#using-a-pyproject-toml
-python_version = "3.10"
+python_version = "3.9"
 mypy_path = "src/"
 exclude = [
     '^src/project/settings/.*\.py$',
