@@ -1,0 +1,53 @@
+{% macro board_whole(game, board_state, board_id="main", piece_available_targets=None) -%}
+    <div class="chess-board-container" id="chess-board-container-{{ board_id }}">
+        {{ board_background(board_id=board_id) }}
+        {{ board_pieces(game, board_state, board_id=board_id) }}
+        {{ board_piece_available_targets(game, piece_available_targets, board_id=board_id) }}
+    </div>
+{% endmacro -%}
+
+{% macro board_background(board_id="main") -%}
+    <div class="chess-board-background" id="chess-board-background-{{ board_id }}">
+        {% for letter in "abcdefgh" %}
+            {% for number in "12345678" %}
+                <div class="square square-{{ letter }}{{ number }} {{ "square-odd-row" if letter in "bdfh" else "square-even-row" }}">
+                    <div class="square-debug">{{ letter }}{{ number }}</div>
+                </div>
+            {% endfor %}
+        {% endfor %}
+    </div>
+{%- endmacro %}
+
+{% macro board_pieces(game, board_state, board_id="main") -%}
+    <div class="chess-board-pieces" id="chess-board-pieces-{{ board_id }}">
+        {% for square, piece in board_state.pieces_view.items() %}
+            {% set belongs_to_active_player = piece.piece|player_side_from_piece == board_state.active_player %}
+            <div class="piece square square-{{ square }} piece-{{ piece.piece }} side-{{ piece.piece|player_side_from_piece }}"
+{#{% if piece.piece|player_code_from_symbol == active_player %}active-player{% endif %} {% if square == selected_piece_square %}selected{% endif %} side-{{ piece.piece|player_code_from_symbol }}"#}
+                 id="board-{{ board_id }}-piece-{{ piece.id }}"
+                 {%- if belongs_to_active_player -%}
+                    data-hx-get="/htmx/games/{{ game.id }}/pieces/{{ square }}/selection/"
+                    data-hx-target="#chess-board-available-targets-{{ board_id }}"
+                    data-hx-swap="outerHTML"
+                 {%- endif %}
+            >
+                <div class="piece-display"></div>
+                <div class="piece-debug">{{ piece.piece|piece_unicode_from_symbol }}<small>#{{ piece.id }}</small></div>
+            </div>
+        {% endfor %}
+    </div>
+{%- endmacro %}
+
+{% macro board_piece_available_targets(game, piece_available_targets, selected_piece_square, board_id="main") -%}
+    <div class="chess-board-available-targets" id="chess-board-available-targets-{{ board_id }}" 
+         style="display: {{ "block" if piece_available_targets else "none" }}">
+        {% for square in piece_available_targets|default([]) %}
+            <div class="target square square-{{ square }}" 
+                 data-hx-post="/htmx/games/{{ game.id }}/pieces/{{ selected_piece_square }}/move/{{ square }}/"
+                 data-hx-target="#chess-board-container-{{ board_id }}"
+                 data-hx-swap="outerHTML"
+            >
+            </div>
+        {% endfor %}
+    </div>    
+{%- endmacro %}

@@ -2,7 +2,7 @@ from collections.abc import Mapping
 
 import chess
 
-from .domain import PieceId, PieceIdsPerSquare, PiecesView, PieceSymbol, SquareName
+from .types import PieceId, PieceIdsPerSquare, PiecesView, PieceSymbol, SquareName
 
 KINGS_CASTLING: tuple[tuple[SquareName, SquareName], ...] = (
     # (king's previous quare, king's new square)

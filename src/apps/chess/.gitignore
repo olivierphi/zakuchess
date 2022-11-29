@@ -1,0 +1,2 @@
+# We'll wait until the project is mroe mature before versioning our migrations :-)
+/migrations/*.py

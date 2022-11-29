@@ -1,3 +1,5 @@
+/frontend-out/
+
 /.env.local
 
 /db.sqlite3

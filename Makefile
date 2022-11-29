@@ -9,12 +9,12 @@ help:
 # @link https://github.com/marmelab/javascript-boilerplate/blob/master/makefile
 	@grep -P '^[a-zA-Z/_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-install: .venv ## Install the Python dependencies
+install: .venv ./node_modules ## Install the Python and frontend dependencies
 	${PYTHON_BINS}/poetry install
 
 dev: ## Start the Django development server
 	@PYTHONPATH=${PYTHONPATH} DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE} \
-		${PYTHON} src/manage.py runserver
+		${PYTHON} src/manage.py runserver 127.0.0.1:8000
 
 .PHONY: test
 test: pytest_opts ?=
@@ -47,9 +47,25 @@ code-quality/mypy: ## Python's equivalent of TypeScript
 # @link https://mypy.readthedocs.io/en/stable/
 	@PYTHONPATH=${PYTHONPATH} ${PYTHON_BINS}/mypy src/ ${mypy_opts}
 
+.PHONY: frontend/css/watch
+frontend/css/watch:
+	@${MAKE} --no-print-directory frontend/css/compile compile_opts='--watch'
 
+.PHONY: frontend/css/compile
+frontend/css/compile: compile_opts ?= 
+frontend/css/compile:
+	./node_modules/.bin/sass ${compile_opts} \
+		frontend-src/css/main.scss:frontend-out/css/main.css \
+		frontend-src/css/chess-board.scss:frontend-out/css/chess-board.css \
+		frontend-src/css/chess-units/theme/default.scss:frontend-out/css/chess-units/theme/default.css 
+		
 .venv: ## Initialises the Python virtual environment in a ".venv" folder
 	python -m venv .venv
 	${PYTHON_BINS}/pip install -U pip poetry
 
 ./.venv/bin/django: .venv install
+
+./node_modules: frontend/install
+
+frontend/install:
+	npm install

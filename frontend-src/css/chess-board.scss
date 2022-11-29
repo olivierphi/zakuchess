@@ -1,6 +1,16 @@
 .chess-board-container {
+  max-width: 45rem;
+  aspect-ratio: 1/1; // 💙
   margin: 0 auto;
   position: relative;
+  
+  border: solid navy 1px;
+  
+  .square {
+    position: absolute;          
+    width: 12.5%;
+    height: 12.5%;
+  }
   
   $letters: [a, b, c, d, e, f, g, h];
   $numbers: [1, 2, 3, 4, 5, 6, 7, 8];
@@ -8,12 +18,9 @@
   $counter_y: 0;
   @each $letter in $letters {
     @each $number in $numbers {
-      .#{$letter}#{$number} {
-        position: absolute;          
+      .square-#{$letter}#{$number} {
         top: 12.5% * $counter_y;
         left: 0 + (12.5% * $counter_x);
-        width: 12.5%;
-        height: 12.5%;
       }
       $counter_x: $counter_x + 1;
     }
@@ -21,29 +28,29 @@
     $counter_y: $counter_y + 1;
   }
   
-  .chess-board {
+  .chess-board-background {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     
-    //border: solid green 1px;
+    border: solid green 1px;
     
     > .square {
-      //border: solid black 1px;
+      border: solid black 1px;
       
       &:nth-child(even) {
-        &.odd-row-square {
+        &.square-odd-row {
           background-color: #6c9d41;
         }
-        &.even-row-square {
+        &.square-even-row {
           background-color: #f1f1f1;
         }
       }
       &:nth-child(odd) {
-        &.odd-row-square {
+        &.square-odd-row {
           background-color: #f1f1f1;
         }
-        &.even-row-square {
+        &.square-even-row {
           background-color: #6c9d41;
         }
       }
