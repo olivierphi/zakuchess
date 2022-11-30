@@ -5,10 +5,14 @@
     <link rel="stylesheet" href="{{ static("css/main.css") }}" />
     <link rel="stylesheet" href="{{ static("css/chess-board.css") }}" />
     <link rel="stylesheet" href="{{ static("css/chess-units/theme/default.css") }}" />
+    {# TODO: only load this when w're actually displaying a chess board #}
+    <script src="{{ static("js/zakuchess-bot.js") }}"></script>
     {# TODO: set a JavaScript asset pipeline instead of loading libraries from a CDN #}  
     <script src="https://unpkg.com/htmx.org@1.8.4" integrity="sha384-wg5Y/JwF7VxGk4zLsJEcAojRtlVp1FKKdGy1qN+OMtdq72WRvX/EdRdqg/LOhYeV" crossorigin="anonymous" defer></script>
   </head>
-  <body>
+  <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+  <div id="chess-bot-data" data-stockfish-urls='{{ {"wasm": static("js/bot/stockfish.wasm.js"), "js": static("js/bot/stockfish.js")}|tojson }}'></div>
+  
   {% import 'webui/macros/chessboard.tpl.html' as chessboard %}
   <div>{{ chessboard.board_whole(game, board_state, piece_available_targets=selected_piece_available_targets) }}</div>
   </body>

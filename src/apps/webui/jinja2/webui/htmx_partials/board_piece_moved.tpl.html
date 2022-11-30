@@ -1,0 +1,10 @@
+{% import 'webui/macros/chessboard.tpl.html' as chessboard %}
+{{ chessboard.board_pieces(game, board_state) }}
+<script>
+  (function () {
+    var chessBoardAvailableTargets = document.getElementById("chess-board-available-targets-{{ board_id|default("main") }}")
+    if (chessBoardAvailableTargets) {
+      chessBoardAvailableTargets.innerHTML = "";
+    }
+  })()
+</script>

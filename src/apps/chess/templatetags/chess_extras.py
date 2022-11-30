@@ -7,8 +7,8 @@ register = template.Library()
 
 
 @register.filter
-def player_code_from_symbol(symbol: PieceSymbol) -> PlayerSide:
-    return "w" if symbol.upper() == symbol else "b"
+def player_code_from_symbol(symbol: PieceSymbol) -> str:
+    return PlayerSide.W if symbol.upper() == symbol else PlayerSide.B
 
 
 @register.filter

@@ -49,16 +49,27 @@ code-quality/mypy: ## Python's equivalent of TypeScript
 
 .PHONY: frontend/css/watch
 frontend/css/watch:
-	@${MAKE} --no-print-directory frontend/css/compile compile_opts='--watch'
+	@${MAKE} --no-print-directory frontend/css/compile sass_compile_opts='--watch'
 
 .PHONY: frontend/css/compile
-frontend/css/compile: compile_opts ?= 
+frontend/css/compile: sass_compile_opts ?= 
 frontend/css/compile:
-	./node_modules/.bin/sass ${compile_opts} \
+	./node_modules/.bin/sass ${sass_compile_opts} \
 		frontend-src/css/main.scss:frontend-out/css/main.css \
 		frontend-src/css/chess-board.scss:frontend-out/css/chess-board.css \
-		frontend-src/css/chess-units/theme/default.scss:frontend-out/css/chess-units/theme/default.css 
+		frontend-src/css/chess-units/theme/default.scss:frontend-out/css/chess-units/theme/default.css
 		
+
+.PHONY: frontend/js/watch
+frontend/js/watch:
+	@${MAKE} --no-print-directory frontend/js/compile esbuild_compile_opts='--watch'
+
+.PHONY: frontend/js/compile
+frontend/js/compile: esbuild_compile_opts ?= 
+frontend/js/compile:
+	./node_modules/.bin/esbuild ${esbuild_compile_opts} \
+		frontend-src/js/zakuchess-bot.js --bundle --outfile=frontend-out/js/zakuchess-bot.js 
+
 .venv: ## Initialises the Python virtual environment in a ".venv" folder
 	python -m venv .venv
 	${PYTHON_BINS}/pip install -U pip poetry

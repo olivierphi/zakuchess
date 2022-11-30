@@ -1,3 +1,4 @@
+import uuid
 from django.template import defaultfilters
 from django.templatetags.static import static
 from django.urls import reverse
@@ -10,13 +11,13 @@ def environment(**options) -> Environment:
         {
             "static": static,
             "url": reverse,
+            "uuid": uuid.uuid4,
         }
     )
     env.filters["date"] = defaultfilters.date
 
     from apps.webui import jinja_extensions as webui_jinja_extensions
 
-    for filter_name, filter_implementation in webui_jinja_extensions.filters.items():
-        env.filters[filter_name] = filter_implementation
+    env.filters |= webui_jinja_extensions.filters
 
     return env

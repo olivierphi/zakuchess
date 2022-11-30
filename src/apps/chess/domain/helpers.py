@@ -26,8 +26,8 @@ def pieces_view_from_chess_board(board: chess.Board, square_to_id_mapping: Piece
     for square, piece in board.piece_map().items():
         square_name = chess.square_name(square)
         pieces_view_as_list.append((square_name, square_to_id_mapping[square_name], piece.symbol()))
-    # In order to get DOM elements that can be matched by Django Unicorn and CSS transitions we need
-    # a constant sorting of our pieces, wherever they're moving.
+    # In order to get DOM elements that can be matched when we replace the board in the DOM and apply
+    # CSS transitions to them, we need a constant sorting of our pieces, wherever they're moving.
     # --> we sort them by id!
     return {
         view_tuple[0]: PiecesView(id=view_tuple[1], piece=view_tuple[2])
