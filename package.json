@@ -6,13 +6,12 @@
     "prettier:check": " prettier --check frontend-src/",
     "prettier:fix": " prettier --write frontend-src/"
   },
+  "web-types": "./htmx.web-types.json",
   "dependencies": {
     "@hotwired/stimulus": "^3.2.1",
-    "@hotwired/turbo": "^7.2.4",
     "chess.js": "^1.0.0-alpha.0",
     "esbuild": "^0.15.16",
-    "form-request-submit-polyfill": "^2.0.0",
-    "morphdom": "^2.6.1",
+    "htmx.org": "^1.8.4",
     "sass": "^1.56.1"
   },
   "devDependencies": {

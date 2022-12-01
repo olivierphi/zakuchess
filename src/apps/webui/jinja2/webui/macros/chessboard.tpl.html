@@ -1,7 +1,6 @@
 {% macro board_whole(game, board_state, board_id="main", piece_available_targets=None) -%}
     <div class="chess-board-container" id="chess-board-container-{{ board_id }}"
-        data-controller="chess-board"
-        data-chess-board-fen-value="{{ board_state.fen }}" 
+        data-controller="chess-board" data-chess-board-is-versus-bot-value="{{ game.is_versus_bot }}"
     >
         {{ board_background(board_id=board_id) }}
         {{ board_pieces(game, board_state, board_id=board_id) }}
@@ -22,13 +21,10 @@
 {%- endmacro %}
 
 {% macro board_pieces(game, board_state, board_id="main") -%}
-    <turbo-frame id="chess-board-pieces-{{ board_id }}-frame">
-    
-          <a href="/messages/expanded" style="position: absolute; z-index: 1000">
-    Show all expanded messages in this frame.
-  </a>
-    
-    <div class="chess-board-pieces" id="chess-board-pieces-{{ board_id }}">
+    <div class="chess-board-pieces" id="chess-board-pieces-{{ board_id }}"
+         data-chess-board-target="piecesContainer"
+        data-fen="{{ board_state.fen }}"
+    >
         {% for square, piece in board_state.pieces_view.items() %}
             {% set belongs_to_active_player = piece.piece|player_side_from_piece == board_state.active_player %}
             <div class="piece square square-{{ square }} 
@@ -41,9 +37,6 @@
                  {%- if belongs_to_active_player -%}
                     data-chess-board-square-param="{{ square }}" 
                     data-action="click->chess-board#selectPiece"
-{#                    data-hx-get="/htmx/games/{{ game.id }}/pieces/{{ square }}/selection/"#}
-{#                    data-hx-target="#chess-board-available-targets-{{ board_id }}"#}
-{#                    data-hx-swap="outerHTML"#}
                  {%- endif %}
             >
                 <div class="piece-display"></div>
@@ -52,14 +45,17 @@
         {% endfor %}
     </div>
 
-    <form style="display: none" action="/games/{{ game.id }}/move" method="post"
+    <form style="display: none" 
+          id="chess-submit-move" {# TODO: make this unique #}
+          data-hx-post="{{ url("webui:htmx_game_move_piece", kwargs={"game_id": game.id}) }}"
+          data-hx-target="#chess-board-pieces-{{ board_id }}"
+          data-hx-swap="outerHTML"
           data-chess-board-target="submitMoveForm"
     >
         {{ csrf_input }}
         <input type="hidden" name="from">
         <input type="hidden" name="to">
     </form>
-    </turbo-frame>
     {# TODO: de-harcode this: 
     {% if game.is_versus_bot and game.active_player == "b" %}
         {% set actionHolderUniqueId = "chess-board-next-bot-action-" ~ board_id ~ "-" ~ uuid() %}

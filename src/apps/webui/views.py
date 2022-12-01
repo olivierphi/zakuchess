@@ -36,36 +36,6 @@ def game_view(req: HttpRequest, game_id: str) -> HttpResponse:
     return render(req, "webui/layout.tpl.html", {"game": game, "board_state": board_state})
 
 
-@require_POST
-def action_game_move_piece(req: HttpRequest, game_id: str) -> HttpResponse:
-    game = get_object_or_404(Game, id=game_id)
-    from_: SquareName = req.POST.get("from")
-    to: SquareName = req.POST.get("to")
-    print(f"{from_=} :: {to=}")
-    board_state = game.get_board_state()
-    result = game_move_piece(board_state=board_state, from_square=from_, to_square=to)
-
-    update_game_model(game=game, board_state=result.board_state)
-
-    return HttpResponse(
-        status=303, headers={"Location": reverse("webui:action_game_move_piece_result", kwargs={"game_id": game.id})}
-    )
-
-
-@require_safe
-def action_game_move_piece_result(req: HttpRequest, game_id: str) -> HttpResponse:
-    game = get_object_or_404(Game, id=game_id)
-
-    return render(
-        req,
-        "webui/turbo_partials/board_piece_moved.tpl.html",
-        {
-            "game": game,
-            "board_state": game.get_board_state(),
-        },
-    )
-
-
 def htmx_game_select_piece(req: HttpRequest, game_id: str, piece_square: SquareName) -> HttpResponse:
     game = get_object_or_404(Game, id=game_id)
     chess_board = game.get_chess_board()
@@ -85,12 +55,14 @@ def htmx_game_select_piece(req: HttpRequest, game_id: str, piece_square: SquareN
 
 
 @require_POST
-def htmx_game_move_piece(
-    req: HttpRequest, game_id: str, from_square: SquareName, to_square: SquareName
-) -> HttpResponse:
+def htmx_game_move_piece(req: HttpRequest, game_id: str) -> HttpResponse:
     game = get_object_or_404(Game, id=game_id)
     board_state = game.get_board_state()
-    result = game_move_piece(board_state=board_state, from_square=from_square, to_square=to_square)
+
+    from_: SquareName = req.POST.get("from")
+    to: SquareName = req.POST.get("to")
+    print(f"{from_=} :: {to=}")
+    result = game_move_piece(board_state=board_state, from_square=from_, to_square=to)
 
     update_game_model(game=game, board_state=result.board_state)
 

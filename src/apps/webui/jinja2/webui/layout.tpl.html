@@ -2,13 +2,12 @@
   <head>
     <title>Zakuchess</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="{{ static("css/main.css") }}" data-turbo-track="reload"/>
-    <link rel="stylesheet" href="{{ static("css/chess-board.css") }}" data-turbo-track="reload"/>
-    <link rel="stylesheet" href="{{ static("css/chess-units/theme/default.css") }}" data-turbo-track="reload"/>
-    <script src="{{ static("js/main.js") }}" data-turbo-track="reload"></script>
-    <meta name="csrf-token" content="{{ csrf_token }}" />
+    <link rel="stylesheet" href="{{ static("css/main.css") }}" />
+    <link rel="stylesheet" href="{{ static("css/chess-board.css") }}" />
+    <link rel="stylesheet" href="{{ static("css/chess-units/theme/default.css") }}" />
+    <script src="{{ static("js/main.js") }}" ></script>
   </head>
-  <body>
+  <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
   
   <div id="chess-bot-data" style="display: none" data-stockfish-urls='{{ {"wasm": static("js/bot/stockfish.wasm.js"), "js": static("js/bot/stockfish.js")}|tojson }}'></div>
   
