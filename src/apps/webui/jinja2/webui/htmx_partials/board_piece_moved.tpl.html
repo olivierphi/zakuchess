@@ -1,4 +1,4 @@
-{% import 'webui/macros/chessboard.tpl.html' as chessboard %}
+{% import 'webui/macros/chessboard.tpl.html' as chessboard with context %}
 {{ chessboard.board_pieces(game, board_state) }}
 <script>
   (function () {

@@ -1,18 +1,18 @@
 .chess-board-container {
-  
-  .square-debug, .piece-debug {
+  .square-debug,
+  .piece-debug {
     display: none;
   }
-  
+
   .chess-board-pieces {
     .piece {
       background-position: center;
-      
+
       filter: grayscale(70%);
       &.active-player {
         filter: none;
       }
-      
+
       &.side-w {
         &.active-player .piece-display {
           filter: drop-shadow(0 0 4px #fff);
@@ -30,7 +30,7 @@
         background-repeat: no-repeat;
         background-position: center;
       }
-      
+
       &.piece-p .piece-display {
         background-image: url("/static/chess/units/default/fencer.png");
       }

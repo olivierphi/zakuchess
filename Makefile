@@ -64,11 +64,18 @@ frontend/css/compile:
 frontend/js/watch:
 	@${MAKE} --no-print-directory frontend/js/compile esbuild_compile_opts='--watch'
 
+.PHONY: frontend/watch
+frontend/watch:
+	@./node_modules/.bin/concurrently --names "css,js" --prefix-colors "yellow,green" \
+		"${MAKE} --no-print-directory frontend/css/watch" \
+		"${MAKE} --no-print-directory frontend/js/watch"
+
 .PHONY: frontend/js/compile
 frontend/js/compile: esbuild_compile_opts ?= 
 frontend/js/compile:
 	./node_modules/.bin/esbuild ${esbuild_compile_opts} \
-		frontend-src/js/zakuchess-bot.js --bundle --outfile=frontend-out/js/zakuchess-bot.js 
+		frontend-src/js/main.ts --bundle --outfile=frontend-out/js/main.js
+# frontend-src/js/zakuchess-bot.js --bundle --outfile=frontend-out/js/zakuchess-bot.js 
 
 .venv: ## Initialises the Python virtual environment in a ".venv" folder
 	python -m venv .venv

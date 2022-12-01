@@ -3,15 +3,15 @@
   aspect-ratio: 1/1; // 💙
   margin: 0 auto;
   position: relative;
-  
+
   border: solid navy 1px;
-  
+
   .square {
-    position: absolute;          
+    position: absolute;
     width: 12.5%;
     height: 12.5%;
   }
-  
+
   $letters: [a, b, c, d, e, f, g, h];
   $numbers: [1, 2, 3, 4, 5, 6, 7, 8];
   $counter_x: 0;
@@ -27,17 +27,17 @@
     $counter_x: 0;
     $counter_y: $counter_y + 1;
   }
-  
+
   .chess-board-background {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    
+
     border: solid green 1px;
-    
+
     > .square {
       border: solid black 1px;
-      
+
       &:nth-child(even) {
         &.square-odd-row {
           background-color: #6c9d41;
@@ -54,10 +54,9 @@
           background-color: #6c9d41;
         }
       }
-     
     }
   }
-  
+
   .chess-board-pieces {
     position: absolute;
     top: 0;
@@ -66,31 +65,31 @@
     height: 100%;
     z-index: 1;
     //border: dotted red 1px;
-    
+
     .piece {
       //background-color: #ff000080;
       display: flex;
       justify-content: center;
       align-items: center;
       transition: top 0.3s ease-out, left 0.3s ease-out;
-      
+
       &.active-player {
         //box-shadow: 0 0 1px 1px #fff;
         cursor: pointer;
       }
-      
+
       &.selected {
         box-shadow: 0 0 10px 10px #fff;
         z-index: 1;
       }
-      
+
       &.side-w {
         color: white;
       }
       &.side-b {
         color: black;
       }
-      
+
       .piece-debug {
         font-size: 2rem;
         small {
@@ -98,9 +97,8 @@
         }
       }
     }
-    
   }
-  
+
   .chess-board-available-targets {
     position: absolute;
     top: 0;
@@ -108,16 +106,15 @@
     width: 100%;
     height: 100%;
     z-index: 1;
-    
+
     pointer-events: none;
-    
+
     .target {
       pointer-events: auto;
       cursor: pointer;
       background-color: #ffff0030;
     }
   }
-  
 }
 
 .chess-board-captured-pieces {

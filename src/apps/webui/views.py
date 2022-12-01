@@ -3,7 +3,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_safe
+from django.http import HttpResponse
+from django.urls import reverse
 
 from apps.chess.domain.mutations import create_new_game, game_move_piece, update_game_model
 from apps.chess.domain.queries import get_chess_board_state, get_piece_available_targets
@@ -11,11 +13,12 @@ from apps.chess.domain.types import SquareName
 from apps.chess.models import Game
 
 if TYPE_CHECKING:
-    from django.http import HttpRequest, HttpResponse
+    from django.http import HttpRequest
 
 
+@require_safe
 def hello_chess_board(req: HttpRequest) -> HttpResponse:
-    game = create_new_game(save=False)
+    game = create_new_game(is_versus_bot=True, save=False)
     return render(req, "webui/layout.tpl.html", {"game": game, "board_state": get_chess_board_state()})
     # return render(req, "chess/chessboard.tpl.html")
 
@@ -25,11 +28,42 @@ def game_new(req: HttpRequest) -> HttpResponse:
     return redirect(f"/games/{new_game.id}")
 
 
+@require_safe
 def game_view(req: HttpRequest, game_id: str) -> HttpResponse:
     game = get_object_or_404(Game, id=game_id)
     board_state = game.get_board_state()
 
     return render(req, "webui/layout.tpl.html", {"game": game, "board_state": board_state})
+
+
+@require_POST
+def action_game_move_piece(req: HttpRequest, game_id: str) -> HttpResponse:
+    game = get_object_or_404(Game, id=game_id)
+    from_: SquareName = req.POST.get("from")
+    to: SquareName = req.POST.get("to")
+    print(f"{from_=} :: {to=}")
+    board_state = game.get_board_state()
+    result = game_move_piece(board_state=board_state, from_square=from_, to_square=to)
+
+    update_game_model(game=game, board_state=result.board_state)
+
+    return HttpResponse(
+        status=303, headers={"Location": reverse("webui:action_game_move_piece_result", kwargs={"game_id": game.id})}
+    )
+
+
+@require_safe
+def action_game_move_piece_result(req: HttpRequest, game_id: str) -> HttpResponse:
+    game = get_object_or_404(Game, id=game_id)
+
+    return render(
+        req,
+        "webui/turbo_partials/board_piece_moved.tpl.html",
+        {
+            "game": game,
+            "board_state": game.get_board_state(),
+        },
+    )
 
 
 def htmx_game_select_piece(req: HttpRequest, game_id: str, piece_square: SquareName) -> HttpResponse:

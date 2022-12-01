@@ -2,18 +2,18 @@
   <head>
     <title>Zakuchess</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="{{ static("css/main.css") }}" />
-    <link rel="stylesheet" href="{{ static("css/chess-board.css") }}" />
-    <link rel="stylesheet" href="{{ static("css/chess-units/theme/default.css") }}" />
-    {# TODO: only load this when w're actually displaying a chess board #}
-    <script src="{{ static("js/zakuchess-bot.js") }}"></script>
-    {# TODO: set a JavaScript asset pipeline instead of loading libraries from a CDN #}  
-    <script src="https://unpkg.com/htmx.org@1.8.4" integrity="sha384-wg5Y/JwF7VxGk4zLsJEcAojRtlVp1FKKdGy1qN+OMtdq72WRvX/EdRdqg/LOhYeV" crossorigin="anonymous" defer></script>
+    <link rel="stylesheet" href="{{ static("css/main.css") }}" data-turbo-track="reload"/>
+    <link rel="stylesheet" href="{{ static("css/chess-board.css") }}" data-turbo-track="reload"/>
+    <link rel="stylesheet" href="{{ static("css/chess-units/theme/default.css") }}" data-turbo-track="reload"/>
+    <script src="{{ static("js/main.js") }}" data-turbo-track="reload"></script>
+    <meta name="csrf-token" content="{{ csrf_token }}" />
   </head>
-  <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
-  <div id="chess-bot-data" data-stockfish-urls='{{ {"wasm": static("js/bot/stockfish.wasm.js"), "js": static("js/bot/stockfish.js")}|tojson }}'></div>
+  <body>
   
-  {% import 'webui/macros/chessboard.tpl.html' as chessboard %}
+  <div id="chess-bot-data" style="display: none" data-stockfish-urls='{{ {"wasm": static("js/bot/stockfish.wasm.js"), "js": static("js/bot/stockfish.js")}|tojson }}'></div>
+  
+  {% import 'webui/macros/chessboard.tpl.html' as chessboard with context %}
   <div>{{ chessboard.board_whole(game, board_state, piece_available_targets=selected_piece_available_targets) }}</div>
+  
   </body>
 </html>

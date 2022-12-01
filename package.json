@@ -2,9 +2,21 @@
   "name": "zakuchess",
   "private": true,
   "version": "0.0.0",
-  "scripts": {},
+  "scripts": {
+    "prettier:check": " prettier --check frontend-src/",
+    "prettier:fix": " prettier --write frontend-src/"
+  },
   "dependencies": {
+    "@hotwired/stimulus": "^3.2.1",
+    "@hotwired/turbo": "^7.2.4",
+    "chess.js": "^1.0.0-alpha.0",
     "esbuild": "^0.15.16",
+    "form-request-submit-polyfill": "^2.0.0",
+    "morphdom": "^2.6.1",
     "sass": "^1.56.1"
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0",
+    "prettier": "^2.8.0"
   }
 }

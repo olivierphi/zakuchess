@@ -2,10 +2,11 @@ import uuid
 from django.template import defaultfilters
 from django.templatetags.static import static
 from django.urls import reverse
-from jinja2 import Environment
+from jinja2 import Environment, StrictUndefined
 
 
 def environment(**options) -> Environment:
+    options["undefined"] = StrictUndefined
     env = Environment(**options)
     env.globals.update(
         {
