@@ -24,12 +24,15 @@ django-types = "^0.16.0"
 pytest-django = "^4.5.2"
 pre-commit = "^2.20.0"
 ipython = "^8.6.0"
+djlint = "^1.19.7"
 
 [tool.black]
+# @link https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html
 line-length = 119
 target-version = ['py310']
 
 [tool.isort]
+# @link https://pycqa.github.io/isort/docs/configuration/options.html
 py_version = 310
 profile = "black"
 line_length = 119
@@ -38,11 +41,14 @@ known_first_party = ["apps"]
 combine_as_imports = true
 
 [tool.ruff]
+# @link https://github.com/charliermarsh/ruff#options
 line-length = 119
 target-version = "py310"
 exclude = [
      'src/project/settings',
 ]
+[tool.ruff.per-file-ignores]
+"bin/scripts/download_assets.py" = ["E501"]
 
 [tool.mypy]
 # @link https://mypy.readthedocs.io/en/stable/config_file.html#using-a-pyproject-toml

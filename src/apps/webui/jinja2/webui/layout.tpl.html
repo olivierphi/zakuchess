@@ -1,18 +1,23 @@
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <title>Zakuchess</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="{{ static("css/main.css") }}" />
-    <link rel="stylesheet" href="{{ static("css/chess-board.css") }}" />
-    <link rel="stylesheet" href="{{ static("css/chess-units/theme/default.css") }}" />
-    <script src="{{ static("js/main.js") }}" ></script>
-  </head>
-  <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
-  
-  <div id="chess-bot-data" style="display: none" data-stockfish-urls='{{ {"wasm": static("js/bot/stockfish.wasm.js"), "js": static("js/bot/stockfish.js")}|tojson }}'></div>
-  
-  {% import 'webui/macros/chessboard.tpl.html' as chessboard with context %}
-  <div>{{ chessboard.board_whole(game, board_state, piece_available_targets=selected_piece_available_targets) }}</div>
-  
-  </body>
+    <head>
+        <meta charset="utf-8" />
+        <title>ZakuChess</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="description" content="TODO" />
+        <meta name="keywords" content="TODO" />
+        <link rel="stylesheet" href="{{ static("css/main.css") }}" />
+        <link rel="stylesheet" href="{{ static("css/chess-board.css") }}" />
+        <link rel="stylesheet"
+              href="{{ static("css/chess-units/theme/default.css") }}"/>
+        <script src="{{ static("js/main.js") }}"></script>
+    </head>
+    <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+        <div id="chess-bot-data"
+             style="display: none"
+             data-stockfish-urls='{{ {"wasm": static("js/bot/stockfish.wasm.js"), "js": static("js/bot/stockfish.js")}|tojson }}'>
+        </div>
+        {% import 'webui/macros/chessboard.tpl.html' as chessboard with context %}
+        <div>{{ chessboard.board_whole(game, board_state, piece_available_targets=selected_piece_available_targets) }}</div>
+    </body>
 </html>

@@ -1,4 +1,5 @@
 from typing import Final
+
 from .types import PieceSymbol
 
 PIECES_VALUES: Final[dict[PieceSymbol, int]] = {

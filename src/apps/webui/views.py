@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST, require_safe
-from django.http import HttpResponse
-from django.urls import reverse
 
 from apps.chess.domain.mutations import create_new_game, game_move_piece, update_game_model
 from apps.chess.domain.queries import get_chess_board_state, get_piece_available_targets
-from apps.chess.domain.types import SquareName
+from apps.chess.domain.types import Square
 from apps.chess.models import Game
 
 if TYPE_CHECKING:
@@ -18,13 +17,13 @@ if TYPE_CHECKING:
 
 @require_safe
 def hello_chess_board(req: HttpRequest) -> HttpResponse:
-    game = create_new_game(is_versus_bot=True, save=False)
+    game = create_new_game(bot_side="b", save=False)
     return render(req, "webui/layout.tpl.html", {"game": game, "board_state": get_chess_board_state()})
     # return render(req, "chess/chessboard.tpl.html")
 
 
 def game_new(req: HttpRequest) -> HttpResponse:
-    new_game = create_new_game(is_versus_bot=True)
+    new_game = create_new_game(bot_side="b")
     return redirect(f"/games/{new_game.id}")
 
 
@@ -36,7 +35,7 @@ def game_view(req: HttpRequest, game_id: str) -> HttpResponse:
     return render(req, "webui/layout.tpl.html", {"game": game, "board_state": board_state})
 
 
-def htmx_game_select_piece(req: HttpRequest, game_id: str, piece_square: SquareName) -> HttpResponse:
+def htmx_game_select_piece(req: HttpRequest, game_id: str, piece_square: Square) -> HttpResponse:
     game = get_object_or_404(Game, id=game_id)
     chess_board = game.get_chess_board()
     piece_available_targets = get_piece_available_targets(chess_board=chess_board, piece_square=piece_square)
@@ -59,8 +58,8 @@ def htmx_game_move_piece(req: HttpRequest, game_id: str) -> HttpResponse:
     game = get_object_or_404(Game, id=game_id)
     board_state = game.get_board_state()
 
-    from_: SquareName = req.POST.get("from")
-    to: SquareName = req.POST.get("to")
+    from_ = cast(Square, req.POST.get("from"))
+    to = cast(Square, req.POST.get("to"))
     print(f"{from_=} :: {to=}")
     result = game_move_piece(board_state=board_state, from_square=from_, to_square=to)
 

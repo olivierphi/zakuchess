@@ -1,16 +1,19 @@
 from typing import NamedTuple
-from django.core.exceptions import SuspiciousOperation
-import chess
 
-from ..types import SquareName, ChessBoardState
+import chess
+from django.core.exceptions import SuspiciousOperation
+
 from ..helpers import KINGS_CASTLING, ROOK_SQUARE_AFTER_CASTLING, pieces_view_from_chess_board
+from ..types import ChessBoardState, Square
+
 
 class PieceMovementResult(NamedTuple):
     board: chess.Board
     board_state: ChessBoardState
     is_promotion: bool
 
-def game_move_piece(*, board_state: ChessBoardState, from_square: SquareName, to_square:SquareName)->PieceMovementResult:
+
+def game_move_piece(*, board_state: ChessBoardState, from_square: Square, to_square: Square) -> PieceMovementResult:
     board = chess.Board(fen=board_state.fen)
     current_piece = board.piece_at(chess.parse_square(from_square))
     if not current_piece:
@@ -22,7 +25,7 @@ def game_move_piece(*, board_state: ChessBoardState, from_square: SquareName, to
         f":: move_piece_to({to_square=}) "
         f":: from {from_square} :: {current_piece_id=} {targeted_piece=}"
     )
-    is_promotion = current_piece.piece_type == chess.PAWN and to_square[1] in ("1", "8") 
+    is_promotion = current_piece.piece_type == chess.PAWN and to_square[1] in ("1", "8")
 
     # @link https://en.wikipedia.org/wiki/Algebraic_notation_(chess)
     # @link https://en.wikipedia.org/wiki/Universal_Chess_Interface
@@ -52,9 +55,9 @@ def game_move_piece(*, board_state: ChessBoardState, from_square: SquareName, to
             # Our King just castled!
             # We also have to update the Rook's data in our `pieces_id_per_square` mapping
             target_rook_previous_square, target_rook_new_square = ROOK_SQUARE_AFTER_CASTLING[to_square]
-            target_rook_id = board.pieces_id_per_square[target_rook_previous_square]
-            board.pieces_id_per_square[target_rook_new_square] = target_rook_id
-            del board.pieces_id_per_square[target_rook_previous_square]
+            target_rook_id = board_state.pieces_id_per_square[target_rook_previous_square]
+            board_state.pieces_id_per_square[target_rook_new_square] = target_rook_id
+            del board_state.pieces_id_per_square[target_rook_previous_square]
 
     # if targeted_piece:
     #     self.captured_pieces[self.active_player].append(targeted_piece.symbol())
@@ -63,14 +66,10 @@ def game_move_piece(*, board_state: ChessBoardState, from_square: SquareName, to
         fen=board.fen(),
         active_player="w" if board.turn else "b",
         pieces_view=pieces_view_from_chess_board(board, pieces_id_per_square),
-        selected_piece_square = None,
+        selected_piece_square=None,
     )
 
-    return PieceMovementResult(
-    board=board,
-    board_state=new_board_state,
-    is_promotion=is_promotion
-    )
+    return PieceMovementResult(board=board, board_state=new_board_state, is_promotion=is_promotion)
 
     # self.fen = board.fen()
     # print(f"{self.fen=}")

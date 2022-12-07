@@ -27,7 +27,7 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
-    # @link https://docs.djangoproject.com/en/4.1/howto/static-files/#serving-files-uploaded-by-a-user-during-development
+    # @link https://docs.djangoproject.com/en/4.1/howto/static-files/
 
     from django.conf.urls.static import static
 

@@ -22,7 +22,7 @@ test: ## Launch the pytest tests suite
 	@PYTHONPATH=${PYTHONPATH} ${PYTHON_BINS}/pytest ${pytest_opts}
 
 .PHONY: code-quality/all
-code-quality/all: code-quality/black code-quality/isort code-quality/ruff code-quality/mypy  ## Run all our code quality tools
+code-quality/all: code-quality/black code-quality/djlint code-quality/isort code-quality/ruff code-quality/mypy  ## Run all our code quality tools
 
 .PHONY: code-quality/black
 code-quality/black: black_opts ?=
@@ -30,13 +30,19 @@ code-quality/black: ## Automated 'a la Prettier' code formatting
 # @link https://black.readthedocs.io/en/stable/
 	@${PYTHON_BINS}/black ${black_opts} src/ tests/
 
+.PHONY: code-quality/djlint
+code-quality/djlint: djlint_opts ?= --reformat
+code-quality/djlint: ## Automated 'a la Prettier' code formatting for Jinja templates
+# @link https://black.readthedocs.io/en/stable/
+	@${PYTHON_BINS}/djlint src/ --extension=.tpl.html ${djlint_opts}
+
 .PHONY: code-quality/isort
 code-quality/isort: isort_opts ?=
 code-quality/isort: ## Automated Python imports formatting
 	@${PYTHON_BINS}/isort --settings-file=pyproject.toml ${isort_opts} src/ tests/
 
 .PHONY: code-quality/ruff
-code-quality/ruff: ruff_opts ?=
+code-quality/ruff: ruff_opts ?= --fix
 code-quality/ruff: ## Fast linting
 # @link https://mypy.readthedocs.io/en/stable/
 	@PYTHONPATH=${PYTHONPATH} ${PYTHON_BINS}/ruff src/ ${ruff_opts}

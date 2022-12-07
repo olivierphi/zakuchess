@@ -1,4 +1,5 @@
 import uuid
+
 from django.template import defaultfilters
 from django.templatetags.static import static
 from django.urls import reverse

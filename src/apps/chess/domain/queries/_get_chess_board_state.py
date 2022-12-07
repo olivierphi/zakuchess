@@ -1,6 +1,6 @@
 import chess
 
-from ..helpers import pieces_view_from_chess_board
+from ..helpers import pieces_view_from_chess_board, square_from_int
 from ..types import ChessBoardState, PiecesIdPerSquare
 
 # Useful for quick tests:
@@ -12,7 +12,7 @@ _STARTING_FEN = chess.STARTING_FEN
 _STARTING_BOARD = chess.Board(fen=_STARTING_FEN)
 _STARTING_PIECES_IDS_PER_SQUARE: PiecesIdPerSquare = {
     square_name: square_name
-    for square_name in [chess.square_name(square) for square, piece in _STARTING_BOARD.piece_map().items()]
+    for square_name in [square_from_int(square) for square, piece in _STARTING_BOARD.piece_map().items()]
 }
 _STARTING_PIECES_VIEW = pieces_view_from_chess_board(_STARTING_BOARD, _STARTING_PIECES_IDS_PER_SQUARE)
 
@@ -26,5 +26,7 @@ def get_chess_board_state(
     return ChessBoardState(
         fen=board.fen(),
         active_player="w" if board.turn else "b",
-        pieces_view=_STARTING_PIECES_VIEW if blank_one else pieces_view_from_chess_board(board, pieces_ids_per_square),
+        pieces_view=_STARTING_PIECES_VIEW
+        if blank_one or not pieces_ids_per_square
+        else pieces_view_from_chess_board(board, pieces_ids_per_square),
     )

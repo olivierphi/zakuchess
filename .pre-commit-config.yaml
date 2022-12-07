@@ -5,6 +5,10 @@ repos:
      rev: 22.10.0
      hooks:
        - id: black
+  - repo: https://github.com/Riverside-Healthcare/djLint
+    rev: v1.19.7
+    hooks:
+      - id: djlint-django         
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     rev: v0.0.141
     hooks:
