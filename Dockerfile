@@ -59,7 +59,9 @@ WORKDIR /app
 RUN python -m venv .venv
 
 COPY pyproject.toml poetry.lock ./
-RUN poetry install --without dev
+RUN poetry install --without dev && \
+    # @link https://github.com/pydantic/pydantic/issues/2276#issuecomment-1312472629
+    strip .venv/lib/python3.10/site-packages/pydantic/*.so
 
 FROM python:3.10-slim AS backend_run
 

@@ -1,8 +1,13 @@
 /.venv
+
 /node_modules
 
 /frontend-out
 
 /db.sqlite3
+
+/.git
+/.idea
+/.docker
 
 /.*_cache
