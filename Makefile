@@ -12,7 +12,15 @@ help:
 install: .venv ./node_modules ## Install the Python and frontend dependencies
 	${PYTHON_BINS}/poetry install
 
-dev: ## Start the Django development server
+.PHONY: dev
+dev:
+	@./node_modules/.bin/concurrently --names "django,css,js" --prefix-colors "blue,yellow,green" \
+		"${MAKE} --no-print-directory backend/watch" \
+		"${MAKE} --no-print-directory frontend/css/watch" \
+		"${MAKE} --no-print-directory frontend/js/watch"
+
+.PHONY: backend/watch
+backend/watch: ## Start the Django development server
 	@PYTHONPATH=${PYTHONPATH} DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE} \
 		${PYTHON} src/manage.py runserver 127.0.0.1:8000
 
