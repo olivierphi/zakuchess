@@ -19,18 +19,17 @@
       &.side-w {
         &.active-player .piece-display {
           filter: drop-shadow(1px 1px 0 $piece-active-side-glow-color)
-          drop-shadow(-1px 1px 0 $piece-active-side-glow-color)
-          drop-shadow(1px -1px 0 $piece-active-side-glow-color)
-          drop-shadow(-1px -1px 0 $piece-active-side-glow-color);
+            drop-shadow(-1px 1px 0 $piece-active-side-glow-color) drop-shadow(1px -1px 0 $piece-active-side-glow-color)
+            drop-shadow(-1px -1px 0 $piece-active-side-glow-color);
         }
       }
       &.side-b {
         transform: scaleX(-100%);
         &.active-player .piece-display {
           filter: drop-shadow(0.5px 0.5px 0 $piece-active-side-glow-color)
-          drop-shadow(-0.5px 0.5px 0 $piece-active-side-glow-color)
-          drop-shadow(0.5px -0.5px 0 $piece-active-side-glow-color)
-          drop-shadow(-0.5px -0.5px 0 $piece-active-side-glow-color);
+            drop-shadow(-0.5px 0.5px 0 $piece-active-side-glow-color)
+            drop-shadow(0.5px -0.5px 0 $piece-active-side-glow-color)
+            drop-shadow(-0.5px -0.5px 0 $piece-active-side-glow-color);
         }
       }
       .piece-display {
@@ -38,6 +37,7 @@
         height: 100%;
         background-repeat: no-repeat;
         background-position: center;
+        background-size: contain;
       }
 
       &.piece-p .piece-display {

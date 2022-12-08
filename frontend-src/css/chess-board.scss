@@ -118,23 +118,16 @@
       &:before {
         content: "";
         position: absolute;
+        display: block;
         top: 50%;
         left: 50%;
+        width: 25%;
+        height: 25%;
+        background-color: #303040c0;
         border-radius: 100%;
-        box-shadow: 0 0 17px 14px #ffff00;
         transform: translate(-50%, -50%);
-        animation: chess-board-target-glow-animation 0.5s linear infinite alternate;
       }
     }
-  }
-}
-
-@keyframes chess-board-target-glow-animation {
-  from {
-    box-shadow: 0 0 17px 14px #cca000;
-  }
-  to {
-    box-shadow: 0 0 14px 14px #ffcc00;
   }
 }
 

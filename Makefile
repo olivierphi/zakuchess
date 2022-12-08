@@ -112,17 +112,32 @@ docker/build: docker_build_args ?=
 docker/build: ## Docker: build the image
 	DOCKER_BUILDKIT=${use_buildkit} docker build -t ${DOCKER_IMG_NAME}:${DOCKER_TAG} ${docker_build_args} .
 
-.PHONY: docker/test-locally
-docker/test-locally: port ?= 8080
-docker/test-locally: port_exposed ?= 8080
-docker/test-locally: docker_args ?= --rm
-docker/test-locally: docker_env ?= -e SECRET_KEY=does-not-matter-here -e DATABASE_URL=sqlite:////app/shared_volume/db.sqlite3 -e ALLOWED_HOSTS=* -e SECURE_SSL_REDIRECT=0
-docker/test-locally: cmd ?= /app/.venv/bin/gunicorn --bind 0.0.0.0:${port} --workers 2 project.wsgi
-docker/test-locally: user_id ?= $$(id -u)
-docker/test-locally: ## Docker: launch the previously built image, listening on port 8080
+.PHONY: docker/local/run
+docker/local/run: port ?= 8080
+docker/local/run: port_exposed ?= 8080
+docker/local/run: docker_args ?= --rm
+docker/local/run: docker_env ?= -e SECRET_KEY=does-not-matter-here -e DATABASE_URL=sqlite:////app/shared_volume/db.sqlite3 -e ALLOWED_HOSTS=* -e SECURE_SSL_REDIRECT=0
+docker/local/run: cmd ?= /app/.venv/bin/gunicorn --bind 0.0.0.0:${port} --workers 2 project.wsgi
+docker/local/run: user_id ?= $$(id -u)
+docker/local/run: ## Docker: launch the previously built image, listening on port 8080
 	docker run -p ${port_exposed}:${port} -v "${PWD}/.docker/:/app/shared_volume/" \
 		-u ${user_id} \
 		${docker_env} ${docker_args} \
 		-e DJANGO_SETTINGS_MODULE=project.settings.production \
 		${DOCKER_IMG_NAME}:${DOCKER_TAG} \
 		${cmd}
+
+.PHONY: docker/local/migrate
+docker/local/migrate:
+	${MAKE} --no-print-directory docker/local/run \
+		cmd='/app/.venv/bin/python src/manage.py migrate'
+
+# Here starts Fly.io-related stuff
+.PHONY: fly.io/deploy
+fly.io/deploy: deploy_build_args ?=
+fly.io/deploy: ## Fly.io: deploy the previously built Docker image
+	flyctl deploy ${deploy_build_args}
+
+.PHONY: fly.io/ssh
+fly.io/ssh: ## Fly.io: start a SSH session within our app
+	flyctl ssh console

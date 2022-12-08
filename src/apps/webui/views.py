@@ -17,9 +17,7 @@ if TYPE_CHECKING:
 
 @require_safe
 def hello_chess_board(req: HttpRequest) -> HttpResponse:
-    game = create_new_game(bot_side="b", save=False)
-    return render(req, "webui/layout.tpl.html", {"game": game, "board_state": get_chess_board_state()})
-    # return render(req, "chess/chessboard.tpl.html")
+    return redirect(f"/games/new/")
 
 
 def game_new(req: HttpRequest) -> HttpResponse:
@@ -60,7 +58,6 @@ def htmx_game_move_piece(req: HttpRequest, game_id: str) -> HttpResponse:
 
     from_ = cast(Square, req.POST.get("from"))
     to = cast(Square, req.POST.get("to"))
-    print(f"{from_=} :: {to=}")
     result = game_move_piece(board_state=board_state, from_square=from_, to_square=to)
 
     update_game_model(game=game, board_state=result.board_state)
