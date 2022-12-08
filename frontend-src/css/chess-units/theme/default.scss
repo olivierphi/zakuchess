@@ -4,6 +4,9 @@
     display: none;
   }
 
+  $piece-active-side-glow-color: #eeeeee;
+  $piece-inactive-side-glow-color: #333333;
+
   .chess-board-pieces {
     .piece {
       background-position: center;
@@ -15,13 +18,19 @@
 
       &.side-w {
         &.active-player .piece-display {
-          filter: drop-shadow(0 0 4px #fff);
+          filter: drop-shadow(1px 1px 0 $piece-active-side-glow-color)
+          drop-shadow(-1px 1px 0 $piece-active-side-glow-color)
+          drop-shadow(1px -1px 0 $piece-active-side-glow-color)
+          drop-shadow(-1px -1px 0 $piece-active-side-glow-color);
         }
       }
       &.side-b {
         transform: scaleX(-100%);
         &.active-player .piece-display {
-          filter: drop-shadow(0 0 4px #000);
+          filter: drop-shadow(0.5px 0.5px 0 $piece-active-side-glow-color)
+          drop-shadow(-0.5px 0.5px 0 $piece-active-side-glow-color)
+          drop-shadow(0.5px -0.5px 0 $piece-active-side-glow-color)
+          drop-shadow(-0.5px -0.5px 0 $piece-active-side-glow-color);
         }
       }
       .piece-display {

@@ -4,6 +4,9 @@
   margin: 0 auto;
   position: relative;
 
+  $square-light-color: #dddddd;
+  $square-dark-color: #b9493d;
+
   border: solid navy 1px;
 
   .square {
@@ -40,18 +43,18 @@
 
       &:nth-child(even) {
         &.square-odd-row {
-          background-color: #6c9d41;
+          background-color: $square-dark-color;
         }
         &.square-even-row {
-          background-color: #f1f1f1;
+          background-color: $square-light-color;
         }
       }
       &:nth-child(odd) {
         &.square-odd-row {
-          background-color: #f1f1f1;
+          background-color: $square-light-color;
         }
         &.square-even-row {
-          background-color: #6c9d41;
+          background-color: $square-dark-color;
         }
       }
     }
@@ -112,8 +115,26 @@
     .target {
       pointer-events: auto;
       cursor: pointer;
-      background-color: #33669970;
+      &:before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        border-radius: 100%;
+        box-shadow: 0 0 17px 14px #ffff00;
+        transform: translate(-50%, -50%);
+        animation: chess-board-target-glow-animation 0.5s linear infinite alternate;
+      }
     }
+  }
+}
+
+@keyframes chess-board-target-glow-animation {
+  from {
+    box-shadow: 0 0 17px 14px #cca000;
+  }
+  to {
+    box-shadow: 0 0 14px 14px #ffcc00;
   }
 }
 
