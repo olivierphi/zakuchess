@@ -1,17 +1,15 @@
+import os
+
+os.environ["SECRET_KEY"] = "does-not-matter-in-this-context"
+os.environ["DATABASE_URL"] = "sqlite://:memory:"
+os.environ["ALLOWED_HOSTS"] = "none"
+
 from ._base import *
-
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
-
-SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=True)
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
 
 # Static assets served by Whitenoise on production
 # @link http://whitenoise.evans.io/en/stable/
-MIDDLEWARE.append("whitenoise.middleware.WhiteNoiseMiddleware")
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# Logging
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,

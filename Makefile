@@ -89,7 +89,6 @@ frontend/js/compile: esbuild_compile_opts ?=
 frontend/js/compile:
 	./node_modules/.bin/esbuild ${esbuild_compile_opts} \
 		frontend-src/js/main.ts --bundle --outfile=frontend-out/js/main.js
-# frontend-src/js/zakuchess-bot.js --bundle --outfile=frontend-out/js/zakuchess-bot.js 
 
 .venv: ## Initialises the Python virtual environment in a ".venv" folder
 	python -m venv .venv
@@ -101,3 +100,29 @@ frontend/js/compile:
 
 frontend/install:
 	npm install
+
+# Here starts Docker-related stuff
+
+DOCKER_IMG_NAME ?= zakuchess
+DOCKER_TAG ?= latest
+
+.PHONY: docker/build
+docker/build: use_buildkit ?= 1 # @link https://docs.docker.com/develop/develop-images/build_enhancements/
+docker/build: docker_build_args ?=
+docker/build: ## Docker: build the image
+	DOCKER_BUILDKIT=${use_buildkit} docker build -t ${DOCKER_IMG_NAME}:${DOCKER_TAG} ${docker_build_args} .
+
+.PHONY: docker/test-locally
+docker/test-locally: port ?= 8080
+docker/test-locally: port_exposed ?= 8080
+docker/test-locally: docker_args ?= --rm
+docker/test-locally: docker_env ?= -e SECRET_KEY=does-not-matter-here -e DATABASE_URL=sqlite:////app/shared_volume/db.sqlite3 -e ALLOWED_HOSTS=* -e SECURE_SSL_REDIRECT=0
+docker/test-locally: cmd ?= /app/.venv/bin/gunicorn --bind 0.0.0.0:${port} --workers 2 project.wsgi
+docker/test-locally: user_id ?= $$(id -u)
+docker/test-locally: ## Docker: launch the previously built image, listening on port 8080
+	docker run -p ${port_exposed}:${port} -v "${PWD}/.docker/:/app/shared_volume/" \
+		-u ${user_id} \
+		${docker_env} ${docker_args} \
+		-e DJANGO_SETTINGS_MODULE=project.settings.production \
+		${DOCKER_IMG_NAME}:${DOCKER_TAG} \
+		${cmd}

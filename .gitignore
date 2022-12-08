@@ -6,10 +6,11 @@
 
 /.venv/
 
+/.docker/*
+!/.docker/.gitkeep
+
 # various tools' cache folders:
-.mypy_cache
-.pytest_cache
-.ruff_cache
+.*_cache
 
 # Logs
 logs
