@@ -1,11 +1,25 @@
+@import "helpers";
+
+$piece-active-side-glow-color: #ffffff;
+$piece-selected-glow-color: #ffff00;
+$piece-glow-width: 1px;
+$piece-selected-glow-width: 2px;
+
 .chess-board-container {
-  max-width: 45rem;
+  max-width: 40rem;
   aspect-ratio: 1/1; // 💙
   margin: 0 auto;
   position: relative;
 
-  $square-light-color: #dddddd;
-  $square-dark-color: #b9493d;
+  //$square-light-color: #dddddd;
+  //$square-dark-color: #b9493d;
+  $square-light-color: #e4b55d;
+  $square-dark-color: #a57713;
+
+  $piece-side-w-marker-border-color: #00ff00;
+  $piece-side-w-marker-bg-color: #00ff0050;
+  $piece-side-b-marker-border-color: #000060;
+  $piece-side-b-marker-bg-color: #00006050;
 
   border: solid navy 1px;
 
@@ -36,10 +50,10 @@
     flex-wrap: wrap;
     justify-content: center;
 
-    border: solid green 1px;
+    //border: solid green 1px;
 
     > .square {
-      border: solid black 1px;
+      // border: solid black 1px;
 
       &:nth-child(even) {
         &.square-odd-row {
@@ -81,16 +95,66 @@
         cursor: pointer;
       }
 
-      &.selected {
-        box-shadow: 0 0 10px 10px #fff;
-        z-index: 1;
+      &.active-player.can-move .piece-display {
+        filter: drop-shadow-solid($piece-glow-width, $piece-active-side-glow-color);
       }
 
-      &.side-w {
-        color: white;
+      .piece-display {
+        width: 100%;
+        height: 100%;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
       }
+
+      &.selected {
+        .piece-display {
+          animation: 0.5s infinite alternate selected-piece-glow;
+        }
+      }
+
+      &.side-w,
       &.side-b {
-        color: black;
+        &:before {
+          content: "";
+          position: absolute;
+          z-index: 1;
+          display: block;
+          bottom: 2%;
+          width: 80%;
+          height: 40%;
+          border-radius: 50%;
+          border-style: solid;
+          border-width: 1px;
+        }
+        &.side-w {
+          &:before {
+            border-color: $piece-side-w-marker-border-color;
+            background-color: $piece-side-w-marker-bg-color;
+          }
+        }
+        &.side-b {
+          &:before {
+            border-color: $piece-side-b-marker-border-color;
+            background-color: $piece-side-b-marker-bg-color;
+          }
+        }
+        &.is-potential-capture {
+          $potential-capture-marker-border-color: #ff0000;
+          .piece-display {
+            filter: drop-shadow-solid($piece-glow-width, $potential-capture-marker-border-color);
+          }
+        }
+
+        &.side-b {
+          .piece-display {
+            transform: scaleX(-100%);
+          }
+        }
+
+        .piece-display {
+          z-index: 2;
+        }
       }
 
       .piece-debug {
@@ -115,18 +179,45 @@
     .target {
       pointer-events: auto;
       cursor: pointer;
+
+      $target-marker-alpha: -30%;
+
       &:before {
         content: "";
         position: absolute;
         display: block;
-        top: 50%;
-        left: 50%;
-        width: 25%;
-        height: 25%;
-        background-color: #303040c0;
-        border-radius: 100%;
-        transform: translate(-50%, -50%);
+        width: 20%;
+        height: 20%;
+        top: 40%; // (100% - 20%) / 2
+        left: 40%; // ditto
+        border-radius: 50%;
+        border-style: solid;
+        border-width: 2px;
       }
+
+      $target-color-w: #ffff00; // $piece-side-w-marker-border-color
+      $target-color-b: #ffff00; // $piece-side-b-marker-border-color
+      &.side-w {
+        &:before {
+          border-color: scale-color($target-color-w, $alpha: $target-marker-alpha);
+          background-color: scale-color($target-color-w, $alpha: $target-marker-alpha);
+        }
+      }
+      &.side-b {
+        &:before {
+          border-color: scale-color($target-color-b, $alpha: $target-marker-alpha);
+          background-color: scale-color($target-color-b, $alpha: $target-marker-alpha);
+        }
+      }
+
+      //$capture-color: red;
+      //&.is-capture {
+      //  &:before {
+      //    opacity: 70%;
+      //    border-color: scale-color($capture-color, $alpha: $target-marker-alpha);
+      //    background-color: scale-color($capture-color, $alpha: $target-marker-alpha);
+      //  }
+      //}
     }
   }
 }
@@ -134,4 +225,16 @@
 .chess-board-captured-pieces {
   max-width: 15rem;
   margin: 0 auto;
+}
+
+@keyframes selected-piece-glow {
+  $w1: $piece-selected-glow-width;
+  $w2: $w1 * 1.5;
+  from {
+    filter: drop-shadow-solid($w1, $piece-selected-glow-color);
+  }
+
+  to {
+    filter: drop-shadow-solid($w2, $piece-selected-glow-color, $blur: 1px);
+  }
 }

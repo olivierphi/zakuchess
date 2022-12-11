@@ -2,8 +2,9 @@ import { Controller } from "@hotwired/stimulus"
 
 import type { GamePhase, PlayerSide, FEN, Square } from "../chess-domain"
 import { getPieceAvailableTargets } from "../chess-helpers"
+import type { PieceAvailableTarget } from "../chess-helpers"
 import { playFromFEN } from "../chess-bot"
-import { ActionEvent } from "@hotwired/stimulus/dist/types/core/action_event"
+import type { ActionEvent } from "@hotwired/stimulus/dist/types/core/action_event"
 import { DEFAULT_POSITION } from "chess.js/src/chess"
 
 const PIECES_MOVE_TRANSITION_DURATION = 300 // we've set 0.3s in the SCSS file
@@ -37,22 +38,23 @@ export default class extends Controller {
     declare botSideValue: string
 
     piecesContainerTargetConnected(target: HTMLElement): void {
-        console.log("piecesContainerTargetConnected")
         this.updateStateFromDOM()
     }
 
     selectPiece(event: ActionEvent): void {
         const square = event.params.square as Square
         const pieceAvailableTargets = getPieceAvailableTargets(this.getCurrentFEN(), square)
-        console.log("selectPiece() :: pieceAvailableTargets=", pieceAvailableTargets)
         this.state.gamePhase = "waiting_for_selected_piece_target"
+        this.piecesContainerTarget
+            .querySelectorAll(".piece.selected")
+            .forEach((piece) => piece.classList.remove("selected"))
+        ;(event.currentTarget as HTMLElement).classList.add("selected")
         this.displayPieceAvailableTargets(square, pieceAvailableTargets)
     }
 
     moveSelectedPiece(event: ActionEvent): void {
         const from = event.params.from as Square
         const to = event.params.to as Square
-        console.log("this.submitMoveFormTarget=", this.submitMoveFormTarget)
         this.movePiece(from, to)
     }
 
@@ -63,7 +65,6 @@ export default class extends Controller {
             activePlayerSide: this.getActivePlayerSide(),
             botSide: this.botSideValue === "" ? null : (this.botSideValue as PlayerSide),
         }
-        console.log("updateStateFromDOM() :: this.state=", this.state)
         if (this.isBotsTurn()) {
             this.playBotAfterPieceMoved()
         }
@@ -75,17 +76,35 @@ export default class extends Controller {
         window.htmx.trigger(this.submitMoveFormTarget, "submit", {})
     }
 
-    private displayPieceAvailableTargets(from: Square, availableTargets: Square[]): void {
+    private displayPieceAvailableTargets(from: Square, availableTargets: PieceAvailableTarget[]): void {
         this.availableTargetsContainerTarget.innerHTML = availableTargets
-            .map((square) => this.getPieceAvailableTargetElement(from, square))
+            .map((target) => this.getPieceAvailableTargetElement(from, target))
             .join("")
+        // Let's highlight the potentially captured pieces:
+        this.piecesContainerTarget
+            .querySelectorAll(".is-potential-capture")
+            .forEach((piece) => piece.classList.remove("is-potential-capture"))
+
+        const captureSquares: Square[] = availableTargets
+            .filter((target) => target.isCapture)
+            .map((target) => target.square)
+        if (!captureSquares.length) {
+            return
+        }
+
+        const captureSquaresSelector = captureSquares.map((square) => `.square-${square}`).join(", ")
+        this.piecesContainerTarget
+            .querySelectorAll(captureSquaresSelector)
+            .forEach((piece) => piece.classList.add("is-potential-capture"))
     }
 
-    private getPieceAvailableTargetElement(from: Square, to: Square): string {
-        return `<div class="target square square-${to}" 
+    private getPieceAvailableTargetElement(from: Square, to: PieceAvailableTarget): string {
+        return `<div class="target square square-${to.square} side-${this.state.activePlayerSide} ${
+            to.isCapture ? "is-capture" : ""
+        }" 
             data-action="click->chess-board#moveSelectedPiece"
             data-chess-board-from-param="${from}"
-            data-chess-board-to-param="${to}"
+            data-chess-board-to-param="${to.square}"
         ></div>`
     }
 
@@ -103,7 +122,7 @@ export default class extends Controller {
     }
 
     private playBot(): void {
-        playFromFEN(this.getCurrentFEN(), 2).then(
+        playFromFEN(this.getCurrentFEN(), 1).then(
             ([from, to]) => {
                 this.movePiece(from, to)
             },
@@ -114,7 +133,7 @@ export default class extends Controller {
         )
     }
     private playBotAfterPieceMoved(): void {
-        setTimeout(this.playBot.bind(this), PIECES_MOVE_TRANSITION_DURATION)
+        setTimeout(this.playBot.bind(this), PIECES_MOVE_TRANSITION_DURATION * 1.1)
     }
 
     private clearPieceAvailableTargets(): void {

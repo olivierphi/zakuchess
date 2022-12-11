@@ -17,9 +17,9 @@ CHESS_STATIC = BASE_DIR / "src" / "apps" / "chess" / "static" / "chess"
 ASSETS_MAP: dict[URL, Path] = {
     # fmt: off
     # Stockfish:
-    "https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.min.js": FRONTEND_SRC / "js" / "bot" / "stockfish.js",
-    "https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.wasm": FRONTEND_SRC / "js" / "bot" / "stockfish.wasm",
-    "https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.wasm.min.js": FRONTEND_SRC / "js" / "bot" / "stockfish.wasm.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.min.js": CHESS_STATIC / "js" / "bot" / "stockfish.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.wasm": CHESS_STATIC / "js" / "bot" / "stockfish.wasm",
+    "https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.wasm.min.js": CHESS_STATIC / "js" / "bot" / "stockfish.wasm.js",
     # Wesnoth assets:
     "https://github.com/wesnoth/wesnoth/raw/master/data/core/images/units/human-loyalists/bowman.png": CHESS_STATIC / "units" / "default" / "bowman.png",
     "https://github.com/wesnoth/wesnoth/raw/master/data/core/images/units/human-loyalists/fencer.png": CHESS_STATIC / "units" / "default" / "fencer.png",

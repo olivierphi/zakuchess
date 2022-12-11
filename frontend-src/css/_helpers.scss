@@ -1,0 +1,4 @@
+@function drop-shadow-solid($width, $color, $blur: 0) {
+  @return drop-shadow($width $width $blur $color) drop-shadow((-($width)) $width $blur $color)
+    drop-shadow($width (-($width)) $blur $color) drop-shadow((-($width)) (-($width)) $blur $color);
+}

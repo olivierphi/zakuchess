@@ -4,6 +4,8 @@ os.environ["USE_DOT_ENV"] = "YES"
 
 from ._base import *
 
+ALLOWED_HOSTS = ["*"]
+
 DEBUG = True
 
 LOGGING = {

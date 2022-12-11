@@ -20,9 +20,11 @@ dev:
 		"${MAKE} --no-print-directory frontend/js/watch"
 
 .PHONY: backend/watch
+backend/watch: address ?= 127.0.0.1
+backend/watch: port ?= 8000
 backend/watch: ## Start the Django development server
 	@PYTHONPATH=${PYTHONPATH} DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE} \
-		${PYTHON} src/manage.py runserver 127.0.0.1:8000
+		${PYTHON} src/manage.py runserver ${address}:${port}
 
 .PHONY: test
 test: pytest_opts ?=

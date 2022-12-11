@@ -4,41 +4,14 @@
     display: none;
   }
 
-  $piece-active-side-glow-color: #eeeeee;
-  $piece-inactive-side-glow-color: #333333;
-
   .chess-board-pieces {
     .piece {
       background-position: center;
 
-      filter: grayscale(70%);
-      &.active-player {
-        filter: none;
-      }
-
-      &.side-w {
-        &.active-player .piece-display {
-          filter: drop-shadow(1px 1px 0 $piece-active-side-glow-color)
-            drop-shadow(-1px 1px 0 $piece-active-side-glow-color) drop-shadow(1px -1px 0 $piece-active-side-glow-color)
-            drop-shadow(-1px -1px 0 $piece-active-side-glow-color);
-        }
-      }
-      &.side-b {
-        transform: scaleX(-100%);
-        &.active-player .piece-display {
-          filter: drop-shadow(0.5px 0.5px 0 $piece-active-side-glow-color)
-            drop-shadow(-0.5px 0.5px 0 $piece-active-side-glow-color)
-            drop-shadow(0.5px -0.5px 0 $piece-active-side-glow-color)
-            drop-shadow(-0.5px -0.5px 0 $piece-active-side-glow-color);
-        }
-      }
-      .piece-display {
-        width: 100%;
-        height: 100%;
-        background-repeat: no-repeat;
-        background-position: center;
-        background-size: contain;
-      }
+      //filter: grayscale(70%);
+      //&.active-player {
+      //  filter: none;
+      //}
 
       &.piece-p .piece-display {
         background-image: url("/static/chess/units/default/fencer.png");
