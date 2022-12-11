@@ -1,21 +1,6 @@
-from random import choice
-from typing import TYPE_CHECKING
+from typing import Final
 
-from ...models import TeamMember
-
-if TYPE_CHECKING:
-    from ..types import TeamMemberRole
-
-
-def generate_team_member(*, role: "TeamMemberRole") -> TeamMember:
-    return TeamMember(
-        first_name=choice(_FIRST_NAMES),
-        last_name=choice(_LAST_NAMES),
-        role=role,
-    )
-
-
-_FIRST_NAMES = (
+FIRST_NAMES: Final = (
     "Nico",
     "Oliv",
     "Elise",
@@ -47,10 +32,12 @@ _FIRST_NAMES = (
     "Tetsuo",
     "Kaneda",
     "Ryu",
+    "Ichigo",
     "Terry",
     "Kelly",
     "Vijay",
-    "Ken",
+    "Gunther" "Ken",
+    "Abdul",
     "Ali",
     "Babakar",
     "Mohamed",
@@ -63,9 +50,31 @@ _FIRST_NAMES = (
     "Linh",
     "Simon",
     "Jean-Michel",
+    "Maximilien",
+    "Rachel",
+    "Robert",
+    "Jane",
+    "William",
+    "Ben",
+    "Ed",
+    "Paula",
+    "Harris",
+    "Lewis",
+    "Alice",
+    "Archibald",
+    "Roger",
+    "Sean",
+    "Timothy",
+    "Frazer",
+    "Guido",
+    "Rasmus",
+    "Fab",
+    "Taylor",
+    "Sufjan",
+    "Mo",
 )
 
-_LAST_NAMES = (
+LAST_NAMES: Final = (
     "Philippon",
     "Warren",
     "Goussin",
@@ -95,6 +104,7 @@ _LAST_NAMES = (
     "Nguyen",
     "Cissé",
     "Diop",
+    "Fara",
     "González",
     "Rodríguez",
     "Martinez",
@@ -103,4 +113,24 @@ _LAST_NAMES = (
     "Hernandez",
     "Lopez",
     "Gomez",
+    "Lion",
+    "Lépée",
+    "Glaive",
+    "Pourfend",
+    "Smith",
+    "Jones",
+    "Williams",
+    "Brown",
+    "Johnson",
+    "Miller",
+    "Davis",
+    "Moore",
+    "Watson",
+    "Karate",
+    "Dalton",
+    "McGregor",
+    "Pratchett",
+    "Stevens",
+    "Stevenson",
+    "Harper",
 )

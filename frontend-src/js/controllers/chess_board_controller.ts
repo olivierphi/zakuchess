@@ -10,6 +10,7 @@ import { DEFAULT_POSITION } from "chess.js/src/chess"
 const PIECES_MOVE_TRANSITION_DURATION = 300 // we've set 0.3s in the SCSS file
 
 type ChessBoardControllerMetadata = {
+    mySide: PlayerSide
     botSide: PlayerSide | null
 }
 type ChessBoardControllerState = {
@@ -27,6 +28,7 @@ const INITIAL_STATE: Readonly<ChessBoardControllerState> = {
 export default class extends Controller {
     static targets = ["piecesContainer", "piece", "availableTargetsContainer", "submitMoveForm"]
     static values = {
+        mySide: String,
         botSide: String,
     }
 
@@ -37,9 +39,11 @@ export default class extends Controller {
     declare readonly piecesContainerTarget: HTMLElement
     declare readonly availableTargetsContainerTarget: HTMLElement
     declare readonly submitMoveFormTarget: HTMLFormElement
+    declare mySideValue: string
     declare botSideValue: string
 
     piecesContainerTargetConnected(target: HTMLElement): void {
+        console.log("piecesContainerTargetConnected")
         if (this.metadata === null) {
             this.setMetadataFromDOM()
         }
@@ -50,9 +54,7 @@ export default class extends Controller {
         const square = event.params.square as Square
         const pieceAvailableTargets = getPieceAvailableTargets(this.getCurrentFEN(), square)
         this.state.gamePhase = "waiting_for_selected_piece_target"
-        this.piecesContainerTarget
-            .querySelectorAll(".piece.selected")
-            .forEach((piece) => piece.classList.remove("selected"))
+        this.piecesContainerTarget.querySelectorAll(".selected").forEach((piece) => piece.classList.remove("selected"))
         ;(event.currentTarget as HTMLElement).classList.add("selected")
         this.displayPieceAvailableTargets(square, pieceAvailableTargets)
     }
@@ -65,6 +67,7 @@ export default class extends Controller {
 
     private setMetadataFromDOM(): void {
         this.metadata = {
+            mySide: this.mySideValue as PlayerSide,
             botSide: this.botSideValue === "" ? null : (this.botSideValue as PlayerSide),
         }
     }
@@ -109,9 +112,14 @@ export default class extends Controller {
     }
 
     private getPieceAvailableTargetElement(from: Square, to: PieceAvailableTarget): string {
-        return `<div class="target square square-${to.square} side-${this.state.activePlayerSide} ${
-            to.isCapture ? "is-capture" : ""
-        }" 
+        const classes = [
+            "target",
+            "square",
+            `square-${to.square}`,
+            `side-${this.state.activePlayerSide}`,
+            to.isCapture ? "is-capture" : "",
+        ]
+        return `<div class="${classes.join(" ")}" 
             data-action="click->chess-board#moveSelectedPiece"
             data-chess-board-from-param="${from}"
             data-chess-board-to-param="${to.square}"

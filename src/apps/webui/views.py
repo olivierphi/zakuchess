@@ -33,6 +33,7 @@ def game_view(req: HttpRequest, game_id: str) -> HttpResponse:
     # TODO: move all that logic to a Presenter
     chess_board = game.get_chess_board()
     board_state = game.get_board_state()
+    my_side = "w"  # TODO: de-harcode this - should come from the user
     squares_with_pieces_that_can_move = get_squares_with_pieces_that_can_move(chess_board)
     team_w, team_b = (
         # TODO: use Players to know which team is which... once we do have Players ^^
@@ -51,6 +52,7 @@ def game_view(req: HttpRequest, game_id: str) -> HttpResponse:
         {
             "game": game,
             "board_state": board_state,
+            "my_side": my_side,
             "squares_with_pieces_that_can_move": squares_with_pieces_that_can_move,
             "team_members_by_role_by_side": team_members_by_role_by_side,
         },
@@ -78,10 +80,11 @@ def htmx_game_select_piece(req: HttpRequest, game_id: str, piece_square: Square)
 @require_POST
 def htmx_game_move_piece(req: HttpRequest, game_id: str) -> HttpResponse:
     game = get_object_or_404(Game, id=game_id)
-    board_state = game.get_board_state()
-
     from_ = cast(Square, req.POST.get("from"))
     to = cast(Square, req.POST.get("to"))
+
+    my_side = "w"  # TODO: de-harcode this
+    board_state = game.get_board_state()
     result = game_move_piece(board_state=board_state, from_square=from_, to_square=to)
 
     update_game_model(game=game, board_state=result.board_state)
@@ -94,6 +97,7 @@ def htmx_game_move_piece(req: HttpRequest, game_id: str) -> HttpResponse:
         "webui/htmx_partials/board_piece_moved.tpl.html",
         {
             "game": game,
+            "my_side": my_side,
             "board_state": result.board_state,
             "squares_with_pieces_that_can_move": squares_with_pieces_that_can_move,
         },

@@ -1,9 +1,12 @@
+from random import sample
 from typing import TYPE_CHECKING
+
+from ..data.team_member_names import FIRST_NAMES, LAST_NAMES
+from ...models import TeamMember
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from ...models import TeamMember
     from ..types import TeamMemberRole
 
 _WHOLE_TEAM_ROLES: tuple["TeamMemberRole", ...] = (
@@ -15,11 +18,18 @@ _WHOLE_TEAM_ROLES: tuple["TeamMemberRole", ...] = (
 
 
 def generate_team_members(*, roles: "Sequence[TeamMemberRole] | None" = None) -> "Sequence[TeamMember]":
-    from ._generate_team_member import generate_team_member
-
     roles = roles or _WHOLE_TEAM_ROLES
 
+    first_names = sample(FIRST_NAMES, k=len(roles))
+    last_names = sample(LAST_NAMES, k=len(roles))
+
     result = []
-    for role in roles:
-        result.append(generate_team_member(role=role))
+    for i, role in enumerate(roles):
+        result.append(
+            TeamMember(
+                first_name=first_names[i],
+                last_name=last_names[i],
+                role=role,
+            )
+        )
     return result

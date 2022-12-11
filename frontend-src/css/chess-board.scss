@@ -48,6 +48,7 @@ $piece-selected-glow-width: 2px;
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
+    pointer-events: none;
 
     //border: solid green 1px;
 
@@ -72,6 +73,7 @@ $piece-selected-glow-width: 2px;
       }
 
       .square-debug {
+        font-size: 0.5rem;
         color: #6f500b;
       }
     }
@@ -92,13 +94,9 @@ $piece-selected-glow-width: 2px;
       justify-content: center;
       align-items: center;
       transition: top 0.3s ease-out, left 0.3s ease-out;
+      cursor: pointer;
 
-      &.active-player {
-        //box-shadow: 0 0 1px 1px #fff;
-        cursor: pointer;
-      }
-
-      &.active-player.can-move .piece-display {
+      &.my-side.can-move .piece-display {
         filter: drop-shadow-solid($piece-glow-width, $piece-active-side-glow-color);
       }
 
@@ -108,6 +106,7 @@ $piece-selected-glow-width: 2px;
         background-repeat: no-repeat;
         background-position: center;
         background-size: contain;
+        animation: none; // could it solve the issue of the animations that keep being played on Safari iOS?
       }
 
       &.selected {

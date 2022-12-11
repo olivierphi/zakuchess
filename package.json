@@ -12,6 +12,7 @@
     "chess.js": "^1.0.0-alpha.0",
     "esbuild": "^0.15.16",
     "htmx.org": "^1.8.4",
+    "reset-css": "^5.0.1",
     "sass": "^1.56.1"
   },
   "devDependencies": {

@@ -1,5 +1,5 @@
 {% import 'webui/macros/chessboard.tpl.html' as chessboard with context %}
-{{ chessboard.board_pieces(game, board_state, squares_with_pieces_that_can_move=squares_with_pieces_that_can_move) }}
+{{ chessboard.board_pieces(game, board_state, my_side=my_side, squares_with_pieces_that_can_move=squares_with_pieces_that_can_move) }}
 <div id="chess-board-available-targets-{{ board_id|default("main") }}"
      hx-swap-oob="innerHTML">
     {# We just empty the "available targets" container after a move was played #}
