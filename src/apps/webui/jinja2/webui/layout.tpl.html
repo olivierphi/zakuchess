@@ -7,7 +7,7 @@
         <meta name="description" content="ZakuChess" />
         <meta name="keywords" content="chess roleplay" />
         <link rel="stylesheet" href="{{ static("css/main.css") }}" />
-        <link rel="stylesheet" href="{{ static("css/chess-board.css") }}" />
+        <link rel="stylesheet" href="{{ static("css/game-container.css") }}" />
         <link rel="stylesheet"
               href="{{ static("css/chess-units/theme/default.css") }}"/>
         <script src="{{ static("js/main.js") }}"></script>
@@ -18,6 +18,14 @@
              data-stockfish-urls='{{ {"wasm": static("chess/js/bot/stockfish.wasm.js"), "js": static("chess/js/bot/stockfish.js")}|tojson }}'>
         </div>
         {% import 'webui/macros/chessboard.tpl.html' as chessboard with context %}
-        <div>{{ chessboard.board_whole(game, board_state, squares_with_pieces_that_can_move=squares_with_pieces_that_can_move, piece_available_targets=piece_available_targets) }}</div>
+        <div>
+            {{ chessboard.board_whole(
+            game,
+            board_state,
+            squares_with_pieces_that_can_move=squares_with_pieces_that_can_move,
+            team_members_by_role_by_side=team_members_by_role_by_side,
+            piece_available_targets=piece_available_targets
+            ) }}
+        </div>
     </body>
 </html>

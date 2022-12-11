@@ -1,4 +1,4 @@
-@import "helpers";
+@import "functions";
 
 $piece-active-side-glow-color: #ffffff;
 $piece-selected-glow-color: #ffff00;
@@ -6,9 +6,8 @@ $piece-glow-width: 1px;
 $piece-selected-glow-width: 2px;
 
 .chess-board-container {
-  max-width: 40rem;
   aspect-ratio: 1/1; // 💙
-  margin: 0 auto;
+  margin: 0;
   position: relative;
 
   //$square-light-color: #dddddd;
@@ -16,10 +15,10 @@ $piece-selected-glow-width: 2px;
   $square-light-color: #e4b55d;
   $square-dark-color: #a57713;
 
-  $piece-side-w-marker-border-color: #00ff00;
-  $piece-side-w-marker-bg-color: #00ff0050;
-  $piece-side-b-marker-border-color: #000060;
-  $piece-side-b-marker-bg-color: #00006050;
+  $piece-side-w-marker-border-color: #ffffff;
+  $piece-side-w-marker-bg-color: #ffffff50;
+  $piece-side-b-marker-border-color: #000030;
+  $piece-side-b-marker-bg-color: #00003050;
 
   border: solid navy 1px;
 
@@ -70,6 +69,10 @@ $piece-selected-glow-width: 2px;
         &.square-even-row {
           background-color: $square-dark-color;
         }
+      }
+
+      .square-debug {
+        color: #6f500b;
       }
     }
   }
@@ -146,22 +149,17 @@ $piece-selected-glow-width: 2px;
           }
         }
 
-        &.side-b {
-          .piece-display {
-            transform: scaleX(-100%);
-          }
-        }
-
         .piece-display {
           z-index: 2;
         }
       }
 
       .piece-debug {
-        font-size: 2rem;
-        small {
-          font-size: 0.8rem;
-        }
+        display: none;
+        //font-size: 2rem;
+        //small {
+        //  font-size: 0.8rem;
+        //}
       }
     }
   }
@@ -229,12 +227,12 @@ $piece-selected-glow-width: 2px;
 
 @keyframes selected-piece-glow {
   $w1: $piece-selected-glow-width;
-  $w2: $w1 * 1.5;
+  $w2: $piece-selected-glow-width;
   from {
     filter: drop-shadow-solid($w1, $piece-selected-glow-color);
   }
 
   to {
-    filter: drop-shadow-solid($w2, $piece-selected-glow-color, $blur: 1px);
+    filter: drop-shadow-solid($w2, $piece-selected-glow-color, $blur: $piece-selected-glow-width);
   }
 }

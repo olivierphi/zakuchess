@@ -1,11 +1,15 @@
-{% macro board_whole(game, board_state, squares_with_pieces_that_can_move, piece_available_targets=None, board_id="main") -%}
-    <div class="chess-board-container"
-         id="chess-board-container-{{ board_id }}"
-         data-controller="chess-board"
-         data-chess-board-bot-side-value="{{ game.bot_side or '' }}">
-        {{ board_background(board_id=board_id) }}
-        {{ board_pieces(game, board_state, squares_with_pieces_that_can_move, board_id=board_id) }}
-        {{ board_piece_available_targets(game, board_state.active_player, piece_available_targets, board_id=board_id) }}
+{% macro board_whole(game, board_state, squares_with_pieces_that_can_move, team_members_by_role_by_side, piece_available_targets=None, board_id="main") -%}
+    <div class="game-container" data-controller="team-members">
+        <div class="chess-board-container"
+             id="chess-board-container-{{ board_id }}"
+             data-controller="chess-board"
+             data-chess-board-bot-side-value="{{ game.bot_side or '' }}">
+            {{ board_background(board_id=board_id) }}
+            {{ board_pieces(game, board_state, squares_with_pieces_that_can_move, board_id=board_id) }}
+            {{ board_piece_available_targets(game, board_state.active_player, piece_available_targets, board_id=board_id) }}
+        </div>
+        {{ board_team_members_by_role_by_side(team_members_by_role_by_side, board_id=board_id) }}
+        {{ board_team_member_display(board_id=board_id) }}
     </div>
 {% endmacro -%}
 {% macro board_background(board_id="main") -%}
@@ -27,49 +31,74 @@
          data-fen="{{ board_state.fen }}"
          data-active-player-side="{{ board_state.active_player }}">
         {% for square, piece in board_state.pieces_view.items() %}
-            {% set belongs_to_active_player = piece.piece|player_side_from_piece == board_state.active_player %}
-            <div class="piece square square-{{ square }} piece-{{ piece.piece|lower }} side-{{ piece.piece|player_side_from_piece }} {{ "active-player" if belongs_to_active_player else "" }} {{ "can-move" if square in squares_with_pieces_that_can_move else "" }}"
+            {% set player_side = piece.piece|player_side_from_piece %}
+            {% set belongs_to_active_player = player_side == board_state.active_player %}
+            <div class="piece square square-{{ square }} piece-{{ piece.piece|lower }} side-{{ player_side }} {{ "active-player" if belongs_to_active_player else "" }} {{ "can-move" if square in squares_with_pieces_that_can_move else "" }} team-member-{{ piece.id }}"
                  data-chess-board-target="piece"
-                 id="board-{{ board_id }}-piece-{{ piece.id }}"
-                 {%- if belongs_to_active_player -%}
-                 data-chess-board-square-param="{{ square }}"
-                 data-action="click->chess-board#selectPiece"
-                 {%- endif %}>
-                <div class="piece-display"></div>
-                <div class="piece-debug">
-                    {{ piece.piece|piece_unicode_from_symbol }}<small>#{{ piece.id }}</small>
+                 id="board-{{ board_id }}-side-{{ player_side }}-piece-{{ piece.id }}"
+                 data-player-side="{{ player_side }}"
+                 data-team-member-role="{{ piece.id }}"
+                 data-action="click->team-members#displayTeamMemberForPiece {{ "
+                 click->
+                chess-board#selectPiece" if belongs_to_active_player else "" }}"
+                {%- if belongs_to_active_player -%}data-chess-board-square-param="{{ square }}"{%- endif %}>
+                    <div class="piece-display"></div>
+                    <div class="piece-debug">
+                        {{ piece.piece|piece_unicode_from_symbol }}<small>#{{ piece.id }}</small>
+                    </div>
                 </div>
-            </div>
-        {% endfor %}
-    </div>
-    <form style="display: none"
-        id="chess-submit-move" {# TODO: make this unique #}
-        data-hx-post="{{ url("webui:htmx_game_move_piece", kwargs={"game_id": game.id}) }}"
-        data-hx-target="#chess-board-pieces-{{ board_id }}"
-        data-hx-swap="outerHTML"
-        data-chess-board-target="submitMoveForm"
-        >
-        {{ csrf_input }}
-        <input type="hidden" name="from" />
-        <input type="hidden" name="to" />
-    </form>
-    {# TODO: de-harcode this:
+            {% endfor %}
+        </div>
+        <form style="display: none"
+            id="chess-submit-move" {# TODO: make this unique #}
+            data-hx-post="{{ url("webui:htmx_game_move_piece", kwargs={"game_id": game.id}) }}"
+            data-hx-target="#chess-board-pieces-{{ board_id }}"
+            data-hx-swap="outerHTML"
+            data-chess-board-target="submitMoveForm"
+            >
+            {{ csrf_input }}
+            <input type="hidden" name="from" />
+            <input type="hidden" name="to" />
+        </form>
+        {# TODO: de-harcode this:
     {% if game.is_versus_bot and game.active_player == "b" %}
         {% set actionHolderUniqueId = "chess-board-next-bot-action-" ~ board_id ~ "-" ~ uuid() %}
         <div id="{{ actionHolderUniqueId }}" data-hx-post="/htmx/games/{{ game.id }}/pieces/${fromSquare}/move/${toSquare}/" data-hx-target="#chess-board-pieces-{{ board_id }}" data-hx-swap="outerHTML"></div>
         <script>window.zakuchess.bot.playFromFEN({{ board_state.fen|tojson }}, 3, "{{ actionHolderUniqueId }}")</script>
     {% endif %}    #}
-{%- endmacro %}
-{% macro board_piece_available_targets(game, active_player_side, piece_available_targets, selected_piece_square, board_id="main") -%}
-    <div class="chess-board-available-targets"
-         id="chess-board-available-targets-{{ board_id }}"
-         data-chess-board-target="availableTargetsContainer">
-        {% for square in piece_available_targets|default([], boolean=true) %}
-            <div class="target square square-{{ square }} side-{{ active_player_side }}"
-                 data-hx-post="/htmx/games/{{ game.id }}/pieces/{{ selected_piece_square }}/move/{{ square }}/"
-                 data-hx-target="#chess-board-pieces-{{ board_id }}"
-                 data-hx-swap="outerHTML">
+    {%- endmacro %}
+    {% macro board_piece_available_targets(game, active_player_side, piece_available_targets, selected_piece_square, board_id="main") -%}
+        <div class="chess-board-available-targets"
+             id="chess-board-available-targets-{{ board_id }}"
+             data-chess-board-target="availableTargetsContainer">
+            {% for square in piece_available_targets|default([], boolean=true) %}
+                <div class="target square square-{{ square }} side-{{ active_player_side }}"
+                     data-hx-post="/htmx/games/{{ game.id }}/pieces/{{ selected_piece_square }}/move/{{ square }}/"
+                     data-hx-target="#chess-board-pieces-{{ board_id }}"
+                     data-hx-swap="outerHTML">
+                </div>
+            {% endfor %}
+        </div>
+    {%- endmacro %}
+    {% macro board_team_members_by_role_by_side(team_members_by_role_by_side, board_id="main") -%}
+        <div data-team-members-by-role-by-side='{{ team_members_by_role_by_side|tojson }}'></div>
+    {%- endmacro %}
+    {% macro board_team_member_display(board_id="main") -%}
+        <div class="selected-team-member-display hidden"
+             data-team-members-target="selectedTeamMemberContainer">
+            {# All this will be updated by our TeamMembersController #}
+            <div class="team-member-piece-container chess-board-pieces">
+                <div class="piece" data-team-members-target="teamMemberUnitDisplay">
+                    <div class="piece-display"></div>
+                </div>
             </div>
-        {% endfor %}
-    </div>
-{%- endmacro %}
+            <div class="team-member-info">
+                <p>
+                    <span data-team-members-target="selectedTeamMemberFirstName"></span>
+                    <span data-team-members-target="selectedTeamMemberLastName"></span>
+                </p>
+                <p>
+                    Chess equivalent: <span data-team-members-target="selectedTeamMemberChessEquivalent"></span>
+                </p>
+            </div>
+        {%- endmacro %}

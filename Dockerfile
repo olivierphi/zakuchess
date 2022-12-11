@@ -85,7 +85,6 @@ COPY --chown=1001:1001 . .
 ENV PYTHONPATH=/app/src
 
 RUN .venv/bin/python bin/scripts/download_assets.py
-RUN cp -p -r frontend-src/js/bot frontend-out/js
 
 RUN DJANGO_SETTINGS_MODULE=project.settings.docker_build \
     .venv/bin/python src/manage.py collectstatic --noinput

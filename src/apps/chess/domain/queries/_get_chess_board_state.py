@@ -1,5 +1,6 @@
 import chess
 
+from ..consts import PIECES_ROLE_BY_STARTING_SQUARE
 from ..helpers import pieces_view_from_chess_board, square_from_int
 from ..types import ChessBoardState, PiecesIdPerSquare
 
@@ -11,7 +12,7 @@ _FEN_BLACK_ABOUT_TO_MOVE_KING = "r1b1kb1r/ppp1qppp/2np1n2/3P4/8/2N1BN2/PPP2PPP/R
 _STARTING_FEN = chess.STARTING_FEN
 _STARTING_BOARD = chess.Board(fen=_STARTING_FEN)
 _STARTING_PIECES_IDS_PER_SQUARE: PiecesIdPerSquare = {
-    square_name: square_name
+    square_name: PIECES_ROLE_BY_STARTING_SQUARE[square_name]
     for square_name in [square_from_int(square) for square, piece in _STARTING_BOARD.piece_map().items()]
 }
 _STARTING_PIECES_VIEW = pieces_view_from_chess_board(_STARTING_BOARD, _STARTING_PIECES_IDS_PER_SQUARE)

@@ -40,5 +40,6 @@ def pieces_view_from_chess_board(board: chess.Board, square_to_id_mapping: Piece
         for view_tuple in sorted(pieces_view_as_list, key=lambda v: v[1])
     }
 
-def get_squares_with_pieces_that_can_move(board: chess.Board)->Sequence[Square]:
+
+def get_squares_with_pieces_that_can_move(board: chess.Board) -> Sequence[Square]:
     return set(chess.square_name(move.from_square) for move in board.legal_moves)

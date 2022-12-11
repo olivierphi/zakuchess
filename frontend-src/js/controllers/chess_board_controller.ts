@@ -9,17 +9,18 @@ import { DEFAULT_POSITION } from "chess.js/src/chess"
 
 const PIECES_MOVE_TRANSITION_DURATION = 300 // we've set 0.3s in the SCSS file
 
+type ChessBoardControllerMetadata = {
+    botSide: PlayerSide | null
+}
 type ChessBoardControllerState = {
     fen: FEN
     activePlayerSide: PlayerSide
-    botSide: PlayerSide | null
     gamePhase: GamePhase
 }
 
 const INITIAL_STATE: Readonly<ChessBoardControllerState> = {
     fen: DEFAULT_POSITION as FEN,
     activePlayerSide: "w",
-    botSide: null,
     gamePhase: "waiting_for_piece_selection",
 }
 
@@ -29,6 +30,7 @@ export default class extends Controller {
         botSide: String,
     }
 
+    metadata: ChessBoardControllerMetadata | null = null
     state: ChessBoardControllerState = INITIAL_STATE
 
     declare readonly pieceTargets: HTMLElement[]
@@ -38,6 +40,9 @@ export default class extends Controller {
     declare botSideValue: string
 
     piecesContainerTargetConnected(target: HTMLElement): void {
+        if (this.metadata === null) {
+            this.setMetadataFromDOM()
+        }
         this.updateStateFromDOM()
     }
 
@@ -58,13 +63,18 @@ export default class extends Controller {
         this.movePiece(from, to)
     }
 
+    private setMetadataFromDOM(): void {
+        this.metadata = {
+            botSide: this.botSideValue === "" ? null : (this.botSideValue as PlayerSide),
+        }
+    }
     private updateStateFromDOM(): void {
         this.state = {
             ...this.state,
             fen: this.getCurrentFEN(),
             activePlayerSide: this.getActivePlayerSide(),
-            botSide: this.botSideValue === "" ? null : (this.botSideValue as PlayerSide),
         }
+
         if (this.isBotsTurn()) {
             this.playBotAfterPieceMoved()
         }
@@ -118,7 +128,7 @@ export default class extends Controller {
     }
 
     private isBotsTurn(): boolean {
-        return this.state.botSide === this.state.activePlayerSide
+        return this.metadata!.botSide === this.state.activePlayerSide
     }
 
     private playBot(): void {
