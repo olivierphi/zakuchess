@@ -1,17 +1,17 @@
-@import "../../node_modules/reset-css/reset";
 @import "helpers";
+@import "mixins";
+@import "layout";
 
-* {
-  box-sizing: border-box;
-}
-
-html {
-  font-family: "Roboto", "Lucida Grande", "DejaVu Sans", "Bitstream Vera Sans", Verdana, Arial, sans-serif;
-  font-size: 16px;
+@font-face {
+  font-family: "PrStart";
+  src: url("/static/webui/fonts/PrStart.ttf") format("truetype");
 }
 
 html,
 body {
-  margin: 0;
-  padding: 0;
+  font-family: "PrStart", serif;
+  font-size: 10px;
+  @include desktop-screen {
+    font-size: 16px;
+  }
 }

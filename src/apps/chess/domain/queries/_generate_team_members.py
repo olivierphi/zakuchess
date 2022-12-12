@@ -1,8 +1,8 @@
 from random import sample
 from typing import TYPE_CHECKING
 
-from ..data.team_member_names import FIRST_NAMES, LAST_NAMES
 from ...models import TeamMember
+from ..data.team_member_names import FIRST_NAMES, LAST_NAMES
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

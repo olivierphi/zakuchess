@@ -10,4 +10,6 @@
 /.idea
 /.docker
 
-/.*_cache
+**/.*_cache
+**/__pycache__
+**/*.pyc

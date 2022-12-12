@@ -3,7 +3,7 @@
 $piece-active-side-glow-color: #ffffff;
 $piece-selected-glow-color: #ffff00;
 $piece-glow-width: 1px;
-$piece-selected-glow-width: 2px;
+$piece-selected-glow-width: 1px;
 
 .chess-board-container {
   aspect-ratio: 1/1; // 💙
@@ -20,7 +20,7 @@ $piece-selected-glow-width: 2px;
   $piece-side-b-marker-border-color: #000030;
   $piece-side-b-marker-bg-color: #00003050;
 
-  border: solid navy 1px;
+  //border: solid navy 1px;
 
   .square {
     position: absolute;
@@ -96,23 +96,20 @@ $piece-selected-glow-width: 2px;
       transition: top 0.3s ease-out, left 0.3s ease-out;
       cursor: pointer;
 
-      &.my-side.can-move .piece-display {
-        filter: drop-shadow-solid($piece-glow-width, $piece-active-side-glow-color);
-      }
-
       .piece-display {
         width: 100%;
         height: 100%;
         background-repeat: no-repeat;
         background-position: center;
         background-size: contain;
-        animation: none; // could it solve the issue of the animations that keep being played on Safari iOS?
       }
 
-      &.selected {
-        .piece-display {
-          animation: 0.5s infinite alternate selected-piece-glow;
-        }
+      &.my-side.can-move .piece-display {
+        //filter: drop-shadow-solid($piece-glow-width, $piece-active-side-glow-color);
+      }
+
+      &.my-side.can-move.selected .piece-display {
+        animation: 0.8s infinite alternate selected-piece-glow;
       }
 
       &.side-w,
@@ -145,6 +142,13 @@ $piece-selected-glow-width: 2px;
           $potential-capture-marker-border-color: #ff0000;
           .piece-display {
             filter: drop-shadow-solid($piece-glow-width, $potential-capture-marker-border-color);
+          }
+        }
+
+        &.side-w.my-side.can-move,
+        &.side-b.my-side.can-move {
+          &:before {
+            filter: drop-shadow-solid($piece-glow-width, #00ff0015);
           }
         }
 
@@ -225,13 +229,13 @@ $piece-selected-glow-width: 2px;
 }
 
 @keyframes selected-piece-glow {
-  $w1: $piece-selected-glow-width;
-  $w2: $piece-selected-glow-width;
+  // Had a cooler "selected" effect, with a drop shadow going from one color to another, but Safari iOS
+  // start doing absolute nonsense as soon as we do this so let's opt for something less good... 😅
   from {
-    filter: drop-shadow-solid($w1, $piece-selected-glow-color);
+    filter: brightness(120%);
   }
 
   to {
-    filter: drop-shadow-solid($w2, $piece-selected-glow-color, $blur: $piece-selected-glow-width);
+    filter: brightness(100%);
   }
 }

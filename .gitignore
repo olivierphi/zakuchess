@@ -11,6 +11,8 @@
 
 # various tools' cache folders:
 .*_cache
+*.pyc
+__pycache__/
 
 # Logs
 logs

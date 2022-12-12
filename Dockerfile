@@ -40,7 +40,7 @@ RUN make frontend/js/compile frontend/css/compile
 FROM python:3.10 AS backend_build
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=0 PYTHONUNBUFFERED=1
 
 RUN apt-get update && apt-get install -y \
     python3-pip \
@@ -51,7 +51,7 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN pip install poetry
+RUN pip install poetry # TODO: specify a version here
 
 RUN mkdir -p /app
 WORKDIR /app
@@ -66,6 +66,8 @@ RUN poetry install --without dev && \
 FROM python:3.10-slim AS backend_run
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONDONTWRITEBYTECODE=0 PYTHONUNBUFFERED=1
+
 RUN apt-get update && apt-get install -y \
     libpq5 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*

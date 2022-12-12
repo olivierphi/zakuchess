@@ -1,16 +1,20 @@
 {% macro board_whole(game, board_state, my_side, squares_with_pieces_that_can_move, team_members_by_role_by_side, piece_available_targets=None, board_id="main") -%}
-    <div class="game-container" data-controller="team-members">
+    <div class="game-container"
+         data-controller="chess-board team-members"
+         data-chess-board-my-side-value="{{ my_side }}"
+         data-chess-board-bot-side-value="{{ game.bot_side or '' }}">
         <div class="chess-board-container"
-             id="chess-board-container-{{ board_id }}"
-             data-controller="chess-board"
-             data-chess-board-my-side-value="{{ my_side }}"
-             data-chess-board-bot-side-value="{{ game.bot_side or '' }}">
+             id="chess-board-container-{{ board_id }}">
             {{ board_background(board_id=board_id) }}
             {{ board_pieces(game, board_state, my_side=my_side, squares_with_pieces_that_can_move=squares_with_pieces_that_can_move, board_id=board_id) }}
             {{ board_piece_available_targets(game, board_state.active_player, piece_available_targets, board_id=board_id) }}
         </div>
         {{ board_team_members_by_role_by_side(team_members_by_role_by_side, board_id=board_id) }}
-        {{ board_team_member_display(board_id=board_id) }}
+        <div class="chess-board-meta-display">
+            {{ board_explanation(board_id=board_id) }}
+            {{ board_team_member_display(board_id=board_id) }}
+            {{ board_move_confirmation_display(board_id=board_id) }}
+        </div>
     </div>
 {% endmacro -%}
 {% macro board_background(board_id="main") -%}
@@ -31,7 +35,7 @@
          data-chess-board-target="piecesContainer"
          data-fen="{{ board_state.fen }}"
          data-active-player-side="{{ board_state.active_player }}">
-        {% for square, piece in board_state.pieces_view.items() %}
+        {%- for square, piece in board_state.pieces_view.items() -%}
             {% set player_side = piece.piece|player_side_from_piece %}
             {% set belongs_to_my_side = player_side == my_side %}
             {% set belongs_to_active_player = player_side == board_state.active_player %}
@@ -40,7 +44,7 @@
             "square-" ~ square,
             "piece-" ~ piece.piece|lower,
             "side-" ~ player_side,
-            "team-member-" ~ piece.id, 
+            "team-member-" ~ piece.id,
             "my-side" if belongs_to_my_side else "",
             "active-player" if belongs_to_active_player else "",
             "can-move" if square in squares_with_pieces_that_can_move else "",
@@ -48,7 +52,7 @@
             {% set actions = [
             "click->chess-board#selectPiece" if belongs_to_active_player else "",
             "click->team-members#displayTeamMemberForPiece",
-            ]  %}
+            ]  -%}
             <div class="{{ classes|join(" ") }}"
                  data-chess-board-target="piece"
                  id="board-{{ board_id }}-side-{{ player_side }}-piece-{{ piece.id }}"
@@ -63,7 +67,7 @@
                     {{ piece.piece|piece_unicode_from_symbol }}<small>#{{ piece.id }}</small>
                 </div>
             </div>
-        {% endfor %}
+        {%- endfor -%}
     </div>
     <form style="display: none"
         id="chess-submit-move" {# TODO: make this unique #}
@@ -93,8 +97,35 @@
 {% macro board_team_members_by_role_by_side(team_members_by_role_by_side, board_id="main") -%}
     <div data-team-members-by-role-by-side='{{ team_members_by_role_by_side|tojson }}'></div>
 {%- endmacro %}
+{% macro board_explanation(board_id="main") -%}
+    <div class="board-explanation">
+        <h4>Zakuchess is just chess!</h4>
+        <ul>
+            <li>
+                Characters with <b>swords</b> are <b>pawns ♟</b>
+            </li>
+            <li>
+                Characters with <b>horses</b> are <b>Knights ♞</b>
+            </li>
+            <li>
+                Characters with <b>bows</b> are <b>Bishops ♝</b>
+            </li>
+            <li>
+                Characters with <b>magic sticks</b> are <b>Rooks ♜</b>
+            </li>
+            <li>
+                Characters with <b>[something]</b> are <b>Queens ♛</b>
+            </li>
+            <li>
+                Character with <b>[something]</b> are <b>Kings ♚</b>.
+                <br/>
+                The mission of each team is to protect theirs at all cost.
+            </li>
+        </ul>
+    </div>
+{%- endmacro %}
 {% macro board_team_member_display(board_id="main") -%}
-    <div class="selected-team-member-display hidden"
+    <div class="selected-team-member-display overlay hidden"
          data-team-members-target="selectedTeamMemberContainer">
         {# All this will be updated by our TeamMembersController #}
         <div class="team-member-piece-container chess-board-pieces">
@@ -111,4 +142,23 @@
                 Chess equivalent: <span data-team-members-target="selectedTeamMemberChessEquivalent"></span>
             </p>
         </div>
-    {%- endmacro %}
+    </div>
+{%- endmacro %}
+{% macro board_move_confirmation_display(board_id="main") -%}
+    <div class="move-confirmation-display overlay hidden"
+         data-chess-board-target="moveConfirmationContainer">
+        {# Will be updated by our TeamMembersController #}
+        <div class="move-confirmation-container">
+            <div>
+                Confirm move for
+                <span data-team-members-target="selectedTeamMemberFirstName"></span>
+                <span data-team-members-target="selectedTeamMemberLastName"></span>
+                ?
+            </div>
+            <div>
+                <button data-action="chess-board#confirmMove">Yes</button>
+                <button data-action="chess-board#cancelMove">No</button>
+            </div>
+        </div>
+    </div>
+{%- endmacro %}

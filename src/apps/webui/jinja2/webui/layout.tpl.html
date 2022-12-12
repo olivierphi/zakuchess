@@ -6,6 +6,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="description" content="ZakuChess" />
         <meta name="keywords" content="chess roleplay" />
+        <link rel="stylesheet" href="{{ static("css/reset.css") }}" />
         <link rel="stylesheet" href="{{ static("css/main.css") }}" />
         <link rel="stylesheet" href="{{ static("css/game-container.css") }}" />
         <link rel="stylesheet"
@@ -13,20 +14,26 @@
         <script src="{{ static("js/main.js") }}"></script>
     </head>
     <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
-        <div id="chess-bot-data"
-             style="display: none"
-             data-stockfish-urls='{{ {"wasm": static("chess/js/bot/stockfish.wasm.js"), "js": static("chess/js/bot/stockfish.js")}|tojson }}'>
-        </div>
-        {% import 'webui/macros/chessboard.tpl.html' as chessboard with context %}
-        <div>
-            {{ chessboard.board_whole(
-            game,
-            board_state,
-            my_side=my_side,
-            squares_with_pieces_that_can_move=squares_with_pieces_that_can_move,
-            team_members_by_role_by_side=team_members_by_role_by_side,
-            piece_available_targets=piece_available_targets
-            ) }}
+        <div id="global-container">
+            <div id="chess-bot-data"
+                 style="display: none"
+                 data-stockfish-urls='{{ {"wasm": static("chess/js/bot/stockfish.wasm.js"), "js": static("chess/js/bot/stockfish.js")}|tojson }}'>
+            </div>
+            <header>
+                <h1>Zakuchess</h1>
+                <h2>Chess with character(s)</h2>
+            </header>
+            {% import 'webui/macros/chessboard.tpl.html' as chessboard with context %}
+            <div>
+                {{ chessboard.board_whole(
+                game,
+                board_state,
+                my_side=my_side,
+                squares_with_pieces_that_can_move=squares_with_pieces_that_can_move,
+                team_members_by_role_by_side=team_members_by_role_by_side,
+                piece_available_targets=piece_available_targets
+                ) }}
+            </div>
         </div>
     </body>
 </html>

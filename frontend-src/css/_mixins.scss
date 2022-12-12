@@ -1,0 +1,7 @@
+@import "variables";
+
+@mixin desktop-screen {
+  @media screen and (min-width: $mobile-theme-threshold) {
+    @content;
+  }
+}

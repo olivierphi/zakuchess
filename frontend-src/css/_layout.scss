@@ -1,0 +1,28 @@
+@import "mixins";
+
+#global-container {
+  width: 100%;
+  @include desktop-screen {
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  header {
+    background-color: #805d11;
+    color: #e5c951;
+
+    border-bottom: solid #5d440d 5px;
+
+    h1,
+    h2 {
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+    }
+    h1 {
+      font-size: 1.2rem;
+    }
+  }
+}

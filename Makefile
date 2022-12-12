@@ -71,6 +71,7 @@ frontend/css/watch:
 frontend/css/compile: sass_compile_opts ?= 
 frontend/css/compile:
 	./node_modules/.bin/sass ${sass_compile_opts} \
+		frontend-src/css/reset.scss:frontend-out/css/reset.css \
 		frontend-src/css/main.scss:frontend-out/css/main.css \
 		frontend-src/css/game-container.scss:frontend-out/css/game-container.css \
 		frontend-src/css/chess-units/theme/default.scss:frontend-out/css/chess-units/theme/default.css

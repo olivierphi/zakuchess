@@ -19,8 +19,8 @@ export default class extends Controller {
     ]
 
     declare selectedTeamMemberContainerTarget: HTMLElement
-    declare selectedTeamMemberFirstNameTarget: HTMLElement
-    declare selectedTeamMemberLastNameTarget: HTMLElement
+    declare selectedTeamMemberFirstNameTargets: HTMLElement[]
+    declare selectedTeamMemberLastNameTargets: HTMLElement[]
     declare selectedTeamMemberChessEquivalentTarget: HTMLElement
     declare teamMemberUnitDisplayTargets: HTMLElement[]
 
@@ -45,11 +45,18 @@ export default class extends Controller {
     }
 
     private displayTeamMemberInfo(teamMember: TeamMember, pieceSymbol: PieceSymbol): void {
-        this.selectedTeamMemberFirstNameTarget.innerText = teamMember.first_name
-        this.selectedTeamMemberLastNameTarget.innerText = teamMember.last_name
-        this.selectedTeamMemberChessEquivalentTarget.innerText = [
+        // Slight appearance effect:
+        const toggleTextAppearance = (operation: "add" | "remove") => {
+            this.element.querySelectorAll("p").forEach((p) => p.classList[operation]("appearance"))
+        }
+        toggleTextAppearance("remove")
+        setTimeout(toggleTextAppearance.bind(null, "add"), 100)
+
+        this.selectedTeamMemberFirstNameTargets.forEach((el) => (el.innerText = teamMember.first_name))
+        this.selectedTeamMemberLastNameTargets.forEach((el) => (el.innerText = teamMember.last_name))
+        this.selectedTeamMemberChessEquivalentTarget.innerHTML = [
             getChessPieceName(pieceSymbol),
-            getChessPieceSymbol(pieceSymbol),
+            `<span class="chess-symbol">${getChessPieceSymbol(pieceSymbol)}</span>`,
         ].join(" ")
     }
 
