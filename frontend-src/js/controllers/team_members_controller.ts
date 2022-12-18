@@ -33,7 +33,7 @@ export default class extends Controller {
         }
     }
 
-    private displayTeamMemberForPiece(event: ActionEvent): void {
+    displayTeamMemberForPiece(event: ActionEvent): void {
         const piece = event.currentTarget as HTMLElement
         const playerSide = piece.dataset.playerSide as PlayerSide
         const role = piece.dataset.teamMemberRole as TeamMembersRole
@@ -42,6 +42,10 @@ export default class extends Controller {
         this.selectedTeamMemberContainerTarget.classList.remove("hidden")
         this.displayTeamMemberInfo(teamMember, pieceSymbol)
         this.displayTeamMemberUnitDisplay(playerSide, pieceSymbol)
+    }
+
+    selectionCancellation(event: ActionEvent): void {
+        this.selectedTeamMemberContainerTarget.classList.add("hidden")
     }
 
     private displayTeamMemberInfo(teamMember: TeamMember, pieceSymbol: PieceSymbol): void {

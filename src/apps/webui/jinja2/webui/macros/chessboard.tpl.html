@@ -2,7 +2,9 @@
     <div class="game-container"
          data-controller="chess-board team-members"
          data-chess-board-my-side-value="{{ my_side }}"
-         data-chess-board-bot-side-value="{{ game.bot_side or '' }}">
+         data-chess-board-bot-side-value="{{ game.bot_side or '' }}"
+         data-action="click@document->chess-board#cancelSelectionIfOutsideActiveElements zakuchess-selection-cancellation@document->chess-board#selectionCancellation zakuchess-selection-cancellation@document->team-members#selectionCancellation"
+         >
         <div class="chess-board-container"
              id="chess-board-container-{{ board_id }}">
             {{ board_background(board_id=board_id) }}

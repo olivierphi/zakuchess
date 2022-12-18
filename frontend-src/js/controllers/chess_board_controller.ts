@@ -66,6 +66,29 @@ export default class extends Controller {
         this.preparePieceMovement(square)
     }
 
+    cancelSelectionIfOutsideActiveElements(event: ActionEvent): void {
+        console.log("cancelSelectionIfOutsideActiveElements")
+        const clickInvolvedElements = event.composedPath()
+        for (const pieceElement of this.pieceTargets) {
+            if (clickInvolvedElements.includes(pieceElement)) {
+                return // don't actually cancel the selection
+            }
+        }
+        for (const targetElement of this.availableTargetsContainerTarget.querySelectorAll<HTMLElement>(".target")) {
+            if (clickInvolvedElements.includes(targetElement)) {
+                return // don't actually cancel the selection
+            }
+        }
+        // Ok, do cancel the selection:
+        document.dispatchEvent(new Event("zakuchess-selection-cancellation"))
+    }
+
+    selectionCancellation(event: ActionEvent | undefined): void {
+        this.moveConfirmationContainerTarget.classList.add("hidden")
+        this.piecesContainerTarget.querySelectorAll(".selected").forEach((piece) => piece.classList.remove("selected"))
+        this.clearPieceAvailableTargets()
+    }
+
     moveSelectedPiece(event: ActionEvent): void {
         const from = event.params.from as Square
         const to = event.params.to as Square
@@ -76,12 +99,14 @@ export default class extends Controller {
             this.movePiece(from, to)
         }
     }
+
     cancelMove(event: ActionEvent): void {
         this.moveConfirmationContainerTarget.classList.add("hidden")
         const move = this.state.moveToConfirm!
         this.preparePieceMovement(move.from)
         this.state.moveToConfirm = null
     }
+
     confirmMove(event: ActionEvent): void {
         this.moveConfirmationContainerTarget.classList.add("hidden")
         const move = this.state.moveToConfirm!
@@ -94,7 +119,7 @@ export default class extends Controller {
         this.state.gamePhase = "waiting_for_selected_piece_target"
         this.piecesContainerTarget.querySelectorAll(".selected").forEach((piece) => piece.classList.remove("selected"))
 
-        const selectedPiece = this.getPieceFromSquare(square)
+        const selectedPiece = this.getPieceFromSquare(square)!
         selectedPiece.classList.add("selected")
         this.displayPieceAvailableTargets(square, pieceAvailableTargets)
     }
@@ -105,6 +130,7 @@ export default class extends Controller {
             botSide: this.botSideValue === "" ? null : (this.botSideValue as PlayerSide),
         }
     }
+
     private updateStateFromDOM(): void {
         this.state = {
             ...this.state,
@@ -118,12 +144,23 @@ export default class extends Controller {
     }
 
     private askConfirmationBeforeMove(from: Square, to: Square): void {
-        const selectedPiece = this.getPieceFromSquare(from)
-        Array.from(this.availableTargetsContainerTarget.querySelectorAll<HTMLElement>(".target"))
-            .filter((target) => target.dataset.chessBoardToParam !== to)
+        // Remove "target square" markers from all squares but the one we're about to move to:
+        Array.from(this.availableTargetsContainerTarget.getElementsByClassName("target"))
+            .filter((target) => (target as HTMLElement).dataset.chessBoardToParam !== to)
             .forEach((notSelectedTarget) => notSelectedTarget.remove())
+        // Same for "potential capture" markers:
+        const targetSquareClass = `square-${to}`
+        Array.from(this.piecesContainerTarget.getElementsByClassName("is-potential-capture"))
+            .filter((potentialCapture) => !potentialCapture.classList.contains(targetSquareClass))
+            .forEach((notPotentialCapture) => notPotentialCapture.classList.remove("is-potential-capture"))
 
+        // We have two ways to confirm the move:
+        // 1. Click on the "confirm" button, that we make visible:
         this.moveConfirmationContainerTarget.classList.remove("hidden")
+        // 2. Click again on the target square, which will trigger the "moveSelectedPiece" action:
+        this.availableTargetsContainerTarget
+            .querySelector<HTMLElement>(`.${targetSquareClass}`)!
+            .setAttribute("data-action", "click->chess-board#confirmMove")
     }
 
     private movePiece(from: Square, to: Square): void {
@@ -183,6 +220,7 @@ export default class extends Controller {
     }
 
     private playBot(): void {
+        this.selectionCancellation()
         playFromFEN(this.getCurrentFEN(), 1).then(
             ([from, to]) => {
                 this.movePiece(from, to)
@@ -197,8 +235,8 @@ export default class extends Controller {
         setTimeout(this.playBot.bind(this), PIECES_MOVE_TRANSITION_DURATION * 1.1)
     }
 
-    private getPieceFromSquare(square: Square): HTMLElement {
-        return this.piecesContainerTarget.querySelector(`.square-${square}`)!
+    private getPieceFromSquare(square: Square): HTMLElement | null {
+        return this.piecesContainerTarget.querySelector(`.square-${square}`)
     }
 
     private clearPieceAvailableTargets(): void {

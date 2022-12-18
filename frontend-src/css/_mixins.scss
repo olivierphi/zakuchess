@@ -5,3 +5,18 @@
     @content;
   }
 }
+
+@mixin unit-position-marker($background-color, $border-color) {
+  content: "";
+  position: absolute;
+          z-index: 1;
+          display: block;
+          bottom: 2%;
+          width: 80%;
+          height: 40%;
+          border-radius: 50%;
+          border-style: solid;
+          border-width: 1px;
+          background-color: $background-color;
+          border-color: $border-color;
+}

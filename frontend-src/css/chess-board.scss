@@ -1,7 +1,9 @@
 @import "functions";
+@import "mixins";
 
 $piece-active-side-glow-color: #ffffff;
-$piece-selected-glow-color: #ffff00;
+$selection-color: #ffff00;
+$piece-selected-glow-color: $selection-color;
 $piece-glow-width: 1px;
 $piece-selected-glow-width: 1px;
 
@@ -109,46 +111,67 @@ $piece-selected-glow-width: 1px;
       }
 
       &.my-side.can-move.selected .piece-display {
-        animation: 0.8s infinite alternate selected-piece-glow;
+        //animation: 0.8s infinite alternate selected-piece-glow;
+        filter: drop-shadow-solid($piece-glow-width, $selection-color);
+      }
+
+      &.side-w {
+        &:before {
+          @include unit-position-marker($piece-side-w-marker-bg-color, $piece-side-w-marker-border-color);
+          // border-color: $piece-side-w-marker-border-color;
+          // background-color: $piece-side-w-marker-bg-color;
+        }
+      }
+      &.side-b {
+        &:before {
+          @include unit-position-marker($piece-side-b-marker-bg-color, $piece-side-b-marker-border-color);
+          // border-color: $piece-side-b-marker-border-color;
+          // background-color: $piece-side-b-marker-bg-color;
+        }
       }
 
       &.side-w,
       &.side-b {
-        &:before {
-          content: "";
-          position: absolute;
-          z-index: 1;
-          display: block;
-          bottom: 2%;
-          width: 80%;
-          height: 40%;
-          border-radius: 50%;
-          border-style: solid;
-          border-width: 1px;
-        }
-        &.side-w {
-          &:before {
-            border-color: $piece-side-w-marker-border-color;
-            background-color: $piece-side-w-marker-bg-color;
-          }
-        }
-        &.side-b {
-          &:before {
-            border-color: $piece-side-b-marker-border-color;
-            background-color: $piece-side-b-marker-bg-color;
-          }
-        }
+        // &:before {
+        //   content: "";
+        //   position: absolute;
+        //   z-index: 1;
+        //   display: block;
+        //   bottom: 2%;
+        //   width: 80%;
+        //   height: 40%;
+        //   border-radius: 50%;
+        //   border-style: solid;
+        //   border-width: 1px;
+        // }
+        // &.side-w {
+        //   &:before {
+        //     border-color: $piece-side-w-marker-border-color;
+        //     background-color: $piece-side-w-marker-bg-color;
+        //   }
+        // }
+        // &.side-b {
+        //   &:before {
+        //     border-color: $piece-side-b-marker-border-color;
+        //     background-color: $piece-side-b-marker-bg-color;
+        //   }
+        // }
         &.is-potential-capture {
           $potential-capture-marker-border-color: #ff0000;
           .piece-display {
             filter: drop-shadow-solid($piece-glow-width, $potential-capture-marker-border-color);
           }
         }
-
-        &.side-w.my-side.can-move,
-        &.side-b.my-side.can-move {
+        &.my-side.can-move {
           &:before {
-            filter: drop-shadow-solid($piece-glow-width, #00ff0015);
+            @include unit-position-marker(alpha-scale($selection-color, 30%), $selection-color);
+            // filter: drop-shadow-solid($piece-glow-width, #00ff0015);
+          }
+        }
+        &.my-side.can-move.selected {
+          &:before {
+            @include unit-position-marker(alpha-scale($selection-color, 50%), $selection-color);
+            // filter: drop-shadow-solid($piece-glow-width, #00ff0015);
           }
         }
 
