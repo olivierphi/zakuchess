@@ -1,25 +1,9 @@
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from typing import cast
 
 import chess
 
 from .types import PieceId, PieceIdsPerSquare, PiecesView, PieceSymbol, Square
-
-KINGS_CASTLING: tuple[tuple[Square, Square], ...] = (
-    # (king's previous quare, king's new square)
-    ("e1", "g1"),
-    ("e1", "c1"),
-    ("e8", "g8"),
-    ("e8", "c8"),
-)
-
-ROOK_SQUARE_AFTER_CASTLING: Mapping[Square, tuple[Square, Square]] = {
-    # king new square: (rook previous square, rook new square)
-    "g1": ("h1", "f1"),
-    "c1": ("a1", "d1"),
-    "g8": ("h8", "f8"),
-    "c8": ("a8", "d8"),
-}
 
 
 def square_from_int(chess_lib_square: int) -> Square:
@@ -41,5 +25,5 @@ def pieces_view_from_chess_board(board: chess.Board, square_to_id_mapping: Piece
     }
 
 
-def get_squares_with_pieces_that_can_move(board: chess.Board) -> Sequence[Square]:
+def get_squares_with_pieces_that_can_move(board: chess.Board) -> set[Square]:
     return set(chess.square_name(move.from_square) for move in board.legal_moves)

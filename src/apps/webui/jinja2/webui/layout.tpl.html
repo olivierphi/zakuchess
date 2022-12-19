@@ -24,16 +24,7 @@
                 <h2>Chess with character(s)</h2>
             </header>
             {% import 'webui/macros/chessboard.tpl.html' as chessboard with context %}
-            <div>
-                {{ chessboard.board_whole(
-                game,
-                board_state,
-                my_side=my_side,
-                squares_with_pieces_that_can_move=squares_with_pieces_that_can_move,
-                team_members_by_role_by_side=team_members_by_role_by_side,
-                piece_available_targets=piece_available_targets
-                ) }}
-            </div>
+            <div>{{ chessboard.board_whole(game_presenter) }}</div>
         </div>
     </body>
 </html>

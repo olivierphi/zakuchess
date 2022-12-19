@@ -1,30 +1,52 @@
+from collections.abc import Mapping
 from typing import NamedTuple
 
 import chess
 from django.core.exceptions import SuspiciousOperation
 
-from ..helpers import KINGS_CASTLING, ROOK_SQUARE_AFTER_CASTLING, pieces_view_from_chess_board
-from ..types import ChessBoardState, Square
+from ...models import Game
+from ..helpers import pieces_view_from_chess_board
+from ..types import Square
 
 
 class PieceMovementResult(NamedTuple):
-    board: chess.Board
-    board_state: ChessBoardState
     is_promotion: bool
+    # game_over: bool
 
 
-def game_move_piece(*, board_state: ChessBoardState, from_square: Square, to_square: Square) -> PieceMovementResult:
-    board = chess.Board(fen=board_state.fen)
+_KINGS_CASTLING: tuple[tuple[Square, Square], ...] = (
+    # (king's previous square, king's new square) tuples:
+    ("e1", "g1"),
+    ("e1", "c1"),
+    ("e8", "g8"),
+    ("e8", "c8"),
+)
+
+_ROOK_SQUARE_AFTER_CASTLING: Mapping[Square, tuple[Square, Square]] = {
+    # {king new square: (rook previous square, rook new square)} dict:
+    "g1": ("h1", "f1"),
+    "c1": ("a1", "d1"),
+    "g8": ("h8", "f8"),
+    "c8": ("a8", "d8"),
+}
+
+
+def game_move_piece(*, game: Game, from_square: Square, to_square: Square) -> PieceMovementResult:
+    # TODO: validate against the board's legal moves, since Python Chess doesn't do that for us
+    board = chess.Board(fen=game.fen)
     current_piece = board.piece_at(chess.parse_square(from_square))
     if not current_piece:
+        raise SuspiciousOperation(f"No pieces on the selected square '{from_square}'")
+    if current_piece.color != board.turn:
         raise SuspiciousOperation()
-    current_piece_id = board_state.pieces_id_per_square[from_square]
+    pieces_id_per_square = game.pieces_id_per_square()
+    current_piece_id = pieces_id_per_square[from_square]
     targeted_piece = board.piece_at(chess.parse_square(to_square))
-    print(
-        f"board.turn={'white' if board.turn else 'black'} "
-        f":: move_piece_to({to_square=}) "
-        f":: from {from_square} :: {current_piece_id=} {targeted_piece=}"
-    )
+    # print(
+    #     f"board.turn={'white' if board.turn else 'black'} "
+    #     f":: move_piece_to({to_square=}) "
+    #     f":: from {from_square} :: {current_piece_id=} {targeted_piece=}"
+    # )
     is_promotion = current_piece.piece_type == chess.PAWN and to_square[1] in ("1", "8")
 
     # @link https://en.wikipedia.org/wiki/Algebraic_notation_(chess)
@@ -39,11 +61,8 @@ def game_move_piece(*, board_state: ChessBoardState, from_square: Square, to_squ
             "q" if is_promotion else "",
         ]
     )
-    print(f"{move_uci_piece_symbol=}")
     previous_castling_rights = board.castling_rights
     board.push_uci(move_uci_piece_symbol)
-
-    pieces_id_per_square = board_state.pieces_id_per_square
 
     del pieces_id_per_square[from_square]
     pieces_id_per_square[to_square] = current_piece_id
@@ -51,30 +70,17 @@ def game_move_piece(*, board_state: ChessBoardState, from_square: Square, to_squ
     # Specific cases:
     if current_piece.piece_type == chess.KING and board.castling_rights != previous_castling_rights:
         king_movement = (from_square, to_square)
-        if king_movement in KINGS_CASTLING:
+        if king_movement in _KINGS_CASTLING:
             # Our King just castled!
             # We also have to update the Rook's data in our `pieces_id_per_square` mapping
-            target_rook_previous_square, target_rook_new_square = ROOK_SQUARE_AFTER_CASTLING[to_square]
-            target_rook_id = board_state.pieces_id_per_square[target_rook_previous_square]
-            board_state.pieces_id_per_square[target_rook_new_square] = target_rook_id
-            del board_state.pieces_id_per_square[target_rook_previous_square]
+            target_rook_previous_square, target_rook_new_square = _ROOK_SQUARE_AFTER_CASTLING[to_square]
+            target_rook_id = pieces_id_per_square[target_rook_previous_square]
+            pieces_id_per_square[target_rook_new_square] = target_rook_id
+            del pieces_id_per_square[target_rook_previous_square]
 
-    # if targeted_piece:
-    #     self.captured_pieces[self.active_player].append(targeted_piece.symbol())
+    game.fen = board.fen()
+    game.active_player = "w" if board.turn else "b"
+    game.pieces_view = pieces_view_from_chess_board(board, pieces_id_per_square)
+    game.save(update_fields=("fen", "active_player", "pieces_view"))
 
-    new_board_state = ChessBoardState(
-        fen=board.fen(),
-        active_player="w" if board.turn else "b",
-        pieces_view=pieces_view_from_chess_board(board, pieces_id_per_square),
-        selected_piece_square=None,
-    )
-
-    return PieceMovementResult(board=board, board_state=new_board_state, is_promotion=is_promotion)
-
-    # self.fen = board.fen()
-    # print(f"{self.fen=}")
-    # self.active_player = "w" if board.turn else "b"
-    # self.pieces_view = pieces_view_from_chess_board(board, self.pieces_id_per_square)
-    # self.selected_piece_square = None
-    # self.selected_piece_available_targets = []
-    # self._calculate_score()
+    return PieceMovementResult(is_promotion=is_promotion)

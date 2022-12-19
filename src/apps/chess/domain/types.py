@@ -3,7 +3,7 @@ from functools import cached_property
 from typing import Literal, TypeAlias, TypedDict
 
 PlayerSide = Literal[
-    # Following chess conventions, our side will be "w(hite)" and "b(lack)".
+    # Following chess conventions, our sides will be "w(hite)" and "b(lack)".
     # fmt: off
     "w",
     "b",
@@ -57,19 +57,21 @@ class PieceView(TypedDict):
     piece: PieceSymbol
 
 
-@dataclasses.dataclass(frozen=True)
-class ChessBoardState:
-    fen: str
-    active_player: PlayerSide
-    pieces_view: "PiecesView"
-    selected_piece_square: Square | None = None
-
-    def replace(self, **kwargs) -> "ChessBoardState":
-        return dataclasses.replace(self, **kwargs)
-
-    @cached_property
-    def pieces_id_per_square(self) -> dict[Square, PieceId]:
-        return {square_name: piece["id"] for square_name, piece in self.pieces_view.items()}
+#
+#
+# @dataclasses.dataclass(frozen=True)
+# class ChessBoardState:
+#     fen: str
+#     active_player: PlayerSide
+#     pieces_view: "PiecesView"
+#     selected_piece_square: Square | None = None
+#
+#     def replace(self, **kwargs) -> "ChessBoardState":
+#         return dataclasses.replace(self, **kwargs)
+#
+#     @cached_property
+#     def pieces_id_per_square(self) -> dict[Square, PieceId]:
+#         return {square_name: piece["id"] for square_name, piece in self.pieces_view.items()}
 
 
 PiecesView: TypeAlias = dict[Square, PieceView]
