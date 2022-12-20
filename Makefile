@@ -98,14 +98,14 @@ frontend/js/compile: js_chess_src ?= src/apps/chess/static-src/chess/ts
 frontend/js/compile: js_chess_dest ?= src/apps/chess/static/chess/js
 frontend/js/compile: ## Compile the JS assets of our various Django apps
 	@./node_modules/.bin/concurrently --names "webui,chess" \
-		"${MAKE} --no-print-directory frontend/js/compile_app_files src=${js_webui_src} dest=${js_webui_dest}" \
-		"${MAKE} --no-print-directory frontend/js/compile_app_files src=${js_chess_src} dest=${js_chess_dest}"
+		"${MAKE} --no-print-directory frontend/js/compile_app_files src='${js_webui_src}/main.ts' dest=${js_webui_dest}" \
+		"${MAKE} --no-print-directory frontend/js/compile_app_files src='${js_chess_src}/chess-main.ts' dest=${js_chess_dest}"
 		
 .PHONY: frontend/js/compile_app_files
 frontend/js/compile_app_files: esbuild_compile_opts ?= 
 frontend/js/compile_app_files:
 	@./node_modules/.bin/esbuild ${esbuild_compile_opts} \
-		${src}/*.ts \
+		${src} \
 		--bundle --sourcemap --target=chrome58,firefox57,safari11,edge16 \
 		--outdir="${dest}"
 

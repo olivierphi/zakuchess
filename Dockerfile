@@ -30,9 +30,11 @@ RUN apk add --no-cache make
 RUN mkdir -p /app
 WORKDIR /app
 COPY --from=frontend_deps /app/node_modules ./node_modules
-COPY frontend-src ./frontend-src
+COPY src/lib/frontend-common ./src/lib/frontend-common
+COPY src/apps/webui/static-src ./src/apps/webui/static-src
+COPY src/apps/chess/static-src ./src/apps/chess/static-src
 COPY Makefile ./
-RUN make frontend/js/compile frontend/css/compile
+RUN make frontend/js/compile frontend/css/compile esbuild_compile_opts='--minify'
 
 #########################################################################
 # Backend stuff
@@ -59,9 +61,7 @@ WORKDIR /app
 RUN python -m venv .venv
 
 COPY pyproject.toml poetry.lock ./
-RUN poetry install --without dev && \
-    # @link https://github.com/pydantic/pydantic/issues/2276#issuecomment-1312472629
-    strip .venv/lib/python3.10/site-packages/pydantic/*.so
+RUN poetry install --without dev --no-interaction --no-ansi
 
 FROM python:3.10-slim AS backend_run
 
@@ -80,7 +80,8 @@ RUN useradd --gid 1001 --uid 1001 webapp
 RUN chown -R 1001:1001 /app 
 USER 1001:1001
 
-COPY --chown=1001:1001 --from=frontend_build /app/frontend-out frontend-out
+COPY --chown=1001:1001 --from=frontend_build /app/src/apps/webui/static src/apps/webui/static
+COPY --chown=1001:1001 --from=frontend_build /app/src/apps/chess/static src/apps/chess/static
 COPY --chown=1001:1001 --from=backend_build /app/.venv .venv
 COPY --chown=1001:1001 . .
 
