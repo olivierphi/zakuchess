@@ -63,35 +63,51 @@ code-quality/mypy: ## Python's equivalent of TypeScript
 # @link https://mypy.readthedocs.io/en/stable/
 	@PYTHONPATH=${PYTHONPATH} ${PYTHON_BINS}/mypy src/ ${mypy_opts}
 
-.PHONY: frontend/css/watch
-frontend/css/watch:
-	@${MAKE} --no-print-directory frontend/css/compile sass_compile_opts='--watch'
-
-.PHONY: frontend/css/compile
-frontend/css/compile: sass_compile_opts ?= 
-frontend/css/compile:
-	./node_modules/.bin/sass ${sass_compile_opts} \
-		frontend-src/css/reset.scss:frontend-out/css/reset.css \
-		frontend-src/css/main.scss:frontend-out/css/main.css \
-		frontend-src/css/game-container.scss:frontend-out/css/game-container.css \
-		frontend-src/css/chess-units/theme/default.scss:frontend-out/css/chess-units/theme/default.css
-		
-
-.PHONY: frontend/js/watch
-frontend/js/watch:
-	@${MAKE} --no-print-directory frontend/js/compile esbuild_compile_opts='--watch'
-
 .PHONY: frontend/watch
-frontend/watch:
+frontend/watch: ## Compile the CSS & JS assets of our various Django apps, in 'watch' mode
 	@./node_modules/.bin/concurrently --names "css,js" --prefix-colors "yellow,green" \
 		"${MAKE} --no-print-directory frontend/css/watch" \
 		"${MAKE} --no-print-directory frontend/js/watch"
 
+.PHONY: frontend/css/watch
+frontend/css/watch: ## Compile the CSS assets of our various Django apps, in 'watch' mode
+	@${MAKE} --no-print-directory frontend/css/compile sass_compile_opts='--watch'
+
+.PHONY: frontend/css/compile
+frontend/css/compile: sass_compile_opts ?= 
+frontend/css/compile: css_webui_src ?= src/apps/webui/static-src/webui/scss
+frontend/css/compile: css_webui_dest ?= src/apps/webui/static/webui/css
+frontend/css/compile: css_chess_src ?= src/apps/chess/static-src/chess/scss
+frontend/css/compile: css_chess_dest ?= src/apps/chess/static/chess/css
+frontend/css/compile: ## Compile the CSS assets of our various Django apps
+	@./node_modules/.bin/sass ${sass_compile_opts} \
+		${css_webui_src}/reset.scss:${css_webui_dest}/reset.css \
+		${css_webui_src}/main.scss:${css_webui_dest}/main.css \
+		${css_chess_src}/game-container.scss:${css_chess_dest}/game-container.css \
+		${css_chess_src}/chess-units/theme/default.scss:${css_chess_dest}/chess-units/theme/default.css
+		
+
+.PHONY: frontend/js/watch
+frontend/js/watch: ## Compile the JS assets of our various Django apps, in 'watch' mode
+	@${MAKE} --no-print-directory frontend/js/compile esbuild_compile_opts='--watch'
+
 .PHONY: frontend/js/compile
-frontend/js/compile: esbuild_compile_opts ?= 
-frontend/js/compile:
-	./node_modules/.bin/esbuild ${esbuild_compile_opts} \
-		frontend-src/js/main.ts --bundle --outfile=frontend-out/js/main.js
+frontend/js/compile: js_webui_src ?= src/apps/webui/static-src/webui/ts
+frontend/js/compile: js_webui_dest ?= src/apps/webui/static/webui/js
+frontend/js/compile: js_chess_src ?= src/apps/chess/static-src/chess/ts
+frontend/js/compile: js_chess_dest ?= src/apps/chess/static/chess/js
+frontend/js/compile: ## Compile the JS assets of our various Django apps
+	@./node_modules/.bin/concurrently --names "webui,chess" \
+		"${MAKE} --no-print-directory frontend/js/compile_app_files src=${js_webui_src} dest=${js_webui_dest}" \
+		"${MAKE} --no-print-directory frontend/js/compile_app_files src=${js_chess_src} dest=${js_chess_dest}"
+		
+.PHONY: frontend/js/compile_app_files
+frontend/js/compile_app_files: esbuild_compile_opts ?= 
+frontend/js/compile_app_files:
+	@./node_modules/.bin/esbuild ${esbuild_compile_opts} \
+		${src}/*.ts \
+		--bundle --sourcemap --target=chrome58,firefox57,safari11,edge16 \
+		--outdir="${dest}"
 
 .venv: ## Initialises the Python virtual environment in a ".venv" folder
 	python -m venv .venv

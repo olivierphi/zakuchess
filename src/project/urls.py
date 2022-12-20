@@ -17,11 +17,9 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
 
-from apps.webapi.urls import api as web_api
-
 urlpatterns = [
     path("", include("apps.webui.urls")),
-    path("api/", web_api.urls),
+    path("games/", include("apps.chess.urls")),
     path("-/", include("django_alive.urls")),
     path("admin/", admin.site.urls),
 ]

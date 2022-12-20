@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING
 
-import chess
 from django.db import models
 
 from lib.django_helpers import literal_to_django_choices
@@ -18,6 +17,8 @@ class Game(models.Model):
     bot_side = models.CharField(
         max_length=1, choices=literal_to_django_choices(PlayerSide), null=True
     )  # type: PlayerSide | None
+
+    updated_at = models.DateTimeField(auto_now=True)  # type: datetime
 
     @property
     def is_versus_bot(self) -> bool:

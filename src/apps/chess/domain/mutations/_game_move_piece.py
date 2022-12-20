@@ -58,6 +58,7 @@ def game_move_piece(*, game: Game, from_square: Square, to_square: Square) -> Pi
             "",  # """ if targeted_piece is None else "x",
             to_square,
             # Promotion to Queen?
+            # TODO: allow the user to choose the promotion piece?
             "q" if is_promotion else "",
         ]
     )
@@ -81,6 +82,6 @@ def game_move_piece(*, game: Game, from_square: Square, to_square: Square) -> Pi
     game.fen = board.fen()
     game.active_player = "w" if board.turn else "b"
     game.pieces_view = pieces_view_from_chess_board(board, pieces_id_per_square)
-    game.save(update_fields=("fen", "active_player", "pieces_view"))
+    game.save(update_fields=("fen", "active_player", "pieces_view", "updated_at"))
 
     return PieceMovementResult(is_promotion=is_promotion)

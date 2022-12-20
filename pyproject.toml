@@ -12,8 +12,8 @@ gunicorn = "^20.1.0"
 django-alive = "^1.2.1"
 chess = "^1.9.3"
 jinja2 = "^3.1.2"
-django-ninja = "^0.19.1"
 whitenoise = "^6.2.0"
+django-htmx = "^1.13.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.10.0"
@@ -51,6 +51,12 @@ exclude = [
 [tool.ruff.per-file-ignores]
 "bin/scripts/download_assets.py" = ["E501"]
 
+[tool.djlint]
+# @link https://www.djlint.com/docs/configuration/
+profile = "jinja"
+blank_line_before_tag = "block,macro"
+use_gitignore = true
+
 [tool.mypy]
 # @link https://mypy.readthedocs.io/en/stable/config_file.html#using-a-pyproject-toml
 python_version = "3.10"
@@ -61,9 +67,6 @@ exclude = [
 ]
 [[tool.mypy.overrides]]
 module = "environ"
-ignore_missing_imports = true
-[[tool.mypy.overrides]]
-module = "django_unicorn.*"
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

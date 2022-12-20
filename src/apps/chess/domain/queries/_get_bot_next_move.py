@@ -5,8 +5,9 @@ from lib.chess_engines.sunfish import sunfish, tools
 if TYPE_CHECKING:
     from apps.chess.domain.types import PlayerSide, Square
 
-# we'll leave 0.1 seconds for the bot to make a move: (which is already pretty long for a CPU-bounded server-side operation 😅)
-_SUNFISH_ALLOWED_TIME = 0.1
+# We'll leave some time for the bot to make a move:
+# (already pretty long for a CPU-bounded server-side operation 😅)
+_SUNFISH_ALLOWED_TIME = 0.05
 _searcher = sunfish.Searcher()
 
 

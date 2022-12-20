@@ -4,6 +4,7 @@ import uuid
 from django.template import defaultfilters
 from django.templatetags.static import static
 from django.urls import reverse
+from django_htmx.jinja import django_htmx_script
 from jinja2 import Environment, StrictUndefined
 
 
@@ -15,6 +16,7 @@ def environment(**options) -> Environment:
             "static": static,
             "url": reverse,
             "uuid": uuid.uuid4,
+            "django_htmx_script": django_htmx_script,
         }
     )
     env.filters["date"] = defaultfilters.date

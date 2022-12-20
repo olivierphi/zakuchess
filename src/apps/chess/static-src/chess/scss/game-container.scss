@@ -1,5 +1,5 @@
-@import "variables";
-@import "mixins";
+@import "../../../../../lib/frontend-common/scss/variables";
+@import "../../../../../lib/frontend-common/scss/mixins";
 @import "chess-board";
 
 .game-container {
@@ -25,12 +25,12 @@
     position: relative;
     //height: 5rem;
 
-    background-color: #e4b55d;
-    border: 1px solid #a57713;
-    color: #79570c;
+    background-color: #262525;
+    border: 1px solid #000511;
+    color: #f0f0f0;
 
     b {
-      color: black;
+      color: yellow;
     }
 
     & > .overlay {
@@ -39,6 +39,12 @@
       width: 100%;
       height: 100%;
       background-color: #e4b55d;
+    }
+
+    .chess-board-status {
+      height: 3rem;
+      text-align: center;
+      vertical-align: center;
     }
 
     .board-explanation {

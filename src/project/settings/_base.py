@@ -45,12 +45,12 @@ INSTALLED_APPS = (
         "django.contrib.staticfiles",
     ]
     + [
-        # "whitenoise",
+        "whitenoise",
+        "django_htmx",
     ]
     + [
         "apps.chess",
         "apps.webui",
-        "apps.webapi",
     ]
 )
 
@@ -62,6 +62,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+] + [
+    "django_htmx.middleware.HtmxMiddleware",
 ]
 
 ROOT_URLCONF = "project.urls"

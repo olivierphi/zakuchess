@@ -1,3 +1,0 @@
-{% import 'webui/macros/chessboard.tpl.html' as chessboard with context %}
-{{ chessboard.board_piece_available_targets(game_presenter) }}
-<div id="chess-board-pieces-{{ board_id }}" hx-swap-oob="innerHTML">{{ chessboard.board_pieces(game_presenter) }}</div>
