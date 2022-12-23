@@ -25,7 +25,7 @@
     position: relative;
     //height: 5rem;
 
-    background-color: #262525;
+    background-color: $color-black-ish;
     border: 1px solid #000511;
     color: #f0f0f0;
 
@@ -41,11 +41,14 @@
       background-color: #e4b55d;
     }
 
-    .chess-board-status {
-      height: 3rem;
-      text-align: center;
-      vertical-align: center;
-    }
+    //.chess-board-status {
+    //  display: flex;
+    //  height: 3rem;
+    //  text-align: center;
+    //  & > div {
+    //    height: 100%;
+    //  }
+    //}
 
     .board-explanation {
       z-index: 1;

@@ -1,3 +1,4 @@
+@import "../../../../../lib/frontend-common/scss/variables";
 @import "../../../../../lib/frontend-common/scss/mixins";
 
 #global-container {
@@ -9,10 +10,8 @@
 
   header {
     font-family: "PixelFont", serif;
-    background-color: #262525;
+    background-color: $color-black-ish;
     color: #f0f0f0;
-
-    border-bottom: solid #202020 5px;
 
     h1,
     h2 {

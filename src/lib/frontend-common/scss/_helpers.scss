@@ -3,6 +3,7 @@
 }
 
 .chess-symbol {
-  font-family: "OpenSans", sans-serif;
+  // 💚💚💚 https://stackoverflow.com/questions/32915485/how-to-prevent-unicode-characters-from-rendering-as-emoji-in-html-from-javascrip
+  font-family: monospace;
   font-size: 1.5rem;
 }

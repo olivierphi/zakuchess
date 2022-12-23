@@ -4,7 +4,8 @@
      hx-swap-oob="innerHTML">
     {# We just empty the "available targets" container after a move was played #}
 </div>
-<div id="chess-board-status-{{ board_id|default("main") }}"
-     hx-swap-oob="innerHTML">
-    {{ chessboard.board_status_bar(game_presenter) }}
-</div>
+{{ chessboard.board_status_bar(
+game_presenter,
+extra_attributes=['hx-swap-oob="innerHTML"'],
+board_id=board_id|default("main")
+) }}

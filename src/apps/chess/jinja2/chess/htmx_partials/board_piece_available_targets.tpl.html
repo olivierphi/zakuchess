@@ -1,7 +1,4 @@
 {% import 'chess/macros/chessboard.tpl.html' as chessboard with context %}
 {{ chessboard.board_piece_available_targets(game_presenter) }}
-<div id="chess-board-pieces-{{ board_id }}" hx-swap-oob="innerHTML">{{ chessboard.board_pieces(game_presenter) }}</div>
-<div id="chess-board-status-{{ board_id|default("main") }}"
-     hx-swap-oob="innerHTML">
-    {{ chessboard.board_status_bar(game_presenter) }}
-</div>
+{{ chessboard.board_pieces(game_presenter, extra_attributes=['hx-swap-oob="innerHTML"']) }}
+{{ chessboard.board_status_bar(game_presenter, extra_attributes=['hx-swap-oob="innerHTML"']) }}

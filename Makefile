@@ -71,17 +71,28 @@ frontend/watch: ## Compile the CSS & JS assets of our various Django apps, in 'w
 
 .PHONY: frontend/css/watch
 frontend/css/watch: ## Compile the CSS assets of our various Django apps, in 'watch' mode
-	@${MAKE} --no-print-directory frontend/css/compile sass_compile_opts='--watch'
+	@${MAKE} --no-print-directory frontend/css/compile \
+		tailwind_compile_opts='--watch' sass_compile_opts='--watch'
 
 .PHONY: frontend/css/compile
-frontend/css/compile: sass_compile_opts ?= 
-frontend/css/compile: css_webui_src ?= src/apps/webui/static-src/webui/scss
-frontend/css/compile: css_webui_dest ?= src/apps/webui/static/webui/css
-frontend/css/compile: css_chess_src ?= src/apps/chess/static-src/chess/scss
-frontend/css/compile: css_chess_dest ?= src/apps/chess/static/chess/css
-frontend/css/compile: ## Compile the CSS assets of our various Django apps
+frontend/css/compile:  
+	@./node_modules/.bin/concurrently --names "tailwind,scss" \
+		"${MAKE} --no-print-directory frontend/css/compile/tailwind" \
+		"${MAKE} --no-print-directory frontend/css/compile/scss"
+		
+frontend/css/compile/tailwind: tailwind_compile_opts ?= 
+frontend/css/compile/tailwind: ## Compile the Tailwind CSS assets of our various Django apps
+	@./node_modules/.bin/tailwind ${tailwind_compile_opts} \
+		-i ./src/apps/webui/static-src/webui/css/tailwind.css \
+		-o ./src/apps/webui/static/webui/css/tailwind.css
+		
+frontend/css/compile/scss: sass_compile_opts ?= 
+frontend/css/compile/scss: css_webui_src ?= src/apps/webui/static-src/webui/scss
+frontend/css/compile/scss: css_webui_dest ?= src/apps/webui/static/webui/css
+frontend/css/compile/scss: css_chess_src ?= src/apps/chess/static-src/chess/scss
+frontend/css/compile/scss: css_chess_dest ?= src/apps/chess/static/chess/css
+frontend/css/compile/scss: ## Compile the CSS assets of our various Django apps
 	@./node_modules/.bin/sass ${sass_compile_opts} \
-		${css_webui_src}/reset.scss:${css_webui_dest}/reset.css \
 		${css_webui_src}/main.scss:${css_webui_dest}/main.css \
 		${css_chess_src}/game-container.scss:${css_chess_dest}/game-container.css \
 		${css_chess_src}/chess-units/theme/default.scss:${css_chess_dest}/chess-units/theme/default.css
