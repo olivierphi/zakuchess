@@ -10,8 +10,9 @@ PlayerSide = Literal[
 
 PieceSymbol = Literal[
     # fmt: off
+    "P", "N", "B", "R", "Q", "K", # "w" side
     "p", "n", "b", "r", "q", "k",
-    "P", "N", "B", "R", "Q", "K",
+    # "b" side
     # fmt: on
 ]
 
@@ -53,23 +54,6 @@ PiecesIdPerSquare: TypeAlias = dict[Square, PieceId]
 class PieceView(TypedDict):
     id: PieceId
     piece: PieceSymbol
-
-
-#
-#
-# @dataclasses.dataclass(frozen=True)
-# class ChessBoardState:
-#     fen: str
-#     active_player: PlayerSide
-#     pieces_view: "PiecesView"
-#     selected_piece_square: Square | None = None
-#
-#     def replace(self, **kwargs) -> "ChessBoardState":
-#         return dataclasses.replace(self, **kwargs)
-#
-#     @cached_property
-#     def pieces_id_per_square(self) -> dict[Square, PieceId]:
-#         return {square_name: piece["id"] for square_name, piece in self.pieces_view.items()}
 
 
 PiecesView: TypeAlias = dict[Square, PieceView]

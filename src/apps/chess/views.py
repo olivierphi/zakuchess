@@ -9,11 +9,12 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import cache_control
 from django.views.decorators.http import etag, require_POST, require_safe
 
-from apps.chess.domain.mutations import create_new_game, game_move_piece
-from apps.chess.domain.queries._get_bot_next_move import get_bot_next_move
-from apps.chess.domain.types import Square
-from apps.chess.models import Game
-from apps.chess.presenters import GamePresenter
+from .domain.mutations import create_new_game, game_move_piece
+from .domain.queries._get_bot_next_move import get_bot_next_move
+from .domain.types import Square
+from .models import Game
+from .presenters import GamePresenter
+from .components.pages.chess import chess_page
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
@@ -50,6 +51,7 @@ def game_view(req: HttpRequest, game_id: str) -> HttpResponse:
         my_side="w",  # TODO: de-hardcode this - should come from the user
     )
 
+    return HttpResponse(chess_page(game_presenter=game_presenter, request=req).render())
     return render(
         req,
         "chess/chess-game.tpl.html",

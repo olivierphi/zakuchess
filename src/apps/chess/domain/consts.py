@@ -53,3 +53,12 @@ STARTING_PIECES: dict[PlayerSide, tuple[PieceSymbol]] = {
     "w": (*("P" * 8), *("N" * 2), *("B" * 2), *("R" * 2), "Q", "K"),
     "b": (*("p" * 8), *("n" * 2), *("b" * 2), *("r" * 2), "q", "k"),
 }
+
+PIECE_ROLE_TO_NAME: dict[PieceRole, str] = {
+    "p": "pawn",
+    "n": "knight",
+    "b": "bishop",
+    "r": "rook",
+    "q": "queen",
+    "k": "king",
+}
