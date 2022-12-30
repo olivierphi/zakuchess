@@ -82,7 +82,7 @@ class GamePresenter:
         return set(square_from_int(move.from_square) for move in self._chess_board.legal_moves)
 
     @cached_property
-    def captured_pieces(self) -> dict[PlayerSide, Sequence[PieceRole]]:
+    def captured_pieces(self) -> dict[PlayerSide, list[PieceRole]]:
         remaining_pieces = [piece.symbol() for piece in self._chess_board.piece_map().values()]
         captured_pieces: dict[PlayerSide, list[PieceRole]] = {"w": [], "b": []}
         for player_side in PLAYER_SIDES:

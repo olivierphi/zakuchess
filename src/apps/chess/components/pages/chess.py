@@ -2,18 +2,55 @@ from typing import TYPE_CHECKING
 
 
 from .. import chess
-from apps.webui.components.layout import document
+from apps.webui.components.layout import page
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
-    from dominate.tags import dom_tag
     from ...presenters import GamePresenter
 
 
-def chess_page(*, game_presenter: "GamePresenter", request: "HttpRequest") -> "dom_tag":
-    return document(
+def chess_page(*, game_presenter: "GamePresenter", request: "HttpRequest", board_id: str) -> str:
+    return page(
         children=[
-            chess.chess_arena(game_presenter=game_presenter),
+            chess.chess_arena(game_presenter=game_presenter, board_id=board_id),
         ],
         request=request,
+    )
+
+
+def chess_htmx_select_piece(*, game_presenter: "GamePresenter", request: "HttpRequest", board_id: str) -> str:
+    return "\n".join(
+        (
+            dom_tag.render()
+            for dom_tag in (
+                chess.chess_available_targets(
+                    game_presenter=game_presenter,
+                    board_id=board_id,
+                ),
+                chess.chess_pieces(
+                    game_presenter=game_presenter,
+                    board_id=board_id,
+                    data_hx_swap_oob="innerHTML",
+                ),
+            )
+        )
+    )
+
+
+def chess_htmx_move_piece(*, game_presenter: "GamePresenter", request: "HttpRequest", board_id: str) -> str:
+    return "\n".join(
+        (
+            dom_tag.render()
+            for dom_tag in (
+                chess.chess_pieces(
+                    game_presenter=game_presenter,
+                    board_id=board_id,
+                ),
+                chess.chess_available_targets(
+                    game_presenter=game_presenter,
+                    board_id=board_id,
+                    data_hx_swap_oob="innerHTML",
+                ),
+            )
+        )
     )

@@ -4,11 +4,26 @@ from typing import TYPE_CHECKING
 
 from django.template.backends.utils import get_token
 from django.templatetags.static import static
-from dominate.tags import *
-from dominate.tags import head as base_head, title as base_title, header as base_header
+from dominate.tags import (
+    dom_tag,
+    meta,
+    link,
+    script,
+    h1,
+    h2,
+    html,
+    body,
+    head as base_head,
+    title as base_title,
+    header as base_header,
+)
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
+
+
+def page(*, children: Sequence[dom_tag], request: "HttpRequest", title: str = "ZakuChess ♞") -> str:
+    return f"<!DOCTYPE html>{document(children=children, request=request, title=title)}"
 
 
 def document(*, children: Sequence[dom_tag], request: "HttpRequest", title: str = "ZakuChess ♞") -> dom_tag:
@@ -17,6 +32,7 @@ def document(*, children: Sequence[dom_tag], request: "HttpRequest", title: str 
         body(
             header(),
             *children,
+            cls="bg-slate-800",
             data_hx_headers=json.dumps({"X-CSRFToken": get_token(request) if request else "[no request]"}),
         ),
     )
@@ -39,11 +55,11 @@ def header() -> dom_tag:
     return base_header(
         h1(
             "Zakuchess",
-            cls="text-3xl font-pixel",
+            cls="text-slate-50 text-2xl font-pixel",
         ),
         h2(
             "Chess with character(s)",
-            cls="text-2xl font-pixel",
+            cls="text-slate-50 text-xl font-pixel",
         ),
         cls="text-center md:mx-auto md:max-w-2xl",
     )

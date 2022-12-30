@@ -1,7 +1,6 @@
 function cursorIsNotOnChessBoardInteractiveElement(boardId: string): boolean {
     // Must return `true` only if the user hasn't clicked on one of the game clickable elements.
     // @link https://htmx.org/attributes/hx-trigger/
-    console.log("cursorIsNotOnChessBoardInteractiveElement; args=", arguments)
 
     const chessBoardContainer = document.getElementById(`chess-board-container-${boardId}`)
 
@@ -34,6 +33,5 @@ function cursorIsNotOnChessBoardInteractiveElement(boardId: string): boolean {
     return true
 }
 
-console.log("cursorIsNotOnChessBoardInteractiveElement has arrived")
 
 window.cursorIsNotOnChessBoardInteractiveElement = cursorIsNotOnChessBoardInteractiveElement
