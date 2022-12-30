@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 from zlib import adler32
 
+from django.conf import settings
 from django.core.exceptions import SuspiciousOperation
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -14,13 +15,15 @@ from .domain.queries._get_bot_next_move import get_bot_next_move
 from .domain.types import Square
 from .models import Game
 from .presenters import GamePresenter
-from .components.pages.chess import chess_page
+from .components.pages.chess import chess_page, chess_htmx_select_piece, chess_htmx_move_piece
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
 
 
-def _game_etag(req: HttpRequest, game_id: str) -> str:
+def _game_etag(req: HttpRequest, game_id: str) -> str | None:
+    if settings.NO_HTTP_CACHE:
+        return None
     hash_data = (
         game_id,
         req.path,
@@ -45,20 +48,14 @@ def game_new(req: HttpRequest) -> HttpResponse:
 @etag(_game_etag)
 def game_view(req: HttpRequest, game_id: str) -> HttpResponse:
     game = get_object_or_404(Game, id=game_id)
+    board_id = "main"
 
     game_presenter = GamePresenter(
         game=game,
         my_side="w",  # TODO: de-hardcode this - should come from the user
     )
 
-    return HttpResponse(chess_page(game_presenter=game_presenter, request=req).render())
-    return render(
-        req,
-        "chess/chess-game.tpl.html",
-        {
-            "game_presenter": game_presenter,
-        },
-    )
+    return HttpResponse(chess_page(game_presenter=game_presenter, request=req, board_id=board_id))
 
 
 @require_safe
@@ -101,19 +98,13 @@ def htmx_game_select_piece(req: HttpRequest, game_id: str) -> HttpResponse:
         selected_piece_square=piece_square,
     )
 
-    return render(
-        req,
-        "chess/htmx_partials/board_piece_available_targets.tpl.html",
-        {
-            "game_presenter": game_presenter,
-            "board_id": board_id,
-        },
-    )
+    return HttpResponse(chess_htmx_select_piece(game_presenter=game_presenter, request=req, board_id=board_id))
 
 
 @require_POST
 def htmx_game_move_piece(req: HttpRequest, game_id: str, from_: Square, to: Square) -> HttpResponse:
     game = get_object_or_404(Game, id=game_id)
+    board_id = cast(str, req.GET.get("board_id"))
 
     game_move_piece(game=game, from_square=from_, to_square=to)
 
@@ -122,13 +113,7 @@ def htmx_game_move_piece(req: HttpRequest, game_id: str, from_: Square, to: Squa
         my_side="w",  # TODO: de-hardcode this - should come from the user
     )
 
-    return render(
-        req,
-        "chess/htmx_partials/board_piece_moved.tpl.html",
-        {
-            "game_presenter": game_presenter,
-        },
-    )
+    return HttpResponse(chess_htmx_move_piece(game_presenter=game_presenter, request=req, board_id=board_id))
 
 
 @require_POST
@@ -138,6 +123,7 @@ def htmx_game_bot_move(req: HttpRequest, game_id: str) -> HttpResponse:
         raise SuspiciousOperation("This game has no bot")
     if game.bot_side != game.active_player:
         raise SuspiciousOperation("This is not bot's turn")
+    board_id = cast(str, req.GET.get("board_id"))
 
     bot_next_move = get_bot_next_move(fen=game.fen, bot_side=game.bot_side)
     game_move_piece(game=game, from_square=bot_next_move[0], to_square=bot_next_move[1])
@@ -147,10 +133,4 @@ def htmx_game_bot_move(req: HttpRequest, game_id: str) -> HttpResponse:
         my_side="w",  # TODO: de-hardcode this - should come from the user
     )
 
-    return render(
-        req,
-        "chess/htmx_partials/board_piece_moved.tpl.html",
-        {
-            "game_presenter": game_presenter,
-        },
-    )
+    return HttpResponse(chess_htmx_move_piece(game_presenter=game_presenter, request=req, board_id=board_id))

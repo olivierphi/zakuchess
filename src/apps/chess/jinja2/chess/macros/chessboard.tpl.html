@@ -60,7 +60,7 @@
                  id="board-{{ board_id }}-side-{{ player_side }}-piece-{{ piece.id }}"
                  data-hx-trigger="click"
                  data-hx-get="{{ url("chess:htmx_game_select_piece", kwargs={"game_id": game_presenter.game_id}) }}?{{ {"square": square, "board_id": board_id}|to_query_string }}"
-                 data-hx-target="#chess-board-available-targets-{{ board_id }}"> 
+                 data-hx-target="#chess-board-available-targets-{{ board_id }}">
                 <div class="piece-display"></div>
                 <div class="piece-debug">
                     {{ piece.piece|piece_unicode_from_symbol }}<small>#{{ piece.id }}</small>
@@ -102,10 +102,10 @@
             </div>
             <div class="chess-board-captured-pieces">
                 Captured&nbsp;pieces:&nbsp;
-            {%- for symbol in game_presenter.captured_pieces["w"] -%}{{ symbol|piece_unicode_from_symbol }}&nbsp;{%- else -%}None{%- endfor -%}
-                &nbsp;/&nbsp;
-                {%- for symbol in game_presenter.captured_pieces["b"] -%}{{ symbol|piece_unicode_from_symbol }}&nbsp;{%- else -%}None{%- endfor -%}
-            </div>
+                {%- for symbol in game_presenter.captured_pieces["w"] -%}{{ symbol|piece_unicode_from_symbol }}&nbsp;{%- else -%}0{%- endfor -%}
+                    &nbsp;/&nbsp;
+                    {%- for symbol in game_presenter.captured_pieces["b"] -%}{{ symbol|piece_unicode_from_symbol }}&nbsp;{%- else -%}0{%- endfor -%}
+                    </div>
                 {%- elif board_state == "waiting_for_player_target_choice" %}
                     {{ board_team_member_display(game_presenter, board_id=board_id) }}
                 {%- endif %}
@@ -143,19 +143,18 @@
         {%- endmacro %}
 
         {% macro board_team_member_display(game_presenter, board_id="main") -%}
-                {%- if game_presenter.selected_piece -%}
-                    <div class="flex">
+            {%- if game_presenter.selected_piece -%}
+                <div class="flex">
                     {%- set selected_piece = game_presenter.selected_piece -%}
                     <div class="w-1/6 flex justify-center content-center">
-                    <div class="w-1/2 team-member-piece-container chess-board-container">
-                        <div class="chess-board-pieces">
-                            <div class="piece side-{{ selected_piece.player_side }} piece-{{ selected_piece.symbol|lower }}"
-                                 style="height: 100%"
-                            >
-                                <div class="piece-display"></div>
+                        <div class="w-1/2 team-member-piece-container chess-board-container">
+                            <div class="chess-board-pieces">
+                                <div class="piece side-{{ selected_piece.player_side }} piece-{{ selected_piece.symbol|lower }}"
+                                     style="height: 100%">
+                                    <div class="piece-display"></div>
+                                </div>
                             </div>
                         </div>
-                    </div>
                     </div>
                     <div class="team-member-info">
                         <p class="font-pixel text-2xl">
@@ -166,7 +165,7 @@
                             Chess equivalent: <span class="chess-symbol">{{ game_presenter.selected_piece.team_member.role|piece_unicode_from_role }}</span>
                         </p>
                     </div>
-                        </div>
+                </div>
             {%- endif -%}
         {%- endmacro %}
 

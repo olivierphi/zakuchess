@@ -20,10 +20,14 @@ def square_to_tailwind_classes(square: "Square") -> "Sequence[str]":
 def piece_unit_classes(piece_view: "PieceView") -> "Sequence[str]":
     piece_role = cast(PieceRole, piece_view["piece"].lower())
     classes = [f"bg-wesnoth-loyalists-{PIECE_ROLE_TO_NAME[piece_role]}"]
-    player_side: PlayerSide = "w" if piece_view["piece"].isupper() else "b"
+    player_side = piece_player_side(piece_view)
     if player_side == "b":
         classes.append("-scale-x-100")
     return classes
+
+
+def piece_player_side(piece_view: "PieceView") -> PlayerSide:
+    return "w" if piece_view["piece"].isupper() else "b"
 
 
 _FILE_TO_TAILWIND_POSITIONING_CLASS = {
