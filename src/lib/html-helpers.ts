@@ -1,28 +1,27 @@
-import type { Square } from "chess.js";
-import type { File, Rank } from "$lib/html-helpers.ts";
+import type { File, Rank, Square } from "$lib/domain/types.js";
 
 const FILE_TO_TAILWIND_POSITIONING_CLASS: Record<File, string> = {
-	a: "top-0/8",
-	b: "top-1/8",
-	c: "top-2/8",
-	d: "top-3/8",
-	e: "top-4/8",
-	f: "top-5/8",
-	g: "top-6/8",
-	h: "top-7/8"
+	a: "translate-y-0/1",
+	b: "translate-y-1/1",
+	c: "translate-y-2/1",
+	d: "translate-y-3/1",
+	e: "translate-y-4/1",
+	f: "translate-y-5/1",
+	g: "translate-y-6/1",
+	h: "translate-y-7/1",
 };
 const RANK_TO_TAILWIND_POSITIONING_CLASS: Record<Rank, string> = {
-	1: "left-0/8",
-	2: "left-1/8",
-	3: "left-2/8",
-	4: "left-3/8",
-	5: "left-4/8",
-	6: "left-5/8",
-	7: "left-6/8",
-	8: "left-7/8"
+	1: "translate-x-0/1",
+	2: "translate-x-1/1",
+	3: "translate-x-2/1",
+	4: "translate-x-3/1",
+	5: "translate-x-4/1",
+	6: "translate-x-5/1",
+	7: "translate-x-6/1",
+	8: "translate-x-7/1",
 };
 
 export const squareToTailwindClasses = (square: Square): string[] => {
-	const [file, rank] = square;
+	const [file, rank] = [square[0] as File, square[1] as unknown as Rank];
 	return [FILE_TO_TAILWIND_POSITIONING_CLASS[file], RANK_TO_TAILWIND_POSITIONING_CLASS[rank]];
 };
