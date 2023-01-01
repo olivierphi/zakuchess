@@ -1,8 +1,9 @@
 function cursorIsNotOnChessBoardInteractiveElement(boardId: string): boolean {
     // Must return `true` only if the user hasn't clicked on one of the game clickable elements.
     // @link https://htmx.org/attributes/hx-trigger/
+    // (see our "chess_arena" Python component to see it used)
 
-    const chessBoardContainer = document.getElementById(`chess-board-container-${boardId}`)
+    const chessBoardContainer = document.getElementById(`chess-arena-${boardId}`)
 
     if (chessBoardContainer === null) {
         return false // not much we can do, as it seems that this chess board has mysteriously disappeared 🤷
@@ -18,13 +19,15 @@ function cursorIsNotOnChessBoardInteractiveElement(boardId: string): boolean {
 
     const hoveredElements = Array.from(document.querySelectorAll(":hover"))
 
-    const gamePiecesElements = chessBoardContainer.querySelectorAll(".chess-board-pieces .piece")
+    const gamePiecesElements = chessBoardContainer.querySelectorAll(`#chess-board-pieces-${boardId} [data-piece]`)
     for (const pieceElement of gamePiecesElements) {
         if (hoveredElements.includes(pieceElement)) {
             return false // don't actually cancel the selection
         }
     }
-    const selectedPieceTargetsElements = chessBoardContainer.querySelectorAll(".chess-board-available-targets .target")
+    const selectedPieceTargetsElements = chessBoardContainer.querySelectorAll(
+        `#chess-board-available-targets-${boardId} [data-square]`,
+    )
     for (const targetElement of selectedPieceTargetsElements) {
         if (hoveredElements.includes(targetElement)) {
             return false // ditto
@@ -32,6 +35,5 @@ function cursorIsNotOnChessBoardInteractiveElement(boardId: string): boolean {
     }
     return true
 }
-
 
 window.cursorIsNotOnChessBoardInteractiveElement = cursorIsNotOnChessBoardInteractiveElement

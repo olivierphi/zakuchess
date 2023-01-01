@@ -1,7 +1,8 @@
-# N.B. Copy-pasted from https://github.com/thomasahle/sunfish
-
 #!/usr/bin/env pypy
 # -*- coding: utf-8 -*-
+
+# N.B. Copy-pasted from https://github.com/thomasahle/sunfish
+# type: ignore
 
 from __future__ import print_function
 
@@ -416,8 +417,10 @@ pst = {
 }
 # Pad tables and join piece and pst dictionaries
 for k, table in pst.items():
+
     def padrow(row):
-        return ((0,) + tuple(x + piece[k] for x in row) + (0,))
+        return (0,) + tuple(x + piece[k] for x in row) + (0,)
+
     pst[k] = sum((padrow(table[i * 8 : i * 8 + 8]) for i in range(8)), ())
     pst[k] = (0,) * 20 + pst[k] + (0,) * 20
 
@@ -540,8 +543,10 @@ class Position(namedtuple("Position", "board score wc bc ep kp")):
     def move(self, move):
         i, j = move
         p, q = self.board[i], self.board[j]
+
         def put(board, i, p):
-            return (board[:i] + p + board[i + 1:])
+            return board[:i] + p + board[i + 1 :]
+
         # Copy variables and reset ep and kp
         board = self.board
         wc, bc, ep, kp = self.wc, self.bc, 0, 0
@@ -705,8 +710,10 @@ class Searcher:
         # but only if depth == 1, so that's probably fair enough.
         # (Btw, at depth 1 we can also mate without realizing.)
         if best < gamma and best < 0 and depth > 0:
+
             def is_dead(pos):
                 return any(pos.value(m) >= MATE_LOWER for m in pos.gen_moves())
+
             if all(is_dead(pos.move(m)) for m in pos.gen_moves()):
                 in_check = is_dead(pos.nullmove())
                 best = -MATE_UPPER if in_check else 0

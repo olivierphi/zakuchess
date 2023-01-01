@@ -69,8 +69,10 @@ def renderSAN(pos, move):
         csrc, cdst = sunfish.render(119 - i), sunfish.render(119 - j)
     # Check
     pos1 = pos.move(move)
+
     def cankill(p):
-        return any(p.board[b] == 'k' for a, b in p.gen_moves())
+        return any(p.board[b] == "k" for a, b in p.gen_moves())
+
     check = ""
     if cankill(pos1.rotate()):
         check = "+"

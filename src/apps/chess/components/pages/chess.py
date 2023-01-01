@@ -1,11 +1,12 @@
 from typing import TYPE_CHECKING
 
+from apps.webui.components.layout import page
 
 from .. import chess
-from apps.webui.components.layout import page
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
+
     from ...presenters import GamePresenter
 
 
@@ -18,7 +19,7 @@ def chess_page(*, game_presenter: "GamePresenter", request: "HttpRequest", board
     )
 
 
-def chess_htmx_select_piece(*, game_presenter: "GamePresenter", request: "HttpRequest", board_id: str) -> str:
+def chess_select_piece_htmx_fragment(*, game_presenter: "GamePresenter", request: "HttpRequest", board_id: str) -> str:
     return "\n".join(
         (
             dom_tag.render()
@@ -30,14 +31,14 @@ def chess_htmx_select_piece(*, game_presenter: "GamePresenter", request: "HttpRe
                 chess.chess_pieces(
                     game_presenter=game_presenter,
                     board_id=board_id,
-                    data_hx_swap_oob="innerHTML",
+                    data_hx_swap_oob="outerHTML",
                 ),
             )
         )
     )
 
 
-def chess_htmx_move_piece(*, game_presenter: "GamePresenter", request: "HttpRequest", board_id: str) -> str:
+def chess_move_piece_htmx_fragment(*, game_presenter: "GamePresenter", request: "HttpRequest", board_id: str) -> str:
     return "\n".join(
         (
             dom_tag.render()

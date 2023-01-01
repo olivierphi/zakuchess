@@ -65,9 +65,13 @@ mypy_path = "src/"
 exclude = [
     '^src/project/settings/.*\.py$',
     '^src/apps/[^/]+/migrations/.*\.py$',
+    '^src/lib/chess_engines/[^/]+/.*\.py$',
 ]
 [[tool.mypy.overrides]]
 module = "environ"
+ignore_missing_imports = true
+[[tool.mypy.overrides]]
+module = "dominate.*"
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

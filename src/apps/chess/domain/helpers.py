@@ -25,4 +25,4 @@ def pieces_view_from_chess_board(board: chess.Board, square_to_id_mapping: Piece
 
 
 def get_squares_with_pieces_that_can_move(board: chess.Board) -> set[Square]:
-    return set(chess.square_name(move.from_square) for move in board.legal_moves)
+    return set(cast(Square, chess.square_name(move.from_square)) for move in board.legal_moves)

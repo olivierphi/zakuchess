@@ -1,16 +1,20 @@
 from typing import TYPE_CHECKING, cast
 
 from ..domain.consts import PIECE_ROLE_TO_NAME
-from ..domain.types import PieceRole, PlayerSide
+from ..domain.types import File, PieceRole, PlayerSide, Rank
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from ..domain.types import Square, PieceView
+    from ..domain.types import PieceView, Square
+
+
+def file_and_rank_from_square(square: "Square") -> tuple[File, Rank]:
+    return cast(File, square[0]), cast(Rank, square[1])
 
 
 def square_to_tailwind_classes(square: "Square") -> "Sequence[str]":
-    file, rank = square
+    file, rank = file_and_rank_from_square(square)
     return (
         _FILE_TO_TAILWIND_POSITIONING_CLASS[file],
         _RANK_TO_TAILWIND_POSITIONING_CLASS[rank],
@@ -30,23 +34,23 @@ def piece_player_side(piece_view: "PieceView") -> PlayerSide:
     return "w" if piece_view["piece"].isupper() else "b"
 
 
-_FILE_TO_TAILWIND_POSITIONING_CLASS = {
-    "a": "top-0/8",
-    "b": "top-1/8",
-    "c": "top-2/8",
-    "d": "top-3/8",
-    "e": "top-4/8",
-    "f": "top-5/8",
-    "g": "top-6/8",
-    "h": "top-7/8",
+_FILE_TO_TAILWIND_POSITIONING_CLASS: dict["File", str] = {
+    "a": "translate-y-0/1",
+    "b": "translate-y-1/1",
+    "c": "translate-y-2/1",
+    "d": "translate-y-3/1",
+    "e": "translate-y-4/1",
+    "f": "translate-y-5/1",
+    "g": "translate-y-6/1",
+    "h": "translate-y-7/1",
 }
-_RANK_TO_TAILWIND_POSITIONING_CLASS = {
-    "1": "left-0/8",
-    "2": "left-1/8",
-    "3": "left-2/8",
-    "4": "left-3/8",
-    "5": "left-4/8",
-    "6": "left-5/8",
-    "7": "left-6/8",
-    "8": "left-7/8",
+_RANK_TO_TAILWIND_POSITIONING_CLASS: dict["Rank", str] = {
+    "1": "translate-x-0/1",
+    "2": "translate-x-1/1",
+    "3": "translate-x-2/1",
+    "4": "translate-x-3/1",
+    "5": "translate-x-4/1",
+    "6": "translate-x-5/1",
+    "7": "translate-x-6/1",
+    "8": "translate-x-7/1",
 }

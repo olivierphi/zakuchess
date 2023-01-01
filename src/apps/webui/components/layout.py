@@ -5,17 +5,17 @@ from typing import TYPE_CHECKING
 from django.template.backends.utils import get_token
 from django.templatetags.static import static
 from dominate.tags import (
+    body,
     dom_tag,
-    meta,
-    link,
-    script,
     h1,
     h2,
-    html,
-    body,
     head as base_head,
-    title as base_title,
     header as base_header,
+    html,
+    link,
+    meta,
+    script,
+    title as base_title,
 )
 
 if TYPE_CHECKING:
@@ -48,6 +48,7 @@ def head(*, title: str) -> dom_tag:
         link(rel="stylesheet", href=static("webui/css/tailwind.css")),
         link(rel="stylesheet", href=static("webui/css/main.css")),
         script(src=static("webui/js/main.js")),
+        script(src=static("chess/js/chess-main.js")),
     )
 
 

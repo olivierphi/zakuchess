@@ -29,6 +29,16 @@ module.exports = {
             height: {
                 "1/8": "12.5%",
             },
+            spacing: {
+                "0/1": "0",
+                "1/1": "100%",
+                "2/1": "200%",
+                "3/1": "300%",
+                "4/1": "400%",
+                "5/1": "500%",
+                "6/1": "600%",
+                "7/1": "700%",
+            },
             inset: {
                 ...CHESS_BOARD_SPACING,
                 "1/12": "8.333333%",
@@ -40,7 +50,7 @@ module.exports = {
                 ...chessPiecesBackgroundImages(),
             },
             transitionProperty: {
-                coordinates: "top, left",
+                coordinates: "transform, top, left",
                 size: "width, height",
             },
             dropShadow: {

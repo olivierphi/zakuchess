@@ -1,16 +1,16 @@
-from urllib.parse import urlencode
 from typing import TYPE_CHECKING, cast
+from urllib.parse import urlencode
 
 from chess import FILE_NAMES, RANK_NAMES
 from django.urls import reverse
-from dominate.tags import div, span, dom_tag
+from dominate.tags import div, dom_tag, span
 
-from .chess_helpers import square_to_tailwind_classes, piece_unit_classes, piece_player_side
 from ..domain.types import Square
+from .chess_helpers import file_and_rank_from_square, piece_player_side, piece_unit_classes, square_to_tailwind_classes
 
 if TYPE_CHECKING:
+    from ..domain.types import File, PieceView, PlayerSide, Rank
     from ..presenters import GamePresenter
-    from ..domain.types import PieceView, PlayerSide
 
 _SQUARE_COLOR_TAILWIND_CLASSES = ("bg-chess-square-dark-color", "bg-chess-square-light-color")
 _PIECE_GROUND_MARKER_COLOR_TAILWIND_CLASSES: dict["PlayerSide", str] = {
@@ -37,7 +37,13 @@ def chess_arena(*, game_presenter: "GamePresenter", board_id: str) -> dom_tag:
             id=f"chess-available-targets-container-{board_id}",
         ),
         id=f"chess-arena-{board_id}",
-        cls="w-full md:max-w-xl mx-auto aspect-square relative border border-debug2 border-solid",
+        cls="w-full md:max-w-xl mx-auto aspect-square relative",
+        # When the user clicks on anything that is not an interactive element of the chess board, and the state
+        # of this chess board is not "waiting_for_player_selection", then the chess board is reset to this state.
+        data_hx_get=f"{ reverse('chess:htmx_game_no_selection', kwargs={'game_id': game_presenter.game_id}) }?{ urlencode({'board_id': board_id}) }",
+        data_hx_trigger=f"click[cursorIsNotOnChessBoardInteractiveElement('{ board_id }')] from:document",
+        data_hx_target=f"#chess-board-pieces-{ board_id }",
+        #
     )
 
 
@@ -49,7 +55,7 @@ def chess_board(board_id: str) -> dom_tag:
     return div(
         *squares,
         id=f"chess-board-{board_id}",
-        cls="relative aspect-square pointer-events-none border border-debug border-solid",
+        cls="relative aspect-square pointer-events-none",
     )
 
 
@@ -70,16 +76,20 @@ def chess_pieces(*, game_presenter: "GamePresenter", board_id: str, **extra_attr
         bot_turn_attrs = {}
 
     return div(
+        div(
+            data_board_state=game_presenter.board_state,
+            data_aria_hidden="true",
+        ),
         *pieces,
         id=f"chess-board-pieces-{board_id}",
-        cls="relative aspect-square border border-debug border-solid",
+        cls="relative aspect-square",
         **bot_turn_attrs,
         **extra_attrs,
     )
 
 
 def chess_board_square(square: "Square") -> dom_tag:
-    file, rank = square
+    file, rank = file_and_rank_from_square(square)
     square_index = FILE_NAMES.index(file) + RANK_NAMES.index(rank)
     square_color_cls = _SQUARE_COLOR_TAILWIND_CLASSES[square_index % 2]
     classes = [
@@ -114,11 +124,13 @@ def chess_piece(
         "aspect-square",
         "w-1/8",
         *square_to_tailwind_classes(square),
-        "transition-coordinates",
-        "duration-200",
-        "ease-in",
         "cursor-pointer",
         "pointer-events-auto",
+        # Transition-related classes:
+        "transition-coordinates",
+        "duration-300",
+        "ease-in",
+        "transform-gpu",
     ]
     return div(
         ground_marker,
@@ -129,7 +141,7 @@ def chess_piece(
         data_hx_trigger="click",
         data_hx_get=f"{reverse('chess:htmx_game_select_piece', kwargs={'game_id': game_presenter.game_id}) }?{urlencode({'square': square, 'board_id': board_id})}",
         data_hx_target=f"#chess-board-available-targets-{ board_id }",
-        # These 2 are for debugging purposes:
+        # These 2 are mostly for debugging purposes:
         data_square=square,
         data_piece=piece_view["piece"],
     )
@@ -171,6 +183,8 @@ def chess_available_target(*, game_presenter: "GamePresenter", square: "Square",
         data_hx_post=f"{reverse('chess:htmx_game_move_piece', kwargs={'game_id': game_presenter.game_id, 'from_': game_presenter.selected_piece.square, 'to': square})}?{urlencode({'board_id': board_id})}",
         data_hx_target=f"#chess-board-pieces-{ board_id }",
         data_hx_swap="outerHTML",
+        # This one is mostly for debugging purposes:
+        data_square=square,
     )
 
 
