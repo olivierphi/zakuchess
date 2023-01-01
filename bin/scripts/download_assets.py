@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from time import monotonic
 from typing import TypeAlias
 from pathlib import Path

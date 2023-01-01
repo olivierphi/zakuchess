@@ -1,6 +1,6 @@
 from typing import Final
 
-from .types import PieceRole, PieceSymbol, PlayerSide, Square
+from .types import PieceRole, PieceSymbol, PlayerSide, Square, TeamMemberRole
 
 PLAYER_SIDES: Final[tuple[PlayerSide, PlayerSide]] = ("w", "b")
 
@@ -12,7 +12,7 @@ PIECES_VALUES: Final[dict[PieceSymbol, int]] = {
     "q": 9,
 }
 
-PIECES_ROLE_BY_STARTING_SQUARE: Final[dict[Square, PieceRole]] = {
+PIECES_ROLE_BY_STARTING_SQUARE: Final[dict[Square, TeamMemberRole]] = {
     # Side "w":
     "a1": "r1",
     "b1": "n1",
@@ -50,8 +50,8 @@ PIECES_ROLE_BY_STARTING_SQUARE: Final[dict[Square, PieceRole]] = {
 }
 
 STARTING_PIECES: dict[PlayerSide, tuple[PieceSymbol]] = {
-    "w": (*("P" * 8), *("N" * 2), *("B" * 2), *("R" * 2), "Q", "K"),
-    "b": (*("p" * 8), *("n" * 2), *("b" * 2), *("r" * 2), "q", "k"),
+    "w": (*("P" * 8), *("N" * 2), *("B" * 2), *("R" * 2), "Q", "K"),  # type: ignore
+    "b": (*("p" * 8), *("n" * 2), *("b" * 2), *("r" * 2), "q", "k"),  # type: ignore
 }
 
 PIECE_ROLE_TO_NAME: dict[PieceRole, str] = {

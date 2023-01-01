@@ -6,16 +6,16 @@ from zlib import adler32
 from django.conf import settings
 from django.core.exceptions import SuspiciousOperation
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.cache import cache_control
 from django.views.decorators.http import etag, require_POST, require_safe
 
+from .components.pages.chess import chess_move_piece_htmx_fragment, chess_page, chess_select_piece_htmx_fragment
 from .domain.mutations import create_new_game, game_move_piece
 from .domain.queries._get_bot_next_move import get_bot_next_move
 from .domain.types import Square
 from .models import Game
 from .presenters import GamePresenter
-from .components.pages.chess import chess_page, chess_htmx_select_piece, chess_htmx_move_piece
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
@@ -71,16 +71,9 @@ def htmx_game_no_selection(req: HttpRequest, game_id: str) -> HttpResponse:
         my_side="w",  # TODO: de-hardcode this - should come from the user
     )
 
-    return render(
-        req,
-        # No pieces were actually moved here, but as this template renders the whole pieces and
-        # an empty targets container we can just re-use it to display a "waiting_for_player_selection" board:
-        "chess/htmx_partials/board_piece_moved.tpl.html",
-        {
-            "game_presenter": game_presenter,
-            "board_id": board_id,
-        },
-    )
+    # No pieces were actually moved here, but as this template renders the whole pieces and
+    # an empty targets container we can just re-use it to display a "waiting_for_player_selection" board:
+    return HttpResponse(chess_move_piece_htmx_fragment(game_presenter=game_presenter, request=req, board_id=board_id))
 
 
 @require_safe
@@ -98,7 +91,9 @@ def htmx_game_select_piece(req: HttpRequest, game_id: str) -> HttpResponse:
         selected_piece_square=piece_square,
     )
 
-    return HttpResponse(chess_htmx_select_piece(game_presenter=game_presenter, request=req, board_id=board_id))
+    return HttpResponse(
+        chess_select_piece_htmx_fragment(game_presenter=game_presenter, request=req, board_id=board_id)
+    )
 
 
 @require_POST
@@ -113,7 +108,7 @@ def htmx_game_move_piece(req: HttpRequest, game_id: str, from_: Square, to: Squa
         my_side="w",  # TODO: de-hardcode this - should come from the user
     )
 
-    return HttpResponse(chess_htmx_move_piece(game_presenter=game_presenter, request=req, board_id=board_id))
+    return HttpResponse(chess_move_piece_htmx_fragment(game_presenter=game_presenter, request=req, board_id=board_id))
 
 
 @require_POST
@@ -133,4 +128,4 @@ def htmx_game_bot_move(req: HttpRequest, game_id: str) -> HttpResponse:
         my_side="w",  # TODO: de-hardcode this - should come from the user
     )
 
-    return HttpResponse(chess_htmx_move_piece(game_presenter=game_presenter, request=req, board_id=board_id))
+    return HttpResponse(chess_move_piece_htmx_fragment(game_presenter=game_presenter, request=req, board_id=board_id))

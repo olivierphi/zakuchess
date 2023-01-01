@@ -1,4 +1,3 @@
-from collections.abc import Sequence
 from functools import cache, cached_property
 from typing import TYPE_CHECKING, cast
 
@@ -10,7 +9,8 @@ from .domain.queries import get_piece_available_targets, get_team_members_by_rol
 from .domain.types import PieceId, PieceRole, PiecesView, PieceSymbol, PlayerSide, Square
 
 if TYPE_CHECKING:
-    from .domain.types import TeamMember, TeamMemberRole, PieceView
+    from chess import Piece
+    from .domain.types import TeamMemberRole, PieceView
 
 from .models import Game, TeamMember
 
@@ -30,13 +30,12 @@ class GamePresenter:
         self._game = game
         self._chess_board = chess.Board(fen=game.fen)
         self.my_side = my_side
-        self.selected_square = selected_square
 
         if selected_square is not None:
             self.selected_square = SelectedSquarePresenter(
                 game_presenter=self,
                 chess_board=self._chess_board,
-                square=selected_piece_square,
+                square=selected_square,
             )
         if selected_piece_square is not None:
             self.selected_piece = SelectedPiecePresenter(
