@@ -1,23 +1,35 @@
 {
-  "name": "zakuchess",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
-  },
-  "dependencies": {
-    "@next/font": "13.1.1",
-    "@types/node": "18.11.18",
-    "@types/react": "18.0.26",
-    "@types/react-dom": "18.0.10",
-    "eslint": "8.31.0",
-    "eslint-config-next": "13.1.1",
-    "next": "13.1.1",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "typescript": "4.9.4"
-  }
+	"name": "zakuchess",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "next dev",
+		"build": "next build",
+		"start": "next start",
+		"lint": "next lint",
+		"prettier": "make prettier"
+	},
+	"dependencies": {
+		"@next/font": "13.1.1",
+		"chess.js": "1.0.0-alpha.0",
+		"lru-cache": "^7.14.1",
+		"next": "13.1.1",
+		"react": "18.2.0",
+		"react-dom": "18.2.0"
+	},
+	"devDependencies": {
+		"@trivago/prettier-plugin-sort-imports": "^4.0.0",
+		"@types/node": "18.11.18",
+		"@types/react": "18.0.26",
+		"@types/react-dom": "18.0.10",
+		"autoprefixer": "^10.4.13",
+		"eslint": "8.31.0",
+		"eslint-config-next": "13.1.1",
+		"postcss": "^8.4.21",
+		"prettier": "^2.8.2",
+		"tailwindcss": "^3.2.4",
+		"typescript": "4.9.4",
+		"zx": "^7.1.1"
+	}
 }
