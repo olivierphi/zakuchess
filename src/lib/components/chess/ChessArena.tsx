@@ -1,6 +1,7 @@
 import { fenToGameState } from "$lib/domain/chess/chess-helpers"
 import { FEN_NEW_GAME } from "$lib/domain/chess/consts"
 import type { FEN, Piece, Square } from "$lib/domain/chess/types"
+import { trpc } from "$lib/utils/trpc"
 import { useCallback, useState } from "react"
 
 import { ChessBoardBackground } from "./ChessBoardBackground"
@@ -13,6 +14,7 @@ type ChessArenaProps = {
 
 export function ChessArena(props: ChessArenaProps) {
 	const [selectedPiece, setSelectedPiece] = useState<{ square: Square; piece: Piece } | null>(null)
+	const createNewGameMutation = trpc.chess.createNewGame.useMutation()
 
 	// END OF HOOKS
 
@@ -34,7 +36,8 @@ export function ChessArena(props: ChessArenaProps) {
 	const onTargetSelection = useCallback(
 		(square: Square): void => {
 			console.log("onTargetSelection()", square)
-			// TODO: backend logic call
+			// TODO: link to the right backend logic call ("move")
+			createNewGameMutation.mutate({ botSide: "b" })
 		},
 		[selectedPiece],
 	)

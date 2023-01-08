@@ -1,7 +1,9 @@
-import Header from "$lib/components/layout/Header"
 import { Roboto } from "@next/font/google"
 import type { AppProps } from "next/app"
 import Head from "next/head"
+
+import Header from "$lib/components/layout/Header"
+import { trpc } from "$lib/utils/trpc"
 
 import "../../styles/globals.css"
 
@@ -11,7 +13,9 @@ const fontRoboto = Roboto({
 	variable: "--font-roboto",
 })
 
-export default function App({ Component, pageProps }: AppProps) {
+export default trpc.withTRPC(ZakuchessApp)
+
+function ZakuchessApp({ Component, pageProps }: AppProps) {
 	return (
 		<>
 			<Head>

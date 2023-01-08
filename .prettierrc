@@ -5,7 +5,7 @@
 	"semi": false,
 	"printWidth": 119,
 	"plugins": ["@trivago/prettier-plugin-sort-imports"],
-	"importOrder": ["node:.*", "<THIRD_PARTY_MODULES>", "^$lib/(.*)$", "^[./]"],
+	"importOrder": ["^node:", "^@?next/", "<THIRD_PARTY_MODULES>", "^$lib/", "^[./]"],
 	"importOrderSeparation": true,
 	"importOrderSortSpecifiers": true
 }
