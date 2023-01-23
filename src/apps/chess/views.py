@@ -5,14 +5,13 @@ from zlib import adler32
 
 from django.conf import settings
 from django.core.exceptions import SuspiciousOperation
-from django.http import HttpResponse
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.cache import cache_control
 from django.views.decorators.http import etag, require_POST, require_safe
 
 from .components.pages.chess import chess_move_piece_htmx_fragment, chess_page, chess_select_piece_htmx_fragment
 from .domain.mutations import create_new_game, game_move_piece
-from .domain.queries._get_bot_next_move import get_bot_next_move
 from .domain.types import Square
 from .models import Game
 from .presenters import GamePresenter
@@ -118,9 +117,11 @@ def htmx_game_bot_move(req: HttpRequest, game_id: str) -> HttpResponse:
         raise SuspiciousOperation("This game has no bot")
     if game.bot_side != game.active_player:
         raise SuspiciousOperation("This is not bot's turn")
+    if not (move := req.GET.get("move")):  # TODO: move this to the view path
+        raise Http404("Missing bot move")
     board_id = cast(str, req.GET.get("board_id"))
 
-    bot_next_move = get_bot_next_move(fen=game.fen, bot_side=game.bot_side)
+    bot_next_move = move[0:2], move[2:4]
     game_move_piece(game=game, from_square=bot_next_move[0], to_square=bot_next_move[1])
 
     game_presenter = GamePresenter(

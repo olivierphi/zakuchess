@@ -2,6 +2,7 @@ PYTHON_BINS ?= ./.venv/bin
 PYTHON ?= ${PYTHON_BINS}/python
 PYTHONPATH ?= ${PWD}/src
 DJANGO_SETTINGS_MODULE ?= project.settings.development
+SUB_MAKE = ${MAKE} --no-print-directory
 
 .DEFAULT_GOAL := help
 
@@ -15,9 +16,9 @@ install: .venv ./node_modules ## Install the Python and frontend dependencies
 .PHONY: dev
 dev:
 	@./node_modules/.bin/concurrently --names "django,css,js" --prefix-colors "blue,yellow,green" \
-		"${MAKE} --no-print-directory backend/watch" \
-		"${MAKE} --no-print-directory frontend/css/watch" \
-		"${MAKE} --no-print-directory frontend/js/watch"
+		"${SUB_MAKE} backend/watch" \
+		"${SUB_MAKE} frontend/css/watch" \
+		"${SUB_MAKE} frontend/js/watch"
 
 .PHONY: backend/watch
 backend/watch: address ?= 127.0.0.1
@@ -66,19 +67,19 @@ code-quality/mypy: ## Python's equivalent of TypeScript
 .PHONY: frontend/watch
 frontend/watch: ## Compile the CSS & JS assets of our various Django apps, in 'watch' mode
 	@./node_modules/.bin/concurrently --names "css,js" --prefix-colors "yellow,green" \
-		"${MAKE} --no-print-directory frontend/css/watch" \
-		"${MAKE} --no-print-directory frontend/js/watch"
+		"${SUB_MAKE} frontend/css/watch" \
+		"${SUB_MAKE} frontend/js/watch"
 
 .PHONY: frontend/css/watch
 frontend/css/watch: ## Compile the CSS assets of our various Django apps, in 'watch' mode
-	@${MAKE} --no-print-directory frontend/css/compile \
+	@${SUB_MAKE} frontend/css/compile \
 		tailwind_compile_opts='--watch' sass_compile_opts='--watch'
 
 .PHONY: frontend/css/compile
 frontend/css/compile:  
 	@./node_modules/.bin/concurrently --names "tailwind,scss" \
-		"${MAKE} --no-print-directory frontend/css/compile/tailwind" \
-		"${MAKE} --no-print-directory frontend/css/compile/scss"
+		"${SUB_MAKE} frontend/css/compile/tailwind" \
+		"${SUB_MAKE} frontend/css/compile/scss"
 		
 frontend/css/compile/tailwind: tailwind_compile_opts ?= 
 frontend/css/compile/tailwind: ## Compile the Tailwind CSS assets of our various Django apps
@@ -100,7 +101,7 @@ frontend/css/compile/scss: ## Compile the CSS assets of our various Django apps
 
 .PHONY: frontend/js/watch
 frontend/js/watch: ## Compile the JS assets of our various Django apps, in 'watch' mode
-	@${MAKE} --no-print-directory frontend/js/compile esbuild_compile_opts='--watch'
+	@${SUB_MAKE} frontend/js/compile esbuild_compile_opts='--watch'
 
 .PHONY: frontend/js/compile
 frontend/js/compile: js_webui_src ?= src/apps/webui/static-src/webui/ts
@@ -109,8 +110,8 @@ frontend/js/compile: js_chess_src ?= src/apps/chess/static-src/chess/ts
 frontend/js/compile: js_chess_dest ?= src/apps/chess/static/chess/js
 frontend/js/compile: ## Compile the JS assets of our various Django apps
 	@./node_modules/.bin/concurrently --names "webui,chess" \
-		"${MAKE} --no-print-directory frontend/js/compile_app_files src='${js_webui_src}/main.ts' dest=${js_webui_dest}" \
-		"${MAKE} --no-print-directory frontend/js/compile_app_files src='${js_chess_src}/chess-main.ts' dest=${js_chess_dest}"
+		"${SUB_MAKE} frontend/js/compile_app_files src='${js_webui_src}/main.ts' dest=${js_webui_dest}" \
+		"${SUB_MAKE} frontend/js/compile_app_files src='${js_chess_src}/chess-main.ts' dest=${js_chess_dest}"
 		
 .PHONY: frontend/js/compile_app_files
 frontend/js/compile_app_files: esbuild_compile_opts ?= 
@@ -159,7 +160,7 @@ docker/local/run: ## Docker: launch the previously built image, listening on por
 
 .PHONY: docker/local/migrate
 docker/local/migrate:
-	${MAKE} --no-print-directory docker/local/run \
+	${SUB_MAKE} docker/local/run \
 		cmd='/app/.venv/bin/python src/manage.py migrate'
 
 # Here starts Fly.io-related stuff
