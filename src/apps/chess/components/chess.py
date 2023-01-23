@@ -1,26 +1,45 @@
+import json
+from string import Template
 from typing import TYPE_CHECKING, cast
 from urllib.parse import urlencode
 
 from chess import FILE_NAMES, RANK_NAMES
+from django.templatetags.static import static
 from django.urls import reverse
 from dominate.tags import div, dom_tag, span
+from dominate.util import raw as unescaped_html
 
 from ..domain.types import Square
 from .chess_helpers import file_and_rank_from_square, piece_player_side, piece_unit_classes, square_to_tailwind_classes
 
 if TYPE_CHECKING:
-    from ..domain.types import File, PieceView, PlayerSide, Rank
+    from ..domain.types import PieceView, PlayerSide
     from ..presenters import GamePresenter
 
 _SQUARE_COLOR_TAILWIND_CLASSES = ("bg-chess-square-dark-color", "bg-chess-square-light-color")
-_PIECE_GROUND_MARKER_COLOR_TAILWIND_CLASSES: dict["PlayerSide", str] = {
-    "w": "bg-slate-100/40 border-slate-100",
-    "b": "bg-slate-800/40 border-slate-800",
+_PIECE_GROUND_MARKER_COLOR_TAILWIND_CLASSES: dict[tuple["PlayerSide", bool], str] = {
+    # the boolean says if the piece can move
+    ("w", False): "bg-slate-100/40 border border-slate-100",
+    ("b", False): "bg-slate-800/40 border border-slate-800",
+    ("w", True): "bg-slate-100/40 border-2 border-chess-available-target-marker",
+    ("b", True): "bg-slate-800/40 border-2 border-chess-available-target-marker",
 }
+
+_BOT_MOVE_DELAY = 500  # we'll wait that amount of millisecondes before starting the bot move's calculation
+_PLAY_BOT_JS_TEMPLATE = Template(
+    """
+<script>
+    (function () {
+        setTimeout(function () {
+            window.playBotMove("$FEN", "$PLAY_MOVE_HTMX_ELEMENT_ID", "$BOT_ASSETS_DATA_HOLDER_ELEMENT_ID");
+        }, $MOVE_DELAY);
+    })()</script>"""
+)
 
 
 def chess_arena(*, game_presenter: "GamePresenter", board_id: str) -> dom_tag:
     return div(
+        chess_bot_data(board_id),
         div(
             chess_board(board_id),
             cls="absolute inset-0 pointer-events-none z-0",
@@ -47,6 +66,18 @@ def chess_arena(*, game_presenter: "GamePresenter", board_id: str) -> dom_tag:
     )
 
 
+def chess_bot_data(board_id: str) -> dom_tag:
+    stockfish_urls = {
+        "wasm": static("chess/js/bot/stockfish.wasm.js"),
+        "js": static("chess/js/bot/stockfish.js"),
+    }
+    return div(
+        id=f"chess-bot-data-{board_id}",
+        aria_hidden="true",
+        data_stockfish_urls=json.dumps(stockfish_urls),
+    )
+
+
 def chess_board(board_id: str) -> dom_tag:
     squares: list[dom_tag] = []
     for file in FILE_NAMES:
@@ -66,14 +97,7 @@ def chess_pieces(*, game_presenter: "GamePresenter", board_id: str, **extra_attr
             chess_piece(square=square, piece_view=piece_view, game_presenter=game_presenter, board_id=board_id)
         )
 
-    if game_presenter.is_bot_turn:
-        bot_turn_attrs = dict(
-            data_hx_post=f"{reverse('chess:htmx_game_bot_move', kwargs={'game_id': game_presenter.game_id})}?{urlencode({'board_id': board_id})}",
-            data_hx_trigger="load delay:1s",
-            data_hx_target=f"#chess-board-pieces-{ board_id }",
-        )
-    else:
-        bot_turn_attrs = {}
+    bot_turn_html_elements = _bot_turn_html_elements(game_presenter=game_presenter, board_id=board_id)
 
     return div(
         div(
@@ -81,9 +105,9 @@ def chess_pieces(*, game_presenter: "GamePresenter", board_id: str, **extra_attr
             data_aria_hidden="true",
         ),
         *pieces,
+        *bot_turn_html_elements,
         id=f"chess-board-pieces-{board_id}",
         cls="relative aspect-square",
-        **bot_turn_attrs,
         **extra_attrs,
     )
 
@@ -116,7 +140,10 @@ def chess_piece(
 ) -> dom_tag:
     player_side = piece_player_side(piece_view)
 
-    ground_marker = chess_unit_ground_marker(player_side=player_side)
+    piece_can_move = (
+        player_side == game_presenter.my_side and square in game_presenter.squares_with_pieces_that_can_move
+    )
+    ground_marker = chess_unit_ground_marker(player_side=player_side, can_move=piece_can_move)
     unit_display = chess_unit_display(game_presenter=game_presenter, square=square, piece_view=piece_view)
 
     classes = [
@@ -189,6 +216,11 @@ def chess_available_target(*, game_presenter: "GamePresenter", square: "Square",
 
 
 def chess_unit_display(*, game_presenter: "GamePresenter", square: "Square", piece_view: "PieceView") -> dom_tag:
+    is_highlighted = (
+        game_presenter.selected_piece
+        and game_presenter.selected_piece.square == square
+        and square in game_presenter.squares_with_pieces_that_can_move
+    )
     classes = [
         "relative",
         "w-full",
@@ -198,23 +230,17 @@ def chess_unit_display(*, game_presenter: "GamePresenter", square: "Square", pie
         "z-10",
         *piece_unit_classes(piece_view),
         # Conditional classes:
-        *[
-            "drop-shadow-selected-piece"
-            if game_presenter.selected_piece and game_presenter.selected_piece.square == square
-            else ""
-        ],
-        *[
-            "drop-shadow-potential-capture"
-            if game_presenter.selected_piece and game_presenter.selected_piece.is_potential_capture(square)
-            else ""
-        ],
+        "drop-shadow-selected-piece" if is_highlighted else "",
+        "drop-shadow-potential-capture"
+        if game_presenter.selected_piece and game_presenter.selected_piece.is_potential_capture(square)
+        else "",
     ]
     return div(
         cls=" ".join(classes),
     )
 
 
-def chess_unit_ground_marker(*, player_side: "PlayerSide") -> dom_tag:
+def chess_unit_ground_marker(*, player_side: "PlayerSide", can_move: bool) -> dom_tag:
     classes = [
         "absolute",
         "w-5/6",
@@ -223,10 +249,34 @@ def chess_unit_ground_marker(*, player_side: "PlayerSide") -> dom_tag:
         "bottom-1",
         "rounded-1/2",
         "z-0",
-        "border",
         "border-solid",
-        _PIECE_GROUND_MARKER_COLOR_TAILWIND_CLASSES[player_side],
+        _PIECE_GROUND_MARKER_COLOR_TAILWIND_CLASSES[(player_side, can_move)],
     ]
     return div(
         cls=" ".join(classes),
     )
+
+
+def _bot_turn_html_elements(*, game_presenter: "GamePresenter", board_id: str) -> list[dom_tag]:
+    if not game_presenter.is_bot_turn:
+        return []
+
+    play_move_htmx_element_id = f"chess-bot-play-move-{ board_id }"
+    return [
+        unescaped_html(
+            _PLAY_BOT_JS_TEMPLATE.safe_substitute(
+                {
+                    "FEN": game_presenter.fen,
+                    "PLAY_MOVE_HTMX_ELEMENT_ID": play_move_htmx_element_id,
+                    "BOT_ASSETS_DATA_HOLDER_ELEMENT_ID": f"chess-bot-data-{ board_id }",
+                    "MOVE_DELAY": _BOT_MOVE_DELAY,
+                }
+            )
+        ),
+        div(
+            id=play_move_htmx_element_id,
+            data_hx_post=f"{reverse('chess:htmx_game_bot_move', kwargs={'game_id': game_presenter.game_id})}?{urlencode({'board_id': board_id, 'move': 'BOT_MOVE'})}",
+            data_hx_target=f"#chess-board-pieces-{ board_id }",
+            data_hx_trigger="playMove",
+        ),
+    ]

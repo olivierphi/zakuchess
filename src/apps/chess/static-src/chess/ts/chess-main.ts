@@ -1,3 +1,10 @@
+import { playFromFEN } from "./chess-bot"
+
+// @ts-ignore
+window.cursorIsNotOnChessBoardInteractiveElement = cursorIsNotOnChessBoardInteractiveElement
+// @ts-ignore
+window.playBotMove = playBotMove
+
 function cursorIsNotOnChessBoardInteractiveElement(boardId: string): boolean {
     // Must return `true` only if the user hasn't clicked on one of the game clickable elements.
     // @link https://htmx.org/attributes/hx-trigger/
@@ -36,4 +43,15 @@ function cursorIsNotOnChessBoardInteractiveElement(boardId: string): boolean {
     return true
 }
 
-window.cursorIsNotOnChessBoardInteractiveElement = cursorIsNotOnChessBoardInteractiveElement
+function playBotMove(fen: string, htmxElementId: string, botAssetsDataHolderElementId: string): void {
+    playFromFEN(fen, 1, botAssetsDataHolderElementId).then((move) => {
+        console.log(`bot wants to move from ${move[0]} to ${move[1]}`)
+        const htmxElement = document.getElementById(htmxElementId)
+        if (!htmxElement) {
+            throw `no #${botAssetsDataHolderElementId} element found to play bot's move!`
+        }
+        htmxElement.dataset.hxPost = htmxElement.dataset.hxPost!.replace("BOT_MOVE", `${move[0]}${move[1]}`)
+        window.htmx.process(htmxElement)
+        window.htmx.trigger(htmxElement, "playMove", {})
+    })
+}
