@@ -6,11 +6,9 @@ import chess
 from .domain.consts import PIECES_VALUES, PLAYER_SIDES, STARTING_PIECES
 from .domain.helpers import square_from_int
 from .domain.queries import get_piece_available_targets, get_team_members_by_role_by_side
-from .domain.types import PieceId, PieceRole, PiecesView, PieceSymbol, PlayerSide, Square
 
 if TYPE_CHECKING:
-    from chess import Piece
-    from .domain.types import TeamMemberRole, PieceView
+    from .domain.types import PieceRoleBySquare, Square, PlayerSide, PieceSymbol
 
 from .models import Game, TeamMember
 
@@ -22,10 +20,10 @@ class GamePresenter:
         self,
         *,
         game: Game,
-        my_side: PlayerSide,
-        selected_square: Square | None = None,
-        selected_piece_square: Square | None = None,
-        target_to_confirm: Square | None = None,
+        my_side: "PlayerSide",
+        selected_square: "Square | None" = None,
+        selected_piece_square: "Square | None" = None,
+        target_to_confirm: "Square | None" = None,
     ):
         self._game = game
         self._chess_board = chess.Board(fen=game.fen)
@@ -37,6 +35,8 @@ class GamePresenter:
                 chess_board=self._chess_board,
                 square=selected_square,
             )
+
+        self.selected_piece: SelectedPiecePresenter | None = None
         if selected_piece_square is not None:
             self.selected_piece = SelectedPiecePresenter(
                 game_presenter=self,
@@ -44,8 +44,6 @@ class GamePresenter:
                 piece_square=selected_piece_square,
                 target_to_confirm=target_to_confirm,
             )
-        else:
-            self.selected_piece = None
 
     @cached_property
     def is_my_turn(self) -> bool:
@@ -73,17 +71,17 @@ class GamePresenter:
         return self._chess_board.is_game_over()
 
     @cached_property
-    def active_player(self) -> PlayerSide:
+    def active_player(self) -> "PlayerSide":
         return "w" if self._chess_board.turn else "b"
 
     @cached_property
-    def squares_with_pieces_that_can_move(self) -> set[Square]:
+    def squares_with_pieces_that_can_move(self) -> set["Square"]:
         return set(square_from_int(move.from_square) for move in self._chess_board.legal_moves)
 
     @cached_property
-    def captured_pieces(self) -> dict[PlayerSide, list[PieceRole]]:
+    def captured_pieces(self) -> dict["PlayerSide", list["PieceSymbol"]]:
         remaining_pieces = [piece.symbol() for piece in self._chess_board.piece_map().values()]
-        captured_pieces: dict[PlayerSide, list[PieceRole]] = {"w": [], "b": []}
+        captured_pieces: dict["PlayerSide", list["PieceSymbol"]] = {"w": [], "b": []}
         for player_side in PLAYER_SIDES:
             for starting_piece in STARTING_PIECES[player_side]:
                 if starting_piece in remaining_pieces:
@@ -98,7 +96,7 @@ class GamePresenter:
         remaining_pieces = [piece.symbol() for piece in self._chess_board.piece_map().values()]
         score = 0
         for piece in remaining_pieces:
-            piece_symbol = cast(PieceSymbol, piece.lower())
+            piece_symbol = cast("PieceType", piece.lower())
             if piece_symbol == "k":
                 continue
             score += PIECES_VALUES[piece_symbol] * (1 if piece in STARTING_PIECES["w"] else -1)
@@ -106,7 +104,7 @@ class GamePresenter:
 
     # Properties derived from the Game model:
     @cached_property
-    def active_player_side(self) -> PlayerSide:
+    def active_player_side(self) -> "PlayerSide":
         return self._game.active_player
 
     @cached_property
@@ -118,16 +116,12 @@ class GamePresenter:
         return str(self._game.id)
 
     @cached_property
-    def pieces_view(self) -> PiecesView:
-        return self._game.pieces_view
+    def pieces_view(self) -> "PieceRoleBySquare":
+        return self._game.piece_role_by_square
 
     @cached_property
-    def team_members_by_role_by_side(self) -> "dict[PlayerSide, dict[TeamMemberRole, TeamMember]]":
+    def team_members_by_role_by_side(self) -> "dict[PlayerSide, dict[PieceRole, TeamMember]]":
         return get_team_members_by_role_by_side(game=self._game)
-
-    @cached_property
-    def pieces_id_per_square(self) -> dict[Square, PieceId]:
-        return {square_name: piece["id"] for square_name, piece in self.pieces_view.items()}
 
 
 class SelectedSquarePresenter:
@@ -143,17 +137,17 @@ class SelectedSquarePresenter:
         self.square = square
 
     @cached_property
-    def team_member(self) -> TeamMember:
+    def team_member(self) -> "TeamMember":
         return self._game_presenter.team_members_by_role_by_side[self._game_presenter.active_player][
             self._square_piece_view["id"]
         ]
 
     @cached_property
-    def player_side(self) -> PieceSymbol:
+    def player_side(self) -> "PieceSymbol":
         return "w" if self.piece_at.color else "b"
 
     @cached_property
-    def symbol(self) -> PieceSymbol:
+    def symbol(self) -> "PieceSymbol":
         return self._square_piece_view["piece"]
 
     @cached_property
@@ -171,16 +165,16 @@ class SelectedPiecePresenter(SelectedSquarePresenter):
         *,
         game_presenter: GamePresenter,
         chess_board: chess.Board,
-        piece_square: Square,
-        target_to_confirm: Square | None,
+        piece_square: "Square",
+        target_to_confirm: "Square | None",
     ):
         super().__init__(game_presenter=game_presenter, chess_board=chess_board, square=piece_square)
         self.target_to_confirm = target_to_confirm
 
     @cached_property
-    def available_targets(self) -> set[Square]:
+    def available_targets(self) -> set["Square"]:
         return get_piece_available_targets(chess_board=self._chess_board, piece_square=self.square)
 
     @cache
-    def is_potential_capture(self, square: Square) -> bool:
+    def is_potential_capture(self, square: "Square") -> bool:
         return square in self.available_targets and self.piece_at is not None

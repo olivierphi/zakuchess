@@ -1,4 +1,4 @@
-from typing import Literal, TypeAlias, TypedDict
+from typing import Literal, TypeAlias
 
 PlayerSide = Literal[
     # Following chess conventions, our sides will be "w(hite)" and "b(lack)".
@@ -8,19 +8,22 @@ PlayerSide = Literal[
     # fmt: on
 ]
 
-PieceSymbol = Literal[
+
+PieceType = Literal[
     # fmt: off
-    "P", "N", "B", "R", "Q", "K", # "w" side
     "p", "n", "b", "r", "q", "k",
-    # "b" side
     # fmt: on
 ]
 
-PieceRole = Literal[
+PieceSymbol = Literal[
     # fmt: off
+    # "w" side:
+    "P", "N", "B", "R", "Q", "K",
+    # "b" side:
     "p", "n", "b", "r", "q", "k",
     # fmt: on
 ]
+
 
 TeamMemberRole = Literal[
     # fmt: off
@@ -28,6 +31,19 @@ TeamMemberRole = Literal[
     "p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", 
     # 8 pieces:
     # N.B. Bishops are "b(lack)" or "w(hite)" rather than 1 or 2
+    "r1", "n1", "bb", "q", "k", "bw", "n2", "r2",
+    # fmt: on
+]
+
+PieceRole = Literal[
+    # fmt: off
+    # Same than TeamMemberRole, but applied to the board:
+    # --> following chess conventions, "w player"'s pieces are uppercase while "b player"'s pieces are lowercase.
+    # "w" side:
+    "P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", 
+    "R1", "N1", "BB", "Q", "K", "BW", "N2", "R2",
+    # "b" side:
+    "p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", 
     "r1", "n1", "bb", "q", "k", "bw", "n2", "r2",
     # fmt: on
 ]
@@ -49,15 +65,5 @@ Square = Literal[
     # fmt: on
 ]
 
-PieceId: TypeAlias = TeamMemberRole
 
-PiecesIdPerSquare: TypeAlias = dict[Square, PieceId]
-
-
-class PieceView(TypedDict):
-    id: PieceId
-    piece: PieceSymbol
-
-
-PiecesView: TypeAlias = dict[Square, PieceView]
-PieceIdsPerSquare: TypeAlias = dict[Square, PieceId]
+PieceRoleBySquare: TypeAlias = dict[Square, PieceRole]

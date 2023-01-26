@@ -1,12 +1,13 @@
 from collections.abc import Mapping
-from typing import NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, cast
 
 import chess
 from django.core.exceptions import SuspiciousOperation
 
 from ...models import Game
-from ..helpers import pieces_view_from_chess_board
-from ..types import Square
+
+if TYPE_CHECKING:
+    from ..types import PieceRoleBySquare, Square
 
 
 class PieceMovementResult(NamedTuple):
@@ -14,7 +15,7 @@ class PieceMovementResult(NamedTuple):
     # game_over: bool
 
 
-_KINGS_CASTLING: tuple[tuple[Square, Square], ...] = (
+_KINGS_CASTLING: tuple[tuple["Square", "Square"], ...] = (
     # (king's previous square, king's new square) tuples:
     ("e1", "g1"),
     ("e1", "c1"),
@@ -22,7 +23,7 @@ _KINGS_CASTLING: tuple[tuple[Square, Square], ...] = (
     ("e8", "c8"),
 )
 
-_ROOK_SQUARE_AFTER_CASTLING: Mapping[Square, tuple[Square, Square]] = {
+_ROOK_SQUARE_AFTER_CASTLING: Mapping["Square", tuple["Square", "Square"]] = {
     # {king new square: (rook previous square, rook new square)} dict:
     "g1": ("h1", "f1"),
     "c1": ("a1", "d1"),
@@ -31,7 +32,7 @@ _ROOK_SQUARE_AFTER_CASTLING: Mapping[Square, tuple[Square, Square]] = {
 }
 
 
-def game_move_piece(*, game: Game, from_square: Square, to_square: Square) -> PieceMovementResult:
+def game_move_piece(*, game: Game, from_square: "Square", to_square: "Square") -> PieceMovementResult:
     # TODO: validate against the board's legal moves, since Python Chess doesn't do that for us
     board = chess.Board(fen=game.fen)
     current_piece = board.piece_at(chess.parse_square(from_square))
@@ -39,8 +40,8 @@ def game_move_piece(*, game: Game, from_square: Square, to_square: Square) -> Pi
         raise SuspiciousOperation(f"No pieces on the selected square '{from_square}'")
     if current_piece.color != board.turn:
         raise SuspiciousOperation()
-    pieces_id_per_square = game.pieces_id_per_square()
-    current_piece_id = pieces_id_per_square[from_square]
+    team_member_role_by_square = cast("PieceRoleBySquare", game.piece_role_by_square)
+    current_piece_role = team_member_role_by_square[from_square]
     targeted_piece = board.piece_at(chess.parse_square(to_square))
     # print(
     #     f"board.turn={'white' if board.turn else 'black'} "
@@ -65,8 +66,8 @@ def game_move_piece(*, game: Game, from_square: Square, to_square: Square) -> Pi
     previous_castling_rights = board.castling_rights
     board.push_uci(move_uci_piece_symbol)
 
-    del pieces_id_per_square[from_square]
-    pieces_id_per_square[to_square] = current_piece_id
+    del team_member_role_by_square[from_square]
+    team_member_role_by_square[to_square] = current_piece_role
 
     # Specific cases:
     if current_piece.piece_type == chess.KING and board.castling_rights != previous_castling_rights:
@@ -75,13 +76,14 @@ def game_move_piece(*, game: Game, from_square: Square, to_square: Square) -> Pi
             # Our King just castled!
             # We also have to update the Rook's data in our `pieces_id_per_square` mapping
             target_rook_previous_square, target_rook_new_square = _ROOK_SQUARE_AFTER_CASTLING[to_square]
-            target_rook_id = pieces_id_per_square[target_rook_previous_square]
-            pieces_id_per_square[target_rook_new_square] = target_rook_id
-            del pieces_id_per_square[target_rook_previous_square]
+            target_rook_id = team_member_role_by_square[target_rook_previous_square]
+            team_member_role_by_square[target_rook_new_square] = target_rook_id
+            del team_member_role_by_square[target_rook_previous_square]
 
+    # Right, let's update that model!
     game.fen = board.fen()
     game.active_player = "w" if board.turn else "b"
-    game.pieces_view = pieces_view_from_chess_board(board, pieces_id_per_square)
-    game.save(update_fields=("fen", "active_player", "pieces_view", "updated_at"))
+    game.piece_role_by_square = team_member_role_by_square  # type: ignore[assignment]
+    game.save(update_fields=("fen", "active_player", "team_member_role_by_square", "updated_at"))
 
     return PieceMovementResult(is_promotion=is_promotion)

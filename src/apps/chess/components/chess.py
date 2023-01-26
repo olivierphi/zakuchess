@@ -13,7 +13,7 @@ from ..domain.types import Square
 from .chess_helpers import file_and_rank_from_square, piece_player_side, piece_unit_classes, square_to_tailwind_classes
 
 if TYPE_CHECKING:
-    from ..domain.types import PieceView, PlayerSide
+    from ..domain.types import PlayerSide
     from ..presenters import GamePresenter
 
 _SQUARE_COLOR_TAILWIND_CLASSES = ("bg-chess-square-dark-color", "bg-chess-square-light-color")
@@ -189,6 +189,8 @@ def chess_available_targets(*, game_presenter: "GamePresenter", board_id: str, *
 
 
 def chess_available_target(*, game_presenter: "GamePresenter", square: "Square", board_id: str) -> dom_tag:
+    if game_presenter.selected_piece is None:
+        return div()
     target_marker = div(
         cls="w-1/5 h-1/5 rounded-full bg-chess-available-target-marker transition-size hover:w-1/4 hover:h-1/4 ",
     )

@@ -1,13 +1,15 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from apps.chess.models import Game
 
 if TYPE_CHECKING:
-    from apps.chess.domain.types import PlayerSide, TeamMemberRole
+    from collections.abc import Sequence
+
+    from apps.chess.domain.types import PieceRole, PlayerSide
     from apps.chess.models import TeamMember
 
 
-def get_team_members_by_role_by_side(*, game: Game) -> "dict[PlayerSide, dict[TeamMemberRole, TeamMember]]":
+def get_team_members_by_role_by_side(*, game: Game) -> "dict[PlayerSide, dict[PieceRole, TeamMember]]":
     team_w, team_b = (
         # TODO: use Players to know which team is which... once we do have Players ^^
         game.teams.all()
@@ -15,6 +17,6 @@ def get_team_members_by_role_by_side(*, game: Game) -> "dict[PlayerSide, dict[Te
         .order_by("id")
     )
     return {
-        "w": {member.role: member.public_data() for member in team_w.members.all()},
-        "b": {member.role: member.public_data() for member in team_b.members.all()},
+        "w": {cast("PieceRole", member.role): member for member in cast("Sequence[TeamMember]", team_w.members.all())},
+        "b": {cast("PieceRole", member.role): member for member in cast("Sequence[TeamMember]", team_b.members.all())},
     }
