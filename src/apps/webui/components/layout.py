@@ -2,7 +2,7 @@ import json
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
-from django.template.backends.utils import get_token
+from django.template.backends.utils import get_token  # type: ignore[attr-defined]
 from django.templatetags.static import static
 from dominate.tags import (
     body,
