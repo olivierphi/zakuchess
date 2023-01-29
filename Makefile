@@ -81,27 +81,14 @@ frontend/css/watch: ## Compile the CSS assets of our various Django apps, in 'wa
 
 .PHONY: frontend/css/compile
 frontend/css/compile:  
-	@./node_modules/.bin/concurrently --names "tailwind,scss" \
-		"${SUB_MAKE} frontend/css/compile/tailwind" \
-		"${SUB_MAKE} frontend/css/compile/scss"
+	@./node_modules/.bin/concurrently --names "tailwind" \
+		"${SUB_MAKE} frontend/css/compile/tailwind"
 		
 frontend/css/compile/tailwind: tailwind_compile_opts ?= 
 frontend/css/compile/tailwind: ## Compile the Tailwind CSS assets of our various Django apps
 	@./node_modules/.bin/tailwind ${tailwind_compile_opts} \
 		-i ./src/apps/webui/static-src/webui/css/tailwind.css \
 		-o ./src/apps/webui/static/webui/css/tailwind.css
-		
-frontend/css/compile/scss: sass_compile_opts ?= 
-frontend/css/compile/scss: css_webui_src ?= src/apps/webui/static-src/webui/scss
-frontend/css/compile/scss: css_webui_dest ?= src/apps/webui/static/webui/css
-frontend/css/compile/scss: css_chess_src ?= src/apps/chess/static-src/chess/scss
-frontend/css/compile/scss: css_chess_dest ?= src/apps/chess/static/chess/css
-frontend/css/compile/scss: ## Compile the CSS assets of our various Django apps
-	@./node_modules/.bin/sass ${sass_compile_opts} \
-		${css_webui_src}/main.scss:${css_webui_dest}/main.css \
-		${css_chess_src}/game-container.scss:${css_chess_dest}/game-container.css \
-		${css_chess_src}/chess-units/theme/default.scss:${css_chess_dest}/chess-units/theme/default.css
-		
 
 .PHONY: frontend/js/watch
 frontend/js/watch: ## Compile the JS assets of our various Django apps, in 'watch' mode

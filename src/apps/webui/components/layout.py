@@ -15,11 +15,25 @@ from dominate.tags import (
     link,
     meta,
     script,
+    style,
     title as base_title,
 )
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
+
+# We'll do something cleaner later
+# TODO: compress these fonts in woff2, and put them in "webui/static/webui/fonts".
+_FONTS_CSS = """
+@font-face {
+  font-family: 'OpenSans';
+  src: url('/static/webui/fonts/OpenSans.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'PixelFont';
+  src: url('/static/webui/fonts/fibberish.ttf') format('truetype');
+}
+"""
 
 
 def page(*, children: Sequence[dom_tag], request: "HttpRequest", title: str = "ZakuChess ♞") -> str:
@@ -45,8 +59,8 @@ def head(*, title: str) -> dom_tag:
         meta(name="viewport", content="width=device-width, initial-scale=1"),
         meta(name="description", content="ZakuChess"),
         meta(name="keywords", content="chess roleplay"),
+        style(_FONTS_CSS),
         link(rel="stylesheet", href=static("webui/css/tailwind.css")),
-        link(rel="stylesheet", href=static("webui/css/main.css")),
         script(src=static("webui/js/main.js")),
         script(src=static("chess/js/chess-main.js")),
     )
