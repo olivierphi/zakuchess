@@ -75,12 +75,12 @@ module.exports = {
 
 function chessPiecesBackgroundImages() {
     const WESNOTH_LOYALISTS_MAPPING = {
-        pawn: "fencer.png",
-        knight: "horseman.png",
-        bishop: "bowman.png",
-        rook: "shocktrooper.png",
-        queen: "red-mage+female.png",
-        king: "swordsman.png",
+        pawn: "pawn.png",
+        knight: "knight.png",
+        bishop: "bishop.png",
+        rook: "rook.png",
+        queen: "queen.png",
+        king: "king.png",
     }
     return Object.fromEntries(
         Object.entries(WESNOTH_LOYALISTS_MAPPING).map(([pieceName, imageName]) => [

@@ -16,20 +16,43 @@ BASE_DIR = Path(__file__).parent.resolve() / ".." / ".."  # points to our git re
 FRONTEND_SRC = BASE_DIR / "frontend-src"
 CHESS_STATIC = BASE_DIR / "src" / "apps" / "chess" / "static" / "chess"
 
+ASSETS_PATTERNS: dict[str, str] = {
+    "STOCKFISH_CDN": "https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/{file}",
+    "WESNOTH_UNITS_GITHUB": "https://github.com/wesnoth/wesnoth/raw/master/data/core/images/units/{path}",
+    "WESNOTH_CAMPAIGN_UNITS_GITHUB": "https://github.com/wesnoth/wesnoth/raw/master/data/campaigns/{campaign}/images/units/{path}",
+    # @link https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces
+    "WIKIMEDIA_CHESS_SVG_LIGHT": "https://upload.wikimedia.org/wikipedia/commons/{folder}/Chess_{piece}lt45.svg",
+    "WIKIMEDIA_CHESS_SVG_DARK": "https://upload.wikimedia.org/wikipedia/commons/{folder}/Chess_{piece}dt45.svg",
+}
+
 ASSETS_MAP: dict[URL, Path] = {
     # fmt: off
     # Stockfish:
-    "https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.min.js": CHESS_STATIC / "js" / "bot" / "stockfish.js",
-    "https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.wasm": CHESS_STATIC / "js" / "bot" / "stockfish.wasm",
-    "https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.wasm.min.js": CHESS_STATIC / "js" / "bot" / "stockfish.wasm.js",
+    ASSETS_PATTERNS["STOCKFISH_CDN"].format(file="stockfish.min.js"): CHESS_STATIC / "js" / "bot" / "stockfish.js",
+    ASSETS_PATTERNS["STOCKFISH_CDN"].format(file="stockfish.wasm"): CHESS_STATIC / "js" / "bot" / "stockfish.wasm",
+    ASSETS_PATTERNS["STOCKFISH_CDN"].format(file="stockfish.wasm.min.js"): CHESS_STATIC / "js" / "bot" / "stockfish.wasm.js",
     # Wesnoth assets:
-    "https://github.com/wesnoth/wesnoth/raw/master/data/core/images/units/human-loyalists/bowman.png": CHESS_STATIC / "units" / "default" / "bowman.png",
-    "https://github.com/wesnoth/wesnoth/raw/master/data/core/images/units/human-loyalists/fencer.png": CHESS_STATIC / "units" / "default" / "fencer.png",
-    "https://github.com/wesnoth/wesnoth/raw/master/data/core/images/units/human-loyalists/general.png": CHESS_STATIC / "units" / "default" / "general.png",
-    "https://github.com/wesnoth/wesnoth/raw/master/data/core/images/units/human-loyalists/horseman/horseman.png": CHESS_STATIC / "units" / "default" / "horseman.png",
-    "https://github.com/wesnoth/wesnoth/raw/master/data/core/images/units/human-magi/red-mage+female.png": CHESS_STATIC / "units" / "default" / "red-mage+female.png",
-    "https://github.com/wesnoth/wesnoth/raw/master/data/core/images/units/human-loyalists/shocktrooper.png": CHESS_STATIC / "units" / "default" / "shocktrooper.png",
-    "https://github.com/wesnoth/wesnoth/raw/master/data/core/images/units/human-loyalists/swordsman.png": CHESS_STATIC / "units" / "default" / "swordsman.png",
+    ASSETS_PATTERNS["WESNOTH_UNITS_GITHUB"].format(path="human-loyalists/fencer.png"): CHESS_STATIC / "units" / "default" / "pawn.png",
+    ASSETS_PATTERNS["WESNOTH_UNITS_GITHUB"].format(path="human-loyalists/horseman/horseman.png"): CHESS_STATIC / "units" / "default" / "knight.png",
+    ASSETS_PATTERNS["WESNOTH_UNITS_GITHUB"].format(path="human-loyalists/bowman.png"): CHESS_STATIC / "units" / "default" / "bishop.png",
+    ASSETS_PATTERNS["WESNOTH_UNITS_GITHUB"].format(path="human-loyalists/shocktrooper.png"): CHESS_STATIC / "units" / "default" / "rook.png",
+    ASSETS_PATTERNS["WESNOTH_UNITS_GITHUB"].format(path="human-magi/red-mage+female.png"): CHESS_STATIC / "units" / "default" / "queen.png",
+    ASSETS_PATTERNS["WESNOTH_CAMPAIGN_UNITS_GITHUB"].format(campaign="Heir_To_The_Throne", path="konrad-lord.png"): CHESS_STATIC / "units" / "default" / "king.png",
+    # Chess pieces symbols:
+    ## white pieces:
+    ASSETS_PATTERNS["WIKIMEDIA_CHESS_SVG_LIGHT"].format(folder="4/45", piece="p"): CHESS_STATIC / "symbols" / "w-pawn.svg",
+    ASSETS_PATTERNS["WIKIMEDIA_CHESS_SVG_LIGHT"].format(folder="7/70", piece="n"): CHESS_STATIC / "symbols" / "w-knight.svg",
+    ASSETS_PATTERNS["WIKIMEDIA_CHESS_SVG_LIGHT"].format(folder="b/b1", piece="b"): CHESS_STATIC / "symbols" / "w-bishop.svg",
+    ASSETS_PATTERNS["WIKIMEDIA_CHESS_SVG_LIGHT"].format(folder="7/72", piece="r"): CHESS_STATIC / "symbols" / "w-rook.svg",
+    ASSETS_PATTERNS["WIKIMEDIA_CHESS_SVG_LIGHT"].format(folder="1/15", piece="q"): CHESS_STATIC / "symbols" / "w-queen.svg",
+    ASSETS_PATTERNS["WIKIMEDIA_CHESS_SVG_LIGHT"].format(folder="4/42", piece="k"): CHESS_STATIC / "symbols" / "w-king.svg",
+    ## black pieces:
+    ASSETS_PATTERNS["WIKIMEDIA_CHESS_SVG_DARK"].format(folder="c/c7", piece="p"): CHESS_STATIC / "symbols" / "b-pawn.svg",
+    ASSETS_PATTERNS["WIKIMEDIA_CHESS_SVG_DARK"].format(folder="e/ef", piece="n"): CHESS_STATIC / "symbols" / "b-knight.svg",
+    ASSETS_PATTERNS["WIKIMEDIA_CHESS_SVG_DARK"].format(folder="9/98", piece="b"): CHESS_STATIC / "symbols" / "b-bishop.svg",
+    ASSETS_PATTERNS["WIKIMEDIA_CHESS_SVG_DARK"].format(folder="f/ff", piece="r"): CHESS_STATIC / "symbols" / "b-rook.svg",
+    ASSETS_PATTERNS["WIKIMEDIA_CHESS_SVG_DARK"].format(folder="4/47", piece="q"): CHESS_STATIC / "symbols" / "b-queen.svg",
+    ASSETS_PATTERNS["WIKIMEDIA_CHESS_SVG_DARK"].format(folder="f/f0", piece="k"): CHESS_STATIC / "symbols" / "b-king.svg",
     # fmt: on
 }
 

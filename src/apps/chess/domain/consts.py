@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Final
 
 if TYPE_CHECKING:
-    from .types import PieceRole, PieceSymbol, PieceType, PlayerSide, Square
+    from .types import PieceName, PieceRole, PieceSymbol, PieceType, PlayerSide, Square
 
 PLAYER_SIDES: Final[tuple["PlayerSide", "PlayerSide"]] = ("w", "b")
 
@@ -55,7 +55,7 @@ STARTING_PIECES: dict["PlayerSide", tuple["PieceSymbol"]] = {
     "b": (*("p" * 8), *("n" * 2), *("b" * 2), *("r" * 2), "q", "k"),  # type: ignore
 }
 
-PIECE_TYPE_TO_NAME: dict["PieceType", str] = {
+PIECE_TYPE_TO_NAME: dict["PieceType", "PieceName"] = {
     "p": "pawn",
     "n": "knight",
     "b": "bishop",
