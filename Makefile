@@ -20,6 +20,10 @@ dev:
 		"${SUB_MAKE} frontend/css/watch" \
 		"${SUB_MAKE} frontend/js/watch"
 
+.PHONY: download_assets
+download_assets:
+	${PYTHON_BINS}/python bin/scripts/download_assets.py
+
 .PHONY: backend/watch
 backend/watch: address ?= 127.0.0.1
 backend/watch: port ?= 8000

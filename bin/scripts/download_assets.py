@@ -40,7 +40,9 @@ def download_assets(*, even_if_exists: bool) -> None:
         if not even_if_exists and target_path.exists():
             print(f"Skipping download of '{asset_url}', since '{target_path.relative_to(BASE_DIR)}' already exists.")
             continue
-
+        target_folder = target_path.parent
+        if not target_folder.exists():
+            target_folder.mkdir(parents=True)
         print(f"Downloading '{asset_url}' to '{target_path.relative_to(BASE_DIR)}'...")
         dl_start_time = monotonic()
         urlretrieve(asset_url, target_path)

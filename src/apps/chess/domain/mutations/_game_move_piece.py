@@ -42,7 +42,7 @@ def game_move_piece(*, game: Game, from_square: "Square", to_square: "Square") -
         raise SuspiciousOperation()
     team_member_role_by_square = cast("PieceRoleBySquare", game.piece_role_by_square)
     current_piece_role = team_member_role_by_square[from_square]
-    targeted_piece = board.piece_at(chess.parse_square(to_square))
+    targeted_piece = board.piece_at(chess.parse_square(to_square))  # # noqa: F841
     # print(
     #     f"board.turn={'white' if board.turn else 'black'} "
     #     f":: move_piece_to({to_square=}) "
@@ -83,7 +83,7 @@ def game_move_piece(*, game: Game, from_square: "Square", to_square: "Square") -
     # Right, let's update that model!
     game.fen = board.fen()
     game.active_player = "w" if board.turn else "b"
-    game.piece_role_by_square = team_member_role_by_square  # type: ignore[assignment]
-    game.save(update_fields=("fen", "active_player", "team_member_role_by_square", "updated_at"))
+    game.piece_role_by_square = team_member_role_by_square
+    game.save(update_fields=("fen", "active_player", "piece_role_by_square", "updated_at"))
 
     return PieceMovementResult(is_promotion=is_promotion)

@@ -22,7 +22,6 @@ isort = "^5.10.1"
 ruff = "^0.0.141"
 mypy = "^0.991"
 pytest = "^7.2.0"
-django-types = "^0.16.0"
 pytest-django = "^4.5.2"
 pre-commit = "^2.20.0"
 ipython = "^8.6.0"
@@ -46,11 +45,13 @@ combine_as_imports = true
 # @link https://github.com/charliermarsh/ruff#options
 line-length = 119
 target-version = "py310"
+ignore = ["E501"]
 exclude = [
      'src/project/settings',
+     'src/apps/chess/components/_chess/status_bar.py', # because Ruff doesn't support pattern matching yet :-/
 ]
 [tool.ruff.per-file-ignores]
-"bin/scripts/download_assets.py" = ["E501"]
+"src/lib/chess_engines/sunfish/sunfish.py" = ["F841", "F821"]
 
 [tool.djlint]
 # @link https://www.djlint.com/docs/configuration/
@@ -67,6 +68,9 @@ exclude = [
     '^src/apps/[^/]+/migrations/.*\.py$',
     '^src/lib/chess_engines/[^/]+/.*\.py$',
 ]
+[[tool.mypy.overrides]]
+module = "django.*"
+ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = "environ"
 ignore_missing_imports = true
