@@ -60,6 +60,10 @@ class GamePresenter:
             )
 
     @cached_property
+    def turn_number(self) -> int:
+        return self._chess_board.fullmove_number
+
+    @cached_property
     def is_my_turn(self) -> bool:
         return self.my_side == self.active_player
 

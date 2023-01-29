@@ -1,9 +1,15 @@
 from typing import TYPE_CHECKING
 
-from dominate.tags import div, dom_tag, span
+from dominate.tags import div, dom_tag, img, span
 
 from ...domain.consts import PLAYER_SIDES
-from ...domain.helpers import piece_name_from_piece_role, utf8_symbol_from_piece_role, utf8_symbol_from_piece_type
+from ...domain.helpers import (
+    piece_name_from_piece_role,
+    piece_name_from_piece_type,
+    player_side_from_piece_role,
+    utf8_symbol_from_piece_role,
+)
+from ..chess_helpers import chess_unit_symbol_url
 
 if TYPE_CHECKING:
     from ...presenters import GamePresenter
@@ -28,36 +34,45 @@ def chess_status_bar(*, game_presenter: "GamePresenter", board_id: str, **extra_
 
 
 def _chess_status_bar_score(game_presenter: "GamePresenter") -> dom_tag:
+    turn_display = f"Turn {game_presenter.turn_number}. "
+
     score = game_presenter.score
-    score_display = "No players are leading at the moment"
+    score_display = "No players leading at the moment"
     if score != 0:
         i_am_leading = score > 0 and game_presenter.my_side == "w" or score < 0 and game_presenter.my_side == "b"
         score_display = "".join(("You're" if i_am_leading else "Opponent is", f" leading by {abs(score)} points"))
         score_display += " 🙂" if i_am_leading else " 🙁"
+
     captured_pieces_to_display: tuple[list[str], list[str]] = ([], [])
     for i, player_side in enumerate(PLAYER_SIDES):
         for captured_piece in game_presenter.captured_pieces[player_side]:
-            captured_pieces_to_display[i].append(utf8_symbol_from_piece_type(captured_piece))
-
+            piece_name = piece_name_from_piece_type(captured_piece)
+            captured_pieces_to_display[i].append(
+                img(
+                    src=chess_unit_symbol_url(player_side=player_side, piece_name=piece_name),
+                    alt=piece_name,
+                    cls="inline w-4 aspect-square",
+                )
+            )
     captures_display: list[str] = []
     if any(captured_pieces_to_display):
         my_captures_index = 1 if game_presenter.my_side == "w" else 0
         my_captures = captured_pieces_to_display[my_captures_index]
-        captures_display += ("You captured: ",)
+        captures_display += ("You captures: ",)
         if not my_captures:
             captures_display += ("nothing yet 😔",)
         else:
-            captures_display += (span("".join(my_captures), cls="font-mono text-xl"),)
+            captures_display += my_captures
         their_captures_index = 1 if my_captures_index == 0 else 0
         their_captures = captured_pieces_to_display[their_captures_index]
         captures_display += (" / ",)
-        captures_display += ("They captured: ",)
+        captures_display += ("Their captures: ",)
         if not my_captures:
             captures_display += ("nothing yet 😀",)
         else:
-            captures_display += (span("".join(their_captures), cls="font-mono text-xl"),)
+            captures_display += their_captures
 
-    return div(div(score_display), div(*captures_display), cls="w-full text-center")
+    return div(div(turn_display, score_display), div(*captures_display), cls="w-full text-center")
 
 
 def _chess_status_bar_selected_piece(game_presenter: "GamePresenter") -> dom_tag:
@@ -67,6 +82,8 @@ def _chess_status_bar_selected_piece(game_presenter: "GamePresenter") -> dom_tag
     selected_piece = game_presenter.selected_piece
     team_member = selected_piece.team_member
     piece_role = selected_piece.piece_role
+    player_side = player_side_from_piece_role(piece_role)
+    piece_name = piece_name_from_piece_role(piece_role)
 
     unit_display = chess_unit_display(
         game_presenter=game_presenter,
@@ -82,8 +99,11 @@ def _chess_status_bar_selected_piece(game_presenter: "GamePresenter") -> dom_tag
         div(f"{team_member.first_name} {team_member.last_name}"),
         div(
             f"Chess equivalent: ",
-            span(piece_name_from_piece_role(piece_role).capitalize()),
-            span(utf8_symbol_from_piece_role(piece_role), cls="font-mono text-lg"),
+            img(
+                src=chess_unit_symbol_url(player_side=player_side, piece_name=piece_name),
+                alt=piece_name,
+                cls="inline w-4 aspect-square",
+            ),
         ),
         cls="grow text-center",
     )

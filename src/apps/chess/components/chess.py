@@ -11,12 +11,12 @@ from dominate.util import raw as unescaped_html
 
 from ..domain.helpers import (
     file_and_rank_from_square,
+    piece_name_from_piece_role,
     player_side_from_piece_role,
     type_from_piece_role,
-    utf8_symbol_from_piece_type,
 )
 from ._chess.status_bar import chess_status_bar
-from .chess_helpers import piece_unit_classes, square_to_tailwind_classes
+from .chess_helpers import chess_unit_symbol_url, piece_unit_classes, square_to_tailwind_classes
 
 if TYPE_CHECKING:
     from ..domain.types import PieceRole, PlayerSide, Square
@@ -272,24 +272,35 @@ def chess_unit_ground_marker(*, player_side: "PlayerSide", can_move: bool) -> do
 def chess_unit_symbol_display(piece_role: "PieceRole") -> dom_tag:
     player_side = player_side_from_piece_role(piece_role)
     piece_type = type_from_piece_role(piece_role)
+    piece_name = piece_name_from_piece_role(piece_role)
+
+    symbol_class = [
+        "w-9",
+        "-ml-1",
+        "-mt-1",
+        "aspect-square",
+        "bg-no-repeat",
+        "bg-cover",
+        "opacity-30" if player_side == "w" else "opacity-20",
+    ]
+    symbol_display = div(
+        style=f"background-image: url('{chess_unit_symbol_url(player_side=player_side, piece_name=piece_name)}')",
+        cls=" ".join(symbol_class),
+    )
 
     classes = [
         "absolute",
         "top-0",
         "left-0" if player_side == "w" else "right-0",
-        "z-20",
-        "font-mono",
-        "text-4xl",
-        "text-slate-100" if player_side == "w" else "text-slate-700",
-        "[text-shadow:1px_1px_1px_rgba(0,0,0,0.75),1px_-1px_1px_rgba(0,0,0,0.75),-1px_1px_1px_rgba(0,0,0,0.75),-1px_-1px_1px_rgba(0,0,0,0.75)]"
-        if player_side == "w"
-        else "[text-shadow:1px_1px_1px_rgba(255,255,255,0.75),1px_-1px_1px_rgba(255,255,255,0.75),-1px_1px_1px_rgba(255,255,255,0.75),-1px_-1px_1px_rgba(255,255,255,0.75)]",
+        "z-0",
         # Quick custom display for white knights, so they face the inside of the board:
         "-scale-x-100" if player_side == "w" and piece_type == "n" else "",
     ]
+
     return div(
-        utf8_symbol_from_piece_type(piece_type),
+        symbol_display,
         cls=" ".join(classes),
+        aria_label=piece_name,
     )
 
 

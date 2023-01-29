@@ -45,8 +45,13 @@ def file_and_rank_from_square(square: "Square") -> tuple["File", "Rank"]:
 
 
 @cache
+def piece_name_from_piece_type(piece_type: "PieceType") -> str:
+    return PIECE_TYPE_TO_NAME[piece_type]
+
+
+@cache
 def piece_name_from_piece_role(piece_role: "PieceRole") -> str:
-    return PIECE_TYPE_TO_NAME[type_from_piece_role(piece_role)]
+    return piece_name_from_piece_type(type_from_piece_role(piece_role))
 
 
 @cache

@@ -26,6 +26,8 @@ PieceSymbol = Literal[
     # fmt: on
 ]
 
+PieceName = Literal["pawn", "knight", "bishop", "rook", "queen", "king"]
+
 
 TeamMemberRole = Literal[
     # fmt: off
