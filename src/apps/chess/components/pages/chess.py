@@ -33,6 +33,11 @@ def chess_select_piece_htmx_fragment(*, game_presenter: "GamePresenter", request
                     board_id=board_id,
                     data_hx_swap_oob="outerHTML",
                 ),
+                chess.chess_status_bar(
+                    game_presenter=game_presenter,
+                    board_id=board_id,
+                    data_hx_swap_oob="outerHTML",
+                ),
             )
         )
     )
@@ -51,6 +56,11 @@ def chess_move_piece_htmx_fragment(*, game_presenter: "GamePresenter", request: 
                     game_presenter=game_presenter,
                     board_id=board_id,
                     data_hx_swap_oob="innerHTML",
+                ),
+                chess.chess_status_bar(
+                    game_presenter=game_presenter,
+                    board_id=board_id,
+                    data_hx_swap_oob="outerHTML",
                 ),
             )
         )

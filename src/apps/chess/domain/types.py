@@ -1,5 +1,7 @@
 from typing import Literal, TypeAlias
 
+FEN: TypeAlias = str
+
 PlayerSide = Literal[
     # Following chess conventions, our sides will be "w(hite)" and "b(lack)".
     # fmt: off
@@ -67,3 +69,13 @@ Square = Literal[
 
 
 PieceRoleBySquare: TypeAlias = dict[Square, PieceRole]
+
+
+GamePhase = Literal[
+    "waiting_for_player_selection",
+    "waiting_for_player_target_choice",
+    "opponent_piece_selected",
+    "waiting_for_player_target_choice_confirmation",
+    "waiting_for_bot_turn",
+    "waiting_for_opponent_turn",
+]

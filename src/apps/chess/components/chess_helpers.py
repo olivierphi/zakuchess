@@ -1,12 +1,13 @@
 from functools import cache
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from ..domain.consts import PIECE_TYPE_TO_NAME
+from ..domain.helpers import file_and_rank_from_square, player_side_from_piece_role, type_from_piece_role
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from ..domain.types import File, PieceRole, PieceSymbol, PieceType, PlayerSide, Rank, Square
+    from ..domain.types import File, PieceRole, Rank, Square
 
 
 _FILE_TO_TAILWIND_POSITIONING_CLASS: dict["File", str] = {
@@ -32,11 +33,6 @@ _RANK_TO_TAILWIND_POSITIONING_CLASS: dict["Rank", str] = {
 
 
 @cache
-def file_and_rank_from_square(square: "Square") -> tuple["File", "Rank"]:
-    return cast(File, square[0]), cast("Rank", square[1])
-
-
-@cache
 def square_to_tailwind_classes(square: "Square") -> "Sequence[str]":
     file, rank = file_and_rank_from_square(square)
     return (
@@ -47,23 +43,8 @@ def square_to_tailwind_classes(square: "Square") -> "Sequence[str]":
 
 @cache
 def piece_unit_classes(piece_role: "PieceRole") -> "Sequence[str]":
-    classes = [f"bg-wesnoth-loyalists-{PIECE_TYPE_TO_NAME[piece_type(piece_role)]}"]
-    player_side = piece_player_side(piece_role)
+    classes = [f"bg-wesnoth-loyalists-{PIECE_TYPE_TO_NAME[type_from_piece_role(piece_role)]}"]
+    player_side = player_side_from_piece_role(piece_role)
     if player_side == "b":
         classes.append("-scale-x-100")
     return classes
-
-
-@cache
-def piece_symbol(piece_role: "PieceRole") -> "PieceSymbol":
-    return cast("PieceSymbol", piece_role[0])
-
-
-@cache
-def piece_type(piece_role: "PieceRole") -> "PieceType":
-    return cast("PieceType", piece_symbol(piece_role).lower())
-
-
-@cache
-def piece_player_side(piece_role: "PieceRole") -> "PlayerSide":
-    return "w" if piece_symbol(piece_role).isupper() else "b"

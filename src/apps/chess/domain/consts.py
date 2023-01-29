@@ -50,7 +50,7 @@ PIECES_ROLE_BY_STARTING_SQUARE: Final[dict["Square", "PieceRole"]] = {
     "h7": "p8",
 }
 
-STARTING_PIECES: dict[PlayerSide, tuple["PieceSymbol"]] = {
+STARTING_PIECES: dict["PlayerSide", tuple["PieceSymbol"]] = {
     "w": (*("P" * 8), *("N" * 2), *("B" * 2), *("R" * 2), "Q", "K"),  # type: ignore
     "b": (*("p" * 8), *("n" * 2), *("b" * 2), *("r" * 2), "q", "k"),  # type: ignore
 }
@@ -62,4 +62,13 @@ PIECE_TYPE_TO_NAME: dict["PieceType", str] = {
     "r": "rook",
     "q": "queen",
     "k": "king",
+}
+
+PIECE_TYPE_TO_UNICODE: dict["PieceType", str] = {
+    "p": "♟",
+    "n": "♞",
+    "b": "♝",
+    "r": "♜",
+    "q": "♛",
+    "k": "♚",
 }

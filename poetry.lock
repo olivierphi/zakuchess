@@ -282,18 +282,6 @@ files = [
 Django = ">=3.2"
 
 [[package]]
-name = "django-types"
-version = "0.16.0"
-description = "Type stubs for Django"
-category = "dev"
-optional = false
-python-versions = ">=3.7,<4.0"
-files = [
-    {file = "django-types-0.16.0.tar.gz", hash = "sha256:29d23af8b88fa1579b47418e92ffc1d89bfbdf11eab64d2ae006fa09e54fed9a"},
-    {file = "django_types-0.16.0-py3-none-any.whl", hash = "sha256:9df4e1936f304f309a59f4cee19a607e151282fc0d97238833a382fafc5052c8"},
-]
-
-[[package]]
 name = "djlint"
 version = "1.19.7"
 description = "HTML Template Linter and Formatter"
@@ -1358,4 +1346,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "f5d41bb05eaff20fa66893da12f53937ab45c7f6e20a15a1319689912be60d5b"
+content-hash = "603236f4a79995438f2dd6f008f827d10fe96f134372ff87c29ca9ed39540dc3"

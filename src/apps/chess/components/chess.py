@@ -9,14 +9,20 @@ from django.urls import reverse
 from dominate.tags import div, dom_tag, span
 from dominate.util import raw as unescaped_html
 
-from ..domain.types import Square
-from .chess_helpers import file_and_rank_from_square, piece_player_side, piece_unit_classes, square_to_tailwind_classes
+from ..domain.helpers import (
+    file_and_rank_from_square,
+    player_side_from_piece_role,
+    type_from_piece_role,
+    utf8_symbol_from_piece_type,
+)
+from ._chess.status_bar import chess_status_bar
+from .chess_helpers import piece_unit_classes, square_to_tailwind_classes
 
 if TYPE_CHECKING:
-    from ..domain.types import PlayerSide
+    from ..domain.types import PieceRole, PlayerSide, Square
     from ..presenters import GamePresenter
 
-_SQUARE_COLOR_TAILWIND_CLASSES = ("bg-chess-square-dark-color", "bg-chess-square-light-color")
+_SQUARE_COLOR_TAILWIND_CLASSES = ("bg-chess-square-dark", "bg-chess-square-light")
 _PIECE_GROUND_MARKER_COLOR_TAILWIND_CLASSES: dict[tuple["PlayerSide", bool], str] = {
     # the boolean says if the piece can move
     ("w", False): "bg-slate-100/40 border border-slate-100",
@@ -39,30 +45,33 @@ _PLAY_BOT_JS_TEMPLATE = Template(
 
 def chess_arena(*, game_presenter: "GamePresenter", board_id: str) -> dom_tag:
     return div(
+        div(
+            div(
+                chess_board(board_id),
+                cls="absolute inset-0 pointer-events-none z-0",
+                id=f"chess-board-container-{board_id}",
+            ),
+            div(
+                chess_pieces(game_presenter=game_presenter, board_id=board_id),
+                cls="absolute inset-0 pointer-events-none z-10",
+                id=f"chess-pieces-container-{board_id}",
+            ),
+            div(
+                chess_available_targets(game_presenter=game_presenter, board_id=board_id),
+                cls="absolute inset-0 pointer-events-none z-20",
+                id=f"chess-available-targets-container-{board_id}",
+            ),
+            cls="aspect-square relative",
+        ),
         chess_bot_data(board_id),
-        div(
-            chess_board(board_id),
-            cls="absolute inset-0 pointer-events-none z-0",
-            id=f"chess-board-container-{board_id}",
-        ),
-        div(
-            chess_pieces(game_presenter=game_presenter, board_id=board_id),
-            cls="absolute inset-0 pointer-events-none z-10",
-            id=f"chess-pieces-container-{board_id}",
-        ),
-        div(
-            chess_available_targets(game_presenter=game_presenter, board_id=board_id),
-            cls="absolute inset-0 pointer-events-none z-20",
-            id=f"chess-available-targets-container-{board_id}",
-        ),
+        chess_status_bar(game_presenter=game_presenter, board_id=board_id),
         id=f"chess-arena-{board_id}",
-        cls="w-full md:max-w-xl mx-auto aspect-square relative",
+        cls="w-full md:max-w-xl mx-auto",
         # When the user clicks on anything that is not an interactive element of the chess board, and the state
         # of this chess board is not "waiting_for_player_selection", then the chess board is reset to this state.
         data_hx_get=f"{ reverse('chess:htmx_game_no_selection', kwargs={'game_id': game_presenter.game_id}) }?{ urlencode({'board_id': board_id}) }",
         data_hx_trigger=f"click[cursorIsNotOnChessBoardInteractiveElement('{ board_id }')] from:document",
         data_hx_target=f"#chess-board-pieces-{ board_id }",
-        #
     )
 
 
@@ -82,7 +91,7 @@ def chess_board(board_id: str) -> dom_tag:
     squares: list[dom_tag] = []
     for file in FILE_NAMES:
         for rank in RANK_NAMES:
-            squares.append(chess_board_square(cast(Square, f"{file}{rank}")))
+            squares.append(chess_board_square(cast("Square", f"{file}{rank}")))
     return div(
         *squares,
         id=f"chess-board-{board_id}",
@@ -92,16 +101,16 @@ def chess_board(board_id: str) -> dom_tag:
 
 def chess_pieces(*, game_presenter: "GamePresenter", board_id: str, **extra_attrs: str) -> dom_tag:
     pieces: list[dom_tag] = []
-    for square, piece_view in game_presenter.pieces_view.items():
+    for square, piece_role in game_presenter.piece_role_by_square.items():
         pieces.append(
-            chess_piece(square=square, piece_view=piece_view, game_presenter=game_presenter, board_id=board_id)
+            chess_piece(square=square, piece_role=piece_role, game_presenter=game_presenter, board_id=board_id)
         )
 
     bot_turn_html_elements = _bot_turn_html_elements(game_presenter=game_presenter, board_id=board_id)
 
     return div(
         div(
-            data_board_state=game_presenter.board_state,
+            data_board_state=game_presenter.game_phase,
             data_aria_hidden="true",
         ),
         *pieces,
@@ -136,15 +145,16 @@ def chess_board_square(square: "Square") -> dom_tag:
 
 
 def chess_piece(
-    *, game_presenter: "GamePresenter", square: "Square", piece_view: "PieceView", board_id: str
+    *, game_presenter: "GamePresenter", square: "Square", piece_role: "PieceRole", board_id: str
 ) -> dom_tag:
-    player_side = piece_player_side(piece_view)
+    player_side = player_side_from_piece_role(piece_role)
 
     piece_can_move = (
         player_side == game_presenter.my_side and square in game_presenter.squares_with_pieces_that_can_move
     )
     ground_marker = chess_unit_ground_marker(player_side=player_side, can_move=piece_can_move)
-    unit_display = chess_unit_display(game_presenter=game_presenter, square=square, piece_view=piece_view)
+    unit_display = chess_unit_display(game_presenter=game_presenter, square=square, piece_role=piece_role)
+    unit_chess_symbol_display = chess_unit_symbol_display(piece_role)
 
     classes = [
         "absolute",
@@ -162,15 +172,16 @@ def chess_piece(
     return div(
         ground_marker,
         unit_display,
+        unit_chess_symbol_display,
         cls=" ".join(classes),
-        id=f"board-{ board_id }-side-{ player_side }-piece-{ piece_view['id'] }",
+        id=f"board-{ board_id }-side-{ player_side }-piece-{ piece_role }",
         # htmx-related attributes:
         data_hx_trigger="click",
         data_hx_get=f"{reverse('chess:htmx_game_select_piece', kwargs={'game_id': game_presenter.game_id}) }?{urlencode({'square': square, 'board_id': board_id})}",
         data_hx_target=f"#chess-board-available-targets-{ board_id }",
         # These 2 are mostly for debugging purposes:
         data_square=square,
-        data_piece=piece_view["piece"],
+        data_piece_role=piece_role,
     )
 
 
@@ -189,10 +200,9 @@ def chess_available_targets(*, game_presenter: "GamePresenter", board_id: str, *
 
 
 def chess_available_target(*, game_presenter: "GamePresenter", square: "Square", board_id: str) -> dom_tag:
-    if game_presenter.selected_piece is None:
-        return div()
+    assert game_presenter.selected_piece is not None
     target_marker = div(
-        cls="w-1/5 h-1/5 rounded-full bg-chess-available-target-marker transition-size hover:w-1/4 hover:h-1/4 ",
+        cls="w-1/5 h-1/5 rounded-full bg-chess-available-target-marker transition-size hover:w-1/3 hover:h-1/3",
     )
     target_marker_container = div(
         target_marker,
@@ -217,7 +227,7 @@ def chess_available_target(*, game_presenter: "GamePresenter", square: "Square",
     )
 
 
-def chess_unit_display(*, game_presenter: "GamePresenter", square: "Square", piece_view: "PieceView") -> dom_tag:
+def chess_unit_display(*, game_presenter: "GamePresenter", square: "Square", piece_role: "PieceRole") -> dom_tag:
     is_highlighted = (
         game_presenter.selected_piece
         and game_presenter.selected_piece.square == square
@@ -230,7 +240,7 @@ def chess_unit_display(*, game_presenter: "GamePresenter", square: "Square", pie
         "bg-no-repeat",
         "bg-cover",
         "z-10",
-        *piece_unit_classes(piece_view),
+        *piece_unit_classes(piece_role),
         # Conditional classes:
         "drop-shadow-selected-piece" if is_highlighted else "",
         "drop-shadow-potential-capture"
@@ -255,6 +265,30 @@ def chess_unit_ground_marker(*, player_side: "PlayerSide", can_move: bool) -> do
         _PIECE_GROUND_MARKER_COLOR_TAILWIND_CLASSES[(player_side, can_move)],
     ]
     return div(
+        cls=" ".join(classes),
+    )
+
+
+def chess_unit_symbol_display(piece_role: "PieceRole") -> dom_tag:
+    player_side = player_side_from_piece_role(piece_role)
+    piece_type = type_from_piece_role(piece_role)
+
+    classes = [
+        "absolute",
+        "top-0",
+        "left-0" if player_side == "w" else "right-0",
+        "z-20",
+        "font-mono",
+        "text-4xl",
+        "text-slate-100" if player_side == "w" else "text-slate-700",
+        "[text-shadow:1px_1px_1px_rgba(0,0,0,0.75),1px_-1px_1px_rgba(0,0,0,0.75),-1px_1px_1px_rgba(0,0,0,0.75),-1px_-1px_1px_rgba(0,0,0,0.75)]"
+        if player_side == "w"
+        else "[text-shadow:1px_1px_1px_rgba(255,255,255,0.75),1px_-1px_1px_rgba(255,255,255,0.75),-1px_1px_1px_rgba(255,255,255,0.75),-1px_-1px_1px_rgba(255,255,255,0.75)]",
+        # Quick custom display for white knights, so they face the inside of the board:
+        "-scale-x-100" if player_side == "w" and piece_type == "n" else "",
+    ]
+    return div(
+        utf8_symbol_from_piece_type(piece_type),
         cls=" ".join(classes),
     )
 

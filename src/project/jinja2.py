@@ -22,8 +22,4 @@ def environment(**options) -> Environment:
     env.filters["date"] = defaultfilters.date
     env.filters["to_query_string"] = urllib.parse.urlencode
 
-    from apps.webui import jinja_extensions as webui_jinja_extensions
-
-    env.filters |= webui_jinja_extensions.filters
-
     return env

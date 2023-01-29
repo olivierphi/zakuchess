@@ -26,7 +26,7 @@ function cursorIsNotOnChessBoardInteractiveElement(boardId: string): boolean {
 
     const hoveredElements = Array.from(document.querySelectorAll(":hover"))
 
-    const gamePiecesElements = chessBoardContainer.querySelectorAll(`#chess-board-pieces-${boardId} [data-piece]`)
+    const gamePiecesElements = chessBoardContainer.querySelectorAll(`#chess-board-pieces-${boardId} [data-piece-role]`)
     for (const pieceElement of gamePiecesElements) {
         if (hoveredElements.includes(pieceElement)) {
             return false // don't actually cancel the selection
@@ -40,6 +40,8 @@ function cursorIsNotOnChessBoardInteractiveElement(boardId: string): boolean {
             return false // ditto
         }
     }
+
+    console.log("no interactive UI element clicked: we reset the board state")
     return true
 }
 
