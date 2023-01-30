@@ -1,17 +1,15 @@
-from typing import TYPE_CHECKING
+import random
+from typing import TYPE_CHECKING, cast
 
-from dominate.tags import div, dom_tag, img, span
+from dominate.tags import div, dom_tag, img
+from dominate.util import raw
 
-from ...domain.consts import PLAYER_SIDES
-from ...domain.helpers import (
-    piece_name_from_piece_role,
-    piece_name_from_piece_type,
-    player_side_from_piece_role,
-    utf8_symbol_from_piece_role,
-)
+from ...domain.consts import PIECE_TYPE_TO_NAME
+from ...domain.helpers import piece_name_from_piece_role, player_side_from_piece_role
 from ..chess_helpers import chess_unit_symbol_url
 
 if TYPE_CHECKING:
+    from ...domain.types import PieceRole, PieceType, TeamMemberRole
     from ...presenters import GamePresenter
 
 
@@ -19,7 +17,7 @@ def chess_status_bar(*, game_presenter: "GamePresenter", board_id: str, **extra_
     inner_content: dom_tag = div("status to implement")
     match game_presenter.game_phase:
         case "waiting_for_player_selection":
-            inner_content = _chess_status_bar_score(game_presenter)
+            inner_content = _chess_status_bar_tip()
         case "waiting_for_player_target_choice" | "opponent_piece_selected":
             inner_content = _chess_status_bar_selected_piece(game_presenter)
         case "waiting_for_bot_turn":
@@ -28,72 +26,65 @@ def chess_status_bar(*, game_presenter: "GamePresenter", board_id: str, **extra_
     return div(
         inner_content,
         id=f"chess-board-status-bar-{board_id}",
-        cls="h-16 flex items-stretch items-center text-slate-100 bg-chess-square-dark border-4 border-solid rounded-b-lg border-chess-square-light",
+        cls="h-16 flex items-stretch items-center text-slate-50 bg-orange-800 border-2 border-t-0 border-solid rounded-b border-slate-50",
         **extra_attrs,
     )
 
 
-def _chess_status_bar_score(game_presenter: "GamePresenter") -> dom_tag:
-    turn_display = f"Turn {game_presenter.turn_number}. "
+_CHARACTER_TYPE_TIP: dict["PieceType", str] = {
+    "p": "swords",
+    "n": "horses",
+    "b": "bows",
+    "r": "staffs",
+    "q": "?",
+    "k": "?",
+}
+_CHARACTER_TYPE_TIP_KEYS = tuple(_CHARACTER_TYPE_TIP.keys())
 
-    score = game_presenter.score
-    score_display = "No players leading at the moment"
-    if score != 0:
-        i_am_leading = score > 0 and game_presenter.my_side == "w" or score < 0 and game_presenter.my_side == "b"
-        score_display = "".join(("You're" if i_am_leading else "Opponent is", f" leading by {abs(score)} points"))
-        score_display += " 🙂" if i_am_leading else " 🙁"
+_CHARACTER_TYPE_ROLE_MAPPING: dict["PieceType", "TeamMemberRole"] = {
+    "p": "p1",
+    "n": "n1",
+    "b": "bb",
+    "r": "r1",
+    "q": "q",
+    "k": "k",
+}
 
-    captured_pieces_to_display: tuple[list[str], list[str]] = ([], [])
-    for i, player_side in enumerate(PLAYER_SIDES):
-        for captured_piece in game_presenter.captured_pieces[player_side]:
-            piece_name = piece_name_from_piece_type(captured_piece)
-            captured_pieces_to_display[i].append(
-                img(
-                    src=chess_unit_symbol_url(player_side=player_side, piece_name=piece_name),
-                    alt=piece_name,
-                    cls="inline w-4 aspect-square",
-                )
-            )
-    captures_display: list[str] = []
-    if any(captured_pieces_to_display):
-        my_captures_index = 1 if game_presenter.my_side == "w" else 0
-        my_captures = captured_pieces_to_display[my_captures_index]
-        captures_display += ("You captures: ",)
-        if not my_captures:
-            captures_display += ("nothing yet 😔",)
-        else:
-            captures_display += my_captures
-        their_captures_index = 1 if my_captures_index == 0 else 0
-        their_captures = captured_pieces_to_display[their_captures_index]
-        captures_display += (" / ",)
-        captures_display += ("Their captures: ",)
-        if not my_captures:
-            captures_display += ("nothing yet 😀",)
-        else:
-            captures_display += their_captures
 
-    return div(div(turn_display, score_display), div(*captures_display), cls="w-full text-center")
+def _chess_status_bar_tip() -> dom_tag:
+    character_type = random.choice(_CHARACTER_TYPE_TIP_KEYS)
+    piece_name = PIECE_TYPE_TO_NAME[character_type]
+    unit_left_side_role = cast("PieceRole", _CHARACTER_TYPE_ROLE_MAPPING[character_type].upper())
+    unit_right_side_role = _CHARACTER_TYPE_ROLE_MAPPING[character_type]
+    unit_display_left = _unit_display_container(unit_left_side_role)
+    unit_display_right = _unit_display_container(unit_right_side_role)
+
+    return div(
+        unit_display_left,
+        div(
+            raw(f"💡 Characters with <b>{_CHARACTER_TYPE_TIP[character_type]}</b> are <b>{piece_name}s</b>"),
+            img(
+                src=chess_unit_symbol_url(player_side="w", piece_name=piece_name),
+                alt=piece_name,
+                cls="inline w-4 aspect-square",
+            ),
+            cls="text-center",
+        ),
+        unit_display_right,
+        cls="flex w-full justify-between items-center",
+    )
 
 
 def _chess_status_bar_selected_piece(game_presenter: "GamePresenter") -> dom_tag:
-    from ..chess import chess_unit_display
-
     assert game_presenter.selected_piece is not None
+
     selected_piece = game_presenter.selected_piece
     team_member = selected_piece.team_member
     piece_role = selected_piece.piece_role
     player_side = player_side_from_piece_role(piece_role)
     piece_name = piece_name_from_piece_role(piece_role)
 
-    unit_display = chess_unit_display(
-        game_presenter=game_presenter,
-        square=selected_piece.square,
-        piece_role=piece_role,
-    )
-    unit_display_container = div(
-        unit_display,
-        cls="h-full aspect-square",
-    )
+    unit_display = _unit_display_container(piece_role)
 
     unit_about = div(
         div(f"{team_member.first_name} {team_member.last_name}"),
@@ -117,12 +108,24 @@ def _chess_status_bar_selected_piece(game_presenter: "GamePresenter") -> dom_tag
     ]
 
     return div(
-        unit_display_container,
+        unit_display,
         unit_about,
         div(cls="h-full aspect-square", aria_hidden=True),  # just to make the "about" centered visually
         cls=" ".join(classes),
     )
 
 
+def _unit_display_container(piece_role: "PieceRole") -> dom_tag:
+    from ..chess import chess_unit_display_with_ground_marker
+
+    unit_display = chess_unit_display_with_ground_marker(
+        piece_role=piece_role,
+    )
+    return div(
+        unit_display,
+        cls="h-full aspect-square",
+    )
+
+
 def _chess_status_bar_waiting_for_bot_turn(game_presenter: "GamePresenter") -> dom_tag:
-    return div("Your opponent 💻 is thinking of their next move", cls="w-full text-center")
+    return div("Waiting for opponent's turn 💻 ", cls="w-full text-center items-center")

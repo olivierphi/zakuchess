@@ -15,8 +15,9 @@ from ..domain.helpers import (
     player_side_from_piece_role,
     type_from_piece_role,
 )
+from ._chess.score_bar import chess_score_bar
 from ._chess.status_bar import chess_status_bar
-from .chess_helpers import chess_unit_symbol_url, piece_unit_classes, square_to_tailwind_classes
+from .chess_helpers import chess_square_color, chess_unit_symbol_url, piece_unit_classes, square_to_tailwind_classes
 
 if TYPE_CHECKING:
     from ..domain.types import PieceRole, PlayerSide, Square
@@ -64,6 +65,7 @@ def chess_arena(*, game_presenter: "GamePresenter", board_id: str) -> dom_tag:
             cls="aspect-square relative",
         ),
         chess_bot_data(board_id),
+        chess_score_bar(game_presenter=game_presenter, board_id=board_id),
         chess_status_bar(game_presenter=game_presenter, board_id=board_id),
         id=f"chess-arena-{board_id}",
         cls="w-full md:max-w-xl mx-auto",
@@ -153,8 +155,8 @@ def chess_piece(
         player_side == game_presenter.my_side and square in game_presenter.squares_with_pieces_that_can_move
     )
     ground_marker = chess_unit_ground_marker(player_side=player_side, can_move=piece_can_move)
-    unit_display = chess_unit_display(game_presenter=game_presenter, square=square, piece_role=piece_role)
-    unit_chess_symbol_display = chess_unit_symbol_display(piece_role)
+    unit_display = chess_unit_display(piece_role=piece_role, game_presenter=game_presenter, square=square)
+    unit_chess_symbol_display = chess_unit_symbol_display(piece_role=piece_role, square=square)
 
     classes = [
         "absolute",
@@ -227,9 +229,13 @@ def chess_available_target(*, game_presenter: "GamePresenter", square: "Square",
     )
 
 
-def chess_unit_display(*, game_presenter: "GamePresenter", square: "Square", piece_role: "PieceRole") -> dom_tag:
+def chess_unit_display(
+    *, piece_role: "PieceRole", game_presenter: "GamePresenter | None" = None, square: "Square | None" = None
+) -> dom_tag:
     is_highlighted = (
-        game_presenter.selected_piece
+        game_presenter
+        and square
+        and game_presenter.selected_piece
         and game_presenter.selected_piece.square == square
         and square in game_presenter.squares_with_pieces_that_can_move
     )
@@ -244,7 +250,9 @@ def chess_unit_display(*, game_presenter: "GamePresenter", square: "Square", pie
         # Conditional classes:
         "drop-shadow-selected-piece" if is_highlighted else "",
         "drop-shadow-potential-capture"
-        if game_presenter.selected_piece and game_presenter.selected_piece.is_potential_capture(square)
+        if game_presenter
+        and game_presenter.selected_piece
+        and game_presenter.selected_piece.is_potential_capture(square)
         else "",
     ]
     return div(
@@ -252,7 +260,7 @@ def chess_unit_display(*, game_presenter: "GamePresenter", square: "Square", pie
     )
 
 
-def chess_unit_ground_marker(*, player_side: "PlayerSide", can_move: bool) -> dom_tag:
+def chess_unit_ground_marker(*, player_side: "PlayerSide", can_move: bool = False) -> dom_tag:
     classes = [
         "absolute",
         "w-5/6",
@@ -269,33 +277,47 @@ def chess_unit_ground_marker(*, player_side: "PlayerSide", can_move: bool) -> do
     )
 
 
-def chess_unit_symbol_display(piece_role: "PieceRole") -> dom_tag:
+def chess_unit_display_with_ground_marker(*, piece_role: "PieceRole") -> dom_tag:
+    player_side = player_side_from_piece_role(piece_role)
+
+    ground_marker = chess_unit_ground_marker(player_side=player_side)
+    unit_display = chess_unit_display(piece_role=piece_role)
+
+    return div(
+        ground_marker,
+        unit_display,
+        cls="relative h-full aspect-square",
+    )
+
+
+def chess_unit_symbol_display(*, piece_role: "PieceRole", square: "Square") -> dom_tag:
     player_side = player_side_from_piece_role(piece_role)
     piece_type = type_from_piece_role(piece_role)
     piece_name = piece_name_from_piece_role(piece_role)
+    square_color = chess_square_color(square)
 
-    symbol_class = [
-        "w-9",
-        "-ml-1",
-        "-mt-1",
+    symbol_class = (
+        "w-10",
+        "-ml-2" if piece_type == "n" else ("-ml-1" if player_side == "w" else "-mr-1"),
+        # "-mt-1",
         "aspect-square",
         "bg-no-repeat",
         "bg-cover",
-        "opacity-30" if player_side == "w" else "opacity-20",
-    ]
+        "opacity-50" if square_color == "light" else "opacity-40",
+    )
     symbol_display = div(
-        style=f"background-image: url('{chess_unit_symbol_url(player_side=player_side, piece_name=piece_name)}')",
+        style=f"background-image: url('{chess_unit_symbol_url(player_side='b', piece_name=piece_name)}')",
         cls=" ".join(symbol_class),
     )
 
-    classes = [
+    classes = (
         "absolute",
         "top-0",
         "left-0" if player_side == "w" else "right-0",
         "z-0",
         # Quick custom display for white knights, so they face the inside of the board:
         "-scale-x-100" if player_side == "w" and piece_type == "n" else "",
-    ]
+    )
 
     return div(
         symbol_display,

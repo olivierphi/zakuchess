@@ -2,17 +2,12 @@ from functools import cache
 from typing import TYPE_CHECKING
 
 from ..domain.consts import PIECE_TYPE_TO_NAME
-from ..domain.helpers import (
-    file_and_rank_from_square,
-    player_side_from_piece_role,
-    type_from_piece_role,
-)
+from ..domain.helpers import file_and_rank_from_square, player_side_from_piece_role, type_from_piece_role
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from ..domain.types import File, PieceName, PieceRole, PlayerSide, Rank, Square
-
+    from ..domain.types import File, PieceName, PieceRole, PlayerSide, Rank, Square, SquareColor
 
 _FILE_TO_TAILWIND_POSITIONING_CLASS: dict["File", str] = {
     "a": "translate-y-0/1",
@@ -57,3 +52,9 @@ def piece_unit_classes(piece_role: "PieceRole") -> "Sequence[str]":
 @cache
 def chess_unit_symbol_url(*, player_side: "PlayerSide", piece_name: "PieceName") -> str:
     return f"/static/chess/symbols/{player_side}-{piece_name}.svg"
+
+
+@cache
+def chess_square_color(square: "Square") -> "SquareColor":
+    file = int(square[1])
+    return "light" if (file % 2 == 0 if square[0] in ("a", "c", "e", "g") else file % 2 == 1) else "dark"

@@ -15,6 +15,11 @@ def square_from_int(chess_lib_square: int) -> "Square":
 
 
 @cache
+def player_side_other(player_side: "PlayerSide") -> "PlayerSide":
+    return "w" if player_side == "b" else "w"
+
+
+@cache
 def symbol_from_piece_role(piece_role: "PieceRole") -> "PieceSymbol":
     return cast("PieceSymbol", piece_role[0])
 
@@ -62,23 +67,6 @@ def utf8_symbol_from_piece_type(piece_type: "PieceType") -> str:
 @cache
 def utf8_symbol_from_piece_role(piece_role: "PieceRole") -> str:
     return utf8_symbol_from_piece_type(type_from_piece_role(piece_role))
-
-
-#
-#
-# def pieces_view_from_chess_board(board: chess.Board, square_to_id_mapping: PieceIdsPerSquare) -> PiecesView:
-#     pieces_view_as_list: list[tuple[Square, PieceId, PieceSymbol]] = []
-#     for square, piece in board.piece_map().items():
-#         square_name = cast(Square, chess.square_name(square))
-#         symbol = cast(PieceSymbol, piece.symbol())
-#         pieces_view_as_list.append((square_name, square_to_id_mapping[square_name], symbol))
-#     # In order to get DOM elements that can be matched when we replace the board in the DOM and apply
-#     # CSS transitions to them, we need a constant sorting of our pieces, wherever they're moving.
-#     # --> we sort them by id!
-#     return {
-#         view_tuple[0]: PiecesView(id=view_tuple[1], piece=view_tuple[2])
-#         for view_tuple in sorted(pieces_view_as_list, key=lambda v: v[1])
-#     }
 
 
 def get_squares_with_pieces_that_can_move(board: chess.Board) -> set["Square"]:

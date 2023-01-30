@@ -69,6 +69,8 @@ Square = Literal[
     # fmt: on
 ]
 
+SquareColor = Literal["light", "dark"]
+
 
 PieceRoleBySquare: TypeAlias = dict[Square, PieceRole]
 

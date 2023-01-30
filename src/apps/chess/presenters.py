@@ -107,6 +107,8 @@ class GamePresenter:
                     remaining_pieces.remove(starting_piece)
                 else:
                     captured_pieces[player_side].append(type_from_piece_symbol(starting_piece))
+        for player_side in captured_pieces.keys():
+            captured_pieces[player_side].sort(key=lambda piece_type: -PIECES_VALUES[piece_type])
         return captured_pieces
 
     @cached_property

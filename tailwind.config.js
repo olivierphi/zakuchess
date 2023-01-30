@@ -19,8 +19,8 @@ module.exports = {
             colors: {
                 "debug1": "red",
                 "debug2": "lime",
-                "chess-square-light": "#e4b55d", // "#fed7aa", // Tailwind's "Orange 200"
-                "chess-square-dark": "#a57713", // "#9f1239", // Tailwind's "Rose 800"
+                "chess-square-light": "#e4b55d", // "#fed7aa", // "#e4b55d", // "#fed7aa", // Tailwind's "Orange 200"
+                "chess-square-dark": "#a57713", // "#881337", // Amber 700 // "#a57713", // "#9f1239", // Tailwind's "Rose 800"
                 "chess-square-square-info": "#58400b",
                 "chess-available-target-marker": SELECTION_COLOR,
             },
