@@ -1,4 +1,5 @@
 import json
+from functools import cache
 from string import Template
 from typing import TYPE_CHECKING, cast
 from urllib.parse import urlencode
@@ -23,7 +24,10 @@ if TYPE_CHECKING:
     from ..domain.types import PieceRole, PlayerSide, Square
     from ..presenters import GamePresenter
 
-_SQUARE_COLOR_TAILWIND_CLASSES = ("bg-chess-square-dark", "bg-chess-square-light")
+SQUARE_COLOR_TAILWIND_CLASSES = ("bg-chess-square-dark", "bg-chess-square-light")
+# SQUARE_COLOR_TAILWIND_CLASSES = ("bg-slate-600", "bg-zinc-400")
+# SQUARE_COLOR_TAILWIND_CLASSES = ("bg-orange-600", "bg-orange-400")
+INFO_BARS_COMMON_CLASSES = "text-slate-200 bg-slate-700 border-2 border-solid border-slate-400"
 _PIECE_GROUND_MARKER_COLOR_TAILWIND_CLASSES: dict[tuple["PlayerSide", bool], str] = {
     # the boolean says if the piece can move
     ("w", False): "bg-slate-100/40 border border-slate-100",
@@ -123,10 +127,11 @@ def chess_pieces(*, game_presenter: "GamePresenter", board_id: str, **extra_attr
     )
 
 
+@cache
 def chess_board_square(square: "Square") -> dom_tag:
     file, rank = file_and_rank_from_square(square)
     square_index = FILE_NAMES.index(file) + RANK_NAMES.index(rank)
-    square_color_cls = _SQUARE_COLOR_TAILWIND_CLASSES[square_index % 2]
+    square_color_cls = SQUARE_COLOR_TAILWIND_CLASSES[square_index % 2]
     classes = [
         "absolute",
         "aspect-square",
@@ -298,12 +303,11 @@ def chess_unit_symbol_display(*, piece_role: "PieceRole", square: "Square") -> d
 
     symbol_class = (
         "w-10",
-        "-ml-2" if piece_type == "n" else ("-ml-1" if player_side == "w" else "-mr-1"),
-        # "-mt-1",
         "aspect-square",
         "bg-no-repeat",
         "bg-cover",
         "opacity-50" if square_color == "light" else "opacity-40",
+        "brightness-50",
     )
     symbol_display = div(
         style=f"background-image: url('{chess_unit_symbol_url(player_side='b', piece_name=piece_name)}')",
@@ -312,8 +316,11 @@ def chess_unit_symbol_display(*, piece_role: "PieceRole", square: "Square") -> d
 
     classes = (
         "absolute",
-        "top-0",
-        "left-0" if player_side == "w" else "right-0",
+        # We have to do some ad-hoc adjustements for Knights:
+        "-top-1" if piece_type == "n" else "top-0",
+        ("-left-1" if player_side == "w" else "-right-1")
+        if piece_type == "n"
+        else ("left-0" if player_side == "w" else "right-0"),
         "z-0",
         # Quick custom display for white knights, so they face the inside of the board:
         "-scale-x-100" if player_side == "w" and piece_type == "n" else "",

@@ -70,11 +70,11 @@ def header() -> dom_tag:
     return base_header(
         h1(
             "Zakuchess",
-            cls="text-orange-700 text-2xl leading-none font-pixel",
+            cls="text-slate-50 text-2xl leading-none font-pixel",
         ),
         h2(
             "Chess with character(s)",
-            cls="text-orange-700 text-xl leading-none font-pixel",
+            cls="text-slate-50 text-xl leading-none font-pixel",
         ),
         cls="text-center md:mx-auto md:max-w-2xl",
     )

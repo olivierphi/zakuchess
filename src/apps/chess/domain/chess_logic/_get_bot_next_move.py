@@ -13,7 +13,7 @@ _searcher = sunfish.Searcher()  # type: ignore
 
 def get_bot_next_move(*, fen: str, bot_side: "PlayerSide") -> "tuple[Square, Square]":
     sunfish_pos = tools.parseFEN(fen)
-    move, _score, _depth = tools.search(_searcher, sunfish_pos, 0.1)
+    _iterations_count, move, _score, _depth = tools.search(_searcher, sunfish_pos, _SUNFISH_ALLOWED_TIME)
     if bot_side == "b":
         # Quoting Sunfish:
         # > The black player moves from a rotated position, so we have to

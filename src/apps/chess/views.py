@@ -100,7 +100,7 @@ def htmx_game_move_piece(req: HttpRequest, game_id: str, from_: Square, to: Squa
     game = get_object_or_404(Game, id=game_id)
     board_id = cast(str, req.GET.get("board_id"))
 
-    game_move_piece(game=game, from_square=from_, to_square=to)
+    game_move_piece(game=game, from_=from_, to=to)
 
     game_presenter = GamePresenter(
         game=game,
@@ -122,7 +122,7 @@ def htmx_game_bot_move(req: HttpRequest, game_id: str) -> HttpResponse:
     board_id = cast(str, req.GET.get("board_id"))
 
     bot_next_move = move[0:2], move[2:4]
-    game_move_piece(game=game, from_square=bot_next_move[0], to_square=bot_next_move[1])
+    game_move_piece(game=game, from_=bot_next_move[0], to=bot_next_move[1])
 
     game_presenter = GamePresenter(
         game=game,
