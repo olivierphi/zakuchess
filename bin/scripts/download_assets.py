@@ -14,9 +14,11 @@ URL: TypeAlias = str
 BASE_DIR = Path(__file__).parent.resolve() / ".." / ".."  # points to our git repo's root
 
 FRONTEND_SRC = BASE_DIR / "frontend-src"
+WEBUI_STATIC = BASE_DIR / "src" / "apps" / "webui" / "static" / "webui"
 CHESS_STATIC = BASE_DIR / "src" / "apps" / "chess" / "static" / "chess"
 
 ASSETS_PATTERNS: dict[str, str] = {
+    "GOOGLE_FONTS": "https://fonts.gstatic.com/s/{font_name}/{v}/{file_id}.woff2",
     "STOCKFISH_CDN": "https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/{file}",
     "WESNOTH_UNITS_GITHUB": "https://github.com/wesnoth/wesnoth/raw/master/data/core/images/units/{path}",
     "WESNOTH_CAMPAIGN_UNITS_GITHUB": "https://github.com/wesnoth/wesnoth/raw/master/data/campaigns/{campaign}/images/units/{path}",
@@ -27,6 +29,8 @@ ASSETS_PATTERNS: dict[str, str] = {
 
 ASSETS_MAP: dict[URL, Path] = {
     # fmt: off
+    # Fonts:
+    ASSETS_PATTERNS["GOOGLE_FONTS"].format(font_name="opensans", file_id="mem8YaGs126MiZpBA-UFVZ0b", v="v35"): WEBUI_STATIC / "fonts" / "OpenSans.woff2",
     # Stockfish:
     ASSETS_PATTERNS["STOCKFISH_CDN"].format(file="stockfish.min.js"): CHESS_STATIC / "js" / "bot" / "stockfish.js",
     ASSETS_PATTERNS["STOCKFISH_CDN"].format(file="stockfish.wasm"): CHESS_STATIC / "js" / "bot" / "stockfish.wasm",
@@ -69,7 +73,7 @@ def download_assets(*, even_if_exists: bool) -> None:
         print(f"Downloading '{asset_url}' to '{target_path.relative_to(BASE_DIR)}'...")
         dl_start_time = monotonic()
         urlretrieve(asset_url, target_path)
-        print(f"Downloaded (took {round(monotonic() - dl_start_time, 1)}s.)")
+        print(f"Downloaded (took {monotonic() - dl_start_time:.1f}s.)")
 
 
 if __name__ == "__main__":

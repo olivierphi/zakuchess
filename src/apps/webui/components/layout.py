@@ -1,12 +1,10 @@
 import json
-from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 from django.template.backends.utils import get_token  # type: ignore[attr-defined]
 from django.templatetags.static import static
 from dominate.tags import (
     body,
-    dom_tag,
     h1,
     h2,
     head as base_head,
@@ -20,14 +18,17 @@ from dominate.tags import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from django.http import HttpRequest
+    from dominate.tags import dom_tag
 
 # We'll do something cleaner later
 # TODO: compress these fonts in woff2, and put them in "webui/static/webui/fonts".
 _FONTS_CSS = """
 @font-face {
   font-family: 'OpenSans';
-  src: url('/static/webui/fonts/OpenSans.ttf') format('truetype');
+  src: url('/static/webui/fonts/OpenSans.woff2') format('woff2');
 }
 @font-face {
   font-family: 'PixelFont';
@@ -36,11 +37,11 @@ _FONTS_CSS = """
 """
 
 
-def page(*, children: Sequence[dom_tag], request: "HttpRequest", title: str = "ZakuChess ♞") -> str:
+def page(*, children: "Sequence[dom_tag]", request: "HttpRequest", title: str = "ZakuChess ♞") -> str:
     return f"<!DOCTYPE html>{document(children=children, request=request, title=title)}"
 
 
-def document(*, children: Sequence[dom_tag], request: "HttpRequest", title: str = "ZakuChess ♞") -> dom_tag:
+def document(*, children: "Sequence[dom_tag]", request: "HttpRequest", title: str = "ZakuChess ♞") -> "dom_tag":
     return html(
         head(title=title),
         body(
@@ -52,7 +53,7 @@ def document(*, children: Sequence[dom_tag], request: "HttpRequest", title: str 
     )
 
 
-def head(*, title: str) -> dom_tag:
+def head(*, title: str) -> "dom_tag":
     return base_head(
         meta(charset="utf-8"),
         base_title(title),
@@ -66,7 +67,7 @@ def head(*, title: str) -> dom_tag:
     )
 
 
-def header() -> dom_tag:
+def header() -> "dom_tag":
     return base_header(
         h1(
             "Zakuchess",
