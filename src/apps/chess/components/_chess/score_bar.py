@@ -12,11 +12,13 @@ if TYPE_CHECKING:
 
 
 def chess_score_bar(game_presenter: "GamePresenter", board_id: str) -> dom_tag:
+    from ..chess import INFO_BARS_COMMON_CLASSES
+
     score = game_presenter.score
     score_display = "Draw"
     if score != 0:
         i_am_leading = score > 0 and game_presenter.my_side == "w" or score < 0 and game_presenter.my_side == "b"
-        score_display = "".join(("You're" if i_am_leading else "Opponent are", f" leading by {abs(score)} points"))
+        score_display = "".join(("You're" if i_am_leading else "Opponent are", f" {abs(score)} points ahead"))
         if abs(score) > 5:
             score_display += " 🙂" if i_am_leading else " 🙁"
 
@@ -36,8 +38,8 @@ def chess_score_bar(game_presenter: "GamePresenter", board_id: str) -> dom_tag:
     captures_display_right = captured_pieces_to_display["w"]
 
     return div(
-        div(captures_display_left),
+        div(captures_display_left, cls="min-w-[5rem]"),
         div(score_display),
-        div(captures_display_right),
-        cls="h-10 flex justify-evenly w-full text-slate-50 size-lg items-center bg-orange-800 border-2 border-solid border-slate-50",
+        div(captures_display_right, cls="min-w-[5rem]"),
+        cls=f"min-h-[2.5rem] flex justify-between w-full size-lg items-center {INFO_BARS_COMMON_CLASSES} border-t-0",
     )

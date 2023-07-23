@@ -3,14 +3,16 @@ from typing import TYPE_CHECKING, cast
 
 import chess
 
+from .domain.chess_logic import calculate_piece_available_targets
 from .domain.consts import PIECES_VALUES, PLAYER_SIDES, STARTING_PIECES
 from .domain.helpers import (
+    get_active_player_from_chess_board,
     square_from_int,
     symbol_from_piece_role,
     team_member_role_from_piece_role,
     type_from_piece_symbol,
 )
-from .domain.queries import get_piece_available_targets, get_team_members_by_role_by_side
+from .domain.queries import get_team_members_by_role_by_side
 
 if TYPE_CHECKING:
     from .domain.types import (
@@ -91,7 +93,7 @@ class GamePresenter:
 
     @cached_property
     def active_player(self) -> "PlayerSide":
-        return "w" if self._chess_board.turn else "b"
+        return get_active_player_from_chess_board(self._chess_board)
 
     @cached_property
     def squares_with_pieces_that_can_move(self) -> set["Square"]:
@@ -198,8 +200,8 @@ class SelectedPiecePresenter(SelectedSquarePresenter):
         self.target_to_confirm = target_to_confirm
 
     @cached_property
-    def available_targets(self) -> set["Square"]:
-        return get_piece_available_targets(chess_board=self._chess_board, piece_square=self.square)
+    def available_targets(self) -> frozenset["Square"]:
+        return calculate_piece_available_targets(chess_board=self._chess_board, piece_square=self.square)
 
     @cache
     def is_potential_capture(self, square: "Square") -> bool:

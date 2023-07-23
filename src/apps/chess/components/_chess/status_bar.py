@@ -14,6 +14,8 @@ if TYPE_CHECKING:
 
 
 def chess_status_bar(*, game_presenter: "GamePresenter", board_id: str, **extra_attrs: str) -> dom_tag:
+    from ..chess import INFO_BARS_COMMON_CLASSES
+
     inner_content: dom_tag = div("status to implement")
     match game_presenter.game_phase:
         case "waiting_for_player_selection":
@@ -26,7 +28,7 @@ def chess_status_bar(*, game_presenter: "GamePresenter", board_id: str, **extra_
     return div(
         inner_content,
         id=f"chess-board-status-bar-{board_id}",
-        cls="h-16 flex items-stretch items-center text-slate-50 bg-orange-800 border-2 border-t-0 border-solid rounded-b border-slate-50",
+        cls=f"min-h-[4rem] flex items-stretch items-center {INFO_BARS_COMMON_CLASSES} border-t-0 rounded-b-md",
         **extra_attrs,
     )
 
@@ -44,7 +46,7 @@ _CHARACTER_TYPE_TIP_KEYS = tuple(_CHARACTER_TYPE_TIP.keys())
 _CHARACTER_TYPE_ROLE_MAPPING: dict["PieceType", "TeamMemberRole"] = {
     "p": "p1",
     "n": "n1",
-    "b": "bb",
+    "b": "b1",
     "r": "r1",
     "q": "q",
     "k": "k",

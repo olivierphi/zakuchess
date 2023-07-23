@@ -1,3 +1,4 @@
+from datetime import date
 from typing import TYPE_CHECKING
 
 from django.db import models
@@ -9,13 +10,15 @@ from .domain.types import PlayerSide
 if TYPE_CHECKING:
     from django.db.models.manager import RelatedManager
 
+    from .domain.dto import GameTeams
     from .domain.types import FEN, PieceRole, PieceRoleBySquare
 
 _PLAYER_SIDE_CHOICES = literal_to_django_choices(PlayerSide)  # type: ignore
+_FEN_MAX_LEN = 90  # @link https://chess.stackexchange.com/questions/30004/longest-possible-fen
 
 
 class Game(models.Model):
-    fen: "FEN" = models.CharField(max_length=150)
+    fen: "FEN" = models.CharField(max_length=_FEN_MAX_LEN)
     piece_role_by_square: "PieceRoleBySquare" = models.JSONField()
     active_player: "PlayerSide" = models.CharField(max_length=1, choices=_PLAYER_SIDE_CHOICES)
     bot_side: "PlayerSide | None" = models.CharField(max_length=1, choices=_PLAYER_SIDE_CHOICES, null=True)
@@ -55,3 +58,17 @@ class TeamMember(models.Model):
 
     def __str__(self) -> str:
         return f"{self.role}: {self.first_name} {self.last_name}"
+
+
+class DailyChallenge(models.Model):
+    day: date = models.DateField(null=True)
+    fen: "FEN" = models.CharField(max_length=_FEN_MAX_LEN)
+    piece_role_by_square: "PieceRoleBySquare" = models.JSONField()
+    teams: "GameTeams" = models.JSONField()
+    bot_first_move: str = models.CharField(max_length=5)  # uses UCI notation
+
+    if TYPE_CHECKING:
+        id: int
+
+    def __str__(self) -> str:
+        return f"{self.day}: {self.fen}"
