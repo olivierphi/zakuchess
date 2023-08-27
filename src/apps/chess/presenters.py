@@ -8,7 +8,6 @@ from .domain.chess_logic import calculate_piece_available_targets
 from .domain.consts import PIECES_VALUES, PLAYER_SIDES, STARTING_PIECES
 from .domain.helpers import (
     get_active_player_from_chess_board,
-    player_side_from_piece_role,
     square_from_int,
     symbol_from_piece_role,
     team_member_role_from_piece_role,
@@ -27,7 +26,6 @@ if TYPE_CHECKING:
         PieceType,
         TeamMemberRole,
         Factions,
-        Faction,
     )
 
 from .models import Game, TeamMember
@@ -77,6 +75,8 @@ class GamePresenter:
 
     @cached_property
     def game_phase(self) -> "GamePhase":
+        if winner := self.winner is not None:
+            return "game_over:won" if winner == self.my_side else "game_over:lost"
         if self.is_my_turn:
             if self.selected_piece is None:
                 return "waiting_for_player_selection"
@@ -94,8 +94,20 @@ class GamePresenter:
         return self._chess_board.fen()
 
     @cached_property
+    def is_check(self) -> bool:
+        return self._chess_board.is_check()
+
+    @cached_property
     def is_game_over(self) -> bool:
         return self._chess_board.is_game_over()
+
+    @cached_property
+    def winner(self) -> "PlayerSide | None":
+        return (
+            None
+            if (outcome := self._chess_board.outcome()) is None
+            else chess_lib_color_to_player_side(outcome.winner)
+        )
 
     @cached_property
     def active_player(self) -> "PlayerSide":
@@ -104,10 +116,6 @@ class GamePresenter:
     @cached_property
     def squares_with_pieces_that_can_move(self) -> set["Square"]:
         return set(square_from_int(move.from_square) for move in self._chess_board.legal_moves)
-
-    @cached_property
-    def piece_faction(self, piece: "PieceRole") -> "Faction":
-        return self.factions[player_side_from_piece_role(piece)]
 
     @cached_property
     def captured_pieces(self) -> dict["PlayerSide", list["PieceType"]]:

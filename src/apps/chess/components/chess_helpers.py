@@ -84,9 +84,7 @@ def square_to_tailwind_classes(square: "Square") -> "Sequence[str]":
 
 
 @cache
-def piece_character_classes(
-    *, piece_role: "PieceRole", game_presenter: "GamePresenter | None" = None
-) -> "Sequence[str]":
+def piece_character_classes(*, piece_role: "PieceRole", game_presenter: "GamePresenter") -> "Sequence[str]":
     piece_name = PIECE_TYPE_TO_NAME[type_from_piece_role(piece_role)]
     faction = game_presenter.factions[player_side_from_piece_role(piece_role)]
     classes = [_PIECE_UNITS_CLASSES[faction][piece_name]]

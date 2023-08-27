@@ -7,7 +7,7 @@ from .consts import PIECE_INT_TO_PIECE_TYPE, PIECE_TYPE_TO_NAME, PIECE_TYPE_TO_U
 from .types import PieceType
 
 if TYPE_CHECKING:
-    from .types import File, PieceRole, PieceSymbol, PlayerSide, Rank, Square, TeamMemberRole
+    from .types import File, PieceRole, PieceSymbol, PlayerSide, Rank, Square, TeamMemberRole, PieceName
 
 
 @cache
@@ -65,12 +65,12 @@ def file_and_rank_from_square(square: "Square") -> tuple["File", "Rank"]:
 
 
 @cache
-def piece_name_from_piece_type(piece_type: "PieceType") -> str:
+def piece_name_from_piece_type(piece_type: "PieceType") -> "PieceName":
     return PIECE_TYPE_TO_NAME[piece_type]
 
 
 @cache
-def piece_name_from_piece_role(piece_role: "PieceRole") -> str:
+def piece_name_from_piece_role(piece_role: "PieceRole") -> "PieceName":
     return piece_name_from_piece_type(type_from_piece_role(piece_role))
 
 

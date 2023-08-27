@@ -32,7 +32,7 @@ PieceName = Literal["pawn", "knight", "bishop", "rook", "queen", "king"]
 TeamMemberRole = Literal[
     # fmt: off
     # 8 pawns:
-    "p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", 
+    "p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8",
     # 8 pieces:
     "r1", "n1", "b1", "q", "k", "b2", "n2", "r2",
     # fmt: on
@@ -43,13 +43,13 @@ PieceRole = Literal[
     # Same than TeamMemberRole, but applied to the board:
     # --> following chess conventions, "w player"'s pieces are uppercase while "b player"'s pieces are lowercase.
     # "w" side:
-    "P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", 
+    "P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8",
     "R1", "N1", "B1", "Q", "K", "B2", "N2", "R2",
     # Promoted pawns have a 3 letters role, where the last one is the promoted piece:
     # Let's consider "Queen" promotions only for now:
-    "P1Q", "P2Q", "P3Q", "P4Q", "P5Q", "P6Q", "P7Q", "P8Q", 
+    "P1Q", "P2Q", "P3Q", "P4Q", "P5Q", "P6Q", "P7Q", "P8Q",
     # "b" side:
-    "p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", 
+    "p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8",
     "r1", "n1", "b1", "q", "k", "b2", "n2", "r2",
     # And same for "b" side promotions:
     "p1q", "p2q", "p3q", "p4q", "p5q", "p6q", "p7q", "p8q",
@@ -85,6 +85,8 @@ GamePhase = Literal[
     "waiting_for_player_target_choice_confirmation",
     "waiting_for_bot_turn",
     "waiting_for_opponent_turn",
+    "game_over:won",
+    "game_over:lost",
 ]
 
 GameEndReason = Literal[

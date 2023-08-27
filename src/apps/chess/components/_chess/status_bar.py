@@ -37,18 +37,25 @@ def chess_status_bar(*, game_presenter: "GamePresenter", board_id: str, **extra_
     from ..chess import INFO_BARS_COMMON_CLASSES
 
     inner_content: dom_tag = div("status to implement")
+    align_items = "items-center"
     match game_presenter.game_phase:
+        case "game_over:won":
+            inner_content = div("You won! 🎉", cls="w-full text-center")
+        case "game_over:lost":
+            inner_content = div("You lost! 😭", cls="w-full text-center")
         case "waiting_for_player_selection":
             inner_content = _chess_status_bar_tip(game_presenter)
+            align_items = "items-stretch"
         case "waiting_for_player_target_choice" | "opponent_piece_selected":
             inner_content = _chess_status_bar_selected_piece(game_presenter)
+            align_items = "items-stretch"
         case "waiting_for_bot_turn":
             inner_content = _chess_status_bar_waiting_for_bot_turn(game_presenter)
 
     return div(
         inner_content,
         id=f"chess-board-status-bar-{board_id}",
-        cls=f"min-h-[4rem] flex items-stretch items-center {INFO_BARS_COMMON_CLASSES} border-t-0 rounded-b-md",
+        cls=f"min-h-[4rem] flex {align_items} {INFO_BARS_COMMON_CLASSES} border-t-0 rounded-b-md",
         **extra_attrs,
     )
 
@@ -65,7 +72,6 @@ def _chess_status_bar_tip(game_presenter: "GamePresenter") -> dom_tag:
         unit_display_left,
         div(
             _character_type_tip(random_character_type),
-            _chess_unit_symbol_display(player_side="w", piece_name=piece_name),
             _chess_unit_symbol_display(player_side="b", piece_name=piece_name),
             cls="text-center",
         ),
