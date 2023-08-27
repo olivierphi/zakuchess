@@ -101,5 +101,8 @@ GameEndReason = Literal[
 ChessMoveChanges: TypeAlias = "dict[Square, Square | None]"  # None is used when the piece on that Square was captured
 
 Faction = Literal[
-    "wesnoth-human-loyalist",
+    "humans",
+    "undeads",
 ]
+
+Factions: TypeAlias = dict[PlayerSide, Faction]

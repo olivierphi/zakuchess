@@ -52,6 +52,7 @@ def game_view(req: HttpRequest, game_id: str) -> HttpResponse:
     game_presenter = GamePresenter(
         game=game,
         my_side="w",  # TODO: de-hardcode this - should come from the user
+        factions={"w": "humans", "b": "undeads"},  # TODO: de-hardcode this - should come from the game
     )
 
     return HttpResponse(chess_page(game_presenter=game_presenter, request=req, board_id=board_id))
@@ -68,6 +69,7 @@ def htmx_game_no_selection(req: HttpRequest, game_id: str) -> HttpResponse:
     game_presenter = GamePresenter(
         game=game,
         my_side="w",  # TODO: de-hardcode this - should come from the user
+        factions={"w": "humans", "b": "undeads"},  # TODO: de-hardcode this - should come from the game
     )
 
     # No pieces were actually moved here, but as this template renders the whole pieces and
@@ -87,6 +89,7 @@ def htmx_game_select_piece(req: HttpRequest, game_id: str) -> HttpResponse:
     game_presenter = GamePresenter(
         game=game,
         my_side="w",  # TODO: de-hardcode this - should come from the user
+        factions={"w": "humans", "b": "undeads"},  # TODO: de-hardcode this - should come from the game
         selected_piece_square=piece_square,
     )
 
@@ -105,6 +108,7 @@ def htmx_game_move_piece(req: HttpRequest, game_id: str, from_: Square, to: Squa
     game_presenter = GamePresenter(
         game=game,
         my_side="w",  # TODO: de-hardcode this - should come from the user
+        factions={"w": "humans", "b": "undeads"},  # TODO: de-hardcode this - should come from the game
     )
 
     return HttpResponse(chess_move_piece_htmx_fragment(game_presenter=game_presenter, request=req, board_id=board_id))
@@ -127,6 +131,7 @@ def htmx_game_bot_move(req: HttpRequest, game_id: str) -> HttpResponse:
     game_presenter = GamePresenter(
         game=game,
         my_side="w",  # TODO: de-hardcode this - should come from the user
+        factions={"w": "humans", "b": "undeads"},  # TODO: de-hardcode this - should come from the game
     )
 
     return HttpResponse(chess_move_piece_htmx_fragment(game_presenter=game_presenter, request=req, board_id=board_id))

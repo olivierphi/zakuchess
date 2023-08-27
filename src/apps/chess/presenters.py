@@ -11,6 +11,7 @@ from .domain.helpers import (
     symbol_from_piece_role,
     team_member_role_from_piece_role,
     type_from_piece_symbol,
+    player_side_from_piece_role,
 )
 from .domain.queries import get_team_members_by_role_by_side
 
@@ -24,6 +25,8 @@ if TYPE_CHECKING:
         PieceRole,
         PieceType,
         TeamMemberRole,
+        Factions,
+        Faction,
     )
 
 from .models import Game, TeamMember
@@ -37,6 +40,7 @@ class GamePresenter:
         *,
         game: Game,
         my_side: "PlayerSide",
+        factions: "Factions",
         selected_square: "Square | None" = None,
         selected_piece_square: "Square | None" = None,
         target_to_confirm: "Square | None" = None,
@@ -44,6 +48,7 @@ class GamePresenter:
         self._game = game
         self._chess_board = chess.Board(fen=game.fen)
         self.my_side = my_side
+        self.factions = factions
 
         if selected_square is not None:
             self.selected_square = SelectedSquarePresenter(
@@ -98,6 +103,10 @@ class GamePresenter:
     @cached_property
     def squares_with_pieces_that_can_move(self) -> set["Square"]:
         return set(square_from_int(move.from_square) for move in self._chess_board.legal_moves)
+
+    @cached_property
+    def piece_faction(self, piece: "PieceRole") -> "Faction":
+        return self.factions[player_side_from_piece_role(piece)]
 
     @cached_property
     def captured_pieces(self) -> dict["PlayerSide", list["PieceType"]]:

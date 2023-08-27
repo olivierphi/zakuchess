@@ -235,11 +235,10 @@ def chess_available_target(*, game_presenter: "GamePresenter", square: "Square",
 
 
 def chess_unit_display(
-    *, piece_role: "PieceRole", game_presenter: "GamePresenter | None" = None, square: "Square | None" = None
+    *, piece_role: "PieceRole", game_presenter: "GamePresenter", square: "Square | None" = None
 ) -> dom_tag:
     is_highlighted = (
-        game_presenter
-        and square
+        square
         and game_presenter.selected_piece
         and game_presenter.selected_piece.square == square
         and square in game_presenter.squares_with_pieces_that_can_move
@@ -251,7 +250,7 @@ def chess_unit_display(
         "bg-no-repeat",
         "bg-cover",
         "z-10",
-        *piece_unit_classes(piece_role),
+        *piece_unit_classes(piece_role=piece_role, game_presenter=game_presenter),
         # Conditional classes:
         "drop-shadow-selected-piece" if is_highlighted else "",
         "drop-shadow-potential-capture"
@@ -282,11 +281,11 @@ def chess_unit_ground_marker(*, player_side: "PlayerSide", can_move: bool = Fals
     )
 
 
-def chess_unit_display_with_ground_marker(*, piece_role: "PieceRole") -> dom_tag:
+def chess_unit_display_with_ground_marker(*, piece_role: "PieceRole", game_presenter: "GamePresenter") -> dom_tag:
     player_side = player_side_from_piece_role(piece_role)
 
     ground_marker = chess_unit_ground_marker(player_side=player_side)
-    unit_display = chess_unit_display(piece_role=piece_role)
+    unit_display = chess_unit_display(piece_role=piece_role, game_presenter=game_presenter)
 
     return div(
         ground_marker,

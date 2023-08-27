@@ -5,11 +5,11 @@ from dominate.tags import div, dom_tag, img
 from dominate.util import raw
 
 from ...domain.consts import PIECE_TYPE_TO_NAME
-from ...domain.helpers import piece_name_from_piece_role, player_side_from_piece_role
+from ...domain.helpers import piece_name_from_piece_role, player_side_from_piece_role, type_from_piece_role
 from ..chess_helpers import chess_unit_symbol_url
 
 if TYPE_CHECKING:
-    from ...domain.types import PieceRole, PieceType, TeamMemberRole
+    from ...domain.types import PieceRole, PieceType, TeamMemberRole, PlayerSide, PieceName
     from ...presenters import GamePresenter
 
 
@@ -19,7 +19,7 @@ def chess_status_bar(*, game_presenter: "GamePresenter", board_id: str, **extra_
     inner_content: dom_tag = div("status to implement")
     match game_presenter.game_phase:
         case "waiting_for_player_selection":
-            inner_content = _chess_status_bar_tip()
+            inner_content = _chess_status_bar_tip(game_presenter)
         case "waiting_for_player_target_choice" | "opponent_piece_selected":
             inner_content = _chess_status_bar_selected_piece(game_presenter)
         case "waiting_for_bot_turn":
@@ -35,11 +35,11 @@ def chess_status_bar(*, game_presenter: "GamePresenter", board_id: str, **extra_
 
 _CHARACTER_TYPE_TIP: dict["PieceType", str] = {
     "p": "swords",
-    "n": "horses",
+    "n": "mounts",
     "b": "bows",
-    "r": "staffs",
-    "q": "?",
-    "k": "?",
+    "r": "wings",
+    "q": "staves",
+    "k": "armors",
 }
 _CHARACTER_TYPE_TIP_KEYS = tuple(_CHARACTER_TYPE_TIP.keys())
 
@@ -53,23 +53,20 @@ _CHARACTER_TYPE_ROLE_MAPPING: dict["PieceType", "TeamMemberRole"] = {
 }
 
 
-def _chess_status_bar_tip() -> dom_tag:
-    character_type = random.choice(_CHARACTER_TYPE_TIP_KEYS)
-    piece_name = PIECE_TYPE_TO_NAME[character_type]
-    unit_left_side_role = cast("PieceRole", _CHARACTER_TYPE_ROLE_MAPPING[character_type].upper())
-    unit_right_side_role = _CHARACTER_TYPE_ROLE_MAPPING[character_type]
-    unit_display_left = _unit_display_container(unit_left_side_role)
-    unit_display_right = _unit_display_container(unit_right_side_role)
+def _chess_status_bar_tip(game_presenter: "GamePresenter") -> dom_tag:
+    random_character_type = random.choice(_CHARACTER_TYPE_TIP_KEYS)
+    piece_name = PIECE_TYPE_TO_NAME[random_character_type]
+    unit_left_side_role = cast("PieceRole", _CHARACTER_TYPE_ROLE_MAPPING[random_character_type].upper())
+    unit_right_side_role = _CHARACTER_TYPE_ROLE_MAPPING[random_character_type]
+    unit_display_left = _unit_display_container(piece_role=unit_left_side_role, game_presenter=game_presenter)
+    unit_display_right = _unit_display_container(piece_role=unit_right_side_role, game_presenter=game_presenter)
 
     return div(
         unit_display_left,
         div(
-            raw(f"💡 Characters with <b>{_CHARACTER_TYPE_TIP[character_type]}</b> are <b>{piece_name}s</b>"),
-            img(
-                src=chess_unit_symbol_url(player_side="w", piece_name=piece_name),
-                alt=piece_name,
-                cls="inline w-4 aspect-square",
-            ),
+            _character_type_tip(random_character_type),
+            _chess_unit_symbol_img(player_side="w", piece_name=piece_name),
+            _chess_unit_symbol_img(player_side="b", piece_name=piece_name),
             cls="text-center",
         ),
         unit_display_right,
@@ -86,17 +83,13 @@ def _chess_status_bar_selected_piece(game_presenter: "GamePresenter") -> dom_tag
     player_side = player_side_from_piece_role(piece_role)
     piece_name = piece_name_from_piece_role(piece_role)
 
-    unit_display = _unit_display_container(piece_role)
+    unit_display = _unit_display_container(piece_role=piece_role, game_presenter=game_presenter)
 
     unit_about = div(
         div(f"{team_member.first_name} {team_member.last_name}"),
         div(
-            f"Chess equivalent: ",
-            img(
-                src=chess_unit_symbol_url(player_side=player_side, piece_name=piece_name),
-                alt=piece_name,
-                cls="inline w-4 aspect-square",
-            ),
+            _character_type_tip(type_from_piece_role(piece_role)),
+            _chess_unit_symbol_img(player_side=player_side, piece_name=piece_name),
         ),
         cls="grow text-center",
     )
@@ -117,11 +110,26 @@ def _chess_status_bar_selected_piece(game_presenter: "GamePresenter") -> dom_tag
     )
 
 
-def _unit_display_container(piece_role: "PieceRole") -> dom_tag:
+def _character_type_tip(piece_type: "PieceType") -> dom_tag:
+    return raw(
+        f"💡 Characters with <b>{_CHARACTER_TYPE_TIP[piece_type]}</b> are chess <b>{PIECE_TYPE_TO_NAME[piece_type]}s</b>"
+    )
+
+
+def _chess_unit_symbol_img(*, player_side: "PlayerSide", piece_name: "PieceName") -> img:
+    return img(
+        src=chess_unit_symbol_url(player_side=player_side, piece_name=piece_name),
+        alt=piece_name,
+        cls="inline w-4 aspect-square",
+    )
+
+
+def _unit_display_container(*, piece_role: "PieceRole", game_presenter: "GamePresenter") -> dom_tag:
     from ..chess import chess_unit_display_with_ground_marker
 
     unit_display = chess_unit_display_with_ground_marker(
         piece_role=piece_role,
+        game_presenter=game_presenter,
     )
     return div(
         unit_display,

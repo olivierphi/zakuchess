@@ -7,7 +7,8 @@ from ..domain.helpers import file_and_rank_from_square, player_side_from_piece_r
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from ..domain.types import File, PieceName, PieceRole, PlayerSide, Rank, Square, SquareColor
+    from ..domain.types import File, PieceName, PieceRole, PlayerSide, Rank, Square, SquareColor, Faction
+    from ..presenters import GamePresenter
 
 _FILE_TO_TAILWIND_POSITIONING_CLASS: dict["File", str] = {
     "a": "translate-y-0/1",
@@ -30,6 +31,26 @@ _RANK_TO_TAILWIND_POSITIONING_CLASS: dict["Rank", str] = {
     "8": "translate-x-7/1",
 }
 
+PIECE_UNITS_CLASSES: "dict[Faction, dict[PieceName, str]]" = {
+    # We need Tailwind to see these classes, so that it bundles them in the final CSS file.
+    "humans": {
+        "pawn": "bg-humans-pawn",
+        "knight": "bg-humans-knight",
+        "bishop": "bg-humans-bishop",
+        "rook": "bg-humans-rook",
+        "queen": "bg-humans-queen",
+        "king": "bg-humans-king",
+    },
+    "undeads": {
+        "pawn": "bg-undeads-pawn",
+        "knight": "bg-undeads-knight",
+        "bishop": "bg-undeads-bishop",
+        "rook": "bg-undeads-rook",
+        "queen": "bg-undeads-queen",
+        "king": "bg-undeads-king",
+    },
+}
+
 
 @cache
 def square_to_tailwind_classes(square: "Square") -> "Sequence[str]":
@@ -41,8 +62,10 @@ def square_to_tailwind_classes(square: "Square") -> "Sequence[str]":
 
 
 @cache
-def piece_unit_classes(piece_role: "PieceRole") -> "Sequence[str]":
-    classes = [f"bg-wesnoth-loyalists-{PIECE_TYPE_TO_NAME[type_from_piece_role(piece_role)]}"]
+def piece_unit_classes(*, piece_role: "PieceRole", game_presenter: "GamePresenter | None" = None) -> "Sequence[str]":
+    piece_name = PIECE_TYPE_TO_NAME[type_from_piece_role(piece_role)]
+    faction = game_presenter.factions[player_side_from_piece_role(piece_role)]
+    classes = [PIECE_UNITS_CLASSES[faction][piece_name]]
     player_side = player_side_from_piece_role(piece_role)
     if player_side == "b":
         classes.append("-scale-x-100")
