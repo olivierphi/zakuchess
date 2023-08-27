@@ -1,8 +1,10 @@
 const CHESS_BOARD_SPACING = Object.fromEntries([1, 2, 3, 4, 5, 6, 7].map((i) => [`${i}/8`, `${i * 12.5}%`]))
 const PIECE_NAMES = ["pawn", "knight", "bishop", "rook", "queen", "king"]
+const PLAYER_SIDES = ["w", "b"]
 const FACTIONS = ["humans", "undeads"]
 
-const SELECTION_COLOR = "#ffff00"
+const ACTIVE_PLAYER_SELECTION_COLOR = "#ffff00"
+const OPPONENT_PLAYER_SELECTION_COLOR = "#B0B000"
 const POTENTIAL_CAPTURE_COLOR = "#c00000"
 const PIECES_DROP_SHADOW_OFFSET = "1px"
 
@@ -23,7 +25,8 @@ module.exports = {
                 "chess-square-light": "#e4b55d", // "#fed7aa", // "#e4b55d", // "#fed7aa", // Tailwind's "Orange 200"
                 "chess-square-dark": "#a57713", // "#881337", // Amber 700 // "#a57713", // "#9f1239", // Tailwind's "Rose 800"
                 "chess-square-square-info": "#58400b",
-                "chess-available-target-marker": SELECTION_COLOR,
+                "active-chess-available-target-marker": ACTIVE_PLAYER_SELECTION_COLOR,
+                "opponent-chess-available-target-marker": OPPONENT_PLAYER_SELECTION_COLOR,
             },
             width: {
                 "1/8": "12.5%",
@@ -44,23 +47,31 @@ module.exports = {
             inset: {
                 ...CHESS_BOARD_SPACING,
                 "1/12": "8.333333%",
+                "2/12": "16.666667%",
             },
             borderRadius: {
                 "1/2": "50%",
             },
             backgroundImage: {
-                ...chessPiecesBackgroundImages(),
+                ...chessSymbolsBackgroundImages(),
+                ...chessCharactersBackgroundImages(),
             },
             transitionProperty: {
                 coordinates: "transform, top, left",
                 size: "width, height",
             },
             dropShadow: {
-                "selected-piece": [
-                    `${PIECES_DROP_SHADOW_OFFSET} ${PIECES_DROP_SHADOW_OFFSET} 0 ${SELECTION_COLOR}`,
-                    `-${PIECES_DROP_SHADOW_OFFSET} ${PIECES_DROP_SHADOW_OFFSET} 0 ${SELECTION_COLOR}`,
-                    `${PIECES_DROP_SHADOW_OFFSET} -${PIECES_DROP_SHADOW_OFFSET} 0 ${SELECTION_COLOR}`,
-                    `-${PIECES_DROP_SHADOW_OFFSET} -${PIECES_DROP_SHADOW_OFFSET} 0 ${SELECTION_COLOR}`,
+                "active-selected-piece": [
+                    `${PIECES_DROP_SHADOW_OFFSET} ${PIECES_DROP_SHADOW_OFFSET} 0 ${ACTIVE_PLAYER_SELECTION_COLOR}`,
+                    `-${PIECES_DROP_SHADOW_OFFSET} ${PIECES_DROP_SHADOW_OFFSET} 0 ${ACTIVE_PLAYER_SELECTION_COLOR}`,
+                    `${PIECES_DROP_SHADOW_OFFSET} -${PIECES_DROP_SHADOW_OFFSET} 0 ${ACTIVE_PLAYER_SELECTION_COLOR}`,
+                    `-${PIECES_DROP_SHADOW_OFFSET} -${PIECES_DROP_SHADOW_OFFSET} 0 ${ACTIVE_PLAYER_SELECTION_COLOR}`,
+                ],
+                "opponent-selected-piece": [
+                    `${PIECES_DROP_SHADOW_OFFSET} ${PIECES_DROP_SHADOW_OFFSET} 0 ${OPPONENT_PLAYER_SELECTION_COLOR}`,
+                    `-${PIECES_DROP_SHADOW_OFFSET} ${PIECES_DROP_SHADOW_OFFSET} 0 ${OPPONENT_PLAYER_SELECTION_COLOR}`,
+                    `${PIECES_DROP_SHADOW_OFFSET} -${PIECES_DROP_SHADOW_OFFSET} 0 ${OPPONENT_PLAYER_SELECTION_COLOR}`,
+                    `-${PIECES_DROP_SHADOW_OFFSET} -${PIECES_DROP_SHADOW_OFFSET} 0 ${OPPONENT_PLAYER_SELECTION_COLOR}`,
                 ],
                 "potential-capture": [
                     `${PIECES_DROP_SHADOW_OFFSET} ${PIECES_DROP_SHADOW_OFFSET} 0 ${POTENTIAL_CAPTURE_COLOR}`,
@@ -74,12 +85,23 @@ module.exports = {
     plugins: [],
 }
 
-function chessPiecesBackgroundImages() {
+function chessCharactersBackgroundImages() {
     return Object.fromEntries(
         FACTIONS.map((faction) =>
             PIECE_NAMES.map((pieceName) => [
                 `${faction}-${pieceName}`,
-                `url('/static/chess/units/${encodeURIComponent(faction)}/${encodeURIComponent(pieceName)}.png')`,
+                `url('/static/chess/units/${faction}/${pieceName}.png')`,
+            ]),
+        ).flat(),
+    )
+}
+
+function chessSymbolsBackgroundImages() {
+    return Object.fromEntries(
+        PLAYER_SIDES.map((playerSide) =>
+            PIECE_NAMES.map((pieceName) => [
+                `${playerSide}-${pieceName}`,
+                `url('/static/chess/symbols/${playerSide}-${pieceName}.svg')`,
             ]),
         ).flat(),
     )

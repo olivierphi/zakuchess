@@ -1,13 +1,15 @@
 from functools import cache
 from typing import TYPE_CHECKING
 
+import chess
+
 from ..domain.consts import PIECE_TYPE_TO_NAME
 from ..domain.helpers import file_and_rank_from_square, player_side_from_piece_role, type_from_piece_role
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from ..domain.types import File, PieceName, PieceRole, PlayerSide, Rank, Square, SquareColor, Faction
+    from ..domain.types import Faction, File, PieceName, PieceRole, PlayerSide, Rank, Square, SquareColor
     from ..presenters import GamePresenter
 
 _FILE_TO_TAILWIND_POSITIONING_CLASS: dict["File", str] = {
@@ -31,7 +33,7 @@ _RANK_TO_TAILWIND_POSITIONING_CLASS: dict["Rank", str] = {
     "8": "translate-x-7/1",
 }
 
-PIECE_UNITS_CLASSES: "dict[Faction, dict[PieceName, str]]" = {
+_PIECE_UNITS_CLASSES: "dict[Faction, dict[PieceName, str]]" = {
     # We need Tailwind to see these classes, so that it bundles them in the final CSS file.
     "humans": {
         "pawn": "bg-humans-pawn",
@@ -51,6 +53,26 @@ PIECE_UNITS_CLASSES: "dict[Faction, dict[PieceName, str]]" = {
     },
 }
 
+_PIECE_SYMBOLS_CLASSES: "dict[PlayerSide, dict[PieceName, str]]" = {
+    # Ditto.
+    "w": {
+        "pawn": "bg-w-pawn",
+        "knight": "bg-w-knight",
+        "bishop": "bg-w-bishop",
+        "rook": "bg-w-rook",
+        "queen": "bg-w-queen",
+        "king": "bg-w-king",
+    },
+    "b": {
+        "pawn": "bg-b-pawn",
+        "knight": "bg-b-knight",
+        "bishop": "bg-b-bishop",
+        "rook": "bg-b-rook",
+        "queen": "bg-b-queen",
+        "king": "bg-b-king",
+    },
+}
+
 
 @cache
 def square_to_tailwind_classes(square: "Square") -> "Sequence[str]":
@@ -62,10 +84,12 @@ def square_to_tailwind_classes(square: "Square") -> "Sequence[str]":
 
 
 @cache
-def piece_unit_classes(*, piece_role: "PieceRole", game_presenter: "GamePresenter | None" = None) -> "Sequence[str]":
+def piece_character_classes(
+    *, piece_role: "PieceRole", game_presenter: "GamePresenter | None" = None
+) -> "Sequence[str]":
     piece_name = PIECE_TYPE_TO_NAME[type_from_piece_role(piece_role)]
     faction = game_presenter.factions[player_side_from_piece_role(piece_role)]
-    classes = [PIECE_UNITS_CLASSES[faction][piece_name]]
+    classes = [_PIECE_UNITS_CLASSES[faction][piece_name]]
     player_side = player_side_from_piece_role(piece_role)
     if player_side == "b":
         classes.append("-scale-x-100")
@@ -73,8 +97,13 @@ def piece_unit_classes(*, piece_role: "PieceRole", game_presenter: "GamePresente
 
 
 @cache
-def chess_unit_symbol_url(*, player_side: "PlayerSide", piece_name: "PieceName") -> str:
-    return f"/static/chess/symbols/{player_side}-{piece_name}.svg"
+def chess_unit_symbol_class(*, player_side: "PlayerSide", piece_name: "PieceName") -> str:
+    return _PIECE_SYMBOLS_CLASSES[player_side][piece_name]
+
+
+@cache
+def chess_lib_color_to_player_side(color: chess.Color) -> "PlayerSide":
+    return "w" if color == chess.WHITE else "b"
 
 
 @cache

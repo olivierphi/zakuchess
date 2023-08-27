@@ -18,9 +18,16 @@ from ..domain.helpers import (
 )
 from ._chess.score_bar import chess_score_bar
 from ._chess.status_bar import chess_status_bar
-from .chess_helpers import chess_square_color, chess_unit_symbol_url, piece_unit_classes, square_to_tailwind_classes
+from .chess_helpers import (
+    chess_square_color,
+    chess_unit_symbol_class,
+    piece_character_classes,
+    square_to_tailwind_classes,
+)
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from ..domain.types import PieceRole, PlayerSide, Square
     from ..presenters import GamePresenter
 
@@ -32,11 +39,18 @@ _PIECE_GROUND_MARKER_COLOR_TAILWIND_CLASSES: dict[tuple["PlayerSide", bool], str
     # the boolean says if the piece can move
     ("w", False): "bg-slate-100/40 border border-slate-100",
     ("b", False): "bg-slate-800/40 border border-slate-800",
-    ("w", True): "bg-slate-100/40 border-2 border-chess-available-target-marker",
-    ("b", True): "bg-slate-800/40 border-2 border-chess-available-target-marker",
+    ("w", True): "bg-slate-100/40 border-2 border-active-chess-available-target-marker",
+    ("b", True): "bg-slate-800/40 border-2 border-opponent-chess-available-target-marker",
+}
+_CHESS_PIECE_Z_INDEXES: dict[str, str] = {
+    # N.B. z-indexes must be multiples of 10 in Tailwind.
+    "ground_marker": "z-0",
+    "symbol": "z-10",
+    "character": "z-20",
 }
 
-_BOT_MOVE_DELAY = 500  # we'll wait that amount of millisecondes before starting the bot move's calculation
+
+_BOT_MOVE_DELAY = 500  # we'll wait that amount of milliseconds before starting the bot move's calculation
 _PLAY_BOT_JS_TEMPLATE = Template(
     """
 <script>
@@ -160,7 +174,7 @@ def chess_piece(
         player_side == game_presenter.my_side and square in game_presenter.squares_with_pieces_that_can_move
     )
     ground_marker = chess_unit_ground_marker(player_side=player_side, can_move=piece_can_move)
-    unit_display = chess_unit_display(piece_role=piece_role, game_presenter=game_presenter, square=square)
+    unit_display = chess_character_display(piece_role=piece_role, game_presenter=game_presenter, square=square)
     unit_chess_symbol_display = chess_unit_symbol_display(piece_role=piece_role, square=square)
 
     classes = [
@@ -176,6 +190,7 @@ def chess_piece(
         "ease-in",
         "transform-gpu",
     ]
+
     return div(
         ground_marker,
         unit_display,
@@ -195,8 +210,16 @@ def chess_piece(
 def chess_available_targets(*, game_presenter: "GamePresenter", board_id: str, **extra_attrs: str) -> dom_tag:
     children: list[dom_tag] = []
     if game_presenter.selected_piece:
+        selected_piece_player_side = game_presenter.selected_piece.player_side
         for square in game_presenter.selected_piece.available_targets:
-            children.append(chess_available_target(game_presenter=game_presenter, square=square, board_id=board_id))
+            children.append(
+                chess_available_target(
+                    game_presenter=game_presenter,
+                    piece_player_side=selected_piece_player_side,
+                    square=square,
+                    board_id=board_id,
+                )
+            )
 
     return div(
         *children,
@@ -206,10 +229,15 @@ def chess_available_targets(*, game_presenter: "GamePresenter", board_id: str, *
     )
 
 
-def chess_available_target(*, game_presenter: "GamePresenter", square: "Square", board_id: str) -> dom_tag:
+def chess_available_target(
+    *, game_presenter: "GamePresenter", piece_player_side: "PlayerSide", square: "Square", board_id: str
+) -> dom_tag:
     assert game_presenter.selected_piece is not None
+    can_move = game_presenter.active_player_side == piece_player_side
+    bg_class = "bg-active-chess-available-target-marker" if can_move else "bg-opponent-chess-available-target-marker"
+    hover_class = "hover:w-1/3 hover:h-1/3" if can_move else ""
     target_marker = div(
-        cls="w-1/5 h-1/5 rounded-full bg-chess-available-target-marker transition-size hover:w-1/3 hover:h-1/3",
+        cls=f"w-1/5 h-1/5 rounded-full transition-size {bg_class} {hover_class}",
     )
     target_marker_container = div(
         target_marker,
@@ -220,45 +248,70 @@ def chess_available_target(*, game_presenter: "GamePresenter", square: "Square",
         "aspect-square",
         "w-1/8",
         *square_to_tailwind_classes(square),
-        "cursor-pointer",
-        "pointer-events-auto",
     ]
+    if can_move:
+        classes += ["cursor-pointer", "pointer-events-auto"]
+    else:
+        classes += ["pointer-events-none"]
+
+    if can_move:
+        htmx_attributes = {
+            "data_hx_post": f"{reverse('chess:htmx_game_move_piece', kwargs={'game_id': game_presenter.game_id, 'from_': game_presenter.selected_piece.square, 'to': square})}?{urlencode({'board_id': board_id})}",
+            "data_hx_target": f"#chess-board-pieces-{ board_id }",
+            "data_hx_swap": "outerHTML",
+        }
+    else:
+        htmx_attributes = {}
+
     return div(
         target_marker_container,
         cls=" ".join(classes),
-        data_hx_post=f"{reverse('chess:htmx_game_move_piece', kwargs={'game_id': game_presenter.game_id, 'from_': game_presenter.selected_piece.square, 'to': square})}?{urlencode({'board_id': board_id})}",
-        data_hx_target=f"#chess-board-pieces-{ board_id }",
-        data_hx_swap="outerHTML",
+        **htmx_attributes,
         # This one is mostly for debugging purposes:
         data_square=square,
     )
 
 
-def chess_unit_display(
-    *, piece_role: "PieceRole", game_presenter: "GamePresenter", square: "Square | None" = None
+def chess_character_display(
+    *,
+    piece_role: "PieceRole",
+    game_presenter: "GamePresenter",
+    square: "Square | None" = None,
+    additional_classes: "Sequence[str]|None" = None,
 ) -> dom_tag:
-    is_highlighted = (
+    piece_player_side = player_side_from_piece_role(piece_role)
+    is_active_player_piece = game_presenter.active_player == piece_player_side
+    is_highlighted: bool = square and game_presenter.selected_piece and game_presenter.selected_piece.square == square
+    is_potential_capture: bool = game_presenter.selected_piece and game_presenter.selected_piece.is_potential_capture(
         square
-        and game_presenter.selected_piece
-        and game_presenter.selected_piece.square == square
-        and square in game_presenter.squares_with_pieces_that_can_move
     )
+    is_knight: bool = type_from_piece_role(piece_role) == "n"
+    horizontal_translation = (
+        ("left-2" if player_side_from_piece_role(piece_role) == "w" else "right-2")
+        if is_knight
+        else ("left-1" if player_side_from_piece_role(piece_role) == "w" else "right-1")
+    )
+    vertical_translation = "top-1" if is_knight else "top-2"
+
     classes = [
         "relative",
-        "w-full",
+        "w-11/12",
         "aspect-square",
         "bg-no-repeat",
         "bg-cover",
-        "z-10",
-        *piece_unit_classes(piece_role=piece_role, game_presenter=game_presenter),
+        _CHESS_PIECE_Z_INDEXES["character"],
+        horizontal_translation,
+        vertical_translation,
+        *piece_character_classes(piece_role=piece_role, game_presenter=game_presenter),
         # Conditional classes:
-        "drop-shadow-selected-piece" if is_highlighted else "",
-        "drop-shadow-potential-capture"
-        if game_presenter
-        and game_presenter.selected_piece
-        and game_presenter.selected_piece.is_potential_capture(square)
+        ("drop-shadow-active-selected-piece" if is_active_player_piece else "drop-shadow-opponent-selected-piece")
+        if is_highlighted
         else "",
+        "drop-shadow-potential-capture" if is_potential_capture else "",
     ]
+    if additional_classes:
+        classes.extend(additional_classes)
+
     return div(
         cls=" ".join(classes),
     )
@@ -272,7 +325,7 @@ def chess_unit_ground_marker(*, player_side: "PlayerSide", can_move: bool = Fals
         "left-1/12",
         "bottom-1",
         "rounded-1/2",
-        "z-0",
+        _CHESS_PIECE_Z_INDEXES["ground_marker"],
         "border-solid",
         _PIECE_GROUND_MARKER_COLOR_TAILWIND_CLASSES[(player_side, can_move)],
     ]
@@ -285,7 +338,7 @@ def chess_unit_display_with_ground_marker(*, piece_role: "PieceRole", game_prese
     player_side = player_side_from_piece_role(piece_role)
 
     ground_marker = chess_unit_ground_marker(player_side=player_side)
-    unit_display = chess_unit_display(piece_role=piece_role, game_presenter=game_presenter)
+    unit_display = chess_character_display(piece_role=piece_role, game_presenter=game_presenter)
 
     return div(
         ground_marker,
@@ -301,26 +354,27 @@ def chess_unit_symbol_display(*, piece_role: "PieceRole", square: "Square") -> d
     square_color = chess_square_color(square)
 
     symbol_class = (
-        "w-10",
+        "w-7",
         "aspect-square",
         "bg-no-repeat",
         "bg-cover",
-        "opacity-50" if square_color == "light" else "opacity-40",
-        "brightness-50",
+        "opacity-80" if square_color == "light" else "opacity-70",
+        chess_unit_symbol_class(player_side=player_side, piece_name=piece_name),
     )
     symbol_display = div(
-        style=f"background-image: url('{chess_unit_symbol_url(player_side='b', piece_name=piece_name)}')",
         cls=" ".join(symbol_class),
     )
 
     classes = (
         "absolute",
-        # We have to do some ad-hoc adjustements for Knights:
-        "-top-1" if piece_type == "n" else "top-0",
-        ("-left-1" if player_side == "w" else "-right-1")
-        if piece_type == "n"
-        else ("left-0" if player_side == "w" else "right-0"),
-        "z-0",
+        # We have to do some ad-hoc adjustments for Knights:
+        # "-top-1",  # "-top-1" if piece_type == "n" else "top-0",
+        "top-0",
+        # ("-left-1" if player_side == "w" else "-right-1")
+        "left-0" if player_side == "w" else "right-0",
+        # if piece_type == "n"
+        # else ("right-0" if player_side == "w" else "left-0"),
+        _CHESS_PIECE_Z_INDEXES["symbol"],
         # Quick custom display for white knights, so they face the inside of the board:
         "-scale-x-100" if player_side == "w" and piece_type == "n" else "",
     )

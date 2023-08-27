@@ -3,15 +3,16 @@ from typing import TYPE_CHECKING, cast
 
 import chess
 
+from .components.chess_helpers import chess_lib_color_to_player_side
 from .domain.chess_logic import calculate_piece_available_targets
 from .domain.consts import PIECES_VALUES, PLAYER_SIDES, STARTING_PIECES
 from .domain.helpers import (
     get_active_player_from_chess_board,
+    player_side_from_piece_role,
     square_from_int,
     symbol_from_piece_role,
     team_member_role_from_piece_role,
     type_from_piece_symbol,
-    player_side_from_piece_role,
 )
 from .domain.queries import get_team_members_by_role_by_side
 
@@ -210,7 +211,16 @@ class SelectedPiecePresenter(SelectedSquarePresenter):
 
     @cached_property
     def available_targets(self) -> frozenset["Square"]:
-        return calculate_piece_available_targets(chess_board=self._chess_board, piece_square=self.square)
+        chess_board_active_player_side = chess_lib_color_to_player_side(self._chess_board.turn)
+        square_index = chess.parse_square(self.square)
+        piece_player_side = chess_lib_color_to_player_side(self._chess_board.color_at(square_index))
+        if chess_board_active_player_side != piece_player_side:
+            # Let's pretend it's that player's turn, so we can calculate the available targets:
+            chess_board = self._chess_board.copy()
+            chess_board.turn = not chess_board.turn
+        else:
+            chess_board = self._chess_board
+        return calculate_piece_available_targets(chess_board=chess_board, piece_square=self.square)
 
     @cache
     def is_potential_capture(self, square: "Square") -> bool:

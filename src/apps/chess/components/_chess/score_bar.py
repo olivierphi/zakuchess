@@ -1,10 +1,10 @@
 from typing import TYPE_CHECKING
 
 from dominate.dom_tag import dom_tag
-from dominate.tags import div, img
+from dominate.tags import div, span
 
 from ...domain.helpers import piece_name_from_piece_type
-from ..chess_helpers import chess_unit_symbol_url
+from ..chess_helpers import chess_unit_symbol_class
 
 if TYPE_CHECKING:
     from ...domain.types import PlayerSide
@@ -27,10 +27,17 @@ def chess_score_bar(game_presenter: "GamePresenter", board_id: str) -> dom_tag:
         for captured_piece in captured_pieces:
             piece_name = piece_name_from_piece_type(captured_piece)
             captured_pieces_to_display[player_side].append(
-                img(
-                    src=chess_unit_symbol_url(player_side=player_side, piece_name=piece_name),
-                    alt=piece_name,
-                    cls="inline w-5 aspect-square",
+                span(
+                    cls=" ".join(
+                        (
+                            "inline-block",
+                            "w-5",
+                            "aspect-square",
+                            "bg-no-repeat",
+                            "bg-cover",
+                            chess_unit_symbol_class(player_side=player_side, piece_name=piece_name),
+                        )
+                    )
                 )
             )
 

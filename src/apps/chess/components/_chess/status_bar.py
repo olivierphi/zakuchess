@@ -1,16 +1,36 @@
 import random
 from typing import TYPE_CHECKING, cast
 
-from dominate.tags import div, dom_tag, img
+from dominate.tags import div, dom_tag, span
 from dominate.util import raw
 
 from ...domain.consts import PIECE_TYPE_TO_NAME
 from ...domain.helpers import piece_name_from_piece_role, player_side_from_piece_role, type_from_piece_role
-from ..chess_helpers import chess_unit_symbol_url
+from ..chess_helpers import chess_unit_symbol_class
 
 if TYPE_CHECKING:
-    from ...domain.types import PieceRole, PieceType, TeamMemberRole, PlayerSide, PieceName
+    from ...domain.types import PieceName, PieceRole, PieceType, PlayerSide, TeamMemberRole
     from ...presenters import GamePresenter
+
+
+_CHARACTER_TYPE_TIP: dict["PieceType", str] = {
+    "p": "Characters with <b>a sword</b>",
+    "n": "<b>Mounted</b> characters",
+    "b": "Characters with <b>a bow</b>",
+    "r": "Characters wearing <b>a heavy armor</b>",
+    "q": "Characters with <b>a staff</b>",
+    "k": "Characters with <b>a crown</b>",
+}
+_CHARACTER_TYPE_TIP_KEYS = tuple(_CHARACTER_TYPE_TIP.keys())
+
+_CHARACTER_TYPE_ROLE_MAPPING: dict["PieceType", "TeamMemberRole"] = {
+    "p": "p1",
+    "n": "n1",
+    "b": "b1",
+    "r": "r1",
+    "q": "q",
+    "k": "k",
+}
 
 
 def chess_status_bar(*, game_presenter: "GamePresenter", board_id: str, **extra_attrs: str) -> dom_tag:
@@ -33,26 +53,6 @@ def chess_status_bar(*, game_presenter: "GamePresenter", board_id: str, **extra_
     )
 
 
-_CHARACTER_TYPE_TIP: dict["PieceType", str] = {
-    "p": "swords",
-    "n": "mounts",
-    "b": "bows",
-    "r": "wings",
-    "q": "staves",
-    "k": "armors",
-}
-_CHARACTER_TYPE_TIP_KEYS = tuple(_CHARACTER_TYPE_TIP.keys())
-
-_CHARACTER_TYPE_ROLE_MAPPING: dict["PieceType", "TeamMemberRole"] = {
-    "p": "p1",
-    "n": "n1",
-    "b": "b1",
-    "r": "r1",
-    "q": "q",
-    "k": "k",
-}
-
-
 def _chess_status_bar_tip(game_presenter: "GamePresenter") -> dom_tag:
     random_character_type = random.choice(_CHARACTER_TYPE_TIP_KEYS)
     piece_name = PIECE_TYPE_TO_NAME[random_character_type]
@@ -65,8 +65,8 @@ def _chess_status_bar_tip(game_presenter: "GamePresenter") -> dom_tag:
         unit_display_left,
         div(
             _character_type_tip(random_character_type),
-            _chess_unit_symbol_img(player_side="w", piece_name=piece_name),
-            _chess_unit_symbol_img(player_side="b", piece_name=piece_name),
+            _chess_unit_symbol_display(player_side="w", piece_name=piece_name),
+            _chess_unit_symbol_display(player_side="b", piece_name=piece_name),
             cls="text-center",
         ),
         unit_display_right,
@@ -89,18 +89,18 @@ def _chess_status_bar_selected_piece(game_presenter: "GamePresenter") -> dom_tag
         div(f"{team_member.first_name} {team_member.last_name}"),
         div(
             _character_type_tip(type_from_piece_role(piece_role)),
-            _chess_unit_symbol_img(player_side=player_side, piece_name=piece_name),
+            _chess_unit_symbol_display(player_side=player_side, piece_name=piece_name),
         ),
         cls="grow text-center",
     )
 
-    classes = [
+    classes = (
         "flex",
         "w-full",
         "justify-between",
         "items-center",
         "flex-row" if selected_piece.player_side == "w" else "flex-row-reverse",
-    ]
+    )
 
     return div(
         unit_display,
@@ -111,16 +111,22 @@ def _chess_status_bar_selected_piece(game_presenter: "GamePresenter") -> dom_tag
 
 
 def _character_type_tip(piece_type: "PieceType") -> dom_tag:
-    return raw(
-        f"💡 Characters with <b>{_CHARACTER_TYPE_TIP[piece_type]}</b> are chess <b>{PIECE_TYPE_TO_NAME[piece_type]}s</b>"
+    return raw(f"{_CHARACTER_TYPE_TIP[piece_type]} are chess <b>{PIECE_TYPE_TO_NAME[piece_type]}s</b>")
+
+
+def _chess_unit_symbol_display(*, player_side: "PlayerSide", piece_name: "PieceName") -> dom_tag:
+    classes = (
+        "inline-block",
+        "w-5",
+        "align-text-bottom",
+        "aspect-square",
+        "bg-no-repeat",
+        "bg-cover",
+        chess_unit_symbol_class(player_side=player_side, piece_name=piece_name),
     )
 
-
-def _chess_unit_symbol_img(*, player_side: "PlayerSide", piece_name: "PieceName") -> img:
-    return img(
-        src=chess_unit_symbol_url(player_side=player_side, piece_name=piece_name),
-        alt=piece_name,
-        cls="inline w-4 aspect-square",
+    return span(
+        cls=" ".join(classes),
     )
 
 

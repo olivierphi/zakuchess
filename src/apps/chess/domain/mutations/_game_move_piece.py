@@ -32,8 +32,8 @@ def game_move_piece(*, game: Game, from_: "Square", to: "Square") -> ChessMoveRe
     for move_from, move_to in move_result["changes"].items():
         if move_to is None:
             continue  # We can just ignore captures there, as the capturing piece just replaces it in the mapping :-)
-        del team_member_role_by_square[move_from]
-        team_member_role_by_square[move_to] = current_piece_role
+        team_member_role_by_square[move_to] = team_member_role_by_square[move_from]
+        del team_member_role_by_square[move_from]  # this square is now empty
 
     # Right, let's update that model!
     game.fen = move_result["fen"]
