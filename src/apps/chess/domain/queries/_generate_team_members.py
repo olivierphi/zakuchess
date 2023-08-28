@@ -10,17 +10,20 @@ if TYPE_CHECKING:
     from ..types import TeamMemberRole
 
 
-def generate_team_members(*, roles: "Sequence[TeamMemberRole]") -> "Sequence[TeamMember]":
-    first_names = sample(FIRST_NAMES, k=len(roles))
-    last_names = sample(LAST_NAMES, k=len(roles))
+def generate_team_members(*, roles: "Sequence[TeamMemberRole]", generate_names: bool) -> "Sequence[TeamMember]":
+    if generate_names:
+        first_names = sample(FIRST_NAMES, k=len(roles))
+        last_names = sample(LAST_NAMES, k=len(roles))
+    else:
+        first_names = last_names = None  # type: ignore
 
     result = []
-    for i, role in enumerate(roles):
+    for role in roles:
         result.append(
             TeamMember(
-                first_name=first_names[i],
-                last_name=last_names[i],
                 role=role,
+                first_name=first_names.pop() if first_names is not None else None,
+                last_name=last_names.pop() if last_names is not None else None,
             )
         )
     return result

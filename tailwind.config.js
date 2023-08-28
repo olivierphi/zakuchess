@@ -4,7 +4,7 @@ const PLAYER_SIDES = ["w", "b"]
 const FACTIONS = ["humans", "undeads"]
 
 const ACTIVE_PLAYER_SELECTION_COLOR = "#ffff00"
-const OPPONENT_PLAYER_SELECTION_COLOR = "#c0b000"
+const OPPONENT_PLAYER_SELECTION_COLOR = "#ffe000"
 const POTENTIAL_CAPTURE_COLOR = "#c00000"
 const PIECES_DROP_SHADOW_OFFSET = "1px"
 

@@ -55,8 +55,9 @@ def create_new_game(
         # while the second Team is the "b" side:
         roles = team_member_roles[player_side]
         team = Team.objects.create(game=game)
+        generate_names: bool = player_side != bot_side
         team_members = []
-        for team_member in generate_team_members(roles=roles):
+        for team_member in generate_team_members(roles=roles, generate_names=generate_names):
             team_member.team = team
             team_members.append(team_member)
         TeamMember.objects.bulk_create(team_members)

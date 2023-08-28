@@ -28,7 +28,7 @@ from .chess_helpers import (
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from ..domain.types import PieceRole, PlayerSide, Square, PieceType
+    from ..domain.types import PieceRole, PieceType, PlayerSide, Square
     from ..presenters import GamePresenter
 
 SQUARE_COLOR_TAILWIND_CLASSES = ("bg-chess-square-dark", "bg-chess-square-light")
@@ -279,20 +279,22 @@ def chess_character_display(
     square: "Square | None" = None,
     additional_classes: "Sequence[str]|None" = None,
 ) -> dom_tag:
+    # Some data we'll need:
     piece_player_side = player_side_from_piece_role(piece_role)
     is_active_player_piece = game_presenter.active_player == piece_player_side
     is_highlighted = bool(square and game_presenter.selected_piece and game_presenter.selected_piece.square == square)
     is_potential_capture = bool(
         game_presenter.selected_piece and game_presenter.selected_piece.is_potential_capture(square)
     )
+    is_w_side = piece_player_side == "w"
     piece_type: "PieceType" = type_from_piece_role(piece_role)
     is_knight, is_king = piece_type == "n", piece_type == "k"
+
+    # Right, let's do this shall we?
     if is_king and is_active_player_piece and game_presenter.is_check:
-        is_potential_capture = True  # let's hightlight our king if it's in check
+        is_potential_capture = True  # let's highlight our king if it's in check
     horizontal_translation = (
-        ("left-2" if piece_player_side == "w" else "right-2")
-        if is_knight
-        else ("left-1" if piece_player_side == "w" else "right-1")
+        ("left-2" if is_w_side else "right-2") if is_knight else ("left-0" if is_w_side else "right-0")
     )
     vertical_translation = "top-1" if is_knight else "top-2"
 
@@ -356,13 +358,16 @@ def chess_unit_symbol_display(*, piece_role: "PieceRole", square: "Square") -> d
     piece_name = piece_name_from_piece_role(piece_role)
     square_color = chess_square_color(square)
 
+    is_pawn = piece_type == "p"
+    is_light_square = square_color == "light"
+
     symbol_class = (
-        "w-8",
+        "w-7" if is_pawn else "w-8",
         "aspect-square",
         "bg-no-repeat",
         "bg-cover",
-        "opacity-60" if square_color == "light" else "opacity-50",
-        "brightness-60",
+        "opacity-60" if is_light_square else "opacity-50",
+        "brightness-50",
         chess_unit_symbol_class(player_side="b", piece_name=piece_name),
     )
     symbol_display = div(

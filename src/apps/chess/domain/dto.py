@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, Required, TypeAlias, TypedDict
 
 if TYPE_CHECKING:
     from .types import FEN, ChessMoveChanges, Faction, GameEndReason, PieceType, PlayerSide, TeamMemberRole
@@ -21,13 +21,11 @@ class ChessMoveResult(TypedDict):
     game_over: GameOverDescription | None
 
 
-class TeamMember(TypedDict):
+class TeamMember(TypedDict, total=False):
+    role: Required["TeamMemberRole"]
     first_name: str
     last_name: str
-    role: "TeamMemberRole"
     faction: "Faction"
 
 
-class GameTeams(TypedDict):
-    w: list[TeamMember]
-    b: list[TeamMember]
+GameTeams: TypeAlias = dict["PlayerSide", list["TeamMember"]]
