@@ -10,27 +10,18 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
-import os
+from os import environ as env
 from pathlib import Path
 
-import environ
+import dj_database_url
 
 BASE_DIR = Path(__file__).parent.resolve() / ".." / ".." / ".."  # points to our git repo's root
 
-env = environ.Env()
-if os.environ.get("USE_DOT_ENV"):
-    for env_file_name in (".env", ".env.local"):
-        env_file_path = BASE_DIR / env_file_name
-        try:
-            environ.Env.read_env(env_file_path)
-        except (OSError, AttributeError):
-            pass  # no .env file? No problem!
-
-SECRET_KEY = env.str("SECRET_KEY")
+SECRET_KEY = env["SECRET_KEY"]
 
 DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS: list[str] = []
 
 
 # Application definition
@@ -70,15 +61,6 @@ ROOT_URLCONF = "project.urls"
 
 TEMPLATES = [
     {
-        # @link https://docs.djangoproject.com/en/4.0/topics/templates/#django.template.backends.jinja2.Jinja2
-        "BACKEND": "django.template.backends.jinja2.Jinja2",
-        "DIRS": [],
-        "APP_DIRS": True,
-        "OPTIONS": {
-            "environment": "project.jinja2.environment",
-        },
-    },
-    {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [],
         "APP_DIRS": True,
@@ -100,7 +82,9 @@ WSGI_APPLICATION = "project.wsgi.application"
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
 DATABASES = {
-    "default": env.db("DATABASE_URL"),
+    "default": dj_database_url.config(
+        default="sqlite:///db.sqlite3",
+    )
 }
 
 

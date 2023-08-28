@@ -1,8 +1,8 @@
-import os
+from os import environ as env
 
-os.environ["SECRET_KEY"] = "does-not-matter-in-this-context"
-os.environ["DATABASE_URL"] = "sqlite://:memory:"
-os.environ["ALLOWED_HOSTS"] = "none"
+env["SECRET_KEY"] = "does-not-matter-in-this-context"
+env["DATABASE_URL"] = "sqlite://:memory:"
+env["ALLOWED_HOSTS"] = "none"
 
 from ._base import *
 

@@ -1,40 +1,43 @@
 [tool.poetry]
 name = "zakuchess"
 version = "0.1.0"
-description = ""
+description = "A daily chess challenge, where pieces are heroic-fantasy characters."
+license = "GPL-3.0-or-later"
 authors = ["Olivier Philippon <olivier@dunsap.com>"]
+homepage = "https://github.com/olivierphi/zakuchess"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 Django = "^4.1.3"
-django-environ = "^0.9.0"
 gunicorn = "^20.1.0"
 django-alive = "^1.2.1"
 chess = "^1.9.3"
-jinja2 = "^3.1.2"
 whitenoise = "^6.2.0"
 django-htmx = "^1.13.0"
 dominate = "^2.7.0"
+dj-database-url = "^2.1.0"
 
 [tool.poetry.group.dev.dependencies]
+python-dotenv = "^1.0.0"
 black = "^22.10.0"
-isort = "^5.10.1"
-ruff = "^0.0.141"
+isort = "5.12.0"
+ruff = "0.0.286"
 mypy = "1.5.1"
-pytest = "^7.2.0"
-pytest-django = "^4.5.2"
 pre-commit = "^2.20.0"
 ipython = "^8.6.0"
-djlint = "^1.19.7"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7.2.0"
+pytest-django = "^4.5.2"
 
 [tool.black]
 # @link https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html
 line-length = 119
-target-version = ['py310']
+target-version = ['py311']
 
 [tool.isort]
 # @link https://pycqa.github.io/isort/docs/configuration/options.html
-py_version = 310
+py_version = 311
 profile = "black"
 line_length = 119
 multi_line_output = 3
@@ -44,24 +47,17 @@ combine_as_imports = true
 [tool.ruff]
 # @link https://github.com/charliermarsh/ruff#options
 line-length = 119
-target-version = "py310"
+target-version = "py311"
 ignore = ["E501"]
 exclude = [
-     'src/project/settings',
-     'src/apps/chess/components/_chess/status_bar.py', # because Ruff doesn't support pattern matching yet :-/
+    'src/project/settings',
 ]
 [tool.ruff.per-file-ignores]
 "src/lib/chess_engines/sunfish/sunfish.py" = ["F841", "F821"]
 
-[tool.djlint]
-# @link https://www.djlint.com/docs/configuration/
-profile = "jinja"
-blank_line_before_tag = "block,macro"
-use_gitignore = true
-
 [tool.mypy]
 # @link https://mypy.readthedocs.io/en/stable/config_file.html#using-a-pyproject-toml
-python_version = "3.10"
+python_version = "3.11"
 mypy_path = "src/"
 exclude = [
     '^src/project/settings/.*\.py$',

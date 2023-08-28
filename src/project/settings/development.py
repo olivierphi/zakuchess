@@ -1,6 +1,4 @@
-import os
-
-os.environ["USE_DOT_ENV"] = "YES"
+from os import environ as env
 
 from ._base import *
 
@@ -20,17 +18,17 @@ LOGGING = {
     },
     "root": {
         "handlers": ["console"],
-        "level": env.str("DJANGO_LOG_LEVEL", default="WARNING"),
+        "level": env.get("DJANGO_LOG_LEVEL", default="WARNING"),
     },
     "loggers": {
         "apps": {
             "handlers": ["console"],
-            "level": env.str("APP_LOG_LEVEL", default="INFO"),
+            "level": env.get("APP_LOG_LEVEL", default="INFO"),
             "propagate": False,
         },
         "django.db.backends": {
             "handlers": ["console"],
-            "level": env.str("SQL_LOG_LEVEL", default="WARNING"),
+            "level": env.get("SQL_LOG_LEVEL", default="WARNING"),
             "propagate": False,
         },
     },
