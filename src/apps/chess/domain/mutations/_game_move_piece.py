@@ -11,7 +11,7 @@ from ..dto import ChessMoveResult
 if TYPE_CHECKING:
     from ..types import Square
 
-
+# TODO: update that for daily challenges
 def game_move_piece(*, game: Game, from_: "Square", to: "Square") -> ChessMoveResult:
     print(f"game_move_piece(); start. {game.active_player=}")
     try:

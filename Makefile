@@ -27,16 +27,14 @@ dev: ## Start Django in "development" mode, as well as our frontend assets compi
 
 .PHONY: download_assets
 download_assets:
-	${PYTHON_BINS}/python bin/scripts/download_assets.py
+	${PYTHON_BINS}/python scripts/download_assets.py
 
 .PHONY: backend/watch
 backend/watch: address ?= localhost
 backend/watch: port ?= 8000
 backend/watch: dotenv_file ?= .env.local
 backend/watch: ## Start the Django development server
-	@PYTHONPATH=${PYTHONPATH} DJANGO_SETTINGS_MODULE='${DJANGO_SETTINGS_MODULE}' \
-		${PYTHON_BINS}/dotenv -f '${dotenv_file}' run -- \
-		${PYTHON} src/manage.py runserver ${address}:${port}
+	@${SUB_MAKE} django/manage cmd='runserver ${address}:${port}'
 
 .PHONY: test
 test: pytest_opts ?=
@@ -44,19 +42,13 @@ test: ## Launch the pytest tests suite
 	@PYTHONPATH=${PYTHONPATH} ${PYTHON_BINS}/pytest ${pytest_opts}
 
 .PHONY: code-quality/all
-code-quality/all: code-quality/black code-quality/djlint code-quality/isort code-quality/ruff code-quality/mypy  ## Run all our code quality tools
+code-quality/all: code-quality/black code-quality/isort code-quality/ruff code-quality/mypy  ## Run all our code quality tools
 
 .PHONY: code-quality/black
 code-quality/black: black_opts ?=
 code-quality/black: ## Automated 'a la Prettier' code formatting
 # @link https://black.readthedocs.io/en/stable/
 	@${PYTHON_BINS}/black ${black_opts} src/ tests/
-
-.PHONY: code-quality/djlint
-code-quality/djlint: djlint_opts ?= --reformat
-code-quality/djlint: ## Automated 'a la Prettier' code formatting for Jinja templates
-# @link https://black.readthedocs.io/en/stable/
-	@${PYTHON_BINS}/djlint src/ --extension=.tpl.html ${djlint_opts}
 
 .PHONY: code-quality/isort
 code-quality/isort: isort_opts ?=
@@ -131,10 +123,20 @@ frontend/js/compile_app_files:
 .env.local:
 	cp .env.dist .env.local
 
-db.sqlite3:
+db.sqlite3: dotenv_file ?= .env.local
+db.sqlite3: ## Initialises the SQLite database
 	touch db.sqlite3
+	@${SUB_MAKE} django/manage cmd='migrate'
 	@PYTHONPATH=${PYTHONPATH} DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE} \
-		${PYTHON} src/manage.py migrate
+		${PYTHON_BINS}/dotenv -f '${dotenv_file}' run -- \
+		${PYTHON_BINS}/python scripts/optimise_db.py
+
+django/manage: dotenv_file ?= .env.local
+django/manage: cmd ?= --help
+django/manage: .venv .env.local ## Run a Django management command
+	@DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE} \
+		${PYTHON_BINS}/dotenv -f '${dotenv_file}' run -- \
+		${PYTHON} src/manage.py ${cmd}
 
 ./.venv/bin/django: .venv install
 
@@ -158,8 +160,8 @@ docker/build: ## Docker: build the image
 docker/local/run: port ?= 8080
 docker/local/run: port_exposed ?= 8080
 docker/local/run: docker_args ?= --rm
-docker/local/run: docker_env ?= -e SECRET_KEY=does-not-matter-here -e DATABASE_URL=sqlite:////app/shared_volume/db.sqlite3 -e ALLOWED_HOSTS=* -e SECURE_SSL_REDIRECT=0
-docker/local/run: cmd ?= /app/.venv/bin/gunicorn --bind 0.0.0.0:${port} --workers 2 project.wsgi
+docker/local/run: docker_env ?= -e SECRET_KEY=does-not-matter-here -e DATABASE_URL=sqlite:////app/shared_volume/db.sqlite3 -e ALLOWED_HOSTS=* -e SECURE_SSL_REDIRECT=
+docker/local/run: cmd ?= /app/.venv/bin/gunicorn --bind 0.0.0.0:${port} --workers 2 --access-logfile - --log-file - project.wsgi
 docker/local/run: user_id ?= $$(id -u)
 docker/local/run: ## Docker: launch the previously built image, listening on port 8080
 	docker run -p ${port_exposed}:${port} -v "${PWD}/.docker/:/app/shared_volume/" \

@@ -69,12 +69,10 @@ def create_new_daily_challenge(
         )
         team_member_role = cast("TeamMemberRole", piece_role.upper() if piece_player_side == "w" else piece_role)
 
-        piece_role_counter_new = team_member_role_counter + 1
-        if piece_role_counter_new > piece_role_max_value:
+        if team_member_role_counter > piece_role_max_value:
             raise ValueError(
                 f"Cannot create more than {piece_role_max_value} pieces(s) in a game for type '{piece_type}'"
             )
-        team_members_counters[piece_player_side][piece_type][0] = piece_role_counter_new
 
         square = square_from_int(chess_square)
         piece_role_by_square[square] = team_member_role
@@ -84,6 +82,8 @@ def create_new_daily_challenge(
             "faction": piece_faction[piece_player_side],
         }
         teams[piece_player_side].append(team_member)
+
+        team_members_counters[piece_player_side][piece_type][0] += 1
 
     # Give a name to the player's team members
     _set_character_names_for_non_bot_side(teams, bot_side=bot_side)

@@ -11,46 +11,37 @@ from django.views.decorators.cache import cache_control
 from django.views.decorators.http import etag, require_POST, require_safe
 
 from .components.pages.chess import chess_move_piece_htmx_fragment, chess_page, chess_select_piece_htmx_fragment
-from .domain.mutations import create_new_game, game_move_piece
+from .domain.queries import get_current_daily_challenge
 from .domain.types import Square
-from .models import Game
+from .models import DailyChallenge
 from .presenters import GamePresenter
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
 
 
-def _game_etag(req: HttpRequest, game_id: str) -> str | None:
+def _game_etag(req: HttpRequest) -> str | None:
     if settings.NO_HTTP_CACHE:
         return None
+    # TODO: add the FEN from the user cookie, and then re-enable this cache
+    return None
+
     hash_data = (
         game_id,
         req.path,
-        # TODO: add the authenticated user's ID to the hash
         str(int(Game.objects.filter(id=game_id).values_list("updated_at", flat=True).get().timestamp())),
     )
     return str(adler32("::".join(hash_data).encode("utf-8")))
 
 
 @require_safe
-def hello_chess_board(req: HttpRequest) -> HttpResponse:
-    return redirect("/games/new/")
-
-
-def game_new(req: HttpRequest) -> HttpResponse:
-    new_game = create_new_game(bot_side="b")
-    return redirect(f"/games/{new_game.id}")
-
-
-@require_safe
-@cache_control(private=True)
 @etag(_game_etag)
-def game_view(req: HttpRequest, game_id: str) -> HttpResponse:
-    game = get_object_or_404(Game, id=game_id)
+def game_view(req: HttpRequest) -> HttpResponse:
+    challenge = get_current_daily_challenge()
     board_id = "main"
 
     game_presenter = GamePresenter(
-        game=game,
+        game=challenge,
         my_side="w",  # TODO: de-hardcode this - should come from the user
         factions={"w": "humans", "b": "undeads"},  # TODO: de-hardcode this - should come from the game
     )

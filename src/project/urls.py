@@ -18,8 +18,7 @@ from django.contrib import admin
 from django.urls import include, path
 
 urlpatterns = [
-    path("", include("apps.webui.urls")),
-    path("games/", include("apps.chess.urls")),
+    path("", include("apps.chess.urls")),
     path("-/", include("django_alive.urls")),
     path("admin/", admin.site.urls),
 ]

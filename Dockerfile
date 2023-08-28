@@ -7,7 +7,7 @@
 # @link https://github.com/vercel/next.js/blob/canary/examples/with-docker-multi-env/docker/production/Dockerfile
 
 # 1. Install dependencies only when needed
-FROM node:16-alpine AS frontend_deps
+FROM node:18-alpine AS frontend_deps
 # Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
 RUN apk add --no-cache libc6-compat
 
@@ -25,7 +25,7 @@ RUN \
 
 
 # 2. Rebuild the source code only when needed
-FROM node:16-alpine AS frontend_build
+FROM node:18-alpine AS frontend_build
 RUN apk add --no-cache make
 RUN mkdir -p /app
 WORKDIR /app
@@ -39,7 +39,7 @@ RUN make frontend/js/compile frontend/css/compile esbuild_compile_opts='--minify
 #########################################################################
 # Backend stuff
 
-FROM python:3.10 AS backend_build
+FROM python:3.11-slim-bookworm AS backend_build
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONDONTWRITEBYTECODE=0 PYTHONUNBUFFERED=1
@@ -53,17 +53,18 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN pip install poetry # TODO: specify a version here
+RUN pip install --upgrade pip
+RUN pip install poetry==1.6.0
 
 RUN mkdir -p /app
 WORKDIR /app
 
-RUN python -m venv .venv
+RUN python -m venv --symlinks .venv
 
 COPY pyproject.toml poetry.lock ./
-RUN poetry install --without dev --no-interaction --no-ansi
+RUN poetry install --only=main --no-root --no-interaction --no-ansi
 
-FROM python:3.10-slim AS backend_run
+FROM python:3.11-slim-bookworm AS backend_run
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONDONTWRITEBYTECODE=0 PYTHONUNBUFFERED=1
@@ -78,20 +79,32 @@ WORKDIR /app
 RUN addgroup -gid 1001 webapp
 RUN useradd --gid 1001 --uid 1001 webapp
 RUN chown -R 1001:1001 /app 
-USER 1001:1001
 
 COPY --chown=1001:1001 --from=frontend_build /app/src/apps/webui/static src/apps/webui/static
 COPY --chown=1001:1001 --from=frontend_build /app/src/apps/chess/static src/apps/chess/static
 COPY --chown=1001:1001 --from=backend_build /app/.venv .venv
-COPY --chown=1001:1001 . .
+COPY --chown=1001:1001 scripts scripts
+COPY --chown=1001:1001 src src
+COPY --chown=1001:1001 Makefile pyproject.toml LICENSE ./
+
+ENV PATH="/app/.venv/bin:${PATH}"
+RUN python -V
+
+USER 1001:1001
 
 ENV PYTHONPATH=/app/src
 
-RUN .venv/bin/python bin/scripts/download_assets.py
+RUN python scripts/download_assets.py
 
 RUN DJANGO_SETTINGS_MODULE=project.settings.docker_build \
     .venv/bin/python src/manage.py collectstatic --noinput
 
+# TODO: remove this once we have a proper deployment pipeline
+RUN DJANGO_SETTINGS_MODULE=project.settings.docker_build \
+    .venv/bin/python src/manage.py makemigrations --noinput
+
 EXPOSE 8080
 
-CMD [".venv/bin/gunicorn", "--bind", ":8080", "--workers", "2", "project.wsgi"]
+ENV DJANGO_SETTINGS_MODULE=project.settings.production
+
+CMD [".venv/bin/gunicorn", "--bind", ":8080", "--workers", "2", "--access-logfile", "-", "--log-file ", "-", "project.wsgi"]

@@ -3,7 +3,8 @@ from ._base import *
 ALLOWED_HOSTS = env["ALLOWED_HOSTS"].split(",")
 
 SECURE_SSL_REDIRECT = bool(env.get("SECURE_SSL_REDIRECT", "1"))
-CSRF_TRUSTED_ORIGINS = env.get("CSRF_TRUSTED_ORIGINS", "").split(",")
+if "CSRF_TRUSTED_ORIGINS" in env:
+    CSRF_TRUSTED_ORIGINS = env["CSRF_TRUSTED_ORIGINS"].split(",")
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 

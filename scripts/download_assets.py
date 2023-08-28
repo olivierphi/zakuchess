@@ -11,7 +11,7 @@ from urllib.request import urlretrieve
 
 URL: TypeAlias = str
 
-BASE_DIR = Path(__file__).parent.resolve() / ".." / ".."  # points to our git repo's root
+BASE_DIR = Path(__file__).parent.resolve() / ".."  # points to our git repo's root
 
 FRONTEND_SRC = BASE_DIR / "frontend-src"
 WEBUI_STATIC = BASE_DIR / "src" / "apps" / "webui" / "static" / "webui"

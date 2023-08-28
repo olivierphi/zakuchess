@@ -13,7 +13,6 @@ from .domain.helpers import (
     team_member_role_from_piece_role,
     type_from_piece_symbol,
 )
-from .domain.queries import get_team_members_by_role_by_side
 
 if TYPE_CHECKING:
     from .domain.types import (
@@ -27,8 +26,9 @@ if TYPE_CHECKING:
         TeamMemberRole,
         Factions,
     )
+    from .domain.dto import TeamMember
 
-from .models import Game, TeamMember
+from .models import DailyChallenge
 
 # Presenters are the objects we pass to our templates.
 
@@ -37,8 +37,7 @@ class GamePresenter:
     def __init__(
         self,
         *,
-        game: Game,
-        my_side: "PlayerSide",
+        game: DailyChallenge,
         factions: "Factions",
         selected_square: "Square | None" = None,
         selected_piece_square: "Square | None" = None,
@@ -46,7 +45,6 @@ class GamePresenter:
     ):
         self._game = game
         self._chess_board = chess.Board(fen=game.fen)
-        self.my_side = my_side
         self.factions = factions
 
         if selected_square is not None:
@@ -150,7 +148,7 @@ class GamePresenter:
 
     @cached_property
     def is_bot_turn(self) -> bool:
-        return self._game.is_versus_bot and self._game.active_player == self._game.bot_side
+        return self._game.active_player == self._game.bot_side
 
     @cached_property
     def game_id(self) -> str:
@@ -162,7 +160,13 @@ class GamePresenter:
 
     @cached_property
     def team_members_by_role_by_side(self) -> "dict[PlayerSide, dict[TeamMemberRole, TeamMember]]":
-        return get_team_members_by_role_by_side(game=self._game)
+        result: "dict[PlayerSide, dict[TeamMemberRole, TeamMember]]" = {}
+        for player_side in PLAYER_SIDES:
+            result[player_side] = {}
+            for team_member in self._game.teams[player_side]:
+                member_role = team_member_role_from_piece_role(team_member["role"])
+                result[player_side][member_role] = team_member
+        return result
 
 
 class SelectedSquarePresenter:
