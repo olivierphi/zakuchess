@@ -7,7 +7,7 @@ from .consts import PIECE_INT_TO_PIECE_TYPE, PIECE_TYPE_TO_NAME, PIECE_TYPE_TO_U
 from .types import PieceType
 
 if TYPE_CHECKING:
-    from .types import File, PieceRole, PieceSymbol, PlayerSide, Rank, Square, TeamMemberRole, PieceName
+    from .types import FEN, File, PieceName, PieceRole, PieceSymbol, PlayerSide, Rank, Square, TeamMemberRole
 
 
 @cache
@@ -88,7 +88,11 @@ def get_squares_with_pieces_that_can_move(board: chess.Board) -> frozenset["Squa
     return frozenset(cast("Square", chess.square_name(move.from_square)) for move in board.legal_moves)
 
 
-def get_active_player_from_chess_board(board: chess.Board) -> "PlayerSide":
+def get_active_player_side_from_fen(fen: "FEN") -> "PlayerSide":
+    return cast("PlayerSide", fen.split(" ")[1])
+
+
+def get_active_player_side_from_chess_board(board: chess.Board) -> "PlayerSide":
     return "w" if board.turn else "b"
 
 

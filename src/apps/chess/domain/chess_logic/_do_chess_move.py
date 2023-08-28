@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING, Literal, cast
 
 import chess
 
-from ..dto import ChessMoveResult, GameOverDescription
 from ..helpers import piece_from_int
+from ..types import ChessMoveResult, GameOverDescription
 
 if TYPE_CHECKING:
     from ..types import FEN, ChessMoveChanges, GameEndReason, PlayerSide, Square
@@ -46,7 +46,7 @@ _CASTLING_ROOK_MOVE: Mapping[_CastlingPossibleTo, tuple["Square", "Square"]] = {
 
 
 @lru_cache
-def do_chess_move(*, fen: "FEN", player_side: "PlayerSide", from_: "Square", to: "Square") -> ChessMoveResult:
+def do_chess_move(*, fen: "FEN", from_: "Square", to: "Square") -> ChessMoveResult:
     changes: "ChessMoveChanges" = {}
 
     chess_board = chess.Board(fen)
@@ -56,12 +56,6 @@ def do_chess_move(*, fen: "FEN", player_side: "PlayerSide", from_: "Square", to:
     current_piece = chess_board.piece_at(chess_from)
     if not current_piece:
         raise ValueError(f"No pieces on the selected square '{from_}'")
-
-    board_player_side = _CHESS_COLOR_TO_PLAYER_SIDE_MAPPING[chess_board.turn]
-    if player_side != board_player_side:
-        raise ValueError(
-            f"FEN says that it's player's '{board_player_side}' turn, but we're trying to play on behalf of the other player side"
-        )
 
     is_promotion = current_piece.piece_type == chess.PAWN and to[1] in ("1", "8")
     promotion = chess.QUEEN if is_promotion else None

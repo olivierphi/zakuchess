@@ -1,4 +1,4 @@
-from typing import Literal, TypeAlias
+from typing import Literal, Required, TypeAlias, TypedDict
 
 FEN: TypeAlias = str
 
@@ -108,3 +108,27 @@ Faction = Literal[
 ]
 
 Factions: TypeAlias = dict[PlayerSide, Faction]
+
+
+class GameOverDescription(TypedDict):
+    winner: "PlayerSide | None"
+    reason: "GameEndReason"
+
+
+class ChessMoveResult(TypedDict):
+    fen: "FEN"
+    changes: "ChessMoveChanges"
+    is_capture: bool
+    is_castling: bool
+    promotion: "PieceType | None"
+    game_over: GameOverDescription | None
+
+
+class TeamMember(TypedDict, total=False):
+    role: Required["TeamMemberRole"]
+    first_name: str
+    last_name: str
+    faction: "Faction"
+
+
+GameTeams: TypeAlias = dict["PlayerSide", list["TeamMember"]]

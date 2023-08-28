@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 
+from pathlib import Path
 from time import monotonic
 from typing import TypeAlias
-from pathlib import Path
 
 # N.B. "urllib" is not part of our direct dependencies, but it's so ubiquitous that
 # we can be pretty sure that one of our transitive dependencies depends on it ^_^
 from urllib.request import urlretrieve
-
 
 URL: TypeAlias = str
 

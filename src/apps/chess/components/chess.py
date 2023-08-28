@@ -16,7 +16,6 @@ from ..domain.helpers import (
     player_side_from_piece_role,
     type_from_piece_role,
 )
-from ._chess.score_bar import chess_score_bar
 from ._chess.status_bar import chess_status_bar
 from .chess_helpers import (
     chess_square_color,
@@ -56,7 +55,7 @@ _PLAY_BOT_JS_TEMPLATE = Template(
 <script>
     (function () {
         setTimeout(function () {
-            window.playBotMove("$FEN", "$PLAY_MOVE_HTMX_ELEMENT_ID", "$BOT_ASSETS_DATA_HOLDER_ELEMENT_ID");
+            window.playBotMove("$FEN", "$PLAY_MOVE_HTMX_ELEMENT_ID", "$BOT_ASSETS_DATA_HOLDER_ELEMENT_ID", $FORCED_MOVE);
         }, $MOVE_DELAY);
     })()</script>"""
 )
@@ -83,13 +82,12 @@ def chess_arena(*, game_presenter: "GamePresenter", board_id: str) -> dom_tag:
             cls="aspect-square relative",
         ),
         chess_bot_data(board_id),
-        chess_score_bar(game_presenter=game_presenter, board_id=board_id),
         chess_status_bar(game_presenter=game_presenter, board_id=board_id),
         id=f"chess-arena-{board_id}",
         cls="w-full md:max-w-xl mx-auto",
         # When the user clicks on anything that is not an interactive element of the chess board, and the state
         # of this chess board is not "waiting_for_player_selection", then the chess board is reset to this state.
-        data_hx_get=f"{ reverse('chess:htmx_game_no_selection', kwargs={'game_id': game_presenter.game_id}) }?{ urlencode({'board_id': board_id}) }",
+        data_hx_get=f"{ reverse('chess:htmx_game_no_selection') }?{ urlencode({'board_id': board_id}) }",
         data_hx_trigger=f"click[cursorIsNotOnChessBoardInteractiveElement('{ board_id }')] from:document",
         data_hx_target=f"#chess-board-pieces-{ board_id }",
     )
@@ -171,7 +169,7 @@ def chess_piece(
     player_side = player_side_from_piece_role(piece_role)
 
     piece_can_move = (
-        player_side == game_presenter.my_side and square in game_presenter.squares_with_pieces_that_can_move
+        player_side == game_presenter.is_player_turn and square in game_presenter.squares_with_pieces_that_can_move
     )
     ground_marker = chess_unit_ground_marker(player_side=player_side, can_move=piece_can_move)
     unit_display = chess_character_display(piece_role=piece_role, game_presenter=game_presenter, square=square)
@@ -199,7 +197,7 @@ def chess_piece(
         id=f"board-{ board_id }-side-{ player_side }-piece-{ piece_role }",
         # htmx-related attributes:
         data_hx_trigger="click",
-        data_hx_get=f"{reverse('chess:htmx_game_select_piece', kwargs={'game_id': game_presenter.game_id}) }?{urlencode({'square': square, 'board_id': board_id})}",
+        data_hx_get=f"{reverse('chess:htmx_game_select_piece') }?{urlencode({'square': square, 'board_id': board_id})}",
         data_hx_target=f"#chess-board-available-targets-{ board_id }",
         # These 2 are mostly for debugging purposes:
         data_square=square,
@@ -256,7 +254,7 @@ def chess_available_target(
 
     if can_move:
         htmx_attributes = {
-            "data_hx_post": f"{reverse('chess:htmx_game_move_piece', kwargs={'game_id': game_presenter.game_id, 'from_': game_presenter.selected_piece.square, 'to': square})}?{urlencode({'board_id': board_id})}",
+            "data_hx_post": f"{reverse('chess:htmx_game_move_piece', kwargs={'from_': game_presenter.selected_piece.square, 'to': square})}?{urlencode({'board_id': board_id})}",
             "data_hx_target": f"#chess-board-pieces-{ board_id }",
             "data_hx_swap": "outerHTML",
         }
@@ -400,6 +398,9 @@ def _bot_turn_html_elements(*, game_presenter: "GamePresenter", board_id: str) -
         return []
 
     play_move_htmx_element_id = f"chess-bot-play-move-{ board_id }"
+    forced_bot_move = json.dumps("".join(game_presenter.forced_bot_move) if game_presenter.forced_bot_move else None)
+    move_delay = _BOT_MOVE_DELAY * 2 if game_presenter.forced_bot_move else _BOT_MOVE_DELAY
+
     return [
         unescaped_html(
             _PLAY_BOT_JS_TEMPLATE.safe_substitute(
@@ -407,13 +408,14 @@ def _bot_turn_html_elements(*, game_presenter: "GamePresenter", board_id: str) -
                     "FEN": game_presenter.fen,
                     "PLAY_MOVE_HTMX_ELEMENT_ID": play_move_htmx_element_id,
                     "BOT_ASSETS_DATA_HOLDER_ELEMENT_ID": f"chess-bot-data-{ board_id }",
-                    "MOVE_DELAY": _BOT_MOVE_DELAY,
+                    "MOVE_DELAY": move_delay,
+                    "FORCED_MOVE": forced_bot_move,
                 }
             )
         ),
         div(
             id=play_move_htmx_element_id,
-            data_hx_post=f"{reverse('chess:htmx_game_bot_move', kwargs={'game_id': game_presenter.game_id})}?{urlencode({'board_id': board_id, 'move': 'BOT_MOVE'})}",
+            data_hx_post=f"{reverse('chess:htmx_game_bot_move')}?{urlencode({'board_id': board_id, 'move': 'BOT_MOVE'})}",
             data_hx_target=f"#chess-board-pieces-{ board_id }",
             data_hx_trigger="playMove",
         ),

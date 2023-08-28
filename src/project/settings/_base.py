@@ -88,6 +88,11 @@ DATABASES = {
 }
 
 
+# Sessions
+# https://docs.djangoproject.com/en/4.1/topics/http/sessions/#using-cookie-based-sessions
+
+SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
+
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
 

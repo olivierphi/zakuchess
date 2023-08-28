@@ -4,11 +4,10 @@ from django.db import models
 
 from lib.django_helpers import literal_to_django_choices
 
-from .domain.types import PlayerSide
+from .domain.types import GameTeams, PlayerSide
 
 if TYPE_CHECKING:
-    from .domain.dto import GameTeams
-    from .domain.types import FEN, PieceRoleBySquare
+    from .domain.types import FEN, Factions, PieceRoleBySquare
 
 _PLAYER_SIDE_CHOICES = literal_to_django_choices(PlayerSide)  # type: ignore
 _FEN_MAX_LEN = 90  # @link https://chess.stackexchange.com/questions/30004/longest-possible-fen
@@ -29,5 +28,13 @@ class DailyChallenge(models.Model):
         return f"{self.id}: {self.fen}"
 
     @property
+    def my_side(self) -> PlayerSide:
+        return "w"  # hard-coded opponent side for now
+
+    @property
     def bot_side(self) -> PlayerSide:
-        return "b"  # hard-coded opponent side for now
+        return "b"  # ditto
+
+    @property
+    def factions(self) -> "Factions":
+        return {"w": "humans", "b": "undeads"}  # ditto

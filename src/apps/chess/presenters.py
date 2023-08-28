@@ -5,13 +5,12 @@ import chess
 
 from .components.chess_helpers import chess_lib_color_to_player_side
 from .domain.chess_logic import calculate_piece_available_targets
-from .domain.consts import PIECES_VALUES, PLAYER_SIDES, STARTING_PIECES
+from .domain.consts import PLAYER_SIDES
 from .domain.helpers import (
-    get_active_player_from_chess_board,
+    get_active_player_side_from_chess_board,
     square_from_int,
     symbol_from_piece_role,
     team_member_role_from_piece_role,
-    type_from_piece_symbol,
 )
 
 if TYPE_CHECKING:
@@ -22,11 +21,11 @@ if TYPE_CHECKING:
         PieceSymbol,
         GamePhase,
         PieceRole,
-        PieceType,
-        TeamMemberRole,
         Factions,
+        TeamMemberRole,
+        TeamMember,
     )
-    from .domain.dto import TeamMember
+    from .domain.daily_challenge import PlayerGameState
 
 from .models import DailyChallenge
 
@@ -37,15 +36,17 @@ class GamePresenter:
     def __init__(
         self,
         *,
-        game: DailyChallenge,
-        factions: "Factions",
+        challenge: DailyChallenge,
+        game_state: "PlayerGameState",
+        forced_bot_move: tuple["Square", "Square"] | None = None,
         selected_square: "Square | None" = None,
         selected_piece_square: "Square | None" = None,
         target_to_confirm: "Square | None" = None,
     ):
-        self._game = game
-        self._chess_board = chess.Board(fen=game.fen)
-        self.factions = factions
+        self._challenge = challenge
+        self._chess_board = chess.Board(fen=game_state["fen"])
+        self._piece_role_by_square = game_state["piece_role_by_square"]
+        self.forced_bot_move = forced_bot_move
 
         if selected_square is not None:
             self.selected_square = SelectedSquarePresenter(
@@ -69,12 +70,12 @@ class GamePresenter:
 
     @cached_property
     def is_my_turn(self) -> bool:
-        return self.my_side == self.active_player
+        return self._challenge.my_side == self.active_player
 
     @cached_property
     def game_phase(self) -> "GamePhase":
-        if winner := self.winner is not None:
-            return "game_over:won" if winner == self.my_side else "game_over:lost"
+        if (winner := self.winner) is not None:
+            return "game_over:won" if winner == self._challenge.my_side else "game_over:lost"
         if self.is_my_turn:
             if self.selected_piece is None:
                 return "waiting_for_player_selection"
@@ -109,61 +110,43 @@ class GamePresenter:
 
     @cached_property
     def active_player(self) -> "PlayerSide":
-        return get_active_player_from_chess_board(self._chess_board)
+        return get_active_player_side_from_chess_board(self._chess_board)
 
     @cached_property
     def squares_with_pieces_that_can_move(self) -> set["Square"]:
         return set(square_from_int(move.from_square) for move in self._chess_board.legal_moves)
 
-    @cached_property
-    def captured_pieces(self) -> dict["PlayerSide", list["PieceType"]]:
-        remaining_pieces = [piece.symbol() for piece in self._chess_board.piece_map().values()]
-        captured_pieces: dict["PlayerSide", list["PieceType"]] = {"w": [], "b": []}
-        for player_side in PLAYER_SIDES:
-            for starting_piece in STARTING_PIECES[player_side]:
-                if starting_piece in remaining_pieces:
-                    remaining_pieces.remove(starting_piece)
-                else:
-                    captured_pieces[player_side].append(type_from_piece_symbol(starting_piece))
-        for player_side in captured_pieces.keys():
-            captured_pieces[player_side].sort(key=lambda piece_type: -PIECES_VALUES[piece_type])
-        return captured_pieces
-
-    @cached_property
-    def score(self) -> int:
-        """A negative score means the "b(lack)" player is winning, a positive value means the "w(hite) player is winning."""
-        remaining_pieces = [piece.symbol() for piece in self._chess_board.piece_map().values()]
-        score = 0
-        for piece in remaining_pieces:
-            piece_symbol = cast("PieceType", piece.lower())
-            if piece_symbol == "k":
-                continue
-            score += PIECES_VALUES[piece_symbol] * (1 if piece in STARTING_PIECES["w"] else -1)
-        return score
-
     # Properties derived from the Game model:
     @cached_property
     def active_player_side(self) -> "PlayerSide":
-        return cast("PlayerSide", self._game.active_player)  # TODO: this cast shouldn't be required ¯\_(ツ)_/¯
+        return chess_lib_color_to_player_side(self._chess_board.turn)
+
+    @cached_property
+    def is_player_turn(self) -> bool:
+        return self.active_player_side != self._challenge.bot_side
 
     @cached_property
     def is_bot_turn(self) -> bool:
-        return self._game.active_player == self._game.bot_side
+        return self.active_player_side == self._challenge.bot_side
 
     @cached_property
     def game_id(self) -> str:
-        return str(self._game.id)
+        return str(self._challenge.id)
+
+    @cached_property
+    def factions(self) -> "Factions":
+        return self._challenge.factions
 
     @cached_property
     def piece_role_by_square(self) -> "PieceRoleBySquare":
-        return self._game.piece_role_by_square
+        return self._piece_role_by_square
 
     @cached_property
     def team_members_by_role_by_side(self) -> "dict[PlayerSide, dict[TeamMemberRole, TeamMember]]":
         result: "dict[PlayerSide, dict[TeamMemberRole, TeamMember]]" = {}
         for player_side in PLAYER_SIDES:
             result[player_side] = {}
-            for team_member in self._game.teams[player_side]:
+            for team_member in self._challenge.teams[player_side]:
                 member_role = team_member_role_from_piece_role(team_member["role"])
                 result[player_side][member_role] = team_member
         return result
@@ -194,7 +177,7 @@ class SelectedSquarePresenter:
 
     @cached_property
     def player_side(self) -> "PlayerSide":
-        return "w" if self.piece_at.color else "b"
+        return chess_lib_color_to_player_side(self._chess_board.turn)
 
     @cached_property
     def symbol(self) -> "PieceSymbol":

@@ -10,9 +10,17 @@ from ..helpers import square_from_int
 from ..queries import calculate_fen_before_bot_first_move
 
 if TYPE_CHECKING:
-    from ..dto import GameTeams, TeamMember
-    from ..types import FEN, Faction, PieceRole, PieceRoleBySquare, PieceType, PlayerSide, TeamMemberRole
-
+    from ..types import (
+        FEN,
+        Faction,
+        GameTeams,
+        PieceRole,
+        PieceRoleBySquare,
+        PieceType,
+        PlayerSide,
+        TeamMember,
+        TeamMemberRole,
+    )
 
 _CHESS_LIB_PIECE_TYPE_TO_PIECE_TYPE_MAPPING: dict[int, "PieceType"] = {
     chess.PAWN: "p",

@@ -90,7 +90,7 @@ def _chess_status_bar_selected_piece(game_presenter: "GamePresenter") -> dom_tag
     piece_name = piece_name_from_piece_role(piece_role)
 
     unit_display = _unit_display_container(piece_role=piece_role, game_presenter=game_presenter)
-    name_display = f"{team_member.first_name} {team_member.last_name}" if team_member.first_name else ""
+    name_display = f"{team_member['first_name']} {team_member['last_name']}" if team_member.get("first_name") else ""
 
     unit_about = div(
         div(name_display),

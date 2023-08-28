@@ -45,15 +45,30 @@ function cursorIsNotOnChessBoardInteractiveElement(boardId: string): boolean {
     return true
 }
 
-function playBotMove(fen: string, htmxElementId: string, botAssetsDataHolderElementId: string): void {
-    playFromFEN(fen, 1, botAssetsDataHolderElementId).then((move) => {
-        console.log(`bot wants to move from ${move[0]} to ${move[1]}`)
-        const htmxElement = document.getElementById(htmxElementId)
-        if (!htmxElement) {
-            throw `no #${botAssetsDataHolderElementId} element found to play bot's move!`
-        }
-        htmxElement.dataset.hxPost = htmxElement.dataset.hxPost!.replace("BOT_MOVE", `${move[0]}${move[1]}`)
+function playBotMove(
+    fen: string,
+    htmxElementId: string,
+    botAssetsDataHolderElementId: string,
+    forcedMove: string | null,
+): void {
+    const htmxElement = document.getElementById(htmxElementId)
+    if (!htmxElement) {
+        throw `no #${botAssetsDataHolderElementId} element found to play bot's move!`
+    }
+
+    const doPlayBotMove = (move: string) => {
+        htmxElement.dataset.hxPost = htmxElement.dataset.hxPost!.replace("BOT_MOVE", move)
         window.htmx.process(htmxElement)
         window.htmx.trigger(htmxElement, "playMove", {})
+    }
+
+    if (forcedMove) {
+        doPlayBotMove(forcedMove)
+        return
+    }
+
+    playFromFEN(fen, 1, botAssetsDataHolderElementId).then((move) => {
+        console.log(`bot wants to move from ${move[0]} to ${move[1]}`)
+        doPlayBotMove(`${move[0]}${move[1]}`)
     })
 }
