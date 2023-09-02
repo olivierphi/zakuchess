@@ -3,14 +3,12 @@ from typing import TYPE_CHECKING, cast
 
 import chess
 
-from ...components.chess_helpers import chess_lib_color_to_player_side
-from ...models import DailyChallenge
 from ..data.team_member_names import FIRST_NAMES, LAST_NAMES
-from ..helpers import square_from_int
-from ..queries import calculate_fen_before_bot_first_move
+from ..helpers import chess_lib_color_to_player_side, square_from_int
 
 if TYPE_CHECKING:
-    from ..types import (
+    from ..models import DailyChallenge
+    from .types import (
         FEN,
         Faction,
         GameTeams,
@@ -37,20 +35,17 @@ def create_new_daily_challenge(
     id_: str,
     fen: "FEN",
     bot_first_move: str,
-    save: bool,
     fen_before_bot_first_move: "FEN | None" = None,
     default_faction_w: "Faction" = "humans",
     default_faction_b: "Faction" = "undeads",
     bot_side: "PlayerSide" = "b",
     # TODO: allow partial customisation of team members?
     # custom_team_members: "GameTeams | None" = None,
-) -> DailyChallenge:
-    chess_board = chess.Board(fen)
+) -> "DailyChallenge":
+    """The returned DailyChallenge is not saved in the database yet."""
+    from ..models import DailyChallenge
 
-    if fen_before_bot_first_move is None:
-        fen_before_bot_first_move = calculate_fen_before_bot_first_move(
-            chess_board=chess_board, bot_first_move=bot_first_move, bot_side=bot_side
-        )
+    chess_board = chess.Board(fen)
 
     team_members_counters: dict["PlayerSide", dict["PieceType", list[int]]] = {
         # first int of the tuple is the current counter, second int is the maximum value for that counter
@@ -105,8 +100,7 @@ def create_new_daily_challenge(
         bot_first_move=bot_first_move,
     )
 
-    if save:
-        challenge.save()
+    challenge.full_clean()
 
     return challenge
 
@@ -117,5 +111,4 @@ def _set_character_names_for_non_bot_side(teams: "GameTeams", bot_side: "PlayerS
     first_names = random.sample(FIRST_NAMES, k=len(player_team_members))
     last_names = random.sample(LAST_NAMES, k=len(player_team_members))
     for team_member in player_team_members:
-        team_member["first_name"] = first_names.pop()
-        team_member["last_name"] = last_names.pop()
+        team_member["name"] = f"{first_names.pop()} {last_names.pop()}"

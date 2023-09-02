@@ -10,24 +10,22 @@ from django.urls import reverse
 from dominate.tags import div, dom_tag, span
 from dominate.util import raw as unescaped_html
 
-from ..domain.helpers import (
+from apps.chess.helpers import (
+    chess_square_color,
     file_and_rank_from_square,
     piece_name_from_piece_role,
     player_side_from_piece_role,
     type_from_piece_role,
 )
+
+from ._chess.daily_challenge_bar import chess_daily_challenge_bar
 from ._chess.status_bar import chess_status_bar
-from .chess_helpers import (
-    chess_square_color,
-    chess_unit_symbol_class,
-    piece_character_classes,
-    square_to_tailwind_classes,
-)
+from .chess_helpers import chess_unit_symbol_class, piece_character_classes, square_to_tailwind_classes
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from ..domain.types import PieceRole, PieceType, PlayerSide, Square
+    from ..business_logic.types import PieceRole, PieceType, PlayerSide, Square
     from ..presenters import GamePresenter
 
 SQUARE_COLOR_TAILWIND_CLASSES = ("bg-chess-square-dark", "bg-chess-square-light")
@@ -82,6 +80,7 @@ def chess_arena(*, game_presenter: "GamePresenter", board_id: str) -> dom_tag:
             cls="aspect-square relative",
         ),
         chess_bot_data(board_id),
+        chess_daily_challenge_bar(game_presenter=game_presenter, board_id=board_id),
         chess_status_bar(game_presenter=game_presenter, board_id=board_id),
         id=f"chess-arena-{board_id}",
         cls="w-full md:max-w-xl mx-auto",
@@ -168,10 +167,10 @@ def chess_piece(
 ) -> dom_tag:
     player_side = player_side_from_piece_role(piece_role)
 
-    piece_can_move = (
-        player_side == game_presenter.is_player_turn and square in game_presenter.squares_with_pieces_that_can_move
+    piece_can_be_moved_by_player = (
+        game_presenter.is_player_turn and square in game_presenter.squares_with_pieces_that_can_move
     )
-    ground_marker = chess_unit_ground_marker(player_side=player_side, can_move=piece_can_move)
+    ground_marker = chess_unit_ground_marker(player_side=player_side, can_move=piece_can_be_moved_by_player)
     unit_display = chess_character_display(piece_role=piece_role, game_presenter=game_presenter, square=square)
     unit_chess_symbol_display = chess_unit_symbol_display(piece_role=piece_role, square=square)
 

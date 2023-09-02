@@ -1,13 +1,23 @@
-from functools import cache
+from functools import cache, lru_cache
 from typing import TYPE_CHECKING, cast
 
 import chess
 
-from .consts import PIECE_INT_TO_PIECE_TYPE, PIECE_TYPE_TO_NAME, PIECE_TYPE_TO_UNICODE, SQUARES
-from .types import PieceType
+from .business_logic.consts import PIECE_INT_TO_PIECE_TYPE, PIECE_TYPE_TO_NAME, PIECE_TYPE_TO_UNICODE, SQUARES
+from .business_logic.types import PieceType, SquareColor
 
 if TYPE_CHECKING:
-    from .types import FEN, File, PieceName, PieceRole, PieceSymbol, PlayerSide, Rank, Square, TeamMemberRole
+    from .business_logic.types import (
+        FEN,
+        File,
+        PieceName,
+        PieceRole,
+        PieceSymbol,
+        PlayerSide,
+        Rank,
+        Square,
+        TeamMemberRole,
+    )
 
 
 @cache
@@ -88,6 +98,7 @@ def get_squares_with_pieces_that_can_move(board: chess.Board) -> frozenset["Squa
     return frozenset(cast("Square", chess.square_name(move.from_square)) for move in board.legal_moves)
 
 
+@lru_cache
 def get_active_player_side_from_fen(fen: "FEN") -> "PlayerSide":
     return cast("PlayerSide", fen.split(" ")[1])
 
@@ -96,6 +107,22 @@ def get_active_player_side_from_chess_board(board: chess.Board) -> "PlayerSide":
     return "w" if board.turn else "b"
 
 
+@lru_cache
+def uci_move_squares(move: str) -> tuple["Square", "Square"]:
+    return cast("Square", move[:2]), cast("Square", move[2:4])
+
+
 @cache
 def get_square_order(square: "Square") -> int:
     return SQUARES.index(square)
+
+
+@cache
+def chess_lib_color_to_player_side(color: chess.Color) -> "PlayerSide":
+    return "w" if color == chess.WHITE else "b"
+
+
+@cache
+def chess_square_color(square: "Square") -> "SquareColor":
+    file = int(square[1])
+    return "light" if (file % 2 == 0 if square[0] in ("a", "c", "e", "g") else file % 2 == 1) else "dark"

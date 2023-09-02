@@ -33,6 +33,11 @@ def chess_select_piece_htmx_fragment(*, game_presenter: "GamePresenter", request
                     board_id=board_id,
                     data_hx_swap_oob="outerHTML",
                 ),
+                chess.chess_daily_challenge_bar(
+                    game_presenter=game_presenter,
+                    board_id=board_id,
+                    data_hx_swap_oob="outerHTML",
+                ),
                 chess.chess_status_bar(
                     game_presenter=game_presenter,
                     board_id=board_id,
@@ -43,7 +48,7 @@ def chess_select_piece_htmx_fragment(*, game_presenter: "GamePresenter", request
     )
 
 
-def chess_move_piece_htmx_fragment(*, game_presenter: "GamePresenter", request: "HttpRequest", board_id: str) -> str:
+def chess_moving_parts_fragment(*, game_presenter: "GamePresenter", request: "HttpRequest", board_id: str) -> str:
     return "\n".join(
         (
             dom_tag.render()
@@ -56,6 +61,11 @@ def chess_move_piece_htmx_fragment(*, game_presenter: "GamePresenter", request: 
                     game_presenter=game_presenter,
                     board_id=board_id,
                     data_hx_swap_oob="innerHTML",
+                ),
+                chess.chess_daily_challenge_bar(
+                    game_presenter=game_presenter,
+                    board_id=board_id,
+                    data_hx_swap_oob="outerHTML",
                 ),
                 chess.chess_status_bar(
                     game_presenter=game_presenter,

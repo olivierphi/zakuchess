@@ -18,6 +18,16 @@ urlpatterns = [
         name="htmx_game_move_piece",
     ),
     path(
+        "htmx/daily-challenge/restart/ask-confirmation/",
+        views.htmx_restart_daily_challenge_ask_confirmation,
+        name="htmx_restart_daily_challenge_ask_confirmation",
+    ),
+    path(
+        "htmx/daily-challenge/restart/do/",
+        views.htmx_restart_daily_challenge_do,
+        name="htmx_restart_daily_challenge_do",
+    ),
+    path(
         "htmx/bot/move/",
         views.htmx_game_bot_move,
         name="htmx_game_bot_move",

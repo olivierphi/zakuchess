@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from .domain.daily_challenge import PlayerGameState, PlayerSessionContent
+from .business_logic.daily_challenge import PlayerGameState, PlayerSessionContent
 from .models import DailyChallenge
 
 if TYPE_CHECKING:
@@ -20,7 +20,11 @@ def get_or_create_daily_challenge_state_for_player(
     game_state: PlayerGameState | None = player_cookie_content["games"].get(challenge.id)
 
     if game_state is None:
-        game_state = PlayerGameState(fen=challenge.fen, piece_role_by_square=challenge.piece_role_by_square)
+        game_state = PlayerGameState(
+            turns_counter=0,
+            fen=challenge.fen,
+            piece_role_by_square=challenge.piece_role_by_square,
+        )
         save_daily_challenge_state_in_session(
             request=request,
             challenge_id=challenge.id,

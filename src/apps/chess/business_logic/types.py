@@ -126,8 +126,7 @@ class ChessMoveResult(TypedDict):
 
 class TeamMember(TypedDict, total=False):
     role: Required["TeamMemberRole"]
-    first_name: str
-    last_name: str
+    name: str
     faction: "Faction"
 
 

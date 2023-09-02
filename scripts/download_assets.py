@@ -39,16 +39,16 @@ ASSETS_MAP: dict[URL, Path] = {
     ASSETS_PATTERNS["WESNOTH_UNITS_GITHUB"].format(path="human-loyalists/fencer.png"): CHESS_STATIC / "units" / "humans" / "pawn.png",
     ASSETS_PATTERNS["WESNOTH_UNITS_GITHUB"].format(path="human-loyalists/horseman/horseman.png"): CHESS_STATIC / "units" / "humans" / "knight.png",
     ASSETS_PATTERNS["WESNOTH_UNITS_GITHUB"].format(path="human-outlaws/ranger.png"): CHESS_STATIC / "units" / "humans" / "bishop.png",
-    ASSETS_PATTERNS["WESNOTH_UNITS_GITHUB"].format(path="human-loyalists/shocktrooper.png"): CHESS_STATIC / "units" / "humans" / "rook.png",
+    ASSETS_PATTERNS["WESNOTH_UNITS_GITHUB"].format(path="dwarves/gryphon-rider.png"): CHESS_STATIC / "units" / "humans" / "rook.png",
     ASSETS_PATTERNS["WESNOTH_UNITS_GITHUB"].format(path="human-magi/red-mage+female.png"): CHESS_STATIC / "units" / "humans" / "queen.png",
-    ASSETS_PATTERNS["WESNOTH_CAMPAIGN_UNITS_GITHUB"].format(campaign="Heir_To_The_Throne", path="konrad-lord-scepter-leading.png"): CHESS_STATIC / "units" / "humans" / "king.png",
+    ASSETS_PATTERNS["WESNOTH_UNITS_GITHUB"].format(path="human-loyalists/shocktrooper.png"): CHESS_STATIC / "units" / "humans" / "king.png",
     # "The bad folks" units:
     ASSETS_PATTERNS["WESNOTH_UNITS_GITHUB"].format(path="undead-skeletal/deathblade.png"): CHESS_STATIC / "units" / "undeads" / "pawn.png",
     ASSETS_PATTERNS["WESNOTH_UNITS_GITHUB"].format(path="undead-skeletal/chocobone.png"): CHESS_STATIC / "units" / "undeads" / "knight.png",
     ASSETS_PATTERNS["WESNOTH_UNITS_GITHUB"].format(path="undead-skeletal/banebow.png"): CHESS_STATIC / "units" / "undeads" / "bishop.png",
-    ASSETS_PATTERNS["WESNOTH_UNITS_GITHUB"].format(path="undead-skeletal/draug.png"): CHESS_STATIC / "units" / "undeads" / "rook.png",
+    ASSETS_PATTERNS["WESNOTH_UNITS_GITHUB"].format(path="monsters/skeletal-dragon/skeletal-dragon.png"): CHESS_STATIC / "units" / "undeads" / "rook.png",
     ASSETS_PATTERNS["WESNOTH_UNITS_GITHUB"].format(path="undead-necromancers/necromancer+female.png"): CHESS_STATIC / "units" / "undeads" / "queen.png",
-    ASSETS_PATTERNS["WESNOTH_UNITS_GITHUB"].format(path="undead-necromancers/ancient-lich-melee-2.png"): CHESS_STATIC / "units" / "undeads" / "king.png",
+    ASSETS_PATTERNS["WESNOTH_UNITS_GITHUB"].format(path="undead-skeletal/draug.png"): CHESS_STATIC / "units" / "undeads" / "king.png",
     # Chess pieces symbols:
     ## white pieces:
     ASSETS_PATTERNS["WIKIMEDIA_CHESS_SVG_LIGHT"].format(folder="4/45", piece="p"): CHESS_STATIC / "symbols" / "w-pawn.svg",

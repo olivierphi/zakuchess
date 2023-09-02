@@ -2,10 +2,10 @@ from typing import TYPE_CHECKING
 
 import chess
 
-from ..helpers import square_from_int
+from apps.chess.helpers import square_from_int
 
 if TYPE_CHECKING:
-    from ..types import Square
+    from apps.chess.business_logic.types import Square
 
 
 def calculate_piece_available_targets(*, chess_board: chess.Board, piece_square: "Square") -> frozenset["Square"]:

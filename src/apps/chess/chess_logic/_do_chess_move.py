@@ -4,11 +4,11 @@ from typing import TYPE_CHECKING, Literal, cast
 
 import chess
 
-from ..helpers import piece_from_int
-from ..types import ChessMoveResult, GameOverDescription
+from apps.chess.business_logic.types import ChessMoveResult, GameOverDescription
+from apps.chess.helpers import piece_from_int
 
 if TYPE_CHECKING:
-    from ..types import FEN, ChessMoveChanges, GameEndReason, PlayerSide, Square
+    from apps.chess.business_logic.types import FEN, ChessMoveChanges, GameEndReason, PlayerSide, Square
 
 _CHESS_COLOR_TO_PLAYER_SIDE_MAPPING: Mapping[chess.Color, "PlayerSide"] = {
     True: "w",

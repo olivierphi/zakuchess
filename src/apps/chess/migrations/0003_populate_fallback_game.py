@@ -5,7 +5,7 @@ from django.db import migrations
 
 def _create_fallback_game(apps, schema_editor):
     DailyChallenge = apps.get_model("chess", "DailyChallenge")
-    DailyChallenge.objects.create(
+    challenge = DailyChallenge(
         id="fallback",
         fen="6k1/7p/1Q2P2p/4P3/qb2Nr2/1n3N1P/5PP1/5RK1 w - - 3 27",
         bot_first_move="f8f4",
@@ -31,16 +31,16 @@ def _create_fallback_game(apps, schema_editor):
         },
         teams={
             "w": [
-                {"role": "P1", "faction": "humans", "first_name": "Abdul", "last_name": "Philippon"},
-                {"role": "Q", "faction": "humans", "first_name": "Tetsuo", "last_name": "Johnson"},
-                {"role": "P2", "faction": "humans", "first_name": "John", "last_name": "Devi"},
-                {"role": "N1", "faction": "humans", "first_name": "Rae", "last_name": "Kitano"},
-                {"role": "P3", "faction": "humans", "first_name": "Joachim", "last_name": "Nguyen"},
-                {"role": "N2", "faction": "humans", "first_name": "Sydney", "last_name": "Lion"},
-                {"role": "P4", "faction": "humans", "first_name": "Kelly", "last_name": "Wang"},
-                {"role": "P5", "faction": "humans", "first_name": "Luis", "last_name": "Hermosa"},
-                {"role": "K", "faction": "humans", "first_name": "Roger", "last_name": "Stevens"},
-                {"role": "R1", "faction": "humans", "first_name": "Fab", "last_name": "Force"},
+                {"role": "P1", "faction": "humans", "name": "Abdul Philippon"},
+                {"role": "Q", "faction": "humans", "name": "Tetsuo Lebowsky"},
+                {"role": "P2", "faction": "humans", "name": "John Devi"},
+                {"role": "N1", "faction": "humans", "name": "Rae Kitano"},
+                {"role": "P3", "faction": "humans", "name": "Joachim Nguyen"},
+                {"role": "N2", "faction": "humans", "name": "Sydney Lion"},
+                {"role": "P4", "faction": "humans", "name": "Kelly Wang"},
+                {"role": "P5", "faction": "humans", "name": "Luis Hermosa"},
+                {"role": "K", "faction": "humans", "name": "Roger Stevens"},
+                {"role": "R1", "faction": "humans", "name": "Fab Force"},
             ],
             "b": [
                 {"role": "k", "faction": "undeads"},
@@ -54,6 +54,14 @@ def _create_fallback_game(apps, schema_editor):
         },
     )
 
+    # In a migration context models are kinda emulated, so this "challenge" object
+    # doesn't have its "clean" method: let's compute the `*_before_bot_first_move` fields manually:
+    from apps.chess.business_logic import compute_daily_challenge_before_bot_first_move_fields
+
+    compute_daily_challenge_before_bot_first_move_fields(challenge)
+
+    challenge.save()
+
 
 def _revert(apps, schema_editor):
     DailyChallenge = apps.get_model("chess", "DailyChallenge")
@@ -63,7 +71,7 @@ def _revert(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("chess", "0001_initial"),
+        ("chess", "0002_dailychallenge_piece_role_by_square_before_bot_first_move"),
     ]
 
     operations = [migrations.RunPython(_create_fallback_game, reverse_code=_revert)]

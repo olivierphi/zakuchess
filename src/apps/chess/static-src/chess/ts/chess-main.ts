@@ -41,6 +41,13 @@ function cursorIsNotOnChessBoardInteractiveElement(boardId: string): boolean {
         }
     }
 
+    const restartDailyChallengeButtonElement = chessBoardContainer.querySelector(
+        `#chess-board-restart-daily-challenge-${boardId}`,
+    )
+    if (restartDailyChallengeButtonElement && hoveredElements.includes(restartDailyChallengeButtonElement)) {
+        return false // don't actually cancel the selection
+    }
+
     console.log("no interactive UI element clicked: we reset the board state")
     return true
 }

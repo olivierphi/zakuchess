@@ -3,31 +3,32 @@ from typing import TYPE_CHECKING, cast
 
 import chess
 
-from .components.chess_helpers import chess_lib_color_to_player_side
-from .domain.chess_logic import calculate_piece_available_targets
-from .domain.consts import PLAYER_SIDES
-from .domain.helpers import (
+from .business_logic.consts import PLAYER_SIDES
+from .chess_logic import calculate_piece_available_targets
+from .helpers import (
+    chess_lib_color_to_player_side,
     get_active_player_side_from_chess_board,
+    player_side_from_piece_role,
     square_from_int,
     symbol_from_piece_role,
     team_member_role_from_piece_role,
 )
+from .models import DailyChallenge
 
 if TYPE_CHECKING:
-    from .domain.types import (
-        PieceRoleBySquare,
-        Square,
-        PlayerSide,
-        PieceSymbol,
+    from .business_logic.daily_challenge import PlayerGameState
+    from .business_logic.types import (
+        Factions,
         GamePhase,
         PieceRole,
-        Factions,
-        TeamMemberRole,
+        PieceRoleBySquare,
+        PieceSymbol,
+        PlayerSide,
+        Square,
         TeamMember,
+        TeamMemberRole,
     )
-    from .domain.daily_challenge import PlayerGameState
 
-from .models import DailyChallenge
 
 # Presenters are the objects we pass to our templates.
 
@@ -42,11 +43,15 @@ class GamePresenter:
         selected_square: "Square | None" = None,
         selected_piece_square: "Square | None" = None,
         target_to_confirm: "Square | None" = None,
+        restart_daily_challenge_ask_confirmation: bool = False,
     ):
         self._challenge = challenge
+        self.game_state = game_state
+        self.forced_bot_move = forced_bot_move
+        self.restart_daily_challenge_ask_confirmation = restart_daily_challenge_ask_confirmation
+
         self._chess_board = chess.Board(fen=game_state["fen"])
         self._piece_role_by_square = game_state["piece_role_by_square"]
-        self.forced_bot_move = forced_bot_move
 
         if selected_square is not None:
             self.selected_square = SelectedSquarePresenter(
@@ -141,6 +146,10 @@ class GamePresenter:
     def piece_role_by_square(self) -> "PieceRoleBySquare":
         return self._piece_role_by_square
 
+    @cache
+    def piece_role_at_square(self, square: "Square") -> "PieceRole":
+        return self._piece_role_by_square[square]
+
     @cached_property
     def team_members_by_role_by_side(self) -> "dict[PlayerSide, dict[TeamMemberRole, TeamMember]]":
         result: "dict[PlayerSide, dict[TeamMemberRole, TeamMember]]" = {}
@@ -177,7 +186,7 @@ class SelectedSquarePresenter:
 
     @cached_property
     def player_side(self) -> "PlayerSide":
-        return chess_lib_color_to_player_side(self._chess_board.turn)
+        return player_side_from_piece_role(self._game_presenter.piece_role_at_square(self.square))
 
     @cached_property
     def symbol(self) -> "PieceSymbol":
@@ -190,6 +199,12 @@ class SelectedSquarePresenter:
     @cached_property
     def piece_at(self) -> "chess.Piece":
         return cast("chess.Piece", self._chess_board.piece_at(chess.parse_square(self.square)))
+
+    def __str__(self) -> str:
+        return f"{self.square} (piece role: {self.piece_role})"
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} {str(self)})>"
 
 
 class SelectedPiecePresenter(SelectedSquarePresenter):
@@ -220,3 +235,9 @@ class SelectedPiecePresenter(SelectedSquarePresenter):
     @cache
     def is_potential_capture(self, square: "Square") -> bool:
         return square in self.available_targets and self.piece_at is not None
+
+    def __str__(self) -> str:
+        return f"{self.piece_role} at {self.square}"
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} {str(self)})>"

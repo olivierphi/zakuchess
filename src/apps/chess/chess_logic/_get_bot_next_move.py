@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from lib.chess_engines.sunfish import sunfish, tools
 
 if TYPE_CHECKING:
-    from apps.chess.domain.types import PlayerSide, Square
+    from apps.chess.business_logic.types import PlayerSide, Square
 
 # We'll leave some time for the bot to make a move:
 # (already pretty long for a CPU-bounded server-side operation 😅)

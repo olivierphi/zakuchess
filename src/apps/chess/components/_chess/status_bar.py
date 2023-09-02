@@ -4,12 +4,13 @@ from typing import TYPE_CHECKING, cast
 from dominate.tags import div, dom_tag, span
 from dominate.util import raw
 
-from ...domain.consts import PIECE_TYPE_TO_NAME
-from ...domain.helpers import piece_name_from_piece_role, player_side_from_piece_role, type_from_piece_role
+from apps.chess.helpers import piece_name_from_piece_role, player_side_from_piece_role, type_from_piece_role
+
+from ...business_logic.consts import PIECE_TYPE_TO_NAME
 from ..chess_helpers import chess_unit_symbol_class
 
 if TYPE_CHECKING:
-    from ...domain.types import PieceName, PieceRole, PieceType, PlayerSide, TeamMemberRole
+    from ...business_logic.types import PieceName, PieceRole, PieceType, PlayerSide, TeamMemberRole
     from ...presenters import GamePresenter
 
 
@@ -17,9 +18,9 @@ _CHARACTER_TYPE_TIP: dict["PieceType", str] = {
     "p": "Characters with <b>a sword</b>",
     "n": "<b>Mounted</b> characters",
     "b": "Characters with <b>a bow</b>",
-    "r": "Characters wearing <b>a heavy armor</b>",
+    "r": "<b>Flying</b> characters",
     "q": "Characters with <b>a staff</b>",
-    "k": "Characters with <b>a crown</b>",
+    "k": "Characters wearing <b>a heavy armor</b>",
 }
 _CHARACTER_TYPE_TIP_KEYS = tuple(_CHARACTER_TYPE_TIP.keys())
 
@@ -90,7 +91,7 @@ def _chess_status_bar_selected_piece(game_presenter: "GamePresenter") -> dom_tag
     piece_name = piece_name_from_piece_role(piece_role)
 
     unit_display = _unit_display_container(piece_role=piece_role, game_presenter=game_presenter)
-    name_display = f"{team_member['first_name']} {team_member['last_name']}" if team_member.get("first_name") else ""
+    name_display = team_member.get("name", "")
 
     unit_about = div(
         div(name_display),
