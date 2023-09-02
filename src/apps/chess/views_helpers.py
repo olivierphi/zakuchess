@@ -18,7 +18,8 @@ def get_or_create_daily_challenge_state_for_player(
     The second value is a boolean indicating if the game state was created or not.
     """
     player_cookie_content = get_player_session_content(request)
-    game_state: PlayerGameState | None = player_cookie_content["games"].get(challenge.id)
+    challenge_id = today_daily_challenge_id()
+    game_state: PlayerGameState | None = player_cookie_content["games"].get(challenge_id)
 
     if game_state is None:
         game_state = PlayerGameState(
@@ -46,5 +47,9 @@ def get_player_session_content(request: "HttpRequest") -> PlayerSessionContent:
 
 def save_daily_challenge_state_in_session(*, request: "HttpRequest", game_state: PlayerGameState) -> None:
     # Erases other games data!
-    challenge_id = date.today().isoformat()
+    challenge_id = today_daily_challenge_id()
     request.session[_PLAYER_CONTENT_SESSION_KEY] = {"games": {challenge_id: game_state}}
+
+
+def today_daily_challenge_id() -> str:
+    return date.today().isoformat()

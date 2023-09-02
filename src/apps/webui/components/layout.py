@@ -1,6 +1,7 @@
 import json
 from typing import TYPE_CHECKING
 
+from django.conf import settings
 from django.template.backends.utils import get_token  # type: ignore[attr-defined]
 from django.templatetags.static import static
 from dominate.tags import (
@@ -18,7 +19,6 @@ from dominate.tags import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
 
     from django.http import HttpRequest
     from dominate.tags import dom_tag
@@ -37,11 +37,11 @@ _FONTS_CSS = """
 """
 
 
-def page(*, children: "Sequence[dom_tag]", request: "HttpRequest", title: str = "ZakuChess ♞") -> str:
-    return f"<!DOCTYPE html>{document(children=children, request=request, title=title)}"
+def page(*children: "dom_tag", request: "HttpRequest", title: str = "ZakuChess ♞") -> str:
+    return f"<!DOCTYPE html>{document(*children, request=request, title=title)}"
 
 
-def document(*, children: "Sequence[dom_tag]", request: "HttpRequest", title: str = "ZakuChess ♞") -> "dom_tag":
+def document(*children: "dom_tag", request: "HttpRequest", title: str = "ZakuChess ♞") -> "dom_tag":
     return html(
         head(title=title),
         body(
@@ -50,6 +50,7 @@ def document(*, children: "Sequence[dom_tag]", request: "HttpRequest", title: st
             cls="bg-slate-900",
             data_hx_headers=json.dumps({"X-CSRFToken": get_token(request) if request else "[no request]"}),
         ),
+        __pretty=settings.DEBUG,
     )
 
 
