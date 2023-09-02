@@ -3,10 +3,13 @@
 /node_modules
 
 /frontend-out
+/staticfiles
 
 /db.sqlite3
 
-/src/apps/*/static
+/src/apps/*/static/css
+/src/apps/*/static/js
+/src/apps/*/static/chess
 
 /.git
 /.idea

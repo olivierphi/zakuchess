@@ -12,7 +12,7 @@ Django = "^4.1.3"
 gunicorn = "^20.1.0"
 django-alive = "^1.2.1"
 chess = "^1.9.3"
-whitenoise = "^6.2.0"
+whitenoise = {extras = ["brotli"], version = "^6.5.0"}
 django-htmx = "^1.13.0"
 dominate = "^2.7.0"
 dj-database-url = "^2.1.0"

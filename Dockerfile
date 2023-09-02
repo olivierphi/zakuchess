@@ -29,12 +29,26 @@ FROM node:18-alpine AS frontend_build
 RUN apk add --no-cache make
 RUN mkdir -p /app
 WORKDIR /app
+
 COPY --from=frontend_deps /app/node_modules ./node_modules
+
+# Assets source: 
 COPY src/lib/frontend-common ./src/lib/frontend-common
 COPY src/apps/webui/static-src ./src/apps/webui/static-src
 COPY src/apps/chess/static-src ./src/apps/chess/static-src
+# We have to copy our components too, 
+# so that Tailwind see the classes used in them:
+COPY src/apps/chess/components ./src/apps/chess/components
+COPY src/apps/webui/components ./src/apps/webui/components
+# We're going to use our Makefile to build the assets:
 COPY Makefile ./
-RUN make frontend/js/compile frontend/css/compile esbuild_compile_opts='--minify'
+# ..and use the Tailwind config file:
+COPY tailwind.config.js ./
+
+# Right, let's build our app's assets!
+RUN make frontend/js/compile frontend/css/compile \
+    esbuild_compile_opts='--minify' \
+    tailwind_compile_opts='--minify'
 
 #########################################################################
 # Backend stuff
@@ -80,11 +94,14 @@ RUN addgroup -gid 1001 webapp
 RUN useradd --gid 1001 --uid 1001 webapp
 RUN chown -R 1001:1001 /app 
 
-COPY --chown=1001:1001 --from=frontend_build /app/src/apps/webui/static src/apps/webui/static
-COPY --chown=1001:1001 --from=frontend_build /app/src/apps/chess/static src/apps/chess/static
-COPY --chown=1001:1001 --from=backend_build /app/.venv .venv
 COPY --chown=1001:1001 scripts scripts
 COPY --chown=1001:1001 src src
+
+COPY --chown=1001:1001 --from=frontend_build /app/src/apps/webui/static src/apps/webui/static
+COPY --chown=1001:1001 --from=frontend_build /app/src/apps/chess/static src/apps/chess/static
+
+COPY --chown=1001:1001 --from=backend_build /app/.venv .venv
+
 COPY --chown=1001:1001 Makefile pyproject.toml LICENSE ./
 
 ENV PATH="/app/.venv/bin:${PATH}"
@@ -107,4 +124,5 @@ EXPOSE 8080
 
 ENV DJANGO_SETTINGS_MODULE=project.settings.production
 
-CMD [".venv/bin/gunicorn", "--bind", ":8080", "--workers", "2", "--access-logfile", "-", "--log-file ", "-", "project.wsgi"]
+ENV GUNICORN_CMD_ARGS="--bind :8080 --workers 2 --max-requests 120 --max-requests-jitter 20 --timeout 8"
+CMD [".venv/bin/gunicorn", "project.wsgi"]
