@@ -1,5 +1,6 @@
-from datetime import date
 from typing import TYPE_CHECKING
+
+from django.utils.timezone import now
 
 from .business_logic.daily_challenge import PlayerGameState, PlayerSessionContent
 from .models import DailyChallenge
@@ -52,4 +53,4 @@ def save_daily_challenge_state_in_session(*, request: "HttpRequest", game_state:
 
 
 def today_daily_challenge_id() -> str:
-    return date.today().isoformat()
+    return now().date().isoformat()
