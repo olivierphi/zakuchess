@@ -4,8 +4,6 @@ from urllib.parse import urlencode
 from django.urls import reverse
 from dominate.tags import button, div, dom_tag, span
 
-from ...business_logic import get_daily_challenge_turns_left
-
 if TYPE_CHECKING:
     from ...presenters import GamePresenter
 
@@ -20,7 +18,7 @@ PROGRESS_BAR_BLOCKS_COUNT = 10
 
 
 def chess_daily_challenge_bar(*, game_presenter: "GamePresenter", board_id: str, **extra_attrs: str) -> dom_tag:
-    from ..chess import INFO_BARS_COMMON_CLASSES
+    from ..chess_board import INFO_BARS_COMMON_CLASSES
 
     if game_presenter.restart_daily_challenge_ask_confirmation:
         inner_content = _restart_confirmation_display(board_id=board_id)
@@ -64,9 +62,7 @@ def _restart_confirmation_display(*, board_id: str) -> dom_tag:
 
 def _current_state_display(*, game_presenter: "GamePresenter", board_id: str) -> dom_tag:
 
-    turns_total, turns_left, percentage_left, is_challenge_over = get_daily_challenge_turns_left(
-        game_state=game_presenter.game_state
-    )
+    turns_total, turns_left, percentage_left, is_challenge_over = game_presenter.challenge_turns_left
 
     blocks_color: BlockColor = "green" if percentage_left >= 60 else ("yellow" if percentage_left >= 30 else "red")
     blocks: list[str] = []
@@ -77,7 +73,7 @@ def _current_state_display(*, game_presenter: "GamePresenter", board_id: str) ->
         blocks.append(PROGRESS_BAR_BLOCKS[blocks_color])
 
     restart_button: dom_tag = span("")
-    if not is_challenge_over:
+    if not game_presenter.is_game_over and turns_left > 2:
         htmx_attributes = {
             "data_hx_post": f"{reverse('chess:htmx_restart_daily_challenge_ask_confirmation')}?{urlencode({'board_id': board_id})}",
             "data_hx_target": f"#chess-board-pieces-{board_id}",
@@ -86,17 +82,20 @@ def _current_state_display(*, game_presenter: "GamePresenter", board_id: str) ->
         restart_button = span(
             button(
                 "↩️",
-                title="Restart the daily challenge",
+                title="Try this daily challenge again, from the start",
                 id=f"chess-board-restart-daily-challenge-{board_id}",
                 **htmx_attributes,
             ),
         )
 
     return div(
-        span(f"Today's turns left: {turns_left}/{turns_total}", cls="w-full text-center"),
-        span(
-            "".join(blocks),
-            cls="inline-block pl-3 pr-3",
+        div(f"Today's turns left: {turns_left}/{turns_total}", cls="w-full text-center"),
+        div(
+            span(
+                "".join(blocks),
+                cls="inline-block pl-3 pr-3",
+            ),
+            restart_button,
+            cls="w-full text-center",
         ),
-        restart_button,
     )

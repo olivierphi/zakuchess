@@ -116,13 +116,11 @@ RUN python scripts/download_assets.py
 RUN DJANGO_SETTINGS_MODULE=project.settings.docker_build \
     .venv/bin/python src/manage.py collectstatic --noinput
 
-# TODO: remove this once we have a proper deployment pipeline
-RUN DJANGO_SETTINGS_MODULE=project.settings.docker_build \
-    .venv/bin/python src/manage.py makemigrations --noinput
-
 EXPOSE 8080
 
 ENV DJANGO_SETTINGS_MODULE=project.settings.production
 
 ENV GUNICORN_CMD_ARGS="--bind :8080 --workers 2 --max-requests 120 --max-requests-jitter 20 --timeout 8"
-CMD [".venv/bin/gunicorn", "project.wsgi"]
+
+RUN chmod +x scripts/start_server.sh
+CMD ["scripts/start_server.sh"]

@@ -34,6 +34,9 @@ module.exports = {
             height: {
                 "1/8": "12.5%",
             },
+            minHeight: {
+                40: "10rem" /* 160px */,
+            },
             spacing: {
                 "0/1": "0",
                 "1/1": "100%",

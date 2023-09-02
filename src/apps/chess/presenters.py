@@ -3,7 +3,9 @@ from typing import TYPE_CHECKING, cast
 
 import chess
 
+from .business_logic import get_daily_challenge_turns_left
 from .business_logic.consts import PLAYER_SIDES
+from .business_logic.daily_challenge import MAXIMUM_TURNS_PER_CHALLENGE
 from .chess_logic import calculate_piece_available_targets
 from .helpers import (
     chess_lib_color_to_player_side,
@@ -16,7 +18,7 @@ from .helpers import (
 from .models import DailyChallenge
 
 if TYPE_CHECKING:
-    from .business_logic.daily_challenge import PlayerGameState
+    from .business_logic.daily_challenge import ChallengeTurnsLeftResult, PlayerGameState
     from .business_logic.types import (
         Factions,
         GamePhase,
@@ -44,11 +46,13 @@ class GamePresenter:
         selected_piece_square: "Square | None" = None,
         target_to_confirm: "Square | None" = None,
         restart_daily_challenge_ask_confirmation: bool = False,
+        is_bot_move: bool = False,
     ):
         self._challenge = challenge
         self.game_state = game_state
         self.forced_bot_move = forced_bot_move
         self.restart_daily_challenge_ask_confirmation = restart_daily_challenge_ask_confirmation
+        self.is_bot_move = is_bot_move
 
         self._chess_board = chess.Board(fen=game_state["fen"])
         self._piece_role_by_square = game_state["piece_role_by_square"]
@@ -70,15 +74,25 @@ class GamePresenter:
             )
 
     @cached_property
-    def turn_number(self) -> int:
-        return self._chess_board.fullmove_number
-
-    @cached_property
     def is_my_turn(self) -> bool:
         return self._challenge.my_side == self.active_player
 
     @cached_property
+    def challenge_turns_left(self) -> "ChallengeTurnsLeftResult":
+        return get_daily_challenge_turns_left(self.game_state)
+
+    @property
+    def challenge_turns_counter(self) -> int:
+        return self.game_state["turns_counter"]
+
+    @property
+    def challenge_total_turns(self) -> int:
+        return MAXIMUM_TURNS_PER_CHALLENGE
+
+    @cached_property
     def game_phase(self) -> "GamePhase":
+        if self.challenge_turns_left.game_over:
+            return "game_over:lost"
         if (winner := self.winner) is not None:
             return "game_over:won" if winner == self._challenge.my_side else "game_over:lost"
         if self.is_my_turn:
@@ -103,7 +117,9 @@ class GamePresenter:
 
     @cached_property
     def is_game_over(self) -> bool:
-        return self._chess_board.is_game_over()
+        if self.challenge_turns_left.game_over:
+            return True
+        return self.winner is not None
 
     @cached_property
     def winner(self) -> "PlayerSide | None":

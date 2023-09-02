@@ -251,6 +251,7 @@ def _play_bot_move(
     game_presenter = GamePresenter(
         challenge=challenge,
         game_state=new_game_state,
+        is_bot_move=True,
     )
 
     return HttpResponse(

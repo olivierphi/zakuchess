@@ -7,8 +7,7 @@ from ..helpers import file_and_rank_from_square, player_side_from_piece_role, ty
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from ..business_logic.types import Faction, File, PieceName, PieceRole, PlayerSide, Rank, Square
-    from ..presenters import GamePresenter
+    from ..business_logic.types import Faction, Factions, File, PieceName, PieceRole, PlayerSide, Rank, Square
 
 _FILE_TO_TAILWIND_POSITIONING_CLASS: dict["File", str] = {
     "a": "translate-y-0/1",
@@ -81,10 +80,19 @@ def square_to_tailwind_classes(square: "Square") -> "Sequence[str]":
     )
 
 
+def piece_character_classes(*, piece_role: "PieceRole", factions: "Factions") -> "Sequence[str]":
+    return _piece_character_classes_for_factions(piece_role=piece_role, factions_tuple=tuple(factions.items()))
+
+
 @cache
-def piece_character_classes(*, piece_role: "PieceRole", game_presenter: "GamePresenter") -> "Sequence[str]":
+def _piece_character_classes_for_factions(
+    *, piece_role: "PieceRole", factions_tuple: "tuple[tuple[PlayerSide, Faction], ...]"
+) -> "Sequence[str]":
+    # N.B. We use a tuple here for the factions, so they're hashable and can be used as cached key
     piece_name = PIECE_TYPE_TO_NAME[type_from_piece_role(piece_role)]
-    faction = game_presenter.factions[player_side_from_piece_role(piece_role)]
+    player_side = player_side_from_piece_role(piece_role)
+    factions_dict = dict(factions_tuple)
+    faction = factions_dict[player_side]
     classes = [_PIECE_UNITS_CLASSES[faction][piece_name]]
     player_side = player_side_from_piece_role(piece_role)
     if player_side == "b":

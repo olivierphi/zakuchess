@@ -4,7 +4,13 @@ from django.conf import settings
 
 from apps.webui.components.layout import page
 
-from ..chess import chess_arena, chess_available_targets, chess_daily_challenge_bar, chess_pieces, chess_status_bar
+from ..chess_board import (
+    chess_arena,
+    chess_available_targets,
+    chess_daily_challenge_bar,
+    chess_pieces,
+    chess_status_bar,
+)
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
