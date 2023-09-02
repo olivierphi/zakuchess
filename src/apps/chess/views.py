@@ -47,12 +47,13 @@ def game_view(req: "HttpRequest") -> HttpResponse:
     game_state, created = get_or_create_daily_challenge_state_for_player(request=req, challenge=challenge)
 
     if created:
+        # The player hasn't played this challenge before,
+        # so we need to start from the beginning, with the bot's first move:
         game_state["fen"] = challenge.fen_before_bot_first_move
         game_state["piece_role_by_square"] = challenge.piece_role_by_square_before_bot_first_move
 
         save_daily_challenge_state_in_session(
             request=req,
-            challenge_id=challenge.id,
             game_state=game_state,
         )
 
@@ -136,7 +137,6 @@ def htmx_game_move_piece(req: "HttpRequest", from_: "Square", to: "Square") -> H
     _logger.info("New game state: %s", new_game_state)
     save_daily_challenge_state_in_session(
         request=req,
-        challenge_id=challenge.id,
         game_state=new_game_state,
     )
 
@@ -189,7 +189,6 @@ def htmx_restart_daily_challenge_do(req: "HttpRequest") -> HttpResponse:
 
     save_daily_challenge_state_in_session(
         request=req,
-        challenge_id=challenge.id,
         game_state=game_state,
     )
 
@@ -246,7 +245,6 @@ def _play_bot_move(
     new_game_state = move_daily_challenge_piece(game_state=game_state, from_=bot_next_move[0], to=bot_next_move[1])
     save_daily_challenge_state_in_session(
         request=req,
-        challenge_id=challenge.id,
         game_state=new_game_state,
     )
 

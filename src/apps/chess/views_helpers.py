@@ -1,3 +1,4 @@
+from datetime import date
 from typing import TYPE_CHECKING
 
 from .business_logic.daily_challenge import PlayerGameState, PlayerSessionContent
@@ -27,7 +28,6 @@ def get_or_create_daily_challenge_state_for_player(
         )
         save_daily_challenge_state_in_session(
             request=request,
-            challenge_id=challenge.id,
             game_state=game_state,
         )
         created = True
@@ -44,8 +44,7 @@ def get_player_session_content(request: "HttpRequest") -> PlayerSessionContent:
     return player_cookie_content
 
 
-def save_daily_challenge_state_in_session(
-    *, request: "HttpRequest", challenge_id: str, game_state: PlayerGameState
-) -> None:
+def save_daily_challenge_state_in_session(*, request: "HttpRequest", game_state: PlayerGameState) -> None:
     # Erases other games data!
+    challenge_id = date.today().isoformat()
     request.session[_PLAYER_CONTENT_SESSION_KEY] = {"games": {challenge_id: game_state}}
