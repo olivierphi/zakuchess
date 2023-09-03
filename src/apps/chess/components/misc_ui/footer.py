@@ -4,8 +4,6 @@ from django.conf import settings
 from dominate.tags import a, div, dom_tag, footer as footer_tag, span
 from dominate.util import raw
 
-from __version__ import VERSION
-
 
 @cache
 def footer() -> dom_tag:
@@ -26,7 +24,11 @@ def footer() -> dom_tag:
             div("© 2023 ZakuChess", cls="text-center mb-3"),
             span(
                 "This website is open source. Version ",
-                a(VERSION, href="https://github.com/olivierphi/zakuchess", **common_links_attributes),
+                a(
+                    settings.ZAKUCHESS_VERSION,
+                    href="https://github.com/olivierphi/zakuchess",
+                    **common_links_attributes,
+                ),
             ),
             cls="w-full text-slate-100 text-sm text-center mb-10 md:max-w-xl mx-auto",
         ).render(pretty=settings.DEBUG)

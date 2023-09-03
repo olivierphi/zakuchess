@@ -49,7 +49,7 @@ backend/createsuperuser: password ?= localdev
 backend/createsuperuser: ## Creates a Django superuser for the development environment
 	@${SUB_MAKE} django/manage cmd='createsuperuser --noinput' \
 		env_vars='DJANGO_SUPERUSER_USERNAME=${email} DJANGO_SUPERUSER_EMAIL=${email} DJANGO_SUPERUSER_PASSWORD=${password}'
-	echo 'You can log in to http://localhost:8000/admin/ with the following credentials: ${email} / ${password}'
+	@echo 'You can log in to http://localhost:8000/admin/ with the following credentials: ${email} / ${password}'
 
 .PHONY: test
 test: pytest_opts ?=
@@ -209,9 +209,16 @@ docker/local/migrate:
 
 # Here starts Fly.io-related stuff
 .PHONY: fly.io/deploy
-fly.io/deploy: deploy_build_args ?=
+fly.io/deploy: deploy_build_args ?= 
+fly.io/deploy: version ?= $$(date --iso-8601)::$$(git rev-parse --short HEAD)
 fly.io/deploy: ## Fly.io: deploy the previously built Docker image
-	flyctl deploy ${deploy_build_args}
+	@echo "Deploying version '${version}'..."
+	flyctl deploy ${deploy_build_args} \
+		--env ZAKUCHESS_VERSION="${version}"
+
+version: v ?= 
+version:
+	echo "$v"
 
 .PHONY: fly.io/ssh
 fly.io/ssh: ## Fly.io: start a SSH session within our app
