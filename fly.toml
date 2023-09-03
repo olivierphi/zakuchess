@@ -7,7 +7,7 @@ processes = []
 
 [env]
   DJANGO_SETTINGS_MODULE = "project.settings.production"
-  DATABASE_URL = "sqlite:////sqlite_dbs/zakuchess.dev.sqlite3"
+  DATABASE_URL = "sqlite:////zakuchess_sqlite_dbs/zakuchess.dev.sqlite3"
   ALLOWED_HOSTS = "zakuchess.fly.dev"
   CSRF_TRUSTED_ORIGINS = "https://zakuchess.fly.dev"
   PORT = "8080"
@@ -15,8 +15,8 @@ processes = []
   SECURE_SSL_REDIRECT = "" 
 
 [mounts]
-  source="sqlite_dbs"
-  destination="/sqlite_dbs"
+  source="zakuchess_sqlite_dbs"
+  destination="/zakuchess_sqlite_dbs"
 
 [experimental]
   allowed_public_ports = []

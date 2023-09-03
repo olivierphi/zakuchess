@@ -80,8 +80,11 @@ def _first_turn_intro(
         div(
             h4("Welcome to this new daily challenge!", cls="mb-2 text-amber-600 font-bold "),
             div(
-                raw("Your pieces are the ones <b>looking to the right</b>.<br>" "Tap one of them to start playing."),
-                cls="mb-2 font-bold",
+                raw(
+                    """Your pieces are the ones <span class="font-bold">looking to the right</span>.<br>"""
+                    "Tap one of them to start playing."
+                ),
+                cls="mb-2",
             ),
             div(raw(f"You have <b>{challenge_total_turns}</b> turns to win this challenge.")),
             div("Restarting from the beginning with the ↩️ button costs one turn."),
