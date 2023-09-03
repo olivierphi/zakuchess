@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING, cast
 
 from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
-from django.core.exceptions import SuspiciousOperation
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect
 from django.views.decorators.http import etag, require_POST, require_safe
@@ -28,6 +27,8 @@ if TYPE_CHECKING:
 
 
 _logger = logging.getLogger(__name__)
+
+# TODO: extract game logic to a separate module
 
 
 def _game_etag(req: "HttpRequest") -> str | None:
@@ -187,6 +188,7 @@ def htmx_restart_daily_challenge_do(req: "HttpRequest") -> HttpResponse:
     if created:
         return htmx_aware_redirect(req, "chess:daily_game_view")
 
+    game_state["attempts_counter"] += 1
     # Restarting the daily challenge costs one move:
     game_state["turns_counter"] += 1
     # Back to the initial state:
@@ -225,7 +227,8 @@ def htmx_game_bot_move(req: "HttpRequest") -> HttpResponse:
 
     active_player_side = get_active_player_side_from_fen(game_state["fen"])
     if active_player_side != challenge.bot_side:
-        raise SuspiciousOperation("This is not bot's turn")
+        # This is not bot's turn 😅
+        return htmx_aware_redirect(req, "chess:daily_game_view")
 
     if not (move := req.GET.get("move")):  # TODO: move this to the view path
         raise Http404("Missing bot move")
@@ -251,6 +254,20 @@ def debug_reset_today(req: "HttpRequest") -> HttpResponse:
     return redirect("chess:daily_game_view")
 
 
+@require_safe
+@user_passes_test(user_is_staff)
+def debug_view_cookie(req: "HttpRequest") -> HttpResponse:
+    import json
+
+    challenge = get_current_daily_challenge()
+    game_state, created = get_or_create_daily_challenge_state_for_player(request=req, challenge=challenge)
+
+    return HttpResponse(
+        f"""<p>Game state exists before check: {'no' if created else 'yes'}</p>"""
+        f"""<p>Game_state: <pre>{json.dumps(game_state, indent=2)}</pre></p>"""
+    )
+
+
 def _play_bot_move(
     *,
     req: "HttpRequest",
@@ -261,6 +278,7 @@ def _play_bot_move(
 ) -> HttpResponse:
     bot_next_move = uci_move_squares(move)
     new_game_state = move_daily_challenge_piece(game_state=game_state, from_=bot_next_move[0], to=bot_next_move[1])
+
     save_daily_challenge_state_in_session(
         request=req,
         game_state=new_game_state,

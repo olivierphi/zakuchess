@@ -41,8 +41,11 @@ def move_daily_challenge_piece(
 
     # Right, let's return the new game state!
     new_game_state: "PlayerGameState" = {
-        "fen": move_result["fen"],
+        # We keep these as-is...
         "turns_counter": game_state["turns_counter"],
+        "attempts_counter": game_state["attempts_counter"],
+        # ...but update those:
+        "fen": move_result["fen"],
         "piece_role_by_square": piece_role_by_square,
     }
 

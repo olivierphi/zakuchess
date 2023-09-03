@@ -24,6 +24,7 @@ def get_or_create_daily_challenge_state_for_player(
 
     if game_state is None:
         game_state = PlayerGameState(
+            attempts_counter=0,
             turns_counter=0,
             fen=challenge.fen,
             piece_role_by_square=challenge.piece_role_by_square,

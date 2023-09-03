@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, cast
 
 import chess
 
-from .business_logic import get_daily_challenge_turns_left
+from .business_logic import get_daily_challenge_turns_state
 from .business_logic.consts import PLAYER_SIDES
 from .business_logic.daily_challenge import MAXIMUM_TURNS_PER_CHALLENGE
 from .chess_logic import calculate_piece_available_targets
@@ -18,7 +18,7 @@ from .helpers import (
 from .models import DailyChallenge
 
 if TYPE_CHECKING:
-    from .business_logic.daily_challenge import ChallengeTurnsLeftResult, PlayerGameState
+    from .business_logic.daily_challenge import ChallengeTurnsState, PlayerGameState
     from .business_logic.types import (
         Factions,
         GamePhase,
@@ -78,8 +78,8 @@ class GamePresenter:
         return self._challenge.my_side == self.active_player
 
     @cached_property
-    def challenge_turns_left(self) -> "ChallengeTurnsLeftResult":
-        return get_daily_challenge_turns_left(self.game_state)
+    def challenge_turns_state(self) -> "ChallengeTurnsState":
+        return get_daily_challenge_turns_state(self.game_state)
 
     @property
     def challenge_turns_counter(self) -> int:
@@ -91,7 +91,7 @@ class GamePresenter:
 
     @cached_property
     def game_phase(self) -> "GamePhase":
-        if self.challenge_turns_left.game_over:
+        if self.challenge_turns_state.game_over:
             return "game_over:lost"
         if (winner := self.winner) is not None:
             return "game_over:won" if winner == self._challenge.my_side else "game_over:lost"
@@ -117,7 +117,7 @@ class GamePresenter:
 
     @cached_property
     def is_game_over(self) -> bool:
-        if self.challenge_turns_left.game_over:
+        if self.challenge_turns_state.game_over:
             return True
         return self.winner is not None
 

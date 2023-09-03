@@ -46,23 +46,35 @@ def _restart_confirmation_display(*, board_id: str) -> dom_tag:
     }
 
     return div(
-        span("Try this challenge again from the start?"),
-        button(
-            "Confirm",
-            cls="inline-block pl-3 pr-3 font-bold text-yellow-400 hover:text-yellow-200",
-            **htmx_attributes_confirm,
+        div(
+            "Try this challenge again from the start?",
+            cls="text-center",
         ),
-        button(
-            "Cancel",
-            cls="inline-block pl-3 pr-3 font-bold text-lime-400 hover:text-lime-200",
-            **htmx_attributes_cancel,
+        div(
+            button(
+                "Confirm",
+                cls="inline-block pl-3 pr-3 font-bold text-yellow-400 hover:text-yellow-200",
+                **htmx_attributes_confirm,
+            ),
+            button(
+                "Cancel",
+                cls="inline-block pl-3 pr-3 font-bold text-lime-400 hover:text-lime-200",
+                **htmx_attributes_cancel,
+            ),
+            cls="text-center",
         ),
     )
 
 
 def _current_state_display(*, game_presenter: "GamePresenter", board_id: str) -> dom_tag:
 
-    turns_total, turns_left, percentage_left, is_challenge_over = game_presenter.challenge_turns_left
+    (
+        attempts_counter,
+        turns_total,
+        turns_left,
+        percentage_left,
+        is_challenge_over,
+    ) = game_presenter.challenge_turns_state
 
     blocks_color: BlockColor = "green" if percentage_left >= 60 else ("yellow" if percentage_left >= 30 else "red")
     blocks: list[str] = []
@@ -89,7 +101,10 @@ def _current_state_display(*, game_presenter: "GamePresenter", board_id: str) ->
         )
 
     return div(
-        div(f"Today's turns left: {turns_left}/{turns_total}", cls="w-full text-center"),
+        div(
+            f"Today's turns left: {turns_left}/{turns_total} - " f"Attempt #{attempts_counter+1}",
+            cls="w-full text-center",
+        ),
         div(
             span(
                 "".join(blocks),

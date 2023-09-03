@@ -23,12 +23,14 @@ class PlayerSessionContent(TypedDict):
 class PlayerGameState(TypedDict):
     # That is the state of a daily challenge, stored in a cookie for the player.
     # Since it's just a Python dict, Django knows how to serialize it.
+    attempts_counter: int
     turns_counter: int
     fen: "FEN"
     piece_role_by_square: "PieceRoleBySquare"
 
 
-class ChallengeTurnsLeftResult(NamedTuple):
+class ChallengeTurnsState(NamedTuple):
+    attempts_counter: int
     turns_total: int
     turns_left: int
     percentage_left: int
