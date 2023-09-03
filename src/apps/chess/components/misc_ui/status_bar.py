@@ -22,7 +22,7 @@ _CHARACTER_TYPE_TIP: dict["PieceType", str] = {
     "b": "Characters with <b>a bow</b>",
     "r": "<b>Flying</b> characters",
     "q": "Characters with <b>a staff</b>",
-    "k": "Characters wearing <b>a heavy armor</b>",
+    "k": "Characters wearing <b>heavy armors</b>",
 }
 _CHARACTER_TYPE_TIP_KEYS = tuple(_CHARACTER_TYPE_TIP.keys())
 
@@ -76,19 +76,23 @@ def _first_turn_intro(
     *, challenge_total_turns: int, factions_tuple: "tuple[tuple[PlayerSide, Faction], ...]"
 ) -> dom_tag:
     # N.B. We use a tuple here for the factions, so they're hashable and can be used as cached key
+    spacing = "mb-3"
     return raw(
         div(
-            h4("Welcome to this new daily challenge!", cls="mb-2 text-amber-600 font-bold "),
+            h4("Welcome to this new daily challenge!", cls=f"{spacing} text-yellow-400 font-bold "),
             div(
                 raw(
-                    """Your pieces are the ones <span class="font-bold">looking to the right</span>.<br>"""
+                    """Your pieces are the ones <span class="font-bold">with a circle around them</span>.<br>"""
                     "Tap one of them to start playing."
                 ),
-                cls="mb-2",
+                cls=f"{spacing}",
             ),
-            div(raw(f"You have <b>{challenge_total_turns}</b> turns to win this challenge.")),
-            div("Restarting from the beginning with the ↩️ button costs one turn."),
-            div("Good luck! 🙂", cls="mt-2"),
+            div(raw(f"You have <b>{challenge_total_turns}</b> turns to win this challenge."), cls=f"{spacing}"),
+            div(
+                raw("You can retry from the start at any time, with the ↩️ button."),
+                cls=f"{spacing}",
+            ),
+            div("Good luck! 🙂", cls=f"{spacing}"),
             div(
                 [
                     _chess_status_bar_tip(

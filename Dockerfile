@@ -134,6 +134,9 @@ USER 1001:1001
 
 ENV PYTHONPATH=/app/src
 
+# Generate a version number for the build:
+RUN echo "VERSION='$(date --iso-8601)::$(git rev-parse --short HEAD)'\n" > src/__version__.py
+
 RUN DJANGO_SETTINGS_MODULE=project.settings.docker_build \
     .venv/bin/python src/manage.py collectstatic --noinput
 
