@@ -40,6 +40,7 @@ INSTALLED_APPS = (
         "django_htmx",
     ]
     + [
+        "apps.authentication",
         "apps.chess",
         "apps.webui",
     ]
@@ -92,6 +93,13 @@ DATABASES = {
 # https://docs.djangoproject.com/en/4.1/topics/http/sessions/#using-cookie-based-sessions
 
 SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
+
+
+# Custom User model
+# https://docs.djangoproject.com/en/4.2/topics/auth/customizing/
+
+AUTH_USER_MODEL = "authentication.User"
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators

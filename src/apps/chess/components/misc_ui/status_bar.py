@@ -2,6 +2,7 @@ import random
 from functools import cache
 from typing import TYPE_CHECKING, cast
 
+from django.conf import settings
 from dominate.tags import div, dom_tag, h4, span
 from dominate.util import raw
 
@@ -16,7 +17,7 @@ if TYPE_CHECKING:
 
 
 _CHARACTER_TYPE_TIP: dict["PieceType", str] = {
-    "p": "Characters with <b>a sword</b>",
+    "p": "Characters with <b>swords</b>",
     "n": "<b>Mounted</b> characters",
     "b": "Characters with <b>a bow</b>",
     "r": "<b>Flying</b> characters",
@@ -39,7 +40,6 @@ def chess_status_bar(*, game_presenter: "GamePresenter", board_id: str, **extra_
     from ..chess_board import INFO_BARS_COMMON_CLASSES
 
     inner_content: dom_tag = div("status to implement")
-    align_items = "items-center"
 
     if game_presenter.is_bot_move and game_presenter.challenge_turns_counter == 0:
         inner_content = _first_turn_intro(
@@ -58,17 +58,15 @@ def chess_status_bar(*, game_presenter: "GamePresenter", board_id: str, **extra_
                 inner_content = div("You lost! 😭", cls="w-full text-center")
             case "waiting_for_player_selection":
                 inner_content = _chess_status_bar_tip(factions=game_presenter.factions)
-                align_items = "items-stretch"
             case "waiting_for_player_target_choice" | "opponent_piece_selected":
                 inner_content = _chess_status_bar_selected_piece(game_presenter)
-                align_items = "items-stretch"
             case "waiting_for_bot_turn":
                 inner_content = _chess_status_bar_waiting_for_bot_turn(game_presenter)
 
     return div(
         inner_content,
         id=f"chess-board-status-bar-{board_id}",
-        cls=f"min-h-[4rem] flex {align_items} {INFO_BARS_COMMON_CLASSES} border-t-0 rounded-b-md",
+        cls=f"min-h-[4rem] flex items-center {INFO_BARS_COMMON_CLASSES} border-t-0 rounded-b-md",
         **extra_attrs,
     )
 
@@ -78,21 +76,30 @@ def _first_turn_intro(
     *, challenge_total_turns: int, factions_tuple: "tuple[tuple[PlayerSide, Faction], ...]"
 ) -> dom_tag:
     # N.B. We use a tuple here for the factions, so they're hashable and can be used as cached key
-    return div(
-        h4("Welcome to this new daily challenge!", cls="mb-2 text-amber-600 font-bold "),
-        div("Tap one of your pieces to start playing.", cls="mb-2 font-bold"),
-        div(raw(f"You have <b>{challenge_total_turns}</b> turns to win this challenge.")),
-        div(raw("Your pieces are the ones <b>looking to the right</b>.")),
-        div("Restarting from the beginning with the ↩️ button costs one turn."),
-        div("Good luck! 🙂", cls="mt-2"),
+    return raw(
         div(
-            [
-                _chess_status_bar_tip(factions=dict(factions_tuple), piece_type=piece_type, additional_classes="h-20")
-                for piece_type in _CHARACTER_TYPE_TIP_KEYS
-            ],
-            cls="mt-2",
-        ),
-        cls="w-full text-center",
+            h4("Welcome to this new daily challenge!", cls="mb-2 text-amber-600 font-bold "),
+            div(
+                raw(
+                    """Tap one of <span class="drop-shadow-active-selected-piece">your pieces</span> to start playing."""
+                ),
+                cls="mb-2 font-bold",
+            ),
+            div(raw(f"You have <b>{challenge_total_turns}</b> turns to win this challenge.")),
+            div(raw("Your pieces are the ones <b>looking to the right</b>.")),
+            div("Restarting from the beginning with the ↩️ button costs one turn."),
+            div("Good luck! 🙂", cls="mt-2"),
+            div(
+                [
+                    _chess_status_bar_tip(
+                        factions=dict(factions_tuple), piece_type=piece_type, additional_classes="h-20"
+                    )
+                    for piece_type in _CHARACTER_TYPE_TIP_KEYS
+                ],
+                cls="mt-2",
+            ),
+            cls="w-full text-center",
+        ).render(pretty=settings.DEBUG)
     )
 
 
@@ -111,7 +118,7 @@ def _chess_status_bar_tip(
         unit_display_left,
         div(
             _character_type_tip(piece_type),
-            _chess_unit_symbol_display(player_side="b", piece_name=piece_name),
+            _chess_unit_symbol_display(player_side="w", piece_name=piece_name),
             cls="text-center",
         ),
         unit_display_right,
@@ -151,7 +158,7 @@ def _chess_status_bar_selected_piece(game_presenter: "GamePresenter") -> dom_tag
     return div(
         unit_display,
         unit_about,
-        div(cls="h-full aspect-square", aria_hidden=True),  # just to make the "about" centered visually
+        div(cls="h-16 aspect-square", aria_hidden=True),  # just to make the "about" centered visually
         cls=" ".join(classes),
     )
 
@@ -186,9 +193,9 @@ def _unit_display_container(*, piece_role: "PieceRole", factions: "Factions") ->
 
     return div(
         unit_display,
-        cls="h-full aspect-square",
+        cls="h-16 aspect-square",
     )
 
 
 def _chess_status_bar_waiting_for_bot_turn(game_presenter: "GamePresenter") -> dom_tag:
-    return div("Waiting for opponent's turn 💻 ", cls="w-full text-center items-center")
+    return div("Waiting for opponent's turn ⚔ ", cls="w-full text-center items-center")

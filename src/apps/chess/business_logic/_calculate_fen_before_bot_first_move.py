@@ -25,9 +25,11 @@ def calculate_fen_before_bot_first_move(
     piece = chess_board.piece_at(move.to_square)
 
     if piece is None:
+        pieces_map = {chess.SQUARE_NAMES[sq]: piece.symbol() for sq, piece in chess_board.piece_map().items()}
         raise ValueError(
             f"Invalid bot first move '{bot_first_move}': "
-            f"no piece at square '{chess.SQUARE_NAMES[move.from_square]}'"
+            f"no piece at square '{chess.SQUARE_NAMES[move.from_square]}'."
+            f"Pieces map: {pieces_map}"
         )
 
     piece_player_side = chess_lib_color_to_player_side(piece.color)
@@ -46,7 +48,8 @@ def calculate_fen_before_bot_first_move(
     if move not in legal_moves:
         raise ValueError(
             f"Invalid bot first move '{bot_first_move}': "
-            f"move is not part of the legal chess moves '{[move.uci() for move in  legal_moves]}'"
+            f"move is not part of the legal chess moves '{[move.uci() for move in  legal_moves]}'. "
+            f"previous turn FEN: {chess_board.fen()}"
         )
 
     return chess_board.fen()

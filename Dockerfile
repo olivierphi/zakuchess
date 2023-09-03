@@ -55,6 +55,8 @@ RUN make frontend/js/compile frontend/css/compile \
 
 FROM python:3.11-slim-bookworm AS backend_build
 
+ENV POETRY_VERSION=1.6.0
+
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONDONTWRITEBYTECODE=0 PYTHONUNBUFFERED=1
 
@@ -68,7 +70,7 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --upgrade pip
-RUN pip install poetry==1.6.0
+RUN pip install poetry==${POETRY_VERSION}
 
 RUN mkdir -p /app
 WORKDIR /app
@@ -83,7 +85,8 @@ FROM python:3.11-slim-bookworm AS assets_download
 # By having a separate build stage for downloading assets, we can cache them
 # as long as the `download_assets.py` doesn't change.
 
-ARG PYTHON_REQUESTS_VERSION=2.31.0
+ENV PYTHON_REQUESTS_VERSION=2.31.0
+
 RUN pip install -U pip requests==$PYTHON_REQUESTS_VERSION
 
 RUN mkdir -p /app

@@ -7,7 +7,6 @@ from ..data.team_member_names import FIRST_NAMES, LAST_NAMES
 from ..helpers import chess_lib_color_to_player_side, square_from_int
 
 if TYPE_CHECKING:
-    from ..models import DailyChallenge
     from .types import (
         FEN,
         Faction,
@@ -30,21 +29,15 @@ _CHESS_LIB_PIECE_TYPE_TO_PIECE_TYPE_MAPPING: dict[int, "PieceType"] = {
 }
 
 
-def create_new_daily_challenge(
+def compute_daily_challenge_teams_and_pieces_roles(
     *,
-    id_: str,
     fen: "FEN",
-    bot_first_move: str,
-    fen_before_bot_first_move: "FEN | None" = None,
     default_faction_w: "Faction" = "humans",
     default_faction_b: "Faction" = "undeads",
     bot_side: "PlayerSide" = "b",
     # TODO: allow partial customisation of team members?
     # custom_team_members: "GameTeams | None" = None,
-) -> "DailyChallenge":
-    """The returned DailyChallenge is not saved in the database yet."""
-    from ..models import DailyChallenge
-
+) -> tuple["GameTeams", "PieceRoleBySquare"]:
     chess_board = chess.Board(fen)
 
     team_members_counters: dict["PlayerSide", dict["PieceType", list[int]]] = {
@@ -91,18 +84,7 @@ def create_new_daily_challenge(
     # Give a name to the player's team members
     _set_character_names_for_non_bot_side(teams, bot_side=bot_side)
 
-    challenge = DailyChallenge(
-        id=id_,
-        fen=fen,
-        fen_before_bot_first_move=fen_before_bot_first_move,
-        piece_role_by_square=piece_role_by_square,
-        teams=teams,
-        bot_first_move=bot_first_move,
-    )
-
-    challenge.full_clean()
-
-    return challenge
+    return teams, piece_role_by_square
 
 
 def _set_character_names_for_non_bot_side(teams: "GameTeams", bot_side: "PlayerSide") -> None:

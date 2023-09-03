@@ -36,6 +36,21 @@ backend/watch: dotenv_file ?= .env.local
 backend/watch: ## Start the Django development server
 	@${SUB_MAKE} django/manage cmd='runserver ${address}:${port}'
 
+.PHONY: backend/resetdb
+backend/resetdb: dotenv_file ?= .env.local
+backend/resetdb: # Destroys the SQLite database and recreates it from scratch
+	rm -f db.sqlite3
+	@${SUB_MAKE} db.sqlite3
+
+.PHONY: backend/createsuperuser
+backend/createsuperuser: dotenv_file ?= .env.local
+backend/createsuperuser: email ?= admin@zakuchess.localhost
+backend/createsuperuser: password ?= localdev
+backend/createsuperuser: ## Creates a Django superuser for the development environment
+	@${SUB_MAKE} django/manage cmd='createsuperuser --noinput' \
+		env_vars='DJANGO_SUPERUSER_USERNAME=${email} DJANGO_SUPERUSER_EMAIL=${email} DJANGO_SUPERUSER_PASSWORD=${password}'
+	echo 'You can log in to http://localhost:8000/admin/ with the following credentials: ${email} / ${password}'
+
 .PHONY: test
 test: pytest_opts ?=
 test: ## Launch the pytest tests suite
@@ -131,10 +146,11 @@ db.sqlite3: ## Initialises the SQLite database
 		${PYTHON_BINS}/dotenv -f '${dotenv_file}' run -- \
 		${PYTHON_BINS}/python scripts/optimise_db.py
 
+django/manage: env_vars ?= 
 django/manage: dotenv_file ?= .env.local
 django/manage: cmd ?= --help
 django/manage: .venv .env.local ## Run a Django management command
-	@DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE} \
+	@DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE} ${env_vars} \
 		${PYTHON_BINS}/dotenv -f '${dotenv_file}' run -- \
 		${PYTHON} src/manage.py ${cmd}
 

@@ -45,6 +45,15 @@ class DailyChallenge(models.Model):
         return daily_challenge.FACTIONS
 
     def clean(self) -> None:
-        from .business_logic import compute_daily_challenge_before_bot_first_move_fields
+        from .business_logic import (
+            compute_daily_challenge_before_bot_first_move_fields,
+            compute_daily_challenge_teams_and_pieces_roles,
+        )
+
+        teams, piece_role_by_square = compute_daily_challenge_teams_and_pieces_roles(fen=self.fen)
+        self.teams = teams
+        self.piece_role_by_square = piece_role_by_square
 
         compute_daily_challenge_before_bot_first_move_fields(self)
+
+        super().clean()

@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 SQUARE_COLOR_TAILWIND_CLASSES = ("bg-chess-square-dark", "bg-chess-square-light")
 # SQUARE_COLOR_TAILWIND_CLASSES = ("bg-slate-600", "bg-zinc-400")
 # SQUARE_COLOR_TAILWIND_CLASSES = ("bg-orange-600", "bg-orange-400")
-INFO_BARS_COMMON_CLASSES = "text-slate-200 bg-slate-700 border-2 border-solid border-slate-400"
+INFO_BARS_COMMON_CLASSES = "p-2 text-slate-200 bg-slate-700 border-2 border-solid border-slate-400"
 _PIECE_GROUND_MARKER_COLOR_TAILWIND_CLASSES: dict[tuple["PlayerSide", bool], str] = {
     # the boolean says if the piece can move
     ("w", False): "bg-slate-100/40 border border-slate-100",
@@ -301,15 +301,15 @@ def chess_character_display(
     if is_king and is_active_player_piece and game_presenter and game_presenter.is_check:
         is_potential_capture = True  # let's highlight our king if it's in check
     horizontal_translation = (
-        ("left-2" if is_w_side else "right-2") if is_knight else ("left-0" if is_w_side else "right-0")
+        ("left-1" if is_w_side else "right-1") if is_knight else ("left-0" if is_w_side else "right-0")
     )
-    vertical_translation = "top-1" if is_knight else "top-2"
+    vertical_translation = "top-1"
 
     game_factions = cast("Factions", factions or game_presenter.factions)  # type: ignore
 
     classes = [
         "relative",
-        "w-11/12",
+        "w-10/12" if is_knight else "w-11/12",
         "aspect-square",
         "bg-no-repeat",
         "bg-cover",
@@ -374,11 +374,11 @@ def chess_unit_symbol_display(*, piece_role: "PieceRole", square: "Square") -> d
     piece_name = piece_name_from_piece_role(piece_role)
     square_color = chess_square_color(square)
 
-    is_pawn = piece_type == "p"
+    is_knight, is_pawn = piece_type == "n", piece_type == "p"
     is_light_square = square_color == "light"
 
     symbol_class = (
-        "w-7" if is_pawn else "w-8",
+        "w-7" if (is_pawn or is_knight) else "w-8",
         "aspect-square",
         "bg-no-repeat",
         "bg-cover",
@@ -393,15 +393,11 @@ def chess_unit_symbol_display(*, piece_role: "PieceRole", square: "Square") -> d
     symbol_display_container_classes = (
         "absolute",
         # We have to do some ad-hoc adjustments for Knights:
-        # "-top-1",  # "-top-1" if piece_type == "n" else "top-0",
-        "top-0",
-        # ("-left-1" if player_side == "w" else "-right-1")
-        "left-0" if player_side == "w" else "right-0",
-        # if piece_type == "n"
-        # else ("right-0" if player_side == "w" else "left-0"),
+        "-top-1" if is_knight else "top-0",
+        ("-left-1" if is_knight else "left-0") if player_side == "w" else ("-right-1" if is_knight else "right-0"),
         _CHESS_PIECE_Z_INDEXES["symbol"],
         # Quick custom display for white knights, so they face the inside of the board:
-        "-scale-x-100" if player_side == "w" and piece_type == "n" else "",
+        "-scale-x-100" if player_side == "w" and is_knight else "",
     )
 
     return div(
