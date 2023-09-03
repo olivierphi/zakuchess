@@ -32,4 +32,5 @@ urlpatterns = [
         views.htmx_game_bot_move,
         name="htmx_game_bot_move",
     ),
+    path("debug/reset-today", views.debug_reset_today),
 ]

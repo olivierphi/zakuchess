@@ -80,13 +80,10 @@ def _first_turn_intro(
         div(
             h4("Welcome to this new daily challenge!", cls="mb-2 text-amber-600 font-bold "),
             div(
-                raw(
-                    """Tap one of <span class="drop-shadow-active-selected-piece">your pieces</span> to start playing."""
-                ),
+                raw("Your pieces are the ones <b>looking to the right</b>.<br>" "Tap one of them to start playing."),
                 cls="mb-2 font-bold",
             ),
             div(raw(f"You have <b>{challenge_total_turns}</b> turns to win this challenge.")),
-            div(raw("Your pieces are the ones <b>looking to the right</b>.")),
             div("Restarting from the beginning with the ↩️ button costs one turn."),
             div("Good luck! 🙂", cls="mt-2"),
             div(
@@ -198,4 +195,4 @@ def _unit_display_container(*, piece_role: "PieceRole", factions: "Factions") ->
 
 
 def _chess_status_bar_waiting_for_bot_turn(game_presenter: "GamePresenter") -> dom_tag:
-    return div("Waiting for opponent's turn ⚔ ", cls="w-full text-center items-center")
+    return div("Waiting for opponent's turn 🛡", cls="w-full text-center items-center")

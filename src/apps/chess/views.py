@@ -2,6 +2,7 @@ import logging
 from typing import TYPE_CHECKING, cast
 
 from django.conf import settings
+from django.contrib.auth.decorators import user_passes_test
 from django.core.exceptions import SuspiciousOperation
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect
@@ -10,9 +11,14 @@ from django.views.decorators.http import etag, require_POST, require_safe
 from .business_logic import get_current_daily_challenge, move_daily_challenge_piece
 from .business_logic.types import Square
 from .components.pages.chess import chess_moving_parts_fragment, chess_page, chess_select_piece_htmx_fragment
+from .daily_challenge_cookie_helpers import (
+    get_or_create_daily_challenge_state_for_player,
+    save_daily_challenge_state_in_session,
+)
 from .helpers import get_active_player_side_from_fen, uci_move_squares
 from .presenters import GamePresenter
-from .views_helpers import get_or_create_daily_challenge_state_for_player, save_daily_challenge_state_in_session
+from .view_decorators import user_is_staff
+from .views_helpers import htmx_aware_redirect
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
@@ -82,7 +88,7 @@ def htmx_game_no_selection(req: "HttpRequest") -> HttpResponse:
     board_id = "main"
     game_state, created = get_or_create_daily_challenge_state_for_player(request=req, challenge=challenge)
     if created:
-        return redirect("chess:daily_game_view")
+        return htmx_aware_redirect(req, "chess:daily_game_view")
 
     game_presenter = GamePresenter(
         challenge=challenge,
@@ -104,7 +110,7 @@ def htmx_game_select_piece(req: "HttpRequest") -> "HttpResponse":
     challenge = get_current_daily_challenge()
     game_state, created = get_or_create_daily_challenge_state_for_player(request=req, challenge=challenge)
     if created:
-        return redirect("chess:daily_game_view")
+        return htmx_aware_redirect(req, "chess:daily_game_view")
 
     game_presenter = GamePresenter(
         challenge=challenge,
@@ -125,7 +131,7 @@ def htmx_game_move_piece(req: "HttpRequest", from_: "Square", to: "Square") -> H
     challenge = get_current_daily_challenge()
     previous_game_state, created = get_or_create_daily_challenge_state_for_player(request=req, challenge=challenge)
     if created:
-        return redirect("chess:daily_game_view")
+        return htmx_aware_redirect(req, "chess:daily_game_view")
 
     active_player_side = get_active_player_side_from_fen(previous_game_state["fen"])
     _logger.info("Game state from player cookie: %s", previous_game_state)
@@ -158,7 +164,7 @@ def htmx_restart_daily_challenge_ask_confirmation(req: "HttpRequest") -> HttpRes
     challenge = get_current_daily_challenge()
     game_state, created = get_or_create_daily_challenge_state_for_player(request=req, challenge=challenge)
     if created:
-        return redirect("chess:daily_game_view")
+        return htmx_aware_redirect(req, "chess:daily_game_view")
 
     game_presenter = GamePresenter(
         challenge=challenge,
@@ -179,7 +185,7 @@ def htmx_restart_daily_challenge_do(req: "HttpRequest") -> HttpResponse:
     challenge = get_current_daily_challenge()
     game_state, created = get_or_create_daily_challenge_state_for_player(request=req, challenge=challenge)
     if created:
-        return redirect("chess:daily_game_view")
+        return htmx_aware_redirect(req, "chess:daily_game_view")
 
     # Restarting the daily challenge costs one move:
     game_state["turns_counter"] += 1
@@ -213,7 +219,7 @@ def htmx_game_bot_move(req: "HttpRequest") -> HttpResponse:
     challenge = get_current_daily_challenge()
     game_state, created = get_or_create_daily_challenge_state_for_player(request=req, challenge=challenge)
     if created:
-        return redirect("chess:daily_game_view")
+        return htmx_aware_redirect(req, "chess:daily_game_view")
 
     _logger.info("Game state from player cookie: %s", game_state)
 
@@ -231,6 +237,18 @@ def htmx_game_bot_move(req: "HttpRequest") -> HttpResponse:
         move=move,
         board_id=board_id,
     )
+
+
+@require_safe
+@user_passes_test(user_is_staff)
+def debug_reset_today(req: "HttpRequest") -> HttpResponse:
+    # This function is dangerous, so let's make sure we're not using it
+    # in another view accidentally 😅
+    from .daily_challenge_cookie_helpers import clear_daily_challenge_state_in_session
+
+    clear_daily_challenge_state_in_session(request=req)
+
+    return redirect("chess:daily_game_view")
 
 
 def _play_bot_move(
