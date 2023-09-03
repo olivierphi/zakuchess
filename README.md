@@ -1,6 +1,6 @@
 # Zakuchess
 
-![Powered by Django](https://img.shields.io/badge/Powered_By-Django-blue)
+![Powered by Django](https://img.shields.io/badge/Powered_By-Django-green)
 ![Formatting: Black](https://img.shields.io/badge/Formatting-Black-blue)
 ![Pre-commit: Enabled](https://img.shields.io/badge/Pre--commit-Enabled-blue)
 ![Type checking: Mypy](https://img.shields.io/badge/Type--checking-Mypy-blue)
@@ -13,17 +13,19 @@ with pixel art graphics.
 
 ### The stack
 
-The following pieces of technology are used to build Zakuchess:
+The amazing following projects are the main ones powering Zakuchess:
 
  - Programming language: [Python](https://www.python.org/)
  - Web framework: [Django](https://www.djangoproject.com/)
  - Database: [SQLite](https://www.sqlite.org/index.html)
+ - Live user interface: [htmx](https://htmx.org/)
  - HTML templating: [DOMinate](https://github.com/Knio/dominate#readme)
- - JavaScript-based interactions: [htmx](https://htmx.org/)
  - CSS framework: [Tailwind CSS](https://tailwindcss.com/)
  - TypeScript compilation: [esbuild](https://esbuild.github.io/)
+ - Units art: [The Battle for Wesnoth](https://www.wesnoth.org/) :shield:
  - Chess logic on the server: [python-chess](https://python-chess.readthedocs.io/en/latest/)
- - Chess IA in the browser: [Stockfish](https://stockfishchess.org/) (compiled in WebAssembly by the folks at [Lichess](https://github.com/lichess-org))
+ - Chess logic in the browser: [Stockfish](https://stockfishchess.org/) (compiled in WebAssembly by the folks at [Lichess](https://github.com/lichess-org))
+ - Tests suite: [pytest](https://docs.pytest.org/en/latest/)
  - Hosting: [Fly.io](https://fly.io/)
 
 ### Running locally
@@ -31,7 +33,7 @@ The following pieces of technology are used to build Zakuchess:
 Make sure you have Python 3.11 installed, as well as Node.js v18.
 
 We recommend [pyenv](https://github.com/pyenv/pyenv-installer#readme) and [nvm](https://github.com/nvm-sh/nvm#readme) to handle specific versions of Python and Node.js,
-but you can use whatever you want of course :-)
+but you can of course use whatever you want :-)
 
 ```bash
 $ python -V
@@ -48,3 +50,9 @@ $ make dev
 ```
 
 You can take a look at [the Makefile](./Makefile) to see more commands.
+
+### Roadmap
+
+ - [ ] Translate the user interface for other languages
+ - [ ] Allow seasoned chess players to play more difficult challenges
+ - [ ] Score sharing

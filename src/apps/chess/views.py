@@ -1,11 +1,10 @@
 import logging
 from typing import TYPE_CHECKING, cast
 
-from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect
-from django.views.decorators.http import etag, require_POST, require_safe
+from django.views.decorators.http import require_POST, require_safe
 
 from .business_logic import get_current_daily_challenge, move_daily_challenge_piece
 from .business_logic.types import Square
@@ -31,23 +30,7 @@ _logger = logging.getLogger(__name__)
 # TODO: extract game logic to a separate module
 
 
-def _game_etag(req: "HttpRequest") -> str | None:
-    if settings.NO_HTTP_CACHE:
-        return None
-    # TODO: add the FEN from the user cookie, and then re-enable this cache
-    return None
-    # from zlib import adler32
-    #
-    # hash_data = (
-    #     game_id,
-    #     req.path,
-    #     str(int(Game.objects.filter(id=game_id).values_list("updated_at", flat=True).get().timestamp())),
-    # )
-    # return str(adler32("::".join(hash_data).encode("utf-8")))
-
-
 @require_safe
-@etag(_game_etag)
 def game_view(req: "HttpRequest") -> HttpResponse:
     challenge = get_current_daily_challenge()
     board_id = "main"
@@ -80,7 +63,6 @@ def game_view(req: "HttpRequest") -> HttpResponse:
 
 
 @require_safe
-@etag(_game_etag)
 def htmx_game_no_selection(req: "HttpRequest") -> HttpResponse:
     # TODO: validate this data, using a Form
     board_id = cast(str, req.GET.get("board_id"))
@@ -102,7 +84,6 @@ def htmx_game_no_selection(req: "HttpRequest") -> HttpResponse:
 
 
 @require_safe
-@etag(_game_etag)
 def htmx_game_select_piece(req: "HttpRequest") -> "HttpResponse":
     # TODO: validate this data, using a Form
     piece_square = cast(Square, req.GET.get("square"))

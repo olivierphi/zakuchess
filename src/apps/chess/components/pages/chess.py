@@ -11,6 +11,7 @@ from ..chess_board import (
     chess_pieces,
     chess_status_bar,
 )
+from ..misc_ui.footer import footer
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
@@ -23,6 +24,7 @@ if TYPE_CHECKING:
 def chess_page(*, game_presenter: "GamePresenter", request: "HttpRequest", board_id: str) -> str:
     return page(
         chess_arena(game_presenter=game_presenter, board_id=board_id),
+        footer(),
         request=request,
     )
 

@@ -8,7 +8,7 @@ from chess import FILE_NAMES, RANK_NAMES
 from django.templatetags.static import static
 from django.urls import reverse
 from dominate.tags import div, dom_tag, span
-from dominate.util import raw as unescaped_html
+from dominate.util import raw as unescaped_html, text
 
 from apps.chess.helpers import (
     chess_square_color,
@@ -27,6 +27,8 @@ if TYPE_CHECKING:
 
     from ..business_logic.types import Factions, PieceRole, PieceType, PlayerSide, Square
     from ..presenters import GamePresenter
+
+OPPONENT_PIECES_HAVE_GROUND_MARKERS = False
 
 SQUARE_COLOR_TAILWIND_CLASSES = ("bg-chess-square-dark", "bg-chess-square-light")
 # SQUARE_COLOR_TAILWIND_CLASSES = ("bg-slate-600", "bg-zinc-400")
@@ -171,9 +173,13 @@ def chess_piece(
     piece_can_be_moved_by_player = (
         game_presenter.is_player_turn and square in game_presenter.squares_with_pieces_that_can_move
     )
-    ground_marker = chess_unit_ground_marker(player_side=player_side, can_move=piece_can_be_moved_by_player)
     unit_display = chess_character_display(piece_role=piece_role, game_presenter=game_presenter, square=square)
     unit_chess_symbol_display = chess_unit_symbol_display(piece_role=piece_role, square=square)
+
+    if player_side == game_presenter.active_player_side or OPPONENT_PIECES_HAVE_GROUND_MARKERS:
+        ground_marker = chess_unit_ground_marker(player_side=player_side, can_move=piece_can_be_moved_by_player)
+    else:
+        ground_marker = text("")
 
     classes = [
         "absolute",

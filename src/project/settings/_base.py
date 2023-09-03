@@ -152,6 +152,6 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Our custom settings:
 
-NO_HTTP_CACHE = False
+# Our custom settings:
+ZAKUCHESS_VERSION = env.get("ZAKUCHESS_VERSION", "dev")
