@@ -1,3 +1,7 @@
+from os import environ as env
+
+env["SECRET_KEY"] = "test-secret-key"
+
 from .development import *
 
 # To be efficient password hashers have to be slow by design

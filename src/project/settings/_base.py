@@ -38,8 +38,10 @@ INSTALLED_APPS = (
     + [
         "whitenoise",
         "django_htmx",
+        "axes",  # https://github.com/jazzband/django-axes
     ]
     + [
+        "apps.authentication",
         "apps.chess",
         "apps.webui",
     ]
@@ -55,6 +57,8 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ] + [
     "django_htmx.middleware.HtmxMiddleware",
+    # "AxesMiddleware should be the last middleware in the MIDDLEWARE list"
+    "axes.middleware.AxesMiddleware",
 ]
 
 ROOT_URLCONF = "project.urls"
@@ -86,6 +90,23 @@ DATABASES = {
         default="sqlite:///db.sqlite3",
     )
 }
+
+
+# Sessions
+# https://docs.djangoproject.com/en/4.1/topics/http/sessions/#using-cookie-based-sessions
+
+SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
+
+
+#  Customizing authentication
+# https://docs.djangoproject.com/en/4.2/topics/auth/customizing/
+
+AUTH_USER_MODEL = "authentication.User"
+
+AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesStandaloneBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
 
 
 # Password validation

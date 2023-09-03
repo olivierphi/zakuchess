@@ -1,8 +1,9 @@
 /frontend-out/
+/staticfiles/
 
 /.env.local
 
-/db.sqlite3
+/db.sqlite3*
 
 /.venv/
 

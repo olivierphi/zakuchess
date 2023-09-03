@@ -47,6 +47,10 @@ class Command(BaseCommand):
 
             self.stdout.write("Formatting this file with Black...")
             subprocess.run(f"black '{file_path}'", shell=True, check=True)
+
+            self.stdout.write("Adding it to git...")
+            subprocess.run(f"git add '{file_path}'", shell=True, check=True)
+
             self.stdout.write("Done.")
 
         self.stdout.write(
