@@ -420,6 +420,25 @@ django = "*"
 test = ["pytest", "pytest-cov", "pytest-django"]
 
 [[package]]
+name = "django-axes"
+version = "6.1.1"
+description = "Keep track of failed login attempts in Django-powered sites."
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "django-axes-6.1.1.tar.gz", hash = "sha256:cd1bc4f7becc8e9243eb4090dffa258d7d7125ca0ce3153b6ffc920bccbf2c3f"},
+    {file = "django_axes-6.1.1-py3-none-any.whl", hash = "sha256:29c48ff5f09046afd5e9a16e96d3bbb79f6c11c59f0a7bbd732559e60d0aa9fa"},
+]
+
+[package.dependencies]
+django = ">=3.2"
+django-ipware = {version = ">=3", optional = true, markers = "extra == \"ipware\""}
+setuptools = "*"
+
+[package.extras]
+ipware = ["django-ipware (>=3)"]
+
+[[package]]
 name = "django-htmx"
 version = "1.13.0"
 description = "Extensions for using Django with htmx."
@@ -432,6 +451,17 @@ files = [
 
 [package.dependencies]
 Django = ">=3.2"
+
+[[package]]
+name = "django-ipware"
+version = "5.0.0"
+description = "A Django application to retrieve user's IP address"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "django-ipware-5.0.0.tar.gz", hash = "sha256:4fa5607ee85e12ee5e158bc7569ff1e134fb1579681aa1ff3f0ed04be21be153"},
+    {file = "django_ipware-5.0.0-py2.py3-none-any.whl", hash = "sha256:80b52a3f571a371519cc552798f1015b934dd5dd7738bfad87e101e861bd21b8"},
+]
 
 [[package]]
 name = "dominate"
@@ -1215,4 +1245,4 @@ brotli = ["Brotli"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "aeca2a028166b6e4541b7e433e44d370ee02ae276594fa4250ca9e3795a56d14"
+content-hash = "5d7bc4645c5541fb02188812b47781b66f99d3c73646a4af9ef3b44c241d0c91"

@@ -38,6 +38,7 @@ INSTALLED_APPS = (
     + [
         "whitenoise",
         "django_htmx",
+        "axes",  # https://github.com/jazzband/django-axes
     ]
     + [
         "apps.authentication",
@@ -56,6 +57,8 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ] + [
     "django_htmx.middleware.HtmxMiddleware",
+    # "AxesMiddleware should be the last middleware in the MIDDLEWARE list"
+    "axes.middleware.AxesMiddleware",
 ]
 
 ROOT_URLCONF = "project.urls"
@@ -95,10 +98,15 @@ DATABASES = {
 SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
 
 
-# Custom User model
+#  Customizing authentication
 # https://docs.djangoproject.com/en/4.2/topics/auth/customizing/
 
 AUTH_USER_MODEL = "authentication.User"
+
+AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesStandaloneBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
 
 
 # Password validation
