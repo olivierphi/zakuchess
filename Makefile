@@ -159,12 +159,27 @@ docker/build: ## Docker: build the image
 .PHONY: docker/local/run
 docker/local/run: port ?= 8080
 docker/local/run: port_exposed ?= 8080
-docker/local/run: docker_args ?= --rm
+docker/local/run: docker_args ?= --rm -it
 docker/local/run: docker_env ?= -e SECRET_KEY=does-not-matter-here -e DATABASE_URL=sqlite:////app/shared_volume/db.sqlite3 -e ALLOWED_HOSTS=* -e SECURE_SSL_REDIRECT=
-docker/local/run: cmd ?= /app/.venv/bin/gunicorn --bind 0.0.0.0:${port} --workers 2 --access-logfile - --log-file - project.wsgi
+docker/local/run: cmd ?= scripts/start_server.sh
+docker/local/run: GUNICORN_CMD_ARGS ?= --bind :8080 --workers 2 --max-requests 120 --max-requests-jitter 20 --timeout 8
 docker/local/run: user_id ?= $$(id -u)
 docker/local/run: ## Docker: launch the previously built image, listening on port 8080
 	docker run -p ${port_exposed}:${port} -v "${PWD}/.docker/:/app/shared_volume/" \
+		-u ${user_id} \
+		${docker_env} ${docker_args} \
+		-e DJANGO_SETTINGS_MODULE=project.settings.production \
+		-e GUNICORN_CMD_ARGS='${GUNICORN_CMD_ARGS}' \
+		${DOCKER_IMG_NAME}:${DOCKER_TAG} \
+		${cmd}
+
+.PHONY: docker/local/shell
+docker/local/shell: docker_args ?= --rm -it
+docker/local/shell: docker_env ?= -e SECRET_KEY=does-not-matter-here -e DATABASE_URL=sqlite:////app/shared_volume/db.sqlite3 -e ALLOWED_HOSTS=* -e SECURE_SSL_REDIRECT=
+docker/local/shell: cmd ?= bash
+docker/local/shell: user_id ?= $$(id -u)
+docker/local/shell:
+	docker run -v "${PWD}/.docker/:/app/shared_volume/" \
 		-u ${user_id} \
 		${docker_env} ${docker_args} \
 		-e DJANGO_SETTINGS_MODULE=project.settings.production \
@@ -173,7 +188,7 @@ docker/local/run: ## Docker: launch the previously built image, listening on por
 
 .PHONY: docker/local/migrate
 docker/local/migrate:
-	${SUB_MAKE} docker/local/run \
+	${SUB_MAKE} docker/local/shell \
 		cmd='/app/.venv/bin/python src/manage.py migrate'
 
 # Here starts Fly.io-related stuff

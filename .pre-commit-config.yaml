@@ -9,6 +9,7 @@ repos:
     rev: v1.5.1
     hooks:
       - id: mypy
+        additional_dependencies: [types-requests==2.31.0.2]
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     rev: v0.0.286
     hooks:

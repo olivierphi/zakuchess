@@ -4,15 +4,13 @@ from pathlib import Path
 from time import monotonic
 from typing import TypeAlias
 
-# N.B. "urllib" is not part of our direct dependencies, but it's so ubiquitous that
-# we can be pretty sure that one of our transitive dependencies depends on it ^_^
-from urllib.request import urlretrieve
+import requests
+from requests.utils import default_user_agent as requests_default_user_agent
 
 URL: TypeAlias = str
 
 BASE_DIR = Path(__file__).parent.resolve() / ".."  # points to our git repo's root
 
-FRONTEND_SRC = BASE_DIR / "frontend-src"
 WEBUI_STATIC = BASE_DIR / "src" / "apps" / "webui" / "static" / "webui"
 CHESS_STATIC = BASE_DIR / "src" / "apps" / "chess" / "static" / "chess"
 
@@ -25,6 +23,16 @@ ASSETS_PATTERNS: dict[str, str] = {
     "WIKIMEDIA_CHESS_SVG_LIGHT": "https://upload.wikimedia.org/wikipedia/commons/{folder}/Chess_{piece}lt45.svg",
     "WIKIMEDIA_CHESS_SVG_DARK": "https://upload.wikimedia.org/wikipedia/commons/{folder}/Chess_{piece}dt45.svg",
 }
+
+# @link https://meta.wikimedia.org/wiki/User-Agent_policy
+# Without this User-Agent we can get "HTTP 429 Too Many Requests" errors from Wikimedia servers.
+_USER_AGENT = " ".join(
+    (
+        "AssetsDownloaderBot/0.0",
+        "(https://zakuchess.fly.dev/; zakuchess@dunsap.com)",
+        requests_default_user_agent(),
+    )
+)
 
 ASSETS_MAP: dict[URL, Path] = {
     # fmt: off
@@ -69,18 +77,31 @@ ASSETS_MAP: dict[URL, Path] = {
 
 
 def download_assets(*, even_if_exists: bool) -> None:
-    # TODO: download this stuff in parallel, using asyncio or threads
-    for asset_url, target_path in ASSETS_MAP.items():
-        if not even_if_exists and target_path.exists():
-            print(f"Skipping download of '{asset_url}', since '{target_path.relative_to(BASE_DIR)}' already exists.")
-            continue
-        target_folder = target_path.parent
-        if not target_folder.exists():
-            target_folder.mkdir(parents=True)
-        print(f"Downloading '{asset_url}' to '{target_path.relative_to(BASE_DIR)}'...")
-        dl_start_time = monotonic()
-        urlretrieve(asset_url, target_path)
-        print(f"Downloaded (took {monotonic() - dl_start_time:.1f}s.)")
+    with requests.Session() as session:
+        session.headers["User-Agent"] = _USER_AGENT
+
+        for asset_url, target_path in ASSETS_MAP.items():
+            if not even_if_exists and target_path.exists():
+                print(
+                    f"Skipping download of '{asset_url}', "
+                    f"since '{target_path.relative_to(BASE_DIR)}' already exists."
+                )
+                continue
+            target_folder = target_path.parent
+            if not target_folder.exists():
+                target_folder.mkdir(parents=True)
+            print(f"Downloading '{asset_url}' to '{target_path.relative_to(BASE_DIR)}'...")
+            dl_start_time = monotonic()
+            _download_file(session=session, url=asset_url, target_path=target_path)
+            print(f"Downloaded (took {monotonic() - dl_start_time:.1f}s.)")
+
+
+def _download_file(*, session: requests.Session, url: str, target_path: Path) -> None:
+    with session.get(url, stream=True) as response:
+        response.raise_for_status()
+        with target_path.open("wb") as target_file:
+            for chunk in response.iter_content(chunk_size=8192):
+                target_file.write(chunk)
 
 
 if __name__ == "__main__":

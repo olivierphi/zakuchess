@@ -78,6 +78,21 @@ RUN python -m venv --symlinks .venv
 COPY pyproject.toml poetry.lock ./
 RUN poetry install --only=main --no-root --no-interaction --no-ansi
 
+FROM python:3.11-slim-bookworm AS assets_download
+
+# By having a separate build stage for downloading assets, we can cache them
+# as long as the `download_assets.py` doesn't change.
+
+ARG PYTHON_REQUESTS_VERSION=2.31.0
+RUN pip install -U pip requests==$PYTHON_REQUESTS_VERSION
+
+RUN mkdir -p /app
+WORKDIR /app
+
+COPY scripts/download_assets.py scripts/download_assets.py
+
+RUN python scripts/download_assets.py
+
 FROM python:3.11-slim-bookworm AS backend_run
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -102,6 +117,11 @@ COPY --chown=1001:1001 --from=frontend_build /app/src/apps/chess/static src/apps
 
 COPY --chown=1001:1001 --from=backend_build /app/.venv .venv
 
+COPY --chown=1001:1001 --from=assets_download /app/src/apps/webui/static/webui/fonts/OpenSans.woff2 src/apps/webui/static/webui/fonts/OpenSans.woff2
+COPY --chown=1001:1001 --from=assets_download /app/src/apps/chess/static/chess/js/bot src/apps/chess/static/chess/js/bot
+COPY --chown=1001:1001 --from=assets_download /app/src/apps/chess/static/chess/units src/apps/chess/static/chess/units
+COPY --chown=1001:1001 --from=assets_download /app/src/apps/chess/static/chess/symbols src/apps/chess/static/chess/symbols
+
 COPY --chown=1001:1001 Makefile pyproject.toml LICENSE ./
 
 ENV PATH="/app/.venv/bin:${PATH}"
@@ -110,8 +130,6 @@ RUN python -V
 USER 1001:1001
 
 ENV PYTHONPATH=/app/src
-
-RUN python scripts/download_assets.py
 
 RUN DJANGO_SETTINGS_MODULE=project.settings.docker_build \
     .venv/bin/python src/manage.py collectstatic --noinput

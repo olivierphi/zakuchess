@@ -16,6 +16,7 @@ whitenoise = {extras = ["brotli"], version = "^6.5.0"}
 django-htmx = "^1.13.0"
 dominate = "^2.7.0"
 dj-database-url = "^2.1.0"
+requests = "^2.31.0"
 
 [tool.poetry.group.dev.dependencies]
 python-dotenv = "^1.0.0"
@@ -25,6 +26,7 @@ ruff = "0.0.286"
 mypy = "1.5.1"
 pre-commit = "^2.20.0"
 ipython = "^8.6.0"
+types-requests = "^2.31.0.2"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.2.0"

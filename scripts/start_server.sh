@@ -14,6 +14,9 @@ set -o errexit
 echo "Running Django migrations."
 .venv/bin/python src/manage.py makemigrations --noinput
 
+echo "Make sure the SQLite database is always optimised."
+.venv/bin/python scripts/optimise_db.py
+
 # Go!
 echo "Starting Gunicorn."
 .venv/bin/gunicorn project.wsgi
