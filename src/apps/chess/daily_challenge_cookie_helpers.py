@@ -20,7 +20,9 @@ def get_or_create_daily_challenge_state_for_player(
     """
     player_cookie_content = get_player_session_content(request)
     challenge_id = today_daily_challenge_id()
-    game_state: PlayerGameState | None = player_cookie_content["games"].get(challenge_id)
+    game_state: PlayerGameState | None = player_cookie_content["games"].get(
+        challenge_id
+    )
 
     if game_state is None:
         game_state = PlayerGameState(
@@ -41,13 +43,17 @@ def get_or_create_daily_challenge_state_for_player(
 
 
 def get_player_session_content(request: "HttpRequest") -> PlayerSessionContent:
-    player_cookie_content: PlayerSessionContent | None = request.session.get(_PLAYER_CONTENT_SESSION_KEY)
+    player_cookie_content: PlayerSessionContent | None = request.session.get(
+        _PLAYER_CONTENT_SESSION_KEY
+    )
     if player_cookie_content is None:
         return PlayerSessionContent(games={})
     return player_cookie_content
 
 
-def save_daily_challenge_state_in_session(*, request: "HttpRequest", game_state: PlayerGameState) -> None:
+def save_daily_challenge_state_in_session(
+    *, request: "HttpRequest", game_state: PlayerGameState
+) -> None:
     # Erases other games data!
     challenge_id = today_daily_challenge_id()
     request.session[_PLAYER_CONTENT_SESSION_KEY] = {"games": {challenge_id: game_state}}

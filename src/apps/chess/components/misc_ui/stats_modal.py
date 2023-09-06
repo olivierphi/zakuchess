@@ -31,11 +31,15 @@ def stats_modal() -> dom_tag:
     )
 
     modal_footer = div(
-        "footer", cls="flex items-center p-6 space-x-2 border-t border-gray-200 rounded-b dark:border-gray-600"
+        "footer",
+        cls="flex items-center p-6 space-x-2 border-t border-gray-200 rounded-b dark:border-gray-600",
     )
 
     modal_content = div(
-        modal_header, modal_body, modal_footer, cls="relative mt-8 bg-white rounded-lg shadow dark:bg-gray-700"
+        modal_header,
+        modal_body,
+        modal_footer,
+        cls="relative mt-8 bg-white rounded-lg shadow dark:bg-gray-700",
     )
 
     return div(

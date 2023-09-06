@@ -56,7 +56,9 @@ def _create_fallback_game(apps, schema_editor):
 
     # In a migration context models are kinda emulated, so this "challenge" object
     # doesn't have its "clean" method: let's compute the `*_before_bot_first_move` fields manually:
-    from apps.chess.business_logic import compute_daily_challenge_before_bot_first_move_fields
+    from apps.chess.business_logic import (
+        compute_daily_challenge_before_bot_first_move_fields,
+    )
 
     compute_daily_challenge_before_bot_first_move_fields(challenge)
 

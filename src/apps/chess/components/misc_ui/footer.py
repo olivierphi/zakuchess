@@ -17,7 +17,11 @@ def footer() -> dom_tag:
         footer_tag(
             div(
                 "Made with ❤️ by ",
-                a("oliphi", href="https://github.com/olivierphi", **common_links_attributes),
+                a(
+                    "oliphi",
+                    href="https://github.com/olivierphi",
+                    **common_links_attributes,
+                ),
                 ".",
                 cls="text-center",
             ),

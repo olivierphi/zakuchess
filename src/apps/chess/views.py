@@ -8,7 +8,11 @@ from django.views.decorators.http import require_POST, require_safe
 
 from .business_logic import get_current_daily_challenge, move_daily_challenge_piece
 from .business_logic.types import Square
-from .components.pages.chess import chess_moving_parts_fragment, chess_page, chess_select_piece_htmx_fragment
+from .components.pages.chess import (
+    chess_moving_parts_fragment,
+    chess_page,
+    chess_select_piece_htmx_fragment,
+)
 from .daily_challenge_cookie_helpers import (
     get_or_create_daily_challenge_state_for_player,
     save_daily_challenge_state_in_session,
@@ -34,13 +38,17 @@ _logger = logging.getLogger(__name__)
 def game_view(req: "HttpRequest") -> HttpResponse:
     challenge = get_current_daily_challenge()
     board_id = "main"
-    game_state, created = get_or_create_daily_challenge_state_for_player(request=req, challenge=challenge)
+    game_state, created = get_or_create_daily_challenge_state_for_player(
+        request=req, challenge=challenge
+    )
 
     if created:
         # The player hasn't played this challenge before,
         # so we need to start from the beginning, with the bot's first move:
         game_state["fen"] = challenge.fen_before_bot_first_move
-        game_state["piece_role_by_square"] = challenge.piece_role_by_square_before_bot_first_move
+        game_state[
+            "piece_role_by_square"
+        ] = challenge.piece_role_by_square_before_bot_first_move
 
         save_daily_challenge_state_in_session(
             request=req,
@@ -59,7 +67,9 @@ def game_view(req: "HttpRequest") -> HttpResponse:
         forced_bot_move=forced_bot_move,
     )
 
-    return HttpResponse(chess_page(game_presenter=game_presenter, request=req, board_id=board_id))
+    return HttpResponse(
+        chess_page(game_presenter=game_presenter, request=req, board_id=board_id)
+    )
 
 
 @require_safe
@@ -69,7 +79,9 @@ def htmx_game_no_selection(req: "HttpRequest") -> HttpResponse:
 
     challenge = get_current_daily_challenge()
     board_id = "main"
-    game_state, created = get_or_create_daily_challenge_state_for_player(request=req, challenge=challenge)
+    game_state, created = get_or_create_daily_challenge_state_for_player(
+        request=req, challenge=challenge
+    )
     if created:
         return htmx_aware_redirect(req, "chess:daily_game_view")
 
@@ -79,7 +91,9 @@ def htmx_game_no_selection(req: "HttpRequest") -> HttpResponse:
     )
 
     return HttpResponse(
-        chess_moving_parts_fragment(game_presenter=game_presenter, request=req, board_id=board_id),
+        chess_moving_parts_fragment(
+            game_presenter=game_presenter, request=req, board_id=board_id
+        ),
     )
 
 
@@ -90,7 +104,9 @@ def htmx_game_select_piece(req: "HttpRequest") -> "HttpResponse":
     board_id = cast(str, req.GET.get("board_id"))
 
     challenge = get_current_daily_challenge()
-    game_state, created = get_or_create_daily_challenge_state_for_player(request=req, challenge=challenge)
+    game_state, created = get_or_create_daily_challenge_state_for_player(
+        request=req, challenge=challenge
+    )
     if created:
         return htmx_aware_redirect(req, "chess:daily_game_view")
 
@@ -101,24 +117,32 @@ def htmx_game_select_piece(req: "HttpRequest") -> "HttpResponse":
     )
 
     return HttpResponse(
-        chess_select_piece_htmx_fragment(game_presenter=game_presenter, request=req, board_id=board_id)
+        chess_select_piece_htmx_fragment(
+            game_presenter=game_presenter, request=req, board_id=board_id
+        )
     )
 
 
 @require_POST
-def htmx_game_move_piece(req: "HttpRequest", from_: "Square", to: "Square") -> HttpResponse:
+def htmx_game_move_piece(
+    req: "HttpRequest", from_: "Square", to: "Square"
+) -> HttpResponse:
     # TODO: validate the whole data, using a Form
     board_id = cast(str, req.GET.get("board_id"))
 
     challenge = get_current_daily_challenge()
-    previous_game_state, created = get_or_create_daily_challenge_state_for_player(request=req, challenge=challenge)
+    previous_game_state, created = get_or_create_daily_challenge_state_for_player(
+        request=req, challenge=challenge
+    )
     if created:
         return htmx_aware_redirect(req, "chess:daily_game_view")
 
     active_player_side = get_active_player_side_from_fen(previous_game_state["fen"])
     _logger.info("Game state from player cookie: %s", previous_game_state)
 
-    new_game_state = move_daily_challenge_piece(game_state=previous_game_state, from_=from_, to=to)
+    new_game_state = move_daily_challenge_piece(
+        game_state=previous_game_state, from_=from_, to=to
+    )
     if active_player_side != challenge.bot_side:
         new_game_state["turns_counter"] += 1
 
@@ -134,7 +158,9 @@ def htmx_game_move_piece(req: "HttpRequest", from_: "Square", to: "Square") -> H
     )
 
     return HttpResponse(
-        chess_moving_parts_fragment(game_presenter=game_presenter, request=req, board_id=board_id),
+        chess_moving_parts_fragment(
+            game_presenter=game_presenter, request=req, board_id=board_id
+        ),
     )
 
 
@@ -144,7 +170,9 @@ def htmx_restart_daily_challenge_ask_confirmation(req: "HttpRequest") -> HttpRes
     board_id = cast(str, req.GET.get("board_id"))
 
     challenge = get_current_daily_challenge()
-    game_state, created = get_or_create_daily_challenge_state_for_player(request=req, challenge=challenge)
+    game_state, created = get_or_create_daily_challenge_state_for_player(
+        request=req, challenge=challenge
+    )
     if created:
         return htmx_aware_redirect(req, "chess:daily_game_view")
 
@@ -155,7 +183,9 @@ def htmx_restart_daily_challenge_ask_confirmation(req: "HttpRequest") -> HttpRes
     )
 
     return HttpResponse(
-        chess_moving_parts_fragment(game_presenter=game_presenter, request=req, board_id=board_id),
+        chess_moving_parts_fragment(
+            game_presenter=game_presenter, request=req, board_id=board_id
+        ),
     )
 
 
@@ -165,7 +195,9 @@ def htmx_restart_daily_challenge_do(req: "HttpRequest") -> HttpResponse:
     board_id = cast(str, req.GET.get("board_id"))
 
     challenge = get_current_daily_challenge()
-    game_state, created = get_or_create_daily_challenge_state_for_player(request=req, challenge=challenge)
+    game_state, created = get_or_create_daily_challenge_state_for_player(
+        request=req, challenge=challenge
+    )
     if created:
         return htmx_aware_redirect(req, "chess:daily_game_view")
 
@@ -174,7 +206,9 @@ def htmx_restart_daily_challenge_do(req: "HttpRequest") -> HttpResponse:
     game_state["turns_counter"] += 1
     # Back to the initial state:
     game_state["fen"] = challenge.fen_before_bot_first_move
-    game_state["piece_role_by_square"] = challenge.piece_role_by_square_before_bot_first_move
+    game_state[
+        "piece_role_by_square"
+    ] = challenge.piece_role_by_square_before_bot_first_move
 
     save_daily_challenge_state_in_session(
         request=req,
@@ -190,7 +224,9 @@ def htmx_restart_daily_challenge_do(req: "HttpRequest") -> HttpResponse:
     )
 
     return HttpResponse(
-        chess_moving_parts_fragment(game_presenter=game_presenter, request=req, board_id=board_id),
+        chess_moving_parts_fragment(
+            game_presenter=game_presenter, request=req, board_id=board_id
+        ),
     )
 
 
@@ -200,7 +236,9 @@ def htmx_game_bot_move(req: "HttpRequest") -> HttpResponse:
     board_id = cast(str, req.GET.get("board_id"))
 
     challenge = get_current_daily_challenge()
-    game_state, created = get_or_create_daily_challenge_state_for_player(request=req, challenge=challenge)
+    game_state, created = get_or_create_daily_challenge_state_for_player(
+        request=req, challenge=challenge
+    )
     if created:
         return htmx_aware_redirect(req, "chess:daily_game_view")
 
@@ -241,7 +279,9 @@ def debug_view_cookie(req: "HttpRequest") -> HttpResponse:
     import json
 
     challenge = get_current_daily_challenge()
-    game_state, created = get_or_create_daily_challenge_state_for_player(request=req, challenge=challenge)
+    game_state, created = get_or_create_daily_challenge_state_for_player(
+        request=req, challenge=challenge
+    )
 
     return HttpResponse(
         f"""<p>Game state exists before check: {'no' if created else 'yes'}</p>"""
@@ -258,7 +298,9 @@ def _play_bot_move(
     board_id: str,
 ) -> HttpResponse:
     bot_next_move = uci_move_squares(move)
-    new_game_state = move_daily_challenge_piece(game_state=game_state, from_=bot_next_move[0], to=bot_next_move[1])
+    new_game_state = move_daily_challenge_piece(
+        game_state=game_state, from_=bot_next_move[0], to=bot_next_move[1]
+    )
 
     save_daily_challenge_state_in_session(
         request=req,
@@ -272,5 +314,7 @@ def _play_bot_move(
     )
 
     return HttpResponse(
-        chess_moving_parts_fragment(game_presenter=game_presenter, request=req, board_id=board_id),
+        chess_moving_parts_fragment(
+            game_presenter=game_presenter, request=req, board_id=board_id
+        ),
     )

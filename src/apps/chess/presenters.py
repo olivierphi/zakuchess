@@ -51,7 +51,9 @@ class GamePresenter:
         self._challenge = challenge
         self.game_state = game_state
         self.forced_bot_move = forced_bot_move
-        self.restart_daily_challenge_ask_confirmation = restart_daily_challenge_ask_confirmation
+        self.restart_daily_challenge_ask_confirmation = (
+            restart_daily_challenge_ask_confirmation
+        )
         self.is_bot_move = is_bot_move
 
         self._chess_board = chess.Board(fen=game_state["fen"])
@@ -94,7 +96,11 @@ class GamePresenter:
         if self.challenge_turns_state.game_over:
             return "game_over:lost"
         if (winner := self.winner) is not None:
-            return "game_over:won" if winner == self._challenge.my_side else "game_over:lost"
+            return (
+                "game_over:won"
+                if winner == self._challenge.my_side
+                else "game_over:lost"
+            )
         if self.is_my_turn:
             if self.selected_piece is None:
                 return "waiting_for_player_selection"
@@ -135,7 +141,9 @@ class GamePresenter:
 
     @cached_property
     def squares_with_pieces_that_can_move(self) -> set["Square"]:
-        return set(square_from_int(move.from_square) for move in self._chess_board.legal_moves)
+        return set(
+            square_from_int(move.from_square) for move in self._chess_board.legal_moves
+        )
 
     # Properties derived from the Game model:
     @cached_property
@@ -167,7 +175,9 @@ class GamePresenter:
         return self._piece_role_by_square[square]
 
     @cached_property
-    def team_members_by_role_by_side(self) -> "dict[PlayerSide, dict[TeamMemberRole, TeamMember]]":
+    def team_members_by_role_by_side(
+        self,
+    ) -> "dict[PlayerSide, dict[TeamMemberRole, TeamMember]]":
         result: "dict[PlayerSide, dict[TeamMemberRole, TeamMember]]" = {}
         for player_side in PLAYER_SIDES:
             result[player_side] = {}
@@ -202,7 +212,9 @@ class SelectedSquarePresenter:
 
     @cached_property
     def player_side(self) -> "PlayerSide":
-        return player_side_from_piece_role(self._game_presenter.piece_role_at_square(self.square))
+        return player_side_from_piece_role(
+            self._game_presenter.piece_role_at_square(self.square)
+        )
 
     @cached_property
     def symbol(self) -> "PieceSymbol":
@@ -214,7 +226,9 @@ class SelectedSquarePresenter:
 
     @cached_property
     def piece_at(self) -> "chess.Piece":
-        return cast("chess.Piece", self._chess_board.piece_at(chess.parse_square(self.square)))
+        return cast(
+            "chess.Piece", self._chess_board.piece_at(chess.parse_square(self.square))
+        )
 
     def __str__(self) -> str:
         return f"{self.square} (piece role: {self.piece_role})"
@@ -232,21 +246,29 @@ class SelectedPiecePresenter(SelectedSquarePresenter):
         piece_square: "Square",
         target_to_confirm: "Square | None",
     ):
-        super().__init__(game_presenter=game_presenter, chess_board=chess_board, square=piece_square)
+        super().__init__(
+            game_presenter=game_presenter, chess_board=chess_board, square=piece_square
+        )
         self.target_to_confirm = target_to_confirm
 
     @cached_property
     def available_targets(self) -> frozenset["Square"]:
-        chess_board_active_player_side = chess_lib_color_to_player_side(self._chess_board.turn)
+        chess_board_active_player_side = chess_lib_color_to_player_side(
+            self._chess_board.turn
+        )
         square_index = chess.parse_square(self.square)
-        piece_player_side = chess_lib_color_to_player_side(self._chess_board.color_at(square_index))
+        piece_player_side = chess_lib_color_to_player_side(
+            self._chess_board.color_at(square_index)
+        )
         if chess_board_active_player_side != piece_player_side:
             # Let's pretend it's that player's turn, so we can calculate the available targets:
             chess_board = self._chess_board.copy()
             chess_board.turn = not chess_board.turn
         else:
             chess_board = self._chess_board
-        return calculate_piece_available_targets(chess_board=chess_board, piece_square=self.square)
+        return calculate_piece_available_targets(
+            chess_board=chess_board, piece_square=self.square
+        )
 
     @cache
     def is_potential_capture(self, square: "Square") -> bool:

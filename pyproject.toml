@@ -35,21 +35,18 @@ pytest-django = "^4.5.2"
 
 [tool.black]
 # @link https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html
-line-length = 119
 target-version = ['py311']
 
 [tool.isort]
 # @link https://pycqa.github.io/isort/docs/configuration/options.html
 py_version = 311
 profile = "black"
-line_length = 119
 multi_line_output = 3
 known_first_party = ["apps"]
 combine_as_imports = true
 
 [tool.ruff]
 # @link https://github.com/charliermarsh/ruff#options
-line-length = 119
 target-version = "py311"
 ignore = ["E501"]
 exclude = [

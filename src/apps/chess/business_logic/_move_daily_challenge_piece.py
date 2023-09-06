@@ -30,7 +30,9 @@ def move_daily_challenge_piece(
     piece_role_by_square = game_state["piece_role_by_square"].copy()
     if promotion := move_result["promotion"]:
         # Let's promote that piece!
-        piece_promotion = cast("PieceSymbol", promotion.upper() if active_player_side == "w" else promotion)
+        piece_promotion = cast(
+            "PieceSymbol", promotion.upper() if active_player_side == "w" else promotion
+        )
         piece_role_by_square[from_] += piece_promotion  # type: ignore
 
     for move_from, move_to in move_result["changes"].items():

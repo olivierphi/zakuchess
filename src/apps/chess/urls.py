@@ -6,7 +6,9 @@ app_name = "chess"
 
 urlpatterns = [
     path("", views.game_view, name="daily_game_view"),
-    path("htmx/no-selection", views.htmx_game_no_selection, name="htmx_game_no_selection"),
+    path(
+        "htmx/no-selection", views.htmx_game_no_selection, name="htmx_game_no_selection"
+    ),
     path(
         "htmx/pieces/select/",
         views.htmx_game_select_piece,

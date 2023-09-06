@@ -15,7 +15,8 @@ from pathlib import Path
 
 import dj_database_url
 
-BASE_DIR = Path(__file__).parent.resolve() / ".." / ".." / ".."  # points to our git repo's root
+# points to our git repo's root
+BASE_DIR = Path(__file__).parent.resolve() / ".." / ".." / ".."
 
 SECRET_KEY = env["SECRET_KEY"]
 

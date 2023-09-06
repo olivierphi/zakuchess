@@ -25,7 +25,10 @@ def calculate_fen_before_bot_first_move(
     piece = chess_board.piece_at(move.to_square)
 
     if piece is None:
-        pieces_map = {chess.SQUARE_NAMES[sq]: piece.symbol() for sq, piece in chess_board.piece_map().items()}
+        pieces_map = {
+            chess.SQUARE_NAMES[sq]: piece.symbol()
+            for sq, piece in chess_board.piece_map().items()
+        }
         raise ValueError(
             f"Invalid bot first move '{bot_first_move}': "
             f"no piece at square '{chess.SQUARE_NAMES[move.from_square]}'."

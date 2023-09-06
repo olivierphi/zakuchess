@@ -90,7 +90,11 @@ def renderSAN(pos, move):
         cap = csrc[0] + "x" if pos.board[j] != "." or j == pos.ep else ""
         return cap + cdst + pro + check
     # Figure out what files and ranks we need to include
-    srcs = [a for (a, b), _ in gen_legal_moves(pos) if pos.board[a] == pos.board[i] and b == j]
+    srcs = [
+        a
+        for (a, b), _ in gen_legal_moves(pos)
+        if pos.board[a] == pos.board[i] and b == j
+    ]
     srcs_file = [a for a in srcs if (a - sunfish.A1) % 10 == (i - sunfish.A1) % 10]
     srcs_rank = [a for a in srcs if (a - sunfish.A1) // 10 == (i - sunfish.A1) // 10]
     assert srcs, "No moves compatible with {}".format(move)
@@ -118,7 +122,9 @@ def parseSAN(pos, msan):
     # Pawn moves
     pawn = re.match("([a-h])?x?([a-h][1-8])", msan)
     if pawn:
-        assert not re.search("[RBN]$", msan), "Sunfish only supports queen promotion in {}".format(msan)
+        assert not re.search(
+            "[RBN]$", msan
+        ), "Sunfish only supports queen promotion in {}".format(msan)
         p, (fil, dst) = "P", pawn.groups()
         src = (fil or "[a-h]") + "[1-8]"
     # Castling
@@ -191,7 +197,9 @@ def parseFEN(fen):
     bc = ("k" in castling, "q" in castling)
     ep = sunfish.parse(enpas) if enpas != "-" else 0
     score = sum(sunfish.pst[p][i] for i, p in enumerate(board) if p.isupper())
-    score -= sum(sunfish.pst[p.upper()][119 - i] for i, p in enumerate(board) if p.islower())
+    score -= sum(
+        sunfish.pst[p.upper()][119 - i] for i, p in enumerate(board) if p.islower()
+    )
     pos = sunfish.Position(board, score, wc, bc, ep, 0)
     return pos if color == "w" else pos.rotate()
 

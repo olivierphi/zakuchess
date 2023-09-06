@@ -3,7 +3,12 @@ from typing import TYPE_CHECKING, cast
 
 import chess
 
-from .business_logic.consts import PIECE_INT_TO_PIECE_TYPE, PIECE_TYPE_TO_NAME, PIECE_TYPE_TO_UNICODE, SQUARES
+from .business_logic.consts import (
+    PIECE_INT_TO_PIECE_TYPE,
+    PIECE_TYPE_TO_NAME,
+    PIECE_TYPE_TO_UNICODE,
+    SQUARES,
+)
 from .business_logic.types import PieceType, SquareColor
 
 if TYPE_CHECKING:
@@ -39,7 +44,9 @@ def player_side_other(player_side: "PlayerSide") -> "PlayerSide":
 @cache
 def symbol_from_piece_role(piece_role: "PieceRole") -> "PieceSymbol":
     # If it's a promoted pawn (len == 3), we want the last character, which is the promoted piece.
-    return cast("PieceSymbol", piece_role[0] if len(piece_role) == 2 else piece_role[-1])
+    return cast(
+        "PieceSymbol", piece_role[0] if len(piece_role) == 2 else piece_role[-1]
+    )
 
 
 @cache
@@ -66,7 +73,10 @@ def team_member_role_from_piece_role(piece_role: "PieceRole") -> "TeamMemberRole
 def piece_role_from_team_member_role_and_player_side(
     team_member_role: "TeamMemberRole", player_side: "PlayerSide"
 ) -> "PieceRole":
-    return cast("PieceRole", team_member_role.upper() if player_side == "w" else team_member_role)
+    return cast(
+        "PieceRole",
+        team_member_role.upper() if player_side == "w" else team_member_role,
+    )
 
 
 @cache
@@ -95,7 +105,10 @@ def utf8_symbol_from_piece_role(piece_role: "PieceRole") -> str:
 
 
 def get_squares_with_pieces_that_can_move(board: chess.Board) -> frozenset["Square"]:
-    return frozenset(cast("Square", chess.square_name(move.from_square)) for move in board.legal_moves)
+    return frozenset(
+        cast("Square", chess.square_name(move.from_square))
+        for move in board.legal_moves
+    )
 
 
 @lru_cache
@@ -125,4 +138,8 @@ def chess_lib_color_to_player_side(color: chess.Color) -> "PlayerSide":
 @cache
 def chess_square_color(square: "Square") -> "SquareColor":
     file = int(square[1])
-    return "light" if (file % 2 == 0 if square[0] in ("a", "c", "e", "g") else file % 2 == 1) else "dark"
+    return (
+        "light"
+        if (file % 2 == 0 if square[0] in ("a", "c", "e", "g") else file % 2 == 1)
+        else "dark"
+    )

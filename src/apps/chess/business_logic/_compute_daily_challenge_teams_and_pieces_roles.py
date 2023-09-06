@@ -43,8 +43,22 @@ def compute_daily_challenge_teams_and_pieces_roles(
     team_members_counters: dict["PlayerSide", dict["PieceType", list[int]]] = {
         # first int of the tuple is the current counter, second int is the maximum value for that counter
         # 9 queens on a player's side is quite an extreme case, but it's theoretically possible via pawn promotions ^^
-        "w": {"p": [1, 8], "n": [1, 2], "b": [1, 2], "r": [1, 2], "q": [0, 9], "k": [0, 1]},
-        "b": {"p": [1, 8], "n": [1, 2], "b": [1, 2], "r": [1, 2], "q": [0, 9], "k": [0, 1]},
+        "w": {
+            "p": [1, 8],
+            "n": [1, 2],
+            "b": [1, 2],
+            "r": [1, 2],
+            "q": [0, 9],
+            "k": [0, 1],
+        },
+        "b": {
+            "p": [1, 8],
+            "n": [1, 2],
+            "b": [1, 2],
+            "r": [1, 2],
+            "q": [0, 9],
+            "k": [0, 1],
+        },
     }
 
     piece_role_by_square: "PieceRoleBySquare" = {}
@@ -59,11 +73,19 @@ def compute_daily_challenge_teams_and_pieces_roles(
     for chess_square, chess_piece in chess_board.piece_map().items():
         piece_player_side = chess_lib_color_to_player_side(chess_piece.color)
         piece_type = _CHESS_LIB_PIECE_TYPE_TO_PIECE_TYPE_MAPPING[chess_piece.piece_type]
-        team_member_role_counter, piece_role_max_value = team_members_counters[piece_player_side][piece_type]
+        team_member_role_counter, piece_role_max_value = team_members_counters[
+            piece_player_side
+        ][piece_type]
         piece_role = cast(
-            "PieceRole", f"{piece_type}{team_member_role_counter}" if team_member_role_counter > 0 else piece_type
+            "PieceRole",
+            f"{piece_type}{team_member_role_counter}"
+            if team_member_role_counter > 0
+            else piece_type,
         )
-        team_member_role = cast("TeamMemberRole", piece_role.upper() if piece_player_side == "w" else piece_role)
+        team_member_role = cast(
+            "TeamMemberRole",
+            piece_role.upper() if piece_player_side == "w" else piece_role,
+        )
 
         if team_member_role_counter > piece_role_max_value:
             raise ValueError(
@@ -87,7 +109,9 @@ def compute_daily_challenge_teams_and_pieces_roles(
     return teams, piece_role_by_square
 
 
-def _set_character_names_for_non_bot_side(teams: "GameTeams", bot_side: "PlayerSide") -> None:
+def _set_character_names_for_non_bot_side(
+    teams: "GameTeams", bot_side: "PlayerSide"
+) -> None:
     player_side: "PlayerSide" = "w" if bot_side == "b" else "b"
     player_team_members = teams[player_side]
     first_names = random.sample(FIRST_NAMES, k=len(player_team_members))

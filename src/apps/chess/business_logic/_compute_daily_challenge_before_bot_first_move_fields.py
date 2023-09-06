@@ -7,7 +7,9 @@ if TYPE_CHECKING:
     from ..models import DailyChallenge
 
 
-def compute_daily_challenge_before_bot_first_move_fields(challenge: "DailyChallenge") -> None:
+def compute_daily_challenge_before_bot_first_move_fields(
+    challenge: "DailyChallenge",
+) -> None:
     """
     Set the `*_before_bot_first_move` fields on the given challenge models,
     from the value of the other fields.

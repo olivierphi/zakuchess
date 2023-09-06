@@ -21,7 +21,9 @@ if TYPE_CHECKING:
 # These are the top-level components returned by our Django Views.
 
 
-def chess_page(*, game_presenter: "GamePresenter", request: "HttpRequest", board_id: str) -> str:
+def chess_page(
+    *, game_presenter: "GamePresenter", request: "HttpRequest", board_id: str
+) -> str:
     return page(
         chess_arena(game_presenter=game_presenter, board_id=board_id),
         footer(),
@@ -29,7 +31,9 @@ def chess_page(*, game_presenter: "GamePresenter", request: "HttpRequest", board
     )
 
 
-def chess_select_piece_htmx_fragment(*, game_presenter: "GamePresenter", request: "HttpRequest", board_id: str) -> str:
+def chess_select_piece_htmx_fragment(
+    *, game_presenter: "GamePresenter", request: "HttpRequest", board_id: str
+) -> str:
     return "\n".join(
         (
             dom_tag.render(pretty=settings.DEBUG)
@@ -58,7 +62,9 @@ def chess_select_piece_htmx_fragment(*, game_presenter: "GamePresenter", request
     )
 
 
-def chess_moving_parts_fragment(*, game_presenter: "GamePresenter", request: "HttpRequest", board_id: str) -> str:
+def chess_moving_parts_fragment(
+    *, game_presenter: "GamePresenter", request: "HttpRequest", board_id: str
+) -> str:
     return "\n".join(
         (
             dom_tag.render(pretty=settings.DEBUG)

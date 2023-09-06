@@ -37,18 +37,24 @@ _FONTS_CSS = """
 """
 
 
-def page(*children: "dom_tag", request: "HttpRequest", title: str = "ZakuChess ♞") -> str:
+def page(
+    *children: "dom_tag", request: "HttpRequest", title: str = "ZakuChess ♞"
+) -> str:
     return f"<!DOCTYPE html>{document(*children, request=request, title=title)}"
 
 
-def document(*children: "dom_tag", request: "HttpRequest", title: str = "ZakuChess ♞") -> "dom_tag":
+def document(
+    *children: "dom_tag", request: "HttpRequest", title: str = "ZakuChess ♞"
+) -> "dom_tag":
     return html(
         head(title=title),
         body(
             header(),
             *children,
             cls="bg-slate-900",
-            data_hx_headers=json.dumps({"X-CSRFToken": get_token(request) if request else "[no request]"}),
+            data_hx_headers=json.dumps(
+                {"X-CSRFToken": get_token(request) if request else "[no request]"}
+            ),
         ),
         __pretty=settings.DEBUG,
     )

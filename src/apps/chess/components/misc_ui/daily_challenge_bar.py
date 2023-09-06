@@ -17,13 +17,17 @@ PROGRESS_BAR_BLOCKS: dict[BlockColor, str] = {
 PROGRESS_BAR_BLOCKS_COUNT = 10
 
 
-def chess_daily_challenge_bar(*, game_presenter: "GamePresenter", board_id: str, **extra_attrs: str) -> dom_tag:
+def chess_daily_challenge_bar(
+    *, game_presenter: "GamePresenter", board_id: str, **extra_attrs: str
+) -> dom_tag:
     from ..chess_board import INFO_BARS_COMMON_CLASSES
 
     if game_presenter.restart_daily_challenge_ask_confirmation:
         inner_content = _restart_confirmation_display(board_id=board_id)
     else:
-        inner_content = _current_state_display(game_presenter=game_presenter, board_id=board_id)
+        inner_content = _current_state_display(
+            game_presenter=game_presenter, board_id=board_id
+        )
 
     return div(
         inner_content,
@@ -66,7 +70,9 @@ def _restart_confirmation_display(*, board_id: str) -> dom_tag:
     )
 
 
-def _current_state_display(*, game_presenter: "GamePresenter", board_id: str) -> dom_tag:
+def _current_state_display(
+    *, game_presenter: "GamePresenter", board_id: str
+) -> dom_tag:
 
     (
         attempts_counter,
@@ -76,7 +82,11 @@ def _current_state_display(*, game_presenter: "GamePresenter", board_id: str) ->
         is_challenge_over,
     ) = game_presenter.challenge_turns_state
 
-    blocks_color: BlockColor = "green" if percentage_left >= 60 else ("yellow" if percentage_left >= 30 else "red")
+    blocks_color: BlockColor = (
+        "green"
+        if percentage_left >= 60
+        else ("yellow" if percentage_left >= 30 else "red")
+    )
     blocks: list[str] = []
     for i in range(PROGRESS_BAR_BLOCKS_COUNT):
         percentage = (i + 1) * 100 / PROGRESS_BAR_BLOCKS_COUNT
@@ -102,7 +112,8 @@ def _current_state_display(*, game_presenter: "GamePresenter", board_id: str) ->
 
     return div(
         div(
-            f"Today's turns left: {turns_left}/{turns_total} - " f"Attempt #{attempts_counter+1}",
+            f"Today's turns left: {turns_left}/{turns_total} - "
+            f"Attempt #{attempts_counter+1}",
             cls="w-full text-center",
         ),
         div(
