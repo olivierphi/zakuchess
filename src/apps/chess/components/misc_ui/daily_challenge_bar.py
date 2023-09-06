@@ -76,6 +76,7 @@ def _current_state_display(
 
     (
         attempts_counter,
+        current_attempt_turns,
         turns_total,
         turns_left,
         percentage_left,
@@ -95,7 +96,7 @@ def _current_state_display(
         blocks.append(PROGRESS_BAR_BLOCKS[blocks_color])
 
     restart_button: dom_tag = span("")
-    if not game_presenter.is_game_over and turns_left > 2:
+    if not game_presenter.is_game_over and current_attempt_turns > 2:
         htmx_attributes = {
             "data_hx_post": f"{reverse('chess:htmx_restart_daily_challenge_ask_confirmation')}?{urlencode({'board_id': board_id})}",
             "data_hx_target": f"#chess-board-pieces-{board_id}",
@@ -103,7 +104,8 @@ def _current_state_display(
         }
         restart_button = span(
             button(
-                "↩️",
+                "Try again from the start ↩️",
+                cls="border-slate-200 bg-slate-900 slate-50 border rounded-md py-0.5 px-1 hover:bg-slate-200 hover:text-slate-800",
                 title="Try this daily challenge again, from the start",
                 id=f"chess-board-restart-daily-challenge-{board_id}",
                 **htmx_attributes,
@@ -121,7 +123,10 @@ def _current_state_display(
                 "".join(blocks),
                 cls="inline-block pl-3 pr-3",
             ),
-            restart_button,
             cls="w-full text-center",
+        ),
+        div(
+            restart_button,
+            cls="my-1 w-full text-center",
         ),
     )

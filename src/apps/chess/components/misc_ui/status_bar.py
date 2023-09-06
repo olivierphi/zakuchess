@@ -105,7 +105,7 @@ def _first_turn_intro(
             ),
             div(
                 raw(
-                    """Your pieces are the ones <span class="font-bold">with a circle around them</span>.<br>"""
+                    """Your pieces are the ones <span class="font-bold text-emerald-800">with a green circle</span>.<br>"""
                     "Tap one of them to start playing."
                 ),
                 cls=f"{spacing}",
@@ -114,10 +114,6 @@ def _first_turn_intro(
                 raw(
                     f"You have <b>{challenge_total_turns}</b> turns to win this challenge."
                 ),
-                cls=f"{spacing}",
-            ),
-            div(
-                raw("You can retry from the start at any time, with the ↩️ button."),
                 cls=f"{spacing}",
             ),
             div("Good luck! 🙂", cls=f"{spacing}"),

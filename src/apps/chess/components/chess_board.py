@@ -8,7 +8,7 @@ from chess import FILE_NAMES, RANK_NAMES
 from django.templatetags.static import static
 from django.urls import reverse
 from dominate.tags import div, dom_tag, span
-from dominate.util import raw as unescaped_html, text
+from dominate.util import raw as unescaped_html
 
 from apps.chess.helpers import (
     chess_square_color,
@@ -38,21 +38,20 @@ if TYPE_CHECKING:
     )
     from ..presenters import GamePresenter
 
-OPPONENT_PIECES_HAVE_GROUND_MARKERS = False
 
 SQUARE_COLOR_TAILWIND_CLASSES = ("bg-chess-square-dark", "bg-chess-square-light")
 # SQUARE_COLOR_TAILWIND_CLASSES = ("bg-slate-600", "bg-zinc-400")
 # SQUARE_COLOR_TAILWIND_CLASSES = ("bg-orange-600", "bg-orange-400")
 INFO_BARS_COMMON_CLASSES = (
-    "p-2 text-slate-200 bg-slate-700 border-2 border-solid border-slate-400"
+    "p-2 text-slate-200 bg-slate-800 border-2 border-solid border-slate-400"
 )
 _PIECE_GROUND_MARKER_COLOR_TAILWIND_CLASSES: dict[tuple["PlayerSide", bool], str] = {
     # the boolean says if the piece can move
     # fmt: off
-    ("w", False): "bg-slate-100/40 border border-slate-100",
-    ("b", False): "bg-slate-800/40 border border-slate-800",
-    ("w", True): "bg-slate-100/40 border-2 border-active-chess-available-target-marker",
-    ("b", True): "bg-slate-800/40 border-2 border-opponent-chess-available-target-marker",
+    ("w", False): "bg-emerald-800/40 border-2 border-emerald-800",
+    ("b", False): "bg-indigo-800/40 border-2 border-indigo-800",
+    ("w", True): "bg-emerald-600/40 border-2 border-emerald-800",
+    ("b", True): "bg-indigo-600/40 border-2 border-indigo-800",
     # fmt: on
 }
 _CHESS_PIECE_Z_INDEXES: dict[str, str] = {
@@ -216,16 +215,9 @@ def chess_piece(
     unit_chess_symbol_display = chess_unit_symbol_display(
         piece_role=piece_role, square=square
     )
-
-    if (
-        player_side == game_presenter.active_player_side
-        or OPPONENT_PIECES_HAVE_GROUND_MARKERS
-    ):
-        ground_marker = chess_unit_ground_marker(
-            player_side=player_side, can_move=piece_can_be_moved_by_player
-        )
-    else:
-        ground_marker = text("")
+    ground_marker = chess_unit_ground_marker(
+        player_side=player_side, can_move=piece_can_be_moved_by_player
+    )
 
     classes = [
         "absolute",
@@ -380,11 +372,9 @@ def chess_character_display(
     ):
         is_potential_capture = True  # let's highlight our king if it's in check
     horizontal_translation = (
-        ("left-1" if is_w_side else "right-1")
-        if is_knight
-        else ("left-0" if is_w_side else "right-0")
+        ("left-3" if is_knight else "left-0") if is_w_side else "right-0"
     )
-    vertical_translation = "top-1"
+    vertical_translation = "top-2" if is_knight and is_w_side else "top-1"
 
     game_factions = cast("Factions", factions or game_presenter.factions)  # type: ignore
 
@@ -421,10 +411,10 @@ def chess_unit_ground_marker(
 ) -> dom_tag:
     classes = [
         "absolute",
-        "w-5/6",
-        "h-1/3",
-        "left-1/12",
-        "bottom-1",
+        "w-11/12",
+        "h-2/5",
+        "left-1/24",
+        "bottom-0.5",
         "rounded-1/2",
         _CHESS_PIECE_Z_INDEXES["ground_marker"],
         "border-solid",
@@ -463,19 +453,23 @@ def chess_unit_symbol_display(*, piece_role: "PieceRole", square: "Square") -> d
     player_side = player_side_from_piece_role(piece_role)
     piece_type = type_from_piece_role(piece_role)
     piece_name = piece_name_from_piece_role(piece_role)
-    square_color = chess_square_color(square)
+    chess_square_color(square)
 
     is_knight, is_pawn = piece_type == "n", piece_type == "p"
-    is_light_square = square_color == "light"
 
     symbol_class = (
+        # We have to do some ad-hoc adjustments for Knights and Pawns:
         "w-7" if (is_pawn or is_knight) else "w-8",
         "aspect-square",
         "bg-no-repeat",
         "bg-cover",
-        "opacity-60" if is_light_square else "opacity-50",
-        "brightness-50",
-        chess_unit_symbol_class(player_side="b", piece_name=piece_name),
+        "opacity-90",
+        (
+            "drop-shadow-piece-symbol-w"
+            if player_side == "w"
+            else "drop-shadow-piece-symbol-b"
+        ),
+        chess_unit_symbol_class(player_side="w", piece_name=piece_name),
     )
     symbol_display = div(
         cls=" ".join(symbol_class),
@@ -483,11 +477,8 @@ def chess_unit_symbol_display(*, piece_role: "PieceRole", square: "Square") -> d
 
     symbol_display_container_classes = (
         "absolute",
-        # We have to do some ad-hoc adjustments for Knights:
-        "-top-1" if is_knight else "top-0",
-        ("-left-1" if is_knight else "left-0")
-        if player_side == "w"
-        else ("-right-1" if is_knight else "right-0"),
+        "top-0",
+        "left-0" if player_side == "w" else "right-0",
         _CHESS_PIECE_Z_INDEXES["symbol"],
         # Quick custom display for white knights, so they face the inside of the board:
         "-scale-x-100" if player_side == "w" and is_knight else "",

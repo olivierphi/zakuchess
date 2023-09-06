@@ -138,13 +138,12 @@ def htmx_game_move_piece(
         return htmx_aware_redirect(req, "chess:daily_game_view")
 
     active_player_side = get_active_player_side_from_fen(previous_game_state["fen"])
+    is_my_side = active_player_side != challenge.bot_side
     _logger.info("Game state from player cookie: %s", previous_game_state)
 
     new_game_state = move_daily_challenge_piece(
-        game_state=previous_game_state, from_=from_, to=to
+        game_state=previous_game_state, from_=from_, to=to, is_my_side=is_my_side
     )
-    if active_player_side != challenge.bot_side:
-        new_game_state["turns_counter"] += 1
 
     _logger.info("New game state: %s", new_game_state)
     save_daily_challenge_state_in_session(
@@ -202,6 +201,7 @@ def htmx_restart_daily_challenge_do(req: "HttpRequest") -> HttpResponse:
         return htmx_aware_redirect(req, "chess:daily_game_view")
 
     game_state["attempts_counter"] += 1
+    game_state["current_attempt_turns_counter"] = 0
     # Restarting the daily challenge costs one move:
     game_state["turns_counter"] += 1
     # Back to the initial state:
@@ -299,7 +299,10 @@ def _play_bot_move(
 ) -> HttpResponse:
     bot_next_move = uci_move_squares(move)
     new_game_state = move_daily_challenge_piece(
-        game_state=game_state, from_=bot_next_move[0], to=bot_next_move[1]
+        game_state=game_state,
+        from_=bot_next_move[0],
+        to=bot_next_move[1],
+        is_my_side=False,
     )
 
     save_daily_challenge_state_in_session(

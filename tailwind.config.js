@@ -6,7 +6,9 @@ const FACTIONS = ["humans", "undeads"]
 const ACTIVE_PLAYER_SELECTION_COLOR = "#ffff00"
 const OPPONENT_PLAYER_SELECTION_COLOR = "#ffe000"
 const POTENTIAL_CAPTURE_COLOR = "#c00000"
-const PIECES_DROP_SHADOW_OFFSET = "1px"
+const PIECE_SYMBOL_W = "#065f46" // emerald-800
+const PIECE_SYMBOL_B = "#3730a3" // indigo-800
+const PIECES_DROP_SHADOW_OFFSET = 1 // px
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -51,6 +53,7 @@ module.exports = {
                 ...CHESS_BOARD_SPACING,
                 "1/12": "8.333333%",
                 "2/12": "16.666667%",
+                "1/24": "4.166667%",
             },
             borderRadius: {
                 "1/2": "50%",
@@ -64,28 +67,34 @@ module.exports = {
                 size: "width, height",
             },
             dropShadow: {
-                "active-selected-piece": [
-                    `${PIECES_DROP_SHADOW_OFFSET} ${PIECES_DROP_SHADOW_OFFSET} 0 ${ACTIVE_PLAYER_SELECTION_COLOR}`,
-                    `-${PIECES_DROP_SHADOW_OFFSET} ${PIECES_DROP_SHADOW_OFFSET} 0 ${ACTIVE_PLAYER_SELECTION_COLOR}`,
-                    `${PIECES_DROP_SHADOW_OFFSET} -${PIECES_DROP_SHADOW_OFFSET} 0 ${ACTIVE_PLAYER_SELECTION_COLOR}`,
-                    `-${PIECES_DROP_SHADOW_OFFSET} -${PIECES_DROP_SHADOW_OFFSET} 0 ${ACTIVE_PLAYER_SELECTION_COLOR}`,
-                ],
-                "opponent-selected-piece": [
-                    `${PIECES_DROP_SHADOW_OFFSET} ${PIECES_DROP_SHADOW_OFFSET} 0 ${OPPONENT_PLAYER_SELECTION_COLOR}`,
-                    `-${PIECES_DROP_SHADOW_OFFSET} ${PIECES_DROP_SHADOW_OFFSET} 0 ${OPPONENT_PLAYER_SELECTION_COLOR}`,
-                    `${PIECES_DROP_SHADOW_OFFSET} -${PIECES_DROP_SHADOW_OFFSET} 0 ${OPPONENT_PLAYER_SELECTION_COLOR}`,
-                    `-${PIECES_DROP_SHADOW_OFFSET} -${PIECES_DROP_SHADOW_OFFSET} 0 ${OPPONENT_PLAYER_SELECTION_COLOR}`,
-                ],
-                "potential-capture": [
-                    `${PIECES_DROP_SHADOW_OFFSET} ${PIECES_DROP_SHADOW_OFFSET} 0 ${POTENTIAL_CAPTURE_COLOR}`,
-                    `-${PIECES_DROP_SHADOW_OFFSET} ${PIECES_DROP_SHADOW_OFFSET} 0 ${POTENTIAL_CAPTURE_COLOR}`,
-                    `${PIECES_DROP_SHADOW_OFFSET} -${PIECES_DROP_SHADOW_OFFSET} 0 ${POTENTIAL_CAPTURE_COLOR}`,
-                    `-${PIECES_DROP_SHADOW_OFFSET} -${PIECES_DROP_SHADOW_OFFSET} 0 ${POTENTIAL_CAPTURE_COLOR}`,
-                ],
+                "piece-symbol-w": `0 0 0.1rem ${PIECE_SYMBOL_W}`,
+                "piece-symbol-b": `0 0 0.1rem ${PIECE_SYMBOL_B}`,
+                "active-selected-piece": borderFromDropShadow(
+                    PIECES_DROP_SHADOW_OFFSET,
+                    ACTIVE_PLAYER_SELECTION_COLOR,
+                ),
+                "opponent-selected-piece": borderFromDropShadow(
+                    PIECES_DROP_SHADOW_OFFSET,
+                    OPPONENT_PLAYER_SELECTION_COLOR,
+                ),
+                "potential-capture": borderFromDropShadow(PIECES_DROP_SHADOW_OFFSET, POTENTIAL_CAPTURE_COLOR),
             },
         },
     },
     plugins: [],
+}
+
+function borderFromDropShadow(offset, color) {
+    let dropShadow = []
+    for (const [x, y] of [
+        [offset, offset],
+        [-offset, offset],
+        [offset, -offset],
+        [-offset, -offset],
+    ]) {
+        dropShadow.push(`${x}px ${y}px 0 ${color}`)
+    }
+    return dropShadow
 }
 
 function chessCharactersBackgroundImages() {

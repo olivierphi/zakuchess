@@ -15,6 +15,7 @@ def move_daily_challenge_piece(
     game_state: "PlayerGameState",
     from_: "Square",
     to: "Square",
+    is_my_side: bool,
 ) -> "PlayerGameState":
     fen = game_state["fen"]
     active_player_side = get_active_player_side_from_fen(fen)
@@ -37,7 +38,9 @@ def move_daily_challenge_piece(
 
     for move_from, move_to in move_result["changes"].items():
         if move_to is None:
-            continue  # We can just ignore captures there, as the capturing piece just replaces it in the mapping :-)
+            # We can just ignore captures there, as the capturing piece
+            # just replaces it in the mapping :-)
+            continue
         piece_role_by_square[move_to] = piece_role_by_square[move_from]
         del piece_role_by_square[move_from]  # this square is now empty
 
@@ -46,9 +49,14 @@ def move_daily_challenge_piece(
         # We keep these as-is...
         "turns_counter": game_state["turns_counter"],
         "attempts_counter": game_state["attempts_counter"],
+        "current_attempt_turns_counter": game_state["current_attempt_turns_counter"],
         # ...but update those:
         "fen": move_result["fen"],
         "piece_role_by_square": piece_role_by_square,
     }
+
+    if is_my_side:
+        new_game_state["turns_counter"] += 1
+        new_game_state["current_attempt_turns_counter"] += 1
 
     return new_game_state

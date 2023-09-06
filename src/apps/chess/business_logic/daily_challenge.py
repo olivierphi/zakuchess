@@ -25,12 +25,16 @@ class PlayerGameState(TypedDict):
     # Since it's just a Python dict, Django knows how to serialize it.
     attempts_counter: int
     turns_counter: int
+    current_attempt_turns_counter: int
     fen: "FEN"
     piece_role_by_square: "PieceRoleBySquare"
 
 
 class ChallengeTurnsState(NamedTuple):
+    # the number of attempts the player has made for today's challenge:
     attempts_counter: int
+    # The number of turns in the current attempt:
+    current_attempt_turns: int
     turns_total: int
     turns_left: int
     percentage_left: int

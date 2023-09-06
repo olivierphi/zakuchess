@@ -77,7 +77,7 @@ def head(*, title: str) -> "dom_tag":
 def header() -> "dom_tag":
     return base_header(
         h1(
-            "Zakuchess",
+            "ZakuChess",
             cls="text-slate-50 text-2xl leading-none font-pixel",
         ),
         h2(
