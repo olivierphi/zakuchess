@@ -5,7 +5,7 @@ import chess
 from apps.chess.helpers import square_from_int
 
 if TYPE_CHECKING:
-    from apps.chess.business_logic.types import Square
+    from apps.chess.types import Square
 
 
 def calculate_piece_available_targets(

@@ -2,41 +2,30 @@ import json
 from functools import cache
 from string import Template
 from typing import TYPE_CHECKING, cast
-from urllib.parse import urlencode
 
 from chess import FILE_NAMES, RANK_NAMES
 from django.templatetags.static import static
-from django.urls import reverse
 from dominate.tags import div, dom_tag, span
 from dominate.util import raw as unescaped_html
 
-from apps.chess.helpers import (
+from ..helpers import (
     chess_square_color,
     file_and_rank_from_square,
     piece_name_from_piece_role,
     player_side_from_piece_role,
     type_from_piece_role,
 )
-
 from .chess_helpers import (
     chess_unit_symbol_class,
     piece_character_classes,
     square_to_tailwind_classes,
 )
-from .misc_ui.daily_challenge_bar import chess_daily_challenge_bar
-from .misc_ui.status_bar import chess_status_bar
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from ..business_logic.types import (
-        Factions,
-        PieceRole,
-        PieceType,
-        PlayerSide,
-        Square,
-    )
     from ..presenters import GamePresenter
+    from ..types import Factions, PieceRole, PieceType, PlayerSide, Square
 
 
 SQUARE_COLOR_TAILWIND_CLASSES = ("bg-chess-square-dark", "bg-chess-square-light")
@@ -80,7 +69,9 @@ _PLAY_BOT_JS_TEMPLATE = Template(
 )
 
 
-def chess_arena(*, game_presenter: "GamePresenter", board_id: str) -> dom_tag:
+def chess_arena(
+    *, game_presenter: "GamePresenter", status_bars: list[dom_tag], board_id: str
+) -> dom_tag:
     return div(
         # stats_modal(),
         div(
@@ -104,14 +95,13 @@ def chess_arena(*, game_presenter: "GamePresenter", board_id: str) -> dom_tag:
             cls="aspect-square relative",
         ),
         chess_bot_data(board_id),
-        chess_daily_challenge_bar(game_presenter=game_presenter, board_id=board_id),
-        chess_status_bar(game_presenter=game_presenter, board_id=board_id),
+        *status_bars,
         id=f"chess-arena-{board_id}",
         cls="w-full md:max-w-xl mx-auto",
         # When the user clicks on anything that is not an interactive element
         # of the chess board, and the state of this chess board is not
         # "waiting_for_player_selection", then the chess board is reset to this state.
-        data_hx_get=f"{ reverse('chess:htmx_game_no_selection') }?{ urlencode({'board_id': board_id}) }",
+        data_hx_get=game_presenter.urls.htmx_game_no_selection_url(board_id=board_id),
         data_hx_trigger=f"click[cursorIsNotOnChessBoardInteractiveElement('{ board_id }')] from:document",
         data_hx_target=f"#chess-board-pieces-{ board_id }",
     )
@@ -235,7 +225,9 @@ def chess_piece(
 
     htmx_attributes = {
         "data_hx_trigger": "click",
-        "data_hx_get": f"{reverse('chess:htmx_game_select_piece')}?{urlencode({'square': square, 'board_id': board_id})}",
+        "data_hx_get": game_presenter.urls.htmx_game_select_piece_url(
+            square=square, board_id=board_id
+        ),
         "data_hx_target": f"#chess-board-available-targets-{board_id}",
     }
 
@@ -315,7 +307,9 @@ def chess_available_target(
 
     if can_move:
         htmx_attributes = {
-            "data_hx_post": f"{reverse('chess:htmx_game_move_piece', kwargs={'from_': game_presenter.selected_piece.square, 'to': square})}?{urlencode({'board_id': board_id})}",
+            "data_hx_post": game_presenter.urls.htmx_game_move_piece_url(
+                square=square, board_id=board_id
+            ),
             "data_hx_target": f"#chess-board-pieces-{ board_id }",
             "data_hx_swap": "outerHTML",
         }
@@ -508,7 +502,9 @@ def _bot_turn_html_elements(
     )
 
     htmx_attributes = {
-        "data_hx_post": f"{reverse('chess:htmx_game_bot_move')}?{urlencode({'board_id': board_id, 'move': 'BOT_MOVE'})}",
+        "data_hx_post": game_presenter.urls.htmx_game_play_bot_move_url(
+            board_id=board_id
+        ),
         "data_hx_target": f"#chess-board-pieces-{board_id}",
         "data_hx_trigger": "playMove",
     }

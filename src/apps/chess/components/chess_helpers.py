@@ -1,8 +1,8 @@
 from functools import cache
 from typing import TYPE_CHECKING
 
-from ..business_logic.consts import PIECE_TYPE_TO_NAME
-from ..helpers import (
+from apps.chess.consts import PIECE_TYPE_TO_NAME
+from apps.chess.helpers import (
     file_and_rank_from_square,
     player_side_from_piece_role,
     type_from_piece_role,
@@ -11,7 +11,7 @@ from ..helpers import (
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from ..business_logic.types import (
+    from apps.chess.types import (
         Faction,
         Factions,
         File,

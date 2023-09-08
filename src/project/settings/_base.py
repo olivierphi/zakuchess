@@ -44,6 +44,7 @@ INSTALLED_APPS = (
     + [
         "apps.authentication",
         "apps.chess",
+        "apps.daily_challenge",
         "apps.webui",
     ]
 )

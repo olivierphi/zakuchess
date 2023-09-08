@@ -92,6 +92,7 @@ FIRST_NAMES: Final = (
     "Taylor",
     "Terry",
     "Tetsuo",
+    "Theo",
     "Ti",
     "Timothy",
     "Vijay",

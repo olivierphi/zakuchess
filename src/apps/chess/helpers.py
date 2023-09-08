@@ -3,16 +3,16 @@ from typing import TYPE_CHECKING, cast
 
 import chess
 
-from .business_logic.consts import (
+from .consts import (
     PIECE_INT_TO_PIECE_TYPE,
     PIECE_TYPE_TO_NAME,
     PIECE_TYPE_TO_UNICODE,
     SQUARES,
 )
-from .business_logic.types import PieceType, SquareColor
+from .types import PieceType, SquareColor
 
 if TYPE_CHECKING:
-    from .business_logic.types import (
+    from .types import (
         FEN,
         File,
         PieceName,
@@ -43,7 +43,8 @@ def player_side_other(player_side: "PlayerSide") -> "PlayerSide":
 
 @cache
 def symbol_from_piece_role(piece_role: "PieceRole") -> "PieceSymbol":
-    # If it's a promoted pawn (len == 3), we want the last character, which is the promoted piece.
+    # If it's a promoted pawn (len == 3), we want the last character
+    # (which is the promoted piece in such a case)
     return cast(
         "PieceSymbol", piece_role[0] if len(piece_role) == 2 else piece_role[-1]
     )

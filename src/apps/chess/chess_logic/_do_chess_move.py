@@ -4,11 +4,11 @@ from typing import TYPE_CHECKING, Literal, cast
 
 import chess
 
-from apps.chess.business_logic.types import ChessMoveResult, GameOverDescription
 from apps.chess.helpers import piece_from_int
+from apps.chess.types import ChessMoveResult, GameOverDescription
 
 if TYPE_CHECKING:
-    from apps.chess.business_logic.types import (
+    from apps.chess.types import (
         FEN,
         ChessMoveChanges,
         GameEndReason,
