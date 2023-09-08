@@ -39,6 +39,7 @@ COPY src/apps/chess/static-src ./src/apps/chess/static-src
 # We have to copy our components too, 
 # so that Tailwind see the classes used in them:
 COPY src/apps/chess/components ./src/apps/chess/components
+COPY src/apps/daily_challenge/components ./src/apps/daily_challenge/components
 COPY src/apps/webui/components ./src/apps/webui/components
 # We're going to use our Makefile to build the assets:
 COPY Makefile ./

@@ -2,44 +2,46 @@ import json
 from functools import cache
 from string import Template
 from typing import TYPE_CHECKING, cast
-from urllib.parse import urlencode
 
 from chess import FILE_NAMES, RANK_NAMES
 from django.templatetags.static import static
-from django.urls import reverse
 from dominate.tags import div, dom_tag, span
-from dominate.util import raw as unescaped_html, text
+from dominate.util import raw as unescaped_html
 
-from apps.chess.helpers import (
+from ..helpers import (
     chess_square_color,
     file_and_rank_from_square,
     piece_name_from_piece_role,
     player_side_from_piece_role,
     type_from_piece_role,
 )
-
-from .chess_helpers import chess_unit_symbol_class, piece_character_classes, square_to_tailwind_classes
-from .misc_ui.daily_challenge_bar import chess_daily_challenge_bar
-from .misc_ui.status_bar import chess_status_bar
+from .chess_helpers import (
+    chess_unit_symbol_class,
+    piece_character_classes,
+    square_to_tailwind_classes,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from ..business_logic.types import Factions, PieceRole, PieceType, PlayerSide, Square
     from ..presenters import GamePresenter
+    from ..types import Factions, PieceRole, PieceType, PlayerSide, Square
 
-OPPONENT_PIECES_HAVE_GROUND_MARKERS = False
 
 SQUARE_COLOR_TAILWIND_CLASSES = ("bg-chess-square-dark", "bg-chess-square-light")
 # SQUARE_COLOR_TAILWIND_CLASSES = ("bg-slate-600", "bg-zinc-400")
 # SQUARE_COLOR_TAILWIND_CLASSES = ("bg-orange-600", "bg-orange-400")
-INFO_BARS_COMMON_CLASSES = "p-2 text-slate-200 bg-slate-700 border-2 border-solid border-slate-400"
+INFO_BARS_COMMON_CLASSES = (
+    "p-2 text-slate-200 bg-slate-800 border-2 border-solid border-slate-400"
+)
 _PIECE_GROUND_MARKER_COLOR_TAILWIND_CLASSES: dict[tuple["PlayerSide", bool], str] = {
     # the boolean says if the piece can move
-    ("w", False): "bg-slate-100/40 border border-slate-100",
-    ("b", False): "bg-slate-800/40 border border-slate-800",
-    ("w", True): "bg-slate-100/40 border-2 border-active-chess-available-target-marker",
-    ("b", True): "bg-slate-800/40 border-2 border-opponent-chess-available-target-marker",
+    # fmt: off
+    ("w", False): "bg-emerald-800/40 border-2 border-emerald-800",
+    ("b", False): "bg-indigo-800/40 border-2 border-indigo-800",
+    ("w", True): "bg-emerald-600/40 border-2 border-emerald-800",
+    ("b", True): "bg-indigo-600/40 border-2 border-indigo-800",
+    # fmt: on
 }
 _CHESS_PIECE_Z_INDEXES: dict[str, str] = {
     # N.B. z-indexes must be multiples of 10 in Tailwind.
@@ -49,19 +51,27 @@ _CHESS_PIECE_Z_INDEXES: dict[str, str] = {
 }
 
 
-_BOT_MOVE_DELAY = 500  # we'll wait that amount of milliseconds before starting the bot move's calculation
+# We'll wait that amount of milliseconds before starting the bot move's calculation:
+_BOT_MOVE_DELAY = 500
 _PLAY_BOT_JS_TEMPLATE = Template(
     """
 <script>
     (function () {
         setTimeout(function () {
-            window.playBotMove("$FEN", "$PLAY_MOVE_HTMX_ELEMENT_ID", "$BOT_ASSETS_DATA_HOLDER_ELEMENT_ID", $FORCED_MOVE);
+            window.playBotMove(
+                "$FEN", 
+                "$PLAY_MOVE_HTMX_ELEMENT_ID",
+                "$BOT_ASSETS_DATA_HOLDER_ELEMENT_ID",
+                $FORCED_MOVE
+            );
         }, $MOVE_DELAY);
     })()</script>"""
 )
 
 
-def chess_arena(*, game_presenter: "GamePresenter", board_id: str) -> dom_tag:
+def chess_arena(
+    *, game_presenter: "GamePresenter", status_bars: list[dom_tag], board_id: str
+) -> dom_tag:
     return div(
         # stats_modal(),
         div(
@@ -76,20 +86,22 @@ def chess_arena(*, game_presenter: "GamePresenter", board_id: str) -> dom_tag:
                 id=f"chess-pieces-container-{board_id}",
             ),
             div(
-                chess_available_targets(game_presenter=game_presenter, board_id=board_id),
+                chess_available_targets(
+                    game_presenter=game_presenter, board_id=board_id
+                ),
                 cls="absolute inset-0 pointer-events-none z-20",
                 id=f"chess-available-targets-container-{board_id}",
             ),
             cls="aspect-square relative",
         ),
         chess_bot_data(board_id),
-        chess_daily_challenge_bar(game_presenter=game_presenter, board_id=board_id),
-        chess_status_bar(game_presenter=game_presenter, board_id=board_id),
+        *status_bars,
         id=f"chess-arena-{board_id}",
         cls="w-full md:max-w-xl mx-auto",
-        # When the user clicks on anything that is not an interactive element of the chess board, and the state
-        # of this chess board is not "waiting_for_player_selection", then the chess board is reset to this state.
-        data_hx_get=f"{ reverse('chess:htmx_game_no_selection') }?{ urlencode({'board_id': board_id}) }",
+        # When the user clicks on anything that is not an interactive element
+        # of the chess board, and the state of this chess board is not
+        # "waiting_for_player_selection", then the chess board is reset to this state.
+        data_hx_get=game_presenter.urls.htmx_game_no_selection_url(board_id=board_id),
         data_hx_trigger=f"click[cursorIsNotOnChessBoardInteractiveElement('{ board_id }')] from:document",
         data_hx_target=f"#chess-board-pieces-{ board_id }",
     )
@@ -119,14 +131,23 @@ def chess_board(board_id: str) -> dom_tag:
     )
 
 
-def chess_pieces(*, game_presenter: "GamePresenter", board_id: str, **extra_attrs: str) -> dom_tag:
+def chess_pieces(
+    *, game_presenter: "GamePresenter", board_id: str, **extra_attrs: str
+) -> dom_tag:
     pieces: list[dom_tag] = []
     for square, piece_role in game_presenter.piece_role_by_square.items():
         pieces.append(
-            chess_piece(square=square, piece_role=piece_role, game_presenter=game_presenter, board_id=board_id)
+            chess_piece(
+                square=square,
+                piece_role=piece_role,
+                game_presenter=game_presenter,
+                board_id=board_id,
+            )
         )
 
-    bot_turn_html_elements = _bot_turn_html_elements(game_presenter=game_presenter, board_id=board_id)
+    bot_turn_html_elements = _bot_turn_html_elements(
+        game_presenter=game_presenter, board_id=board_id
+    )
 
     return div(
         div(
@@ -166,20 +187,27 @@ def chess_board_square(square: "Square") -> dom_tag:
 
 
 def chess_piece(
-    *, game_presenter: "GamePresenter", square: "Square", piece_role: "PieceRole", board_id: str
+    *,
+    game_presenter: "GamePresenter",
+    square: "Square",
+    piece_role: "PieceRole",
+    board_id: str,
 ) -> dom_tag:
     player_side = player_side_from_piece_role(piece_role)
 
     piece_can_be_moved_by_player = (
-        game_presenter.is_player_turn and square in game_presenter.squares_with_pieces_that_can_move
+        game_presenter.is_player_turn
+        and square in game_presenter.squares_with_pieces_that_can_move
     )
-    unit_display = chess_character_display(piece_role=piece_role, game_presenter=game_presenter, square=square)
-    unit_chess_symbol_display = chess_unit_symbol_display(piece_role=piece_role, square=square)
-
-    if player_side == game_presenter.active_player_side or OPPONENT_PIECES_HAVE_GROUND_MARKERS:
-        ground_marker = chess_unit_ground_marker(player_side=player_side, can_move=piece_can_be_moved_by_player)
-    else:
-        ground_marker = text("")
+    unit_display = chess_character_display(
+        piece_role=piece_role, game_presenter=game_presenter, square=square
+    )
+    unit_chess_symbol_display = chess_unit_symbol_display(
+        piece_role=piece_role, square=square
+    )
+    ground_marker = chess_unit_ground_marker(
+        player_side=player_side, can_move=piece_can_be_moved_by_player
+    )
 
     classes = [
         "absolute",
@@ -197,7 +225,9 @@ def chess_piece(
 
     htmx_attributes = {
         "data_hx_trigger": "click",
-        "data_hx_get": f"{reverse('chess:htmx_game_select_piece')}?{urlencode({'square': square, 'board_id': board_id})}",
+        "data_hx_get": game_presenter.urls.htmx_game_select_piece_url(
+            square=square, board_id=board_id
+        ),
         "data_hx_target": f"#chess-board-available-targets-{board_id}",
     }
 
@@ -214,7 +244,9 @@ def chess_piece(
     )
 
 
-def chess_available_targets(*, game_presenter: "GamePresenter", board_id: str, **extra_attrs: str) -> dom_tag:
+def chess_available_targets(
+    *, game_presenter: "GamePresenter", board_id: str, **extra_attrs: str
+) -> dom_tag:
     children: list[dom_tag] = []
 
     if game_presenter.selected_piece and not game_presenter.is_game_over:
@@ -238,11 +270,22 @@ def chess_available_targets(*, game_presenter: "GamePresenter", board_id: str, *
 
 
 def chess_available_target(
-    *, game_presenter: "GamePresenter", piece_player_side: "PlayerSide", square: "Square", board_id: str
+    *,
+    game_presenter: "GamePresenter",
+    piece_player_side: "PlayerSide",
+    square: "Square",
+    board_id: str,
 ) -> dom_tag:
     assert game_presenter.selected_piece is not None
-    can_move = not game_presenter.is_game_over and game_presenter.active_player_side == piece_player_side
-    bg_class = "bg-active-chess-available-target-marker" if can_move else "bg-opponent-chess-available-target-marker"
+    can_move = (
+        not game_presenter.is_game_over
+        and game_presenter.active_player_side == piece_player_side
+    )
+    bg_class = (
+        "bg-active-chess-available-target-marker"
+        if can_move
+        else "bg-opponent-chess-available-target-marker"
+    )
     hover_class = "hover:w-1/3 hover:h-1/3" if can_move else ""
     target_marker = div(
         cls=f"w-1/5 h-1/5 rounded-full transition-size {bg_class} {hover_class}",
@@ -264,7 +307,9 @@ def chess_available_target(
 
     if can_move:
         htmx_attributes = {
-            "data_hx_post": f"{reverse('chess:htmx_game_move_piece', kwargs={'from_': game_presenter.selected_piece.square, 'to': square})}?{urlencode({'board_id': board_id})}",
+            "data_hx_post": game_presenter.urls.htmx_game_move_piece_url(
+                square=square, board_id=board_id
+            ),
             "data_hx_target": f"#chess-board-pieces-{ board_id }",
             "data_hx_swap": "outerHTML",
         }
@@ -288,28 +333,42 @@ def chess_character_display(
     additional_classes: "Sequence[str]|None" = None,
     factions: "Factions | None" = None,
 ) -> dom_tag:
-    assert game_presenter or factions, "You must provide either a GamePresenter or a Factions kwarg."
+    assert (
+        game_presenter or factions
+    ), "You must provide either a GamePresenter or a Factions kwarg."
 
     # Some data we'll need:
     piece_player_side = player_side_from_piece_role(piece_role)
-    is_active_player_piece = game_presenter.active_player == piece_player_side if game_presenter else False
+    is_active_player_piece = (
+        game_presenter.active_player == piece_player_side if game_presenter else False
+    )
     is_highlighted = bool(
-        square and game_presenter and game_presenter.selected_piece and game_presenter.selected_piece.square == square
+        square
+        and game_presenter
+        and game_presenter.selected_piece
+        and game_presenter.selected_piece.square == square
     )
     is_potential_capture = bool(
-        game_presenter and game_presenter.selected_piece and game_presenter.selected_piece.is_potential_capture(square)
+        game_presenter
+        and game_presenter.selected_piece
+        and game_presenter.selected_piece.is_potential_capture(square)
     )
     is_w_side = piece_player_side == "w"
     piece_type: "PieceType" = type_from_piece_role(piece_role)
     is_knight, is_king = piece_type == "n", piece_type == "k"
 
     # Right, let's do this shall we?
-    if is_king and is_active_player_piece and game_presenter and game_presenter.is_check:
+    if (
+        is_king
+        and is_active_player_piece
+        and game_presenter
+        and game_presenter.is_check
+    ):
         is_potential_capture = True  # let's highlight our king if it's in check
     horizontal_translation = (
-        ("left-1" if is_w_side else "right-1") if is_knight else ("left-0" if is_w_side else "right-0")
+        ("left-3" if is_knight else "left-0") if is_w_side else "right-0"
     )
-    vertical_translation = "top-1"
+    vertical_translation = "top-2" if is_knight and is_w_side else "top-1"
 
     game_factions = cast("Factions", factions or game_presenter.factions)  # type: ignore
 
@@ -324,7 +383,11 @@ def chess_character_display(
         vertical_translation,
         *piece_character_classes(piece_role=piece_role, factions=game_factions),
         # Conditional classes:
-        ("drop-shadow-active-selected-piece" if is_active_player_piece else "drop-shadow-opponent-selected-piece")
+        (
+            "drop-shadow-active-selected-piece"
+            if is_active_player_piece
+            else "drop-shadow-opponent-selected-piece"
+        )
         if is_highlighted
         else "",
         "drop-shadow-potential-capture" if is_potential_capture else "",
@@ -337,13 +400,15 @@ def chess_character_display(
     )
 
 
-def chess_unit_ground_marker(*, player_side: "PlayerSide", can_move: bool = False) -> dom_tag:
+def chess_unit_ground_marker(
+    *, player_side: "PlayerSide", can_move: bool = False
+) -> dom_tag:
     classes = [
         "absolute",
-        "w-5/6",
-        "h-1/3",
-        "left-1/12",
-        "bottom-1",
+        "w-11/12",
+        "h-2/5",
+        "left-1/24",
+        "bottom-0.5",
         "rounded-1/2",
         _CHESS_PIECE_Z_INDEXES["ground_marker"],
         "border-solid",
@@ -360,12 +425,16 @@ def chess_unit_display_with_ground_marker(
     game_presenter: "GamePresenter | None" = None,
     factions: "Factions | None" = None,
 ) -> dom_tag:
-    assert game_presenter or factions, "You must provide either a GamePresenter or a Factions kwarg."
+    assert (
+        game_presenter or factions
+    ), "You must provide either a GamePresenter or a Factions kwarg."
 
     player_side = player_side_from_piece_role(piece_role)
 
     ground_marker = chess_unit_ground_marker(player_side=player_side)
-    unit_display = chess_character_display(piece_role=piece_role, game_presenter=game_presenter, factions=factions)
+    unit_display = chess_character_display(
+        piece_role=piece_role, game_presenter=game_presenter, factions=factions
+    )
 
     return div(
         ground_marker,
@@ -378,19 +447,23 @@ def chess_unit_symbol_display(*, piece_role: "PieceRole", square: "Square") -> d
     player_side = player_side_from_piece_role(piece_role)
     piece_type = type_from_piece_role(piece_role)
     piece_name = piece_name_from_piece_role(piece_role)
-    square_color = chess_square_color(square)
+    chess_square_color(square)
 
     is_knight, is_pawn = piece_type == "n", piece_type == "p"
-    is_light_square = square_color == "light"
 
     symbol_class = (
+        # We have to do some ad-hoc adjustments for Knights and Pawns:
         "w-7" if (is_pawn or is_knight) else "w-8",
         "aspect-square",
         "bg-no-repeat",
         "bg-cover",
-        "opacity-60" if is_light_square else "opacity-50",
-        "brightness-50",
-        chess_unit_symbol_class(player_side="b", piece_name=piece_name),
+        "opacity-90",
+        (
+            "drop-shadow-piece-symbol-w"
+            if player_side == "w"
+            else "drop-shadow-piece-symbol-b"
+        ),
+        chess_unit_symbol_class(player_side="w", piece_name=piece_name),
     )
     symbol_display = div(
         cls=" ".join(symbol_class),
@@ -398,9 +471,8 @@ def chess_unit_symbol_display(*, piece_role: "PieceRole", square: "Square") -> d
 
     symbol_display_container_classes = (
         "absolute",
-        # We have to do some ad-hoc adjustments for Knights:
-        "-top-1" if is_knight else "top-0",
-        ("-left-1" if is_knight else "left-0") if player_side == "w" else ("-right-1" if is_knight else "right-0"),
+        "top-0",
+        "left-0" if player_side == "w" else "right-0",
         _CHESS_PIECE_Z_INDEXES["symbol"],
         # Quick custom display for white knights, so they face the inside of the board:
         "-scale-x-100" if player_side == "w" and is_knight else "",
@@ -413,16 +485,26 @@ def chess_unit_symbol_display(*, piece_role: "PieceRole", square: "Square") -> d
     )
 
 
-def _bot_turn_html_elements(*, game_presenter: "GamePresenter", board_id: str) -> list[dom_tag]:
+def _bot_turn_html_elements(
+    *, game_presenter: "GamePresenter", board_id: str
+) -> list[dom_tag]:
     if not game_presenter.is_bot_turn or game_presenter.is_game_over:
         return []
 
     play_move_htmx_element_id = f"chess-bot-play-move-{ board_id }"
-    forced_bot_move = json.dumps("".join(game_presenter.forced_bot_move) if game_presenter.forced_bot_move else None)
-    move_delay = _BOT_MOVE_DELAY * 2 if game_presenter.forced_bot_move else _BOT_MOVE_DELAY
+    forced_bot_move = json.dumps(
+        "".join(game_presenter.forced_bot_move)
+        if game_presenter.forced_bot_move
+        else None
+    )
+    move_delay = (
+        _BOT_MOVE_DELAY * 2 if game_presenter.forced_bot_move else _BOT_MOVE_DELAY
+    )
 
     htmx_attributes = {
-        "data_hx_post": f"{reverse('chess:htmx_game_bot_move')}?{urlencode({'board_id': board_id, 'move': 'BOT_MOVE'})}",
+        "data_hx_post": game_presenter.urls.htmx_game_play_bot_move_url(
+            board_id=board_id
+        ),
         "data_hx_target": f"#chess-board-pieces-{board_id}",
         "data_hx_trigger": "playMove",
     }

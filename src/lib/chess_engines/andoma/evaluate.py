@@ -138,7 +138,9 @@ def evaluate_capture(board: chess.Board, move: chess.Move) -> float:
     _to = board.piece_at(move.to_square)
     _from = board.piece_at(move.from_square)
     if _to is None or _from is None:
-        raise Exception(f"Pieces were expected at _both_ {move.to_square} and {move.from_square}")
+        raise Exception(
+            f"Pieces were expected at _both_ {move.to_square} and {move.from_square}"
+        )
     return piece_value[_to.piece_type] - piece_value[_from.piece_type]
 
 
@@ -158,7 +160,11 @@ def evaluate_piece(piece: chess.Piece, square: chess.Square, end_game: bool) -> 
     if piece_type == chess.KING:
         # use end game piece-square tables if neither side has a queen
         if end_game:
-            mapping = kingEvalEndGameWhite if piece.color == chess.WHITE else kingEvalEndGameBlack
+            mapping = (
+                kingEvalEndGameWhite
+                if piece.color == chess.WHITE
+                else kingEvalEndGameBlack
+            )
         else:
             mapping = kingEvalWhite if piece.color == chess.WHITE else kingEvalBlack
 
@@ -201,7 +207,9 @@ def check_end_game(board: chess.Board) -> bool:
         piece = board.piece_at(square)
         if piece and piece.piece_type == chess.QUEEN:
             queens += 1
-        if piece and (piece.piece_type == chess.BISHOP or piece.piece_type == chess.KNIGHT):
+        if piece and (
+            piece.piece_type == chess.BISHOP or piece.piece_type == chess.KNIGHT
+        ):
             minors += 1
 
     if queens == 0 or (queens == 2 and minors <= 1):

@@ -4,18 +4,26 @@ from typing import TYPE_CHECKING, Literal, cast
 
 import chess
 
-from apps.chess.business_logic.types import ChessMoveResult, GameOverDescription
 from apps.chess.helpers import piece_from_int
+from apps.chess.types import ChessMoveResult, GameOverDescription
 
 if TYPE_CHECKING:
-    from apps.chess.business_logic.types import FEN, ChessMoveChanges, GameEndReason, PlayerSide, Square
+    from apps.chess.types import (
+        FEN,
+        ChessMoveChanges,
+        GameEndReason,
+        PlayerSide,
+        Square,
+    )
 
 _CHESS_COLOR_TO_PLAYER_SIDE_MAPPING: Mapping[chess.Color, "PlayerSide"] = {
     True: "w",
     False: "b",
 }
 
-_CHESS_OUTCOME_TO_GAME_END_REASON_MAPPING: Mapping[chess.Termination, "GameEndReason"] = {
+_CHESS_OUTCOME_TO_GAME_END_REASON_MAPPING: Mapping[
+    chess.Termination, "GameEndReason"
+] = {
     chess.Termination.CHECKMATE: "checkmate",
     chess.Termination.STALEMATE: "stalemate",
     chess.Termination.INSUFFICIENT_MATERIAL: "insufficient_material",
@@ -89,19 +97,28 @@ def do_chess_move(*, fen: "FEN", from_: "Square", to: "Square") -> ChessMoveResu
 
     # Specific cases:
     is_castling = False
-    if current_piece.piece_type == chess.KING and chess_board.castling_rights != previous_castling_rights:
+    if (
+        current_piece.piece_type == chess.KING
+        and chess_board.castling_rights != previous_castling_rights
+    ):
         king_movement = (from_, to)
         if king_movement in _CASTLING_KING_MOVES:
             # A King just castled!
             is_castling = True
             # Record that rook's move:
-            rook_previous_square, rook_new_square = _CASTLING_ROOK_MOVE[cast(_CastlingPossibleTo, to)]
+            rook_previous_square, rook_new_square = _CASTLING_ROOK_MOVE[
+                cast(_CastlingPossibleTo, to)
+            ]
             changes[rook_previous_square] = rook_new_square
 
     # Check the game's outcome:
     outcome = chess_board.outcome()
     if outcome:
-        winner = _CHESS_COLOR_TO_PLAYER_SIDE_MAPPING[outcome.winner] if outcome.winner else None
+        winner = (
+            _CHESS_COLOR_TO_PLAYER_SIDE_MAPPING[outcome.winner]
+            if outcome.winner
+            else None
+        )
         win_reason = _CHESS_OUTCOME_TO_GAME_END_REASON_MAPPING[outcome.termination]
     else:
         winner = None
@@ -110,7 +127,9 @@ def do_chess_move(*, fen: "FEN", from_: "Square", to: "Square") -> ChessMoveResu
     new_fen = chess_board.fen()
 
     domain_promotion = None if promotion is None else piece_from_int(promotion)
-    game_over = GameOverDescription(winner=winner, reason=win_reason) if win_reason else None
+    game_over = (
+        GameOverDescription(winner=winner, reason=win_reason) if win_reason else None
+    )
 
     return ChessMoveResult(
         fen=new_fen,

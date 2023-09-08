@@ -1,13 +1,26 @@
 from functools import cache
 from typing import TYPE_CHECKING
 
-from ..business_logic.consts import PIECE_TYPE_TO_NAME
-from ..helpers import file_and_rank_from_square, player_side_from_piece_role, type_from_piece_role
+from apps.chess.consts import PIECE_TYPE_TO_NAME
+from apps.chess.helpers import (
+    file_and_rank_from_square,
+    player_side_from_piece_role,
+    type_from_piece_role,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from ..business_logic.types import Faction, Factions, File, PieceName, PieceRole, PlayerSide, Rank, Square
+    from apps.chess.types import (
+        Faction,
+        Factions,
+        File,
+        PieceName,
+        PieceRole,
+        PlayerSide,
+        Rank,
+        Square,
+    )
 
 _FILE_TO_TAILWIND_POSITIONING_CLASS: dict["File", str] = {
     "a": "translate-y-0/1",
@@ -80,8 +93,12 @@ def square_to_tailwind_classes(square: "Square") -> "Sequence[str]":
     )
 
 
-def piece_character_classes(*, piece_role: "PieceRole", factions: "Factions") -> "Sequence[str]":
-    return _piece_character_classes_for_factions(piece_role=piece_role, factions_tuple=tuple(factions.items()))
+def piece_character_classes(
+    *, piece_role: "PieceRole", factions: "Factions"
+) -> "Sequence[str]":
+    return _piece_character_classes_for_factions(
+        piece_role=piece_role, factions_tuple=tuple(factions.items())
+    )
 
 
 @cache
@@ -101,5 +118,7 @@ def _piece_character_classes_for_factions(
 
 
 @cache
-def chess_unit_symbol_class(*, player_side: "PlayerSide", piece_name: "PieceName") -> str:
+def chess_unit_symbol_class(
+    *, player_side: "PlayerSide", piece_name: "PieceName"
+) -> str:
     return _PIECE_SYMBOLS_CLASSES[player_side][piece_name]

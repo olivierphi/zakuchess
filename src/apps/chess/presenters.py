@@ -1,12 +1,11 @@
+from abc import ABC
 from functools import cache, cached_property
 from typing import TYPE_CHECKING, cast
 
 import chess
 
-from .business_logic import get_daily_challenge_turns_state
-from .business_logic.consts import PLAYER_SIDES
-from .business_logic.daily_challenge import MAXIMUM_TURNS_PER_CHALLENGE
 from .chess_logic import calculate_piece_available_targets
+from .consts import PLAYER_SIDES
 from .helpers import (
     chess_lib_color_to_player_side,
     get_active_player_side_from_chess_board,
@@ -15,13 +14,13 @@ from .helpers import (
     symbol_from_piece_role,
     team_member_role_from_piece_role,
 )
-from .models import DailyChallenge
 
 if TYPE_CHECKING:
-    from .business_logic.daily_challenge import ChallengeTurnsState, PlayerGameState
-    from .business_logic.types import (
+    from .types import (
+        FEN,
         Factions,
         GamePhase,
+        GameTeams,
         PieceRole,
         PieceRoleBySquare,
         PieceSymbol,
@@ -35,27 +34,23 @@ if TYPE_CHECKING:
 # Presenters are the objects we pass to our templates.
 
 
-class GamePresenter:
+class GamePresenter(ABC):
     def __init__(
         self,
         *,
-        challenge: DailyChallenge,
-        game_state: "PlayerGameState",
-        forced_bot_move: tuple["Square", "Square"] | None = None,
+        fen: "FEN",
+        piece_role_by_square: "PieceRoleBySquare",
+        teams: "GameTeams",
         selected_square: "Square | None" = None,
         selected_piece_square: "Square | None" = None,
         target_to_confirm: "Square | None" = None,
-        restart_daily_challenge_ask_confirmation: bool = False,
-        is_bot_move: bool = False,
+        forced_bot_move: tuple["Square", "Square"] | None = None,
     ):
-        self._challenge = challenge
-        self.game_state = game_state
+        self._fen = fen
+        self._chess_board = chess.Board(fen=fen)
+        self._piece_role_by_square = piece_role_by_square
+        self._teams = teams
         self.forced_bot_move = forced_bot_move
-        self.restart_daily_challenge_ask_confirmation = restart_daily_challenge_ask_confirmation
-        self.is_bot_move = is_bot_move
-
-        self._chess_board = chess.Board(fen=game_state["fen"])
-        self._piece_role_by_square = game_state["piece_role_by_square"]
 
         if selected_square is not None:
             self.selected_square = SelectedSquarePresenter(
@@ -73,38 +68,17 @@ class GamePresenter:
                 target_to_confirm=target_to_confirm,
             )
 
-    @cached_property
+    @property
+    def urls(self) -> "GamePresenterUrls":
+        raise NotImplementedError
+
+    @property
     def is_my_turn(self) -> bool:
-        return self._challenge.my_side == self.active_player
-
-    @cached_property
-    def challenge_turns_state(self) -> "ChallengeTurnsState":
-        return get_daily_challenge_turns_state(self.game_state)
+        raise NotImplementedError
 
     @property
-    def challenge_turns_counter(self) -> int:
-        return self.game_state["turns_counter"]
-
-    @property
-    def challenge_total_turns(self) -> int:
-        return MAXIMUM_TURNS_PER_CHALLENGE
-
-    @cached_property
     def game_phase(self) -> "GamePhase":
-        if self.challenge_turns_state.game_over:
-            return "game_over:lost"
-        if (winner := self.winner) is not None:
-            return "game_over:won" if winner == self._challenge.my_side else "game_over:lost"
-        if self.is_my_turn:
-            if self.selected_piece is None:
-                return "waiting_for_player_selection"
-            if self.selected_piece.target_to_confirm is None:
-                return "waiting_for_player_target_choice"
-            return "waiting_for_player_target_choice_confirmation"
-        if self.is_bot_turn:
-            return "waiting_for_bot_turn"
-
-        return "waiting_for_opponent_turn"
+        raise NotImplementedError
 
     # Properties derived from the chess board:
     @cached_property
@@ -117,8 +91,6 @@ class GamePresenter:
 
     @cached_property
     def is_game_over(self) -> bool:
-        if self.challenge_turns_state.game_over:
-            return True
         return self.winner is not None
 
     @cached_property
@@ -135,28 +107,30 @@ class GamePresenter:
 
     @cached_property
     def squares_with_pieces_that_can_move(self) -> set["Square"]:
-        return set(square_from_int(move.from_square) for move in self._chess_board.legal_moves)
+        return set(
+            square_from_int(move.from_square) for move in self._chess_board.legal_moves
+        )
 
     # Properties derived from the Game model:
     @cached_property
     def active_player_side(self) -> "PlayerSide":
         return chess_lib_color_to_player_side(self._chess_board.turn)
 
-    @cached_property
+    @property
     def is_player_turn(self) -> bool:
-        return self.active_player_side != self._challenge.bot_side
+        raise NotImplementedError
 
-    @cached_property
+    @property
     def is_bot_turn(self) -> bool:
-        return self.active_player_side == self._challenge.bot_side
+        raise NotImplementedError
 
-    @cached_property
+    @property
     def game_id(self) -> str:
-        return str(self._challenge.id)
+        raise NotImplementedError
 
-    @cached_property
+    @property
     def factions(self) -> "Factions":
-        return self._challenge.factions
+        raise NotImplementedError
 
     @cached_property
     def piece_role_by_square(self) -> "PieceRoleBySquare":
@@ -167,14 +141,33 @@ class GamePresenter:
         return self._piece_role_by_square[square]
 
     @cached_property
-    def team_members_by_role_by_side(self) -> "dict[PlayerSide, dict[TeamMemberRole, TeamMember]]":
+    def team_members_by_role_by_side(
+        self,
+    ) -> "dict[PlayerSide, dict[TeamMemberRole, TeamMember]]":
         result: "dict[PlayerSide, dict[TeamMemberRole, TeamMember]]" = {}
         for player_side in PLAYER_SIDES:
             result[player_side] = {}
-            for team_member in self._challenge.teams[player_side]:
+            for team_member in self._teams[player_side]:
                 member_role = team_member_role_from_piece_role(team_member["role"])
                 result[player_side][member_role] = team_member
         return result
+
+
+class GamePresenterUrls(ABC):
+    def __init__(self, *, game_presenter: GamePresenter):
+        self._game_presenter = game_presenter
+
+    def htmx_game_no_selection_url(self, *, board_id: str) -> str:
+        raise NotImplementedError
+
+    def htmx_game_select_piece_url(self, *, square: "Square", board_id: str) -> str:
+        raise NotImplementedError
+
+    def htmx_game_move_piece_url(self, *, square: "Square", board_id: str) -> str:
+        raise NotImplementedError
+
+    def htmx_game_play_bot_move_url(self, *, board_id: str) -> str:
+        raise NotImplementedError
 
 
 class SelectedSquarePresenter:
@@ -202,7 +195,9 @@ class SelectedSquarePresenter:
 
     @cached_property
     def player_side(self) -> "PlayerSide":
-        return player_side_from_piece_role(self._game_presenter.piece_role_at_square(self.square))
+        return player_side_from_piece_role(
+            self._game_presenter.piece_role_at_square(self.square)
+        )
 
     @cached_property
     def symbol(self) -> "PieceSymbol":
@@ -214,7 +209,9 @@ class SelectedSquarePresenter:
 
     @cached_property
     def piece_at(self) -> "chess.Piece":
-        return cast("chess.Piece", self._chess_board.piece_at(chess.parse_square(self.square)))
+        return cast(
+            "chess.Piece", self._chess_board.piece_at(chess.parse_square(self.square))
+        )
 
     def __str__(self) -> str:
         return f"{self.square} (piece role: {self.piece_role})"
@@ -232,21 +229,32 @@ class SelectedPiecePresenter(SelectedSquarePresenter):
         piece_square: "Square",
         target_to_confirm: "Square | None",
     ):
-        super().__init__(game_presenter=game_presenter, chess_board=chess_board, square=piece_square)
+        super().__init__(
+            game_presenter=game_presenter, chess_board=chess_board, square=piece_square
+        )
         self.target_to_confirm = target_to_confirm
 
     @cached_property
     def available_targets(self) -> frozenset["Square"]:
-        chess_board_active_player_side = chess_lib_color_to_player_side(self._chess_board.turn)
+        chess_board_active_player_side = chess_lib_color_to_player_side(
+            self._chess_board.turn
+        )
         square_index = chess.parse_square(self.square)
-        piece_player_side = chess_lib_color_to_player_side(self._chess_board.color_at(square_index))
+        piece_player_side = chess_lib_color_to_player_side(
+            self._chess_board.color_at(square_index)
+        )
+
         if chess_board_active_player_side != piece_player_side:
-            # Let's pretend it's that player's turn, so we can calculate the available targets:
+            # Let's pretend it's that player's turn,
+            # so we can calculate the available targets:
             chess_board = self._chess_board.copy()
             chess_board.turn = not chess_board.turn
         else:
             chess_board = self._chess_board
-        return calculate_piece_available_targets(chess_board=chess_board, piece_square=self.square)
+
+        return calculate_piece_available_targets(
+            chess_board=chess_board, piece_square=self.square
+        )
 
     @cache
     def is_potential_capture(self, square: "Square") -> bool:

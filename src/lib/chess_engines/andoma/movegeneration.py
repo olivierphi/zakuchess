@@ -41,7 +41,9 @@ def get_ordered_moves(board: chess.Board) -> List[chess.Move]:
     def orderer(move):
         return move_value(board, move, end_game)
 
-    in_order = sorted(board.legal_moves, key=orderer, reverse=(board.turn == chess.WHITE))
+    in_order = sorted(
+        board.legal_moves, key=orderer, reverse=(board.turn == chess.WHITE)
+    )
     return list(in_order)
 
 
