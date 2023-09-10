@@ -111,7 +111,7 @@ def _current_state_display(
         blocks.append(PROGRESS_BAR_BLOCKS[current_block_color])
 
     restart_button: dom_tag = span("")
-    if not time_s_up and current_attempt_turns > 1:
+    if not time_s_up:
         htmx_attributes = {
             "data_hx_post": "".join(
                 (
@@ -143,7 +143,14 @@ def _current_state_display(
 
     return div(
         div(
-            f"{ordinal(attempts_counter+1)} attempt - turn #{current_attempt_turns+1}",
+            raw(
+                " - ".join(
+                    (
+                        f"<b>{ordinal(attempts_counter+1)}</b> attempt",
+                        f"turn <b>#{current_attempt_turns+1}</b>",
+                    )
+                )
+            ),
             cls="w-full text-center",
         ),
         div(

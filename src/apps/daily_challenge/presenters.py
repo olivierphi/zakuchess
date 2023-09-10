@@ -140,7 +140,7 @@ class DailyChallengeGamePresenter(GamePresenter):
                 or "Come on folks, we can win this one!"
             )
             return SpeechBubbleData(
-                text=text, square=self._challenge.intro_turn_speech_square
+                text=text, square=self._challenge.intro_turn_speech_square, time_out=8
             )
 
         if (
@@ -171,7 +171,7 @@ class DailyChallengeGamePresenter(GamePresenter):
                     "Maybe restarting from the beginning, "
                     "by using the ↩️ button, could be a good idea?",
                     square=king_square,
-                    time_out=4,
+                    time_out=8,
                 )
         return None
 

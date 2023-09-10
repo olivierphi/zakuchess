@@ -326,4 +326,4 @@ class SelectedPiecePresenter(SelectedSquarePresenter):
 class SpeechBubbleData(NamedTuple):
     text: str
     square: "Square"
-    time_out: int = 2  # seconds
+    time_out: int = 4  # seconds
