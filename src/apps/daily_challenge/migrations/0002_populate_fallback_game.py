@@ -52,6 +52,7 @@ def _create_fallback_game(apps, schema_editor):
                 {"role": "n1", "faction": "undeads"},
             ],
         },
+        intro_turn_speech_square="e4",
     )
 
     # In a migration context models are kinda emulated, so this "challenge" object

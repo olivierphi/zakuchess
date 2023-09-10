@@ -22,7 +22,7 @@ if TYPE_CHECKING:
         Square,
     )
 
-_FILE_TO_TAILWIND_POSITIONING_CLASS: dict["File", str] = {
+_PIECE_FILE_TO_TAILWIND_POSITIONING_CLASS: dict["File", str] = {
     "a": "translate-y-0/1",
     "b": "translate-y-1/1",
     "c": "translate-y-2/1",
@@ -32,7 +32,7 @@ _FILE_TO_TAILWIND_POSITIONING_CLASS: dict["File", str] = {
     "g": "translate-y-6/1",
     "h": "translate-y-7/1",
 }
-_RANK_TO_TAILWIND_POSITIONING_CLASS: dict["Rank", str] = {
+_PIECE_RANK_TO_TAILWIND_POSITIONING_CLASS: dict["Rank", str] = {
     "1": "translate-x-0/1",
     "2": "translate-x-1/1",
     "3": "translate-x-2/1",
@@ -41,6 +41,27 @@ _RANK_TO_TAILWIND_POSITIONING_CLASS: dict["Rank", str] = {
     "6": "translate-x-5/1",
     "7": "translate-x-6/1",
     "8": "translate-x-7/1",
+}
+
+_SQUARE_FILE_TO_TAILWIND_POSITIONING_CLASS: dict["File", str] = {
+    "a": "top-1/8%",
+    "b": "top-2/8%",
+    "c": "top-3/8%",
+    "d": "top-4/8%",
+    "e": "top-5/8%",
+    "f": "top-6/8%",
+    "g": "top-7/8%",
+    "h": "top-8/8%",
+}
+_SQUARE_RANK_TO_TAILWIND_POSITIONING_CLASS: dict["Rank", str] = {
+    "1": "left-1/8%",
+    "2": "left-2/8%",
+    "3": "left-3/8%",
+    "4": "left-4/8%",
+    "5": "left-5/8%",
+    "6": "left-6/8%",
+    "7": "left-7/8%",
+    "8": "left-8/8%",
 }
 
 _PIECE_UNITS_CLASSES: "dict[Faction, dict[PieceName, str]]" = {
@@ -85,11 +106,20 @@ _PIECE_SYMBOLS_CLASSES: "dict[PlayerSide, dict[PieceName, str]]" = {
 
 
 @cache
-def square_to_tailwind_classes(square: "Square") -> "Sequence[str]":
+def square_to_piece_tailwind_classes(square: "Square") -> "Sequence[str]":
     file, rank = file_and_rank_from_square(square)
     return (
-        _FILE_TO_TAILWIND_POSITIONING_CLASS[file],
-        _RANK_TO_TAILWIND_POSITIONING_CLASS[rank],
+        _PIECE_FILE_TO_TAILWIND_POSITIONING_CLASS[file],
+        _PIECE_RANK_TO_TAILWIND_POSITIONING_CLASS[rank],
+    )
+
+
+@cache
+def square_to_square_center_tailwind_classes(square: "Square") -> "Sequence[str]":
+    file, rank = file_and_rank_from_square(square)
+    return (
+        _SQUARE_FILE_TO_TAILWIND_POSITIONING_CLASS[file],
+        _SQUARE_RANK_TO_TAILWIND_POSITIONING_CLASS[rank],
     )
 
 

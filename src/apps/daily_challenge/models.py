@@ -8,7 +8,7 @@ from lib.django_helpers import literal_to_django_choices
 from .consts import BOT_SIDE, FACTIONS, PLAYER_SIDE
 
 if TYPE_CHECKING:
-    from apps.chess.types import FEN, Factions, GameTeams, PieceRoleBySquare
+    from apps.chess.types import FEN, Factions, GameTeams, PieceRoleBySquare, Square
 
 _PLAYER_SIDE_CHOICES = literal_to_django_choices(PlayerSide)  # type: ignore
 _FEN_MAX_LEN = (
@@ -39,6 +39,8 @@ class DailyChallenge(models.Model):
     bot_first_move: str = models.CharField(
         max_length=5, help_text="uses UCI notation, e.g. 'e2e4'"
     )
+    intro_turn_speech_square: "Square" = models.CharField(max_length=2)
+    intro_turn_speech_text: str = models.CharField(max_length=100, blank=True)
 
     def __str__(self) -> str:
         return f"{self.id}: {self.fen}"

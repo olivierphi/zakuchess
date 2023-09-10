@@ -3,7 +3,7 @@ from functools import cache
 from typing import TYPE_CHECKING, cast
 
 from django.conf import settings
-from dominate.tags import div, dom_tag, h4, span
+from dominate.tags import div, dom_tag, h4, p, span
 from dominate.util import raw
 
 from apps.chess.components.chess_helpers import chess_unit_symbol_class
@@ -54,7 +54,7 @@ def status_bar(
 
     inner_content: dom_tag = div("status to implement")
 
-    if game_presenter.is_bot_move and game_presenter.challenge_turns_counter == 0:
+    if game_presenter.is_intro_turn:
         inner_content = _first_turn_intro(
             challenge_total_turns=game_presenter.challenge_total_turns,
             factions_tuple=tuple(game_presenter.factions.items()),
@@ -62,17 +62,29 @@ def status_bar(
     else:
         match game_presenter.game_phase:
             case "game_over:won":
+                msg = raw(
+                    "Today it took you "
+                    f"<b>{game_presenter.challenge_turns_counter}</b> turns, "
+                    f"across <b>{game_presenter.challenge_attempts_counter}</b> attempts."
+                )
                 inner_content = div(
                     div("You won! 🎉"),
-                    div(
-                        raw(
-                            f"It took you <b>{game_presenter.challenge_turns_counter}</b> turns today."
-                        )
-                    ),
+                    div(msg),
                     cls="w-full text-center",
                 )
             case "game_over:lost":
-                inner_content = div("You lost! 😭", cls="w-full text-center")
+                inner_content = div(
+                    p("You lost! 😭"),
+                    (
+                        p(
+                            "You can try again with the ↩️ button above!",
+                            cls="w-full text-center",
+                        )
+                        if game_presenter.challenge_turns_left > 4
+                        else ""
+                    ),
+                    cls="w-full text-center",
+                )
             case "waiting_for_player_selection":
                 inner_content = _chess_status_bar_tip(factions=game_presenter.factions)
             case "waiting_for_player_target_choice" | "opponent_piece_selected":

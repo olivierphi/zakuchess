@@ -61,8 +61,13 @@ def type_from_piece_symbol(piece_symbol: "PieceSymbol") -> "PieceType":
 
 
 @cache
+def player_side_from_piece_symbol(piece_role: "PieceSymbol") -> "PlayerSide":
+    return "w" if piece_role.isupper() else "b"
+
+
+@cache
 def player_side_from_piece_role(piece_role: "PieceRole") -> "PlayerSide":
-    return "w" if symbol_from_piece_role(piece_role).isupper() else "b"
+    return player_side_from_piece_symbol(piece_role)
 
 
 @cache
@@ -129,6 +134,11 @@ def uci_move_squares(move: str) -> tuple["Square", "Square"]:
 @cache
 def get_square_order(square: "Square") -> int:
     return SQUARES.index(square)
+
+
+@cache
+def player_side_to_chess_lib_color(player_side: "PlayerSide") -> chess.Color:
+    return chess.WHITE if player_side == "w" else chess.BLACK
 
 
 @cache

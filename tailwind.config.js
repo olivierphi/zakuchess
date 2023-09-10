@@ -1,10 +1,15 @@
-const CHESS_BOARD_SPACING = Object.fromEntries([1, 2, 3, 4, 5, 6, 7].map((i) => [`${i}/8`, `${i * 12.5}%`]))
+const CHESS_BOARD_SQUARES_TRANSLATION_SPACING = Object.fromEntries(
+    [1, 2, 3, 4, 5, 6, 7, 8].map((i) => [`${i}/8`, `${i * 12.5}%`]),
+)
+const CHESS_BOARD_SQUARES_ABSOLUTE_POSITION_SPACING = Object.fromEntries(
+    [1, 2, 3, 4, 5, 6, 7, 8].map((i) => [`${i}/8%`, `${i * 12.5 - 12.5 / 2}%`]),
+)
 const PIECE_NAMES = ["pawn", "knight", "bishop", "rook", "queen", "king"]
 const PLAYER_SIDES = ["w", "b"]
 const FACTIONS = ["humans", "undeads"]
 
 const ACTIVE_PLAYER_SELECTION_COLOR = "#ffff00"
-const OPPONENT_PLAYER_SELECTION_COLOR = "#ffe000"
+const OPPONENT_PLAYER_SELECTION_COLOR = "#ffd000"
 const POTENTIAL_CAPTURE_COLOR = "#c00000"
 const PIECE_SYMBOL_W = "#065f46" // emerald-800
 const PIECE_SYMBOL_B = "#3730a3" // indigo-800
@@ -36,6 +41,9 @@ module.exports = {
             height: {
                 "1/8": "12.5%",
             },
+            minWidth: {
+                40: "10rem" /* 160px */,
+            },
             minHeight: {
                 40: "10rem" /* 160px */,
             },
@@ -48,9 +56,11 @@ module.exports = {
                 "5/1": "500%",
                 "6/1": "600%",
                 "7/1": "700%",
+                "1/2": "50%",
             },
             inset: {
-                ...CHESS_BOARD_SPACING,
+                ...CHESS_BOARD_SQUARES_TRANSLATION_SPACING,
+                ...CHESS_BOARD_SQUARES_ABSOLUTE_POSITION_SPACING,
                 "1/12": "8.333333%",
                 "2/12": "16.666667%",
                 "1/24": "4.166667%",

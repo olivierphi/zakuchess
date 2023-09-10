@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, cast
 
 from chess import FILE_NAMES, RANK_NAMES
 from django.templatetags.static import static
-from dominate.tags import div, dom_tag, span
+from dominate.tags import div, dom_tag, section, span
 from dominate.util import raw as unescaped_html
 
 from ..helpers import (
@@ -18,8 +18,9 @@ from ..helpers import (
 from .chess_helpers import (
     chess_unit_symbol_class,
     piece_character_classes,
-    square_to_tailwind_classes,
+    square_to_piece_tailwind_classes,
 )
+from .misc_ui import speech_bubble_container
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -52,7 +53,7 @@ _CHESS_PIECE_Z_INDEXES: dict[str, str] = {
 
 
 # We'll wait that amount of milliseconds before starting the bot move's calculation:
-_BOT_MOVE_DELAY = 500
+_BOT_MOVE_DELAY = 700
 _PLAY_BOT_JS_TEMPLATE = Template(
     """
 <script>
@@ -72,7 +73,7 @@ _PLAY_BOT_JS_TEMPLATE = Template(
 def chess_arena(
     *, game_presenter: "GamePresenter", status_bars: list[dom_tag], board_id: str
 ) -> dom_tag:
-    return div(
+    return section(
         # stats_modal(),
         div(
             div(
@@ -91,6 +92,13 @@ def chess_arena(
                 ),
                 cls="absolute inset-0 pointer-events-none z-20",
                 id=f"chess-available-targets-container-{board_id}",
+            ),
+            div(
+                speech_bubble_container(
+                    game_presenter=game_presenter, board_id=board_id
+                ),
+                cls="absolute inset-0 pointer-events-none z-30",
+                id=f"chess-available-speech-container-{board_id}",
             ),
             cls="aspect-square relative",
         ),
@@ -172,7 +180,7 @@ def chess_board_square(square: "Square") -> dom_tag:
         "aspect-square",
         "w-1/8",
         square_color_cls,
-        *square_to_tailwind_classes(square),
+        *square_to_piece_tailwind_classes(square),
     ]
     square_info = span(
         "".join((file if rank == "1" else "", rank if file == "a" else "")),
@@ -181,7 +189,7 @@ def chess_board_square(square: "Square") -> dom_tag:
     return div(
         square_info,
         cls=" ".join(classes),
-        # This one is for debugging purposes:
+        # Mostly for debugging purposes:
         data_square=square,
     )
 
@@ -218,7 +226,7 @@ def chess_piece(
         "absolute",
         "aspect-square",
         "w-1/8",
-        *square_to_tailwind_classes(square),
+        *square_to_piece_tailwind_classes(square),
         "cursor-pointer",
         "pointer-events-auto",
         # Transition-related classes:
@@ -239,7 +247,7 @@ def chess_piece(
             # Re-selecting an already selected piece de-selects it:
             else game_presenter.urls.htmx_game_no_selection_url(board_id=board_id)
         ),
-        "data_hx_target": f"#chess-board-available-targets-{board_id}",
+        "data_hx_target": f"#chess-board-pieces-{board_id}",
     }
 
     return div(
@@ -309,7 +317,7 @@ def chess_available_target(
         "absolute",
         "aspect-square",
         "w-1/8",
-        *square_to_tailwind_classes(square),
+        *square_to_piece_tailwind_classes(square),
     ]
     if can_move:
         classes += ["cursor-pointer", "pointer-events-auto"]
@@ -331,7 +339,7 @@ def chess_available_target(
         target_marker_container,
         cls=" ".join(classes),
         **htmx_attributes,
-        # This one is mostly for debugging purposes:
+        # Mostly for debugging purposes:
         data_square=square,
     )
 
@@ -353,17 +361,25 @@ def chess_character_display(
     is_active_player_piece = (
         game_presenter.active_player == piece_player_side if game_presenter else False
     )
-    is_highlighted = bool(
-        square
-        and game_presenter
-        and game_presenter.selected_piece
-        and game_presenter.selected_piece.square == square
-    )
-    is_potential_capture = bool(
-        game_presenter
-        and game_presenter.selected_piece
-        and game_presenter.selected_piece.is_potential_capture(square)
-    )
+    is_potential_capture: bool = False
+    is_highlighted: bool = False
+    if square and game_presenter:
+        if (
+            game_presenter.selected_piece
+            and game_presenter.selected_piece.square == square
+        ):
+            is_highlighted = True
+        elif (
+            game_presenter.player_side_to_highlight_all_pieces_for == piece_player_side
+        ):
+            is_highlighted = True
+
+        if (
+            game_presenter.selected_piece
+            and game_presenter.selected_piece.is_potential_capture(square)
+        ):
+            is_potential_capture = True
+
     is_w_side = piece_player_side == "w"
     piece_type: "PieceType" = type_from_piece_role(piece_role)
     is_knight, is_king = piece_type == "n", piece_type == "k"
@@ -395,12 +411,14 @@ def chess_character_display(
         *piece_character_classes(piece_role=piece_role, factions=game_factions),
         # Conditional classes:
         (
-            "drop-shadow-active-selected-piece"
-            if is_active_player_piece
-            else "drop-shadow-opponent-selected-piece"
-        )
-        if is_highlighted
-        else "",
+            (
+                "drop-shadow-active-selected-piece"
+                if is_active_player_piece
+                else "drop-shadow-opponent-selected-piece"
+            )
+            if is_highlighted
+            else ""
+        ),
         "drop-shadow-potential-capture" if is_potential_capture else "",
     ]
     if additional_classes:
@@ -408,6 +426,7 @@ def chess_character_display(
 
     return div(
         cls=" ".join(classes),
+        data_piece_role=piece_role,
     )
 
 
