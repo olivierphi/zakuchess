@@ -143,7 +143,11 @@ class DailyChallengeGamePresenter(GamePresenter):
                 text=text, square=self._challenge.intro_turn_speech_square
             )
 
-        if self.is_bot_turn and self.game_state["current_attempt_turns_counter"] == 0:
+        if (
+            self.is_bot_turn
+            and self.game_state["turns_counter"] > 1
+            and self.game_state["current_attempt_turns_counter"] == 0
+        ):
             return SpeechBubbleData(
                 text="Let's try that again, folks! 🤞",
                 square=self._challenge.intro_turn_speech_square,

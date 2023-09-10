@@ -10,7 +10,8 @@ if TYPE_CHECKING:
     from ..types import Square
 
 
-_SPEECH_BUBBLE_BACKGROUND_COLOR = ("bg-slate-50", "#f8fafc")  # tailwind name, hex value
+# tailwind name, hex value:
+_SPEECH_BUBBLE_BACKGROUND_COLOR = ("bg-slate-900", "#0f172a")
 _SPEECH_BUBBLE_TAIL_SIZE = 10  # px
 
 
@@ -42,7 +43,7 @@ def speech_bubble(
         "p-1 ",
         # Cosmetics:
         _SPEECH_BUBBLE_BACKGROUND_COLOR[0],
-        "text-slate-900",
+        "text-amber-400",
         "text-sm",
         "font-medium",
         "rounded-md",
