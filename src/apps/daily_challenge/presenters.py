@@ -144,7 +144,7 @@ class DailyChallengeGamePresenter(GamePresenter):
             )
 
         if (
-            self.is_bot_turn
+            self.is_bot_move
             and self.game_state["turns_counter"] > 1
             and self.game_state["current_attempt_turns_counter"] == 0
         ):

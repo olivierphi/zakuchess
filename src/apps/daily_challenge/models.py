@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from apps.chess.types import PlayerSide
@@ -69,6 +70,11 @@ class DailyChallenge(models.Model):
         self.teams = teams
         self.piece_role_by_square = piece_role_by_square
 
-        compute_fields_before_bot_first_move(self)
+        try:
+            compute_fields_before_bot_first_move(self)
+        except ValueError as exc:
+            raise ValidationError(exc) from exc
+
+        # TODO: check that the "intro_turn_speech_square" is a valid square
 
         super().clean()
