@@ -208,6 +208,11 @@ def chess_piece(
     ground_marker = chess_unit_ground_marker(
         player_side=player_side, can_move=piece_can_be_moved_by_player
     )
+    is_selected_piece = bool(
+        square
+        and game_presenter.selected_piece
+        and game_presenter.selected_piece.square == square
+    )
 
     classes = [
         "absolute",
@@ -225,8 +230,14 @@ def chess_piece(
 
     htmx_attributes = {
         "data_hx_trigger": "click",
-        "data_hx_get": game_presenter.urls.htmx_game_select_piece_url(
-            square=square, board_id=board_id
+        "data_hx_get": (
+            game_presenter.urls.htmx_game_select_piece_url(
+                square=square,
+                board_id=board_id,
+            )
+            if not is_selected_piece
+            # Re-selecting an already selected piece de-selects it:
+            else game_presenter.urls.htmx_game_no_selection_url(board_id=board_id)
         ),
         "data_hx_target": f"#chess-board-available-targets-{board_id}",
     }
