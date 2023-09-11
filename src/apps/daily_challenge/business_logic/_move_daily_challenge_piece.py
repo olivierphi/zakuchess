@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, cast
 
 from django.core.exceptions import SuspiciousOperation
 
-from apps.chess.chess_logic import do_chess_move
+from apps.chess.business_logic import do_chess_move
 from apps.chess.helpers import get_active_player_side_from_fen
 
 if TYPE_CHECKING:

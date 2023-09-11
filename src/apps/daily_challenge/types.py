@@ -30,4 +30,4 @@ class ChallengeTurnsState(NamedTuple):
     turns_total: int
     turns_left: int
     percentage_left: int
-    game_over: bool  # `True` when there are no more turns left for today's challenge.
+    time_s_up: bool  # `True` when there are no more turns left for today's challenge.

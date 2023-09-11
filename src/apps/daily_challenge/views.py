@@ -15,7 +15,6 @@ from .business_logic import get_current_daily_challenge, move_daily_challenge_pi
 from .components.pages.chess import (
     daily_challenge_moving_parts_fragment,
     daily_challenge_page,
-    daily_challenge_select_piece_htmx_fragment,
 )
 from .cookie_helpers import (
     get_or_create_daily_challenge_state_for_player,
@@ -66,6 +65,7 @@ def game_view(req: "HttpRequest") -> HttpResponse:
         challenge=challenge,
         game_state=game_state,
         forced_bot_move=forced_bot_move,
+        is_htmx_request=False,
     )
 
     return HttpResponse(
@@ -86,11 +86,12 @@ def htmx_game_no_selection(req: "HttpRequest") -> HttpResponse:
         request=req, challenge=challenge
     )
     if created:
-        return htmx_aware_redirect(req, "chess:daily_game_view")
+        return htmx_aware_redirect(req, "daily_challenge:daily_game_view")
 
     game_presenter = DailyChallengeGamePresenter(
         challenge=challenge,
         game_state=game_state,
+        is_htmx_request=True,
     )
 
     return HttpResponse(
@@ -111,16 +112,17 @@ def htmx_game_select_piece(req: "HttpRequest") -> "HttpResponse":
         request=req, challenge=challenge
     )
     if created:
-        return htmx_aware_redirect(req, "chess:daily_game_view")
+        return htmx_aware_redirect(req, "daily_challenge:daily_game_view")
 
     game_presenter = DailyChallengeGamePresenter(
         challenge=challenge,
         game_state=game_state,
         selected_piece_square=piece_square,
+        is_htmx_request=True,
     )
 
     return HttpResponse(
-        daily_challenge_select_piece_htmx_fragment(
+        daily_challenge_moving_parts_fragment(
             game_presenter=game_presenter, request=req, board_id=board_id
         )
     )
@@ -138,7 +140,7 @@ def htmx_game_move_piece(
         request=req, challenge=challenge
     )
     if created:
-        return htmx_aware_redirect(req, "chess:daily_game_view")
+        return htmx_aware_redirect(req, "daily_challenge:daily_game_view")
 
     active_player_side = get_active_player_side_from_fen(previous_game_state["fen"])
     is_my_side = active_player_side != challenge.bot_side
@@ -157,6 +159,7 @@ def htmx_game_move_piece(
     game_presenter = DailyChallengeGamePresenter(
         challenge=challenge,
         game_state=new_game_state,
+        is_htmx_request=True,
     )
 
     return HttpResponse(
@@ -176,12 +179,13 @@ def htmx_restart_daily_challenge_ask_confirmation(req: "HttpRequest") -> HttpRes
         request=req, challenge=challenge
     )
     if created:
-        return htmx_aware_redirect(req, "chess:daily_game_view")
+        return htmx_aware_redirect(req, "daily_challenge:daily_game_view")
 
     game_presenter = DailyChallengeGamePresenter(
         challenge=challenge,
         game_state=game_state,
         restart_daily_challenge_ask_confirmation=True,
+        is_htmx_request=True,
     )
 
     return HttpResponse(
@@ -201,7 +205,7 @@ def htmx_restart_daily_challenge_do(req: "HttpRequest") -> HttpResponse:
         request=req, challenge=challenge
     )
     if created:
-        return htmx_aware_redirect(req, "chess:daily_game_view")
+        return htmx_aware_redirect(req, "daily_challenge:daily_game_view")
 
     game_state["attempts_counter"] += 1
     game_state["current_attempt_turns_counter"] = 0
@@ -224,6 +228,7 @@ def htmx_restart_daily_challenge_do(req: "HttpRequest") -> HttpResponse:
         challenge=challenge,
         game_state=game_state,
         forced_bot_move=forced_bot_move,
+        is_htmx_request=True,
     )
 
     return HttpResponse(
@@ -243,14 +248,14 @@ def htmx_game_bot_move(req: "HttpRequest") -> HttpResponse:
         request=req, challenge=challenge
     )
     if created:
-        return htmx_aware_redirect(req, "chess:daily_game_view")
+        return htmx_aware_redirect(req, "daily_challenge:daily_game_view")
 
     _logger.info("Game state from player cookie: %s", game_state)
 
     active_player_side = get_active_player_side_from_fen(game_state["fen"])
     if active_player_side != challenge.bot_side:
         # This is not bot's turn 😅
-        return htmx_aware_redirect(req, "chess:daily_game_view")
+        return htmx_aware_redirect(req, "daily_challenge:daily_game_view")
 
     if not (move := req.GET.get("move")):  # TODO: move this to the view path
         raise Http404("Missing bot move")
@@ -273,7 +278,7 @@ def debug_reset_today(req: "HttpRequest") -> HttpResponse:
 
     clear_daily_challenge_state_in_session(request=req)
 
-    return redirect("chess:daily_game_view")
+    return redirect("daily_challenge:daily_game_view")
 
 
 @require_safe
@@ -317,6 +322,7 @@ def _play_bot_move(
         challenge=challenge,
         game_state=new_game_state,
         is_bot_move=True,
+        is_htmx_request=True,
     )
 
     return HttpResponse(

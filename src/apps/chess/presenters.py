@@ -1,15 +1,17 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from functools import cache, cached_property
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, NamedTuple, cast
 
 import chess
 
-from .chess_logic import calculate_piece_available_targets
+from apps.chess.business_logic import calculate_piece_available_targets
+
 from .consts import PLAYER_SIDES
 from .helpers import (
     chess_lib_color_to_player_side,
     get_active_player_side_from_chess_board,
     player_side_from_piece_role,
+    player_side_from_piece_symbol,
     square_from_int,
     symbol_from_piece_role,
     team_member_role_from_piece_role,
@@ -24,6 +26,7 @@ if TYPE_CHECKING:
         PieceRole,
         PieceRoleBySquare,
         PieceSymbol,
+        PieceType,
         PlayerSide,
         Square,
         TeamMember,
@@ -33,6 +36,14 @@ if TYPE_CHECKING:
 
 # Presenters are the objects we pass to our templates.
 
+_PIECES_VALUES: dict["PieceType", int] = {
+    "p": 1,
+    "n": 3,
+    "b": 3,
+    "r": 5,
+    "q": 9,
+}
+
 
 class GamePresenter(ABC):
     def __init__(
@@ -41,6 +52,7 @@ class GamePresenter(ABC):
         fen: "FEN",
         piece_role_by_square: "PieceRoleBySquare",
         teams: "GameTeams",
+        is_htmx_request: bool,
         selected_square: "Square | None" = None,
         selected_piece_square: "Square | None" = None,
         target_to_confirm: "Square | None" = None,
@@ -50,7 +62,9 @@ class GamePresenter(ABC):
         self._chess_board = chess.Board(fen=fen)
         self._piece_role_by_square = piece_role_by_square
         self._teams = teams
+
         self.forced_bot_move = forced_bot_move
+        self.is_htmx_request = is_htmx_request
 
         if selected_square is not None:
             self.selected_square = SelectedSquarePresenter(
@@ -69,16 +83,19 @@ class GamePresenter(ABC):
             )
 
     @property
+    @abstractmethod
     def urls(self) -> "GamePresenterUrls":
-        raise NotImplementedError
+        ...
 
     @property
+    @abstractmethod
     def is_my_turn(self) -> bool:
-        raise NotImplementedError
+        ...
 
     @property
+    @abstractmethod
     def game_phase(self) -> "GamePhase":
-        raise NotImplementedError
+        ...
 
     # Properties derived from the chess board:
     @cached_property
@@ -117,20 +134,39 @@ class GamePresenter(ABC):
         return chess_lib_color_to_player_side(self._chess_board.turn)
 
     @property
+    @abstractmethod
     def is_player_turn(self) -> bool:
-        raise NotImplementedError
+        ...
 
     @property
+    @abstractmethod
     def is_bot_turn(self) -> bool:
-        raise NotImplementedError
+        ...
 
     @property
+    @abstractmethod
     def game_id(self) -> str:
-        raise NotImplementedError
+        ...
 
     @property
+    @abstractmethod
     def factions(self) -> "Factions":
-        raise NotImplementedError
+        ...
+
+    @property
+    @abstractmethod
+    def is_intro_turn(self) -> bool:
+        ...
+
+    @property
+    @abstractmethod
+    def player_side_to_highlight_all_pieces_for(self) -> "PlayerSide | None":
+        ...
+
+    @property
+    @abstractmethod
+    def speech_bubble(self) -> "SpeechBubbleData | None":
+        ...
 
     @cached_property
     def piece_role_by_square(self) -> "PieceRoleBySquare":
@@ -151,6 +187,26 @@ class GamePresenter(ABC):
                 member_role = team_member_role_from_piece_role(team_member["role"])
                 result[player_side][member_role] = team_member
         return result
+
+    @cached_property
+    def naive_score(self) -> int:
+        """
+        A negative score means the "b(lack)" player is winning,
+        while a positive value means the "w(hite) player is winning.
+        This is a very naive score, only based on the value of pieces left on each side.
+        """
+        remaining_pieces = cast(
+            "list[PieceSymbol]",
+            [piece.symbol() for piece in self._chess_board.piece_map().values()],
+        )
+        score = 0
+        for piece in remaining_pieces:
+            piece_symbol = cast("PieceType", piece.lower())
+            if piece_symbol == "k":
+                continue
+            multiplier = 1 if player_side_from_piece_symbol(piece) == "w" else -1
+            score += _PIECES_VALUES[piece_symbol] * multiplier
+        return score
 
 
 class GamePresenterUrls(ABC):
@@ -209,9 +265,11 @@ class SelectedSquarePresenter:
 
     @cached_property
     def piece_at(self) -> "chess.Piece":
-        return cast(
-            "chess.Piece", self._chess_board.piece_at(chess.parse_square(self.square))
-        )
+        return cast("chess.Piece", self._chess_board.piece_at(self._chess_lib_square))
+
+    @cached_property
+    def _chess_lib_square(self) -> chess.Square:
+        return chess.parse_square(self.square)
 
     def __str__(self) -> str:
         return f"{self.square} (piece role: {self.piece_role})"
@@ -230,7 +288,9 @@ class SelectedPiecePresenter(SelectedSquarePresenter):
         target_to_confirm: "Square | None",
     ):
         super().__init__(
-            game_presenter=game_presenter, chess_board=chess_board, square=piece_square
+            game_presenter=game_presenter,
+            chess_board=chess_board,
+            square=piece_square,
         )
         self.target_to_confirm = target_to_confirm
 
@@ -260,8 +320,21 @@ class SelectedPiecePresenter(SelectedSquarePresenter):
     def is_potential_capture(self, square: "Square") -> bool:
         return square in self.available_targets and self.piece_at is not None
 
+    @cached_property
+    def is_pinned(self) -> bool:
+        return self._chess_board.is_pinned(
+            self.piece_at.color,
+            self._chess_lib_square,
+        )
+
     def __str__(self) -> str:
         return f"{self.piece_role} at {self.square}"
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {str(self)})>"
+
+
+class SpeechBubbleData(NamedTuple):
+    text: str
+    square: "Square"
+    time_out: int = 4  # seconds

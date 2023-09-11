@@ -7,6 +7,7 @@ from apps.chess.components.chess_board import (
     chess_available_targets,
     chess_pieces,
 )
+from apps.chess.components.misc_ui import speech_bubble_container
 from apps.webui.components.layout import page
 
 from ..misc_ui import daily_challenge_bar, status_bar
@@ -41,40 +42,6 @@ def daily_challenge_page(
     )
 
 
-def daily_challenge_select_piece_htmx_fragment(
-    *,
-    game_presenter: "DailyChallengeGamePresenter",
-    request: "HttpRequest",
-    board_id: str,
-) -> str:
-    return "\n".join(
-        (
-            dom_tag.render(pretty=settings.DEBUG)
-            for dom_tag in (
-                chess_available_targets(
-                    game_presenter=game_presenter,
-                    board_id=board_id,
-                ),
-                chess_pieces(
-                    game_presenter=game_presenter,
-                    board_id=board_id,
-                    data_hx_swap_oob="outerHTML",
-                ),
-                daily_challenge_bar(
-                    game_presenter=game_presenter,
-                    board_id=board_id,
-                    data_hx_swap_oob="outerHTML",
-                ),
-                status_bar(
-                    game_presenter=game_presenter,
-                    board_id=board_id,
-                    data_hx_swap_oob="outerHTML",
-                ),
-            )
-        )
-    )
-
-
 def daily_challenge_moving_parts_fragment(
     *,
     game_presenter: "DailyChallengeGamePresenter",
@@ -92,7 +59,7 @@ def daily_challenge_moving_parts_fragment(
                 chess_available_targets(
                     game_presenter=game_presenter,
                     board_id=board_id,
-                    data_hx_swap_oob="innerHTML",
+                    data_hx_swap_oob="outerHTML",
                 ),
                 daily_challenge_bar(
                     game_presenter=game_presenter,
@@ -100,6 +67,11 @@ def daily_challenge_moving_parts_fragment(
                     data_hx_swap_oob="outerHTML",
                 ),
                 status_bar(
+                    game_presenter=game_presenter,
+                    board_id=board_id,
+                    data_hx_swap_oob="outerHTML",
+                ),
+                speech_bubble_container(
                     game_presenter=game_presenter,
                     board_id=board_id,
                     data_hx_swap_oob="outerHTML",

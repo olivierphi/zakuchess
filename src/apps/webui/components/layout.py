@@ -119,7 +119,7 @@ def footer() -> dom_tag:
                 a(
                     img(
                         src=f"data:image/svg+xml;base64,{svg_b64}",
-                        cls="inline-block w-3 aspect-square",
+                        cls="inline-block w-4 aspect-square",
                         alt="GitHub logo",
                     ),
                     href="https://github.com/olivierphi/zakuchess",

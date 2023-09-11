@@ -1,8 +1,10 @@
 from typing import TYPE_CHECKING, Literal
 from urllib.parse import urlencode
 
+from django.contrib.humanize.templatetags.humanize import ordinal
 from django.urls import reverse
 from dominate.tags import button, div, dom_tag, span
+from dominate.util import raw
 
 if TYPE_CHECKING:
     from ...presenters import DailyChallengeGamePresenter
@@ -39,12 +41,24 @@ def daily_challenge_bar(
 
 def _restart_confirmation_display(*, board_id: str) -> dom_tag:
     htmx_attributes_confirm = {
-        "data_hx_post": f"{reverse('chess:htmx_restart_daily_challenge_do')}?{urlencode({'board_id': board_id})}",
+        "data_hx_post": "".join(
+            (
+                reverse("daily_challenge:htmx_restart_daily_challenge_do"),
+                "?",
+                urlencode({"board_id": board_id}),
+            )
+        ),
         "data_hx_target": f"#chess-board-pieces-{board_id}",
         "data_hx_swap": "outerHTML",
     }
     htmx_attributes_cancel = {
-        "data_hx_get": f"{reverse('chess:htmx_game_no_selection')}?{urlencode({'board_id': board_id})}",
+        "data_hx_get": "".join(
+            (
+                reverse("daily_challenge:htmx_game_no_selection"),
+                "?",
+                urlencode({"board_id": board_id}),
+            )
+        ),
         "data_hx_target": f"#chess-board-pieces-{board_id}",
         "data_hx_swap": "outerHTML",
     }
@@ -80,7 +94,7 @@ def _current_state_display(
         turns_total,
         turns_left,
         percentage_left,
-        is_challenge_over,
+        time_s_up,
     ) = game_presenter.challenge_turns_state
 
     blocks_color: BlockColor = (
@@ -89,44 +103,67 @@ def _current_state_display(
         else ("yellow" if percentage_left >= 30 else "red")
     )
     blocks: list[str] = []
+    current_block_color = blocks_color
     for i in range(PROGRESS_BAR_BLOCKS_COUNT):
         percentage = (i + 1) * 100 / PROGRESS_BAR_BLOCKS_COUNT
         if percentage > percentage_left:
-            blocks_color = "grey"
-        blocks.append(PROGRESS_BAR_BLOCKS[blocks_color])
+            current_block_color = "grey"
+        blocks.append(PROGRESS_BAR_BLOCKS[current_block_color])
 
     restart_button: dom_tag = span("")
-    if not game_presenter.is_game_over and current_attempt_turns > 2:
+    if not time_s_up:
         htmx_attributes = {
-            "data_hx_post": f"{reverse('chess:htmx_restart_daily_challenge_ask_confirmation')}?{urlencode({'board_id': board_id})}",
+            "data_hx_post": "".join(
+                (
+                    reverse(
+                        "daily_challenge:htmx_restart_daily_challenge_ask_confirmation"
+                    ),
+                    "?",
+                    urlencode({"board_id": board_id}),
+                )
+            ),
             "data_hx_target": f"#chess-board-pieces-{board_id}",
             "data_hx_swap": "outerHTML",
         }
         restart_button = span(
             button(
-                "Try again from the start ↩️",
-                cls="border-slate-200 bg-slate-900 slate-50 border rounded-md py-0.5 px-1 hover:bg-slate-200 hover:text-slate-800",
+                "↩️",
+                cls="inline-block m-l-2",
                 title="Try this daily challenge again, from the start",
                 id=f"chess-board-restart-daily-challenge-{board_id}",
                 **htmx_attributes,
             ),
         )
 
+    turns_left_display = (
+        f"""<b class="text-rose-600">{turns_left}</b>"""
+        if blocks_color == "red"
+        else turns_left
+    )
+
     return div(
         div(
-            f"Today's turns left: {turns_left}/{turns_total} - "
-            f"Attempt #{attempts_counter+1}",
+            raw(
+                " - ".join(
+                    (
+                        f"<b>{ordinal(attempts_counter+1)}</b> attempt",
+                        f"turn <b>#{current_attempt_turns+1}</b>",
+                    )
+                )
+            ),
+            cls="w-full text-center",
+        ),
+        div(
+            raw(f"Today's turns left: {turns_left_display}/{turns_total}"),
             cls="w-full text-center",
         ),
         div(
             span(
                 "".join(blocks),
+                " ",
+                restart_button,
                 cls="inline-block pl-3 pr-3",
             ),
             cls="w-full text-center",
-        ),
-        div(
-            restart_button,
-            cls="my-1 w-full text-center",
         ),
     )

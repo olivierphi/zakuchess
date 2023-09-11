@@ -34,6 +34,11 @@ class Migration(migrations.Migration):
                         help_text="uses UCI notation, e.g. 'e2e4'", max_length=5
                     ),
                 ),
+                ("intro_turn_speech_square", models.CharField(max_length=2)),
+                (
+                    "intro_turn_speech_text",
+                    models.CharField(max_length=100, blank=True),
+                ),
             ],
         ),
     ]

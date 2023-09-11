@@ -4,6 +4,8 @@ import { playFromFEN } from "./chess-bot"
 window.cursorIsNotOnChessBoardInteractiveElement = cursorIsNotOnChessBoardInteractiveElement
 // @ts-ignore
 window.playBotMove = playBotMove
+// @ts-ignore
+window.closeSpeechBubble = closeSpeechBubble
 
 function cursorIsNotOnChessBoardInteractiveElement(boardId: string): boolean {
     // Must return `true` only if the user hasn't clicked on one of the game clickable elements.
@@ -16,12 +18,17 @@ function cursorIsNotOnChessBoardInteractiveElement(boardId: string): boolean {
         return false // not much we can do, as it seems that this chess board has mysteriously disappeared 🤷
     }
 
-    const chessBoardState = (chessBoardContainer.querySelector("[data-board-state]") as HTMLElement).dataset.boardState
+    const chessBoardState = (chessBoardContainer.querySelector("[data-board-state]") as HTMLElement).dataset
+        .boardState as string
 
     console.log("chessBoardState; ", chessBoardState)
 
     if (chessBoardState === "waiting_for_player_selection") {
         return false // there's no current selection, so we actually have nothing to do here
+    }
+
+    if (chessBoardState.includes("game_over")) {
+        return false // the UI stops being interactive when the game is over
     }
 
     const hoveredElements = Array.from(document.querySelectorAll(":hover"))
@@ -45,7 +52,12 @@ function cursorIsNotOnChessBoardInteractiveElement(boardId: string): boolean {
         `#chess-board-restart-daily-challenge-${boardId}`,
     )
     if (restartDailyChallengeButtonElement && hoveredElements.includes(restartDailyChallengeButtonElement)) {
-        return false // don't actually cancel the selection
+        return false // don't actually cancel the selection when clicking on the "restart daily challenge" button
+    }
+
+    const speechBubble = getSpeechBubble()
+    if (speechBubble && hoveredElements.includes(speechBubble)) {
+        return false // don't actually cancel the selection when closing the speech bubble
     }
 
     console.log("no interactive UI element clicked: we reset the board state")
@@ -78,4 +90,15 @@ function playBotMove(
         console.log(`bot wants to move from ${move[0]} to ${move[1]}`)
         doPlayBotMove(`${move[0]}${move[1]}`)
     })
+}
+
+function closeSpeechBubble() {
+    const speechBubble = getSpeechBubble()
+    if (speechBubble && speechBubble.parentNode) {
+        speechBubble.innerHTML = ""
+    }
+}
+
+function getSpeechBubble(): Element | null {
+    return document.querySelector("[data-speech-bubble]")
 }

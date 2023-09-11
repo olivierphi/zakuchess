@@ -7,7 +7,7 @@ from .models import DailyChallenge
 class DailyChallengeAdminForm(forms.ModelForm):
     class Meta:
         model = DailyChallenge
-        fields = ("id", "fen", "bot_first_move")
+        fields = ("id", "fen", "bot_first_move", "intro_turn_speech_square")
 
     def clean_bot_first_move(self) -> str:
         return self.cleaned_data["bot_first_move"].lower()
