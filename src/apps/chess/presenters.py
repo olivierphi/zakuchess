@@ -265,9 +265,11 @@ class SelectedSquarePresenter:
 
     @cached_property
     def piece_at(self) -> "chess.Piece":
-        return cast(
-            "chess.Piece", self._chess_board.piece_at(chess.parse_square(self.square))
-        )
+        return cast("chess.Piece", self._chess_board.piece_at(self._chess_lib_square))
+
+    @cached_property
+    def _chess_lib_square(self) -> chess.Square:
+        return chess.parse_square(self.square)
 
     def __str__(self) -> str:
         return f"{self.square} (piece role: {self.piece_role})"
@@ -286,7 +288,9 @@ class SelectedPiecePresenter(SelectedSquarePresenter):
         target_to_confirm: "Square | None",
     ):
         super().__init__(
-            game_presenter=game_presenter, chess_board=chess_board, square=piece_square
+            game_presenter=game_presenter,
+            chess_board=chess_board,
+            square=piece_square,
         )
         self.target_to_confirm = target_to_confirm
 
@@ -315,6 +319,13 @@ class SelectedPiecePresenter(SelectedSquarePresenter):
     @cache
     def is_potential_capture(self, square: "Square") -> bool:
         return square in self.available_targets and self.piece_at is not None
+
+    @cached_property
+    def is_pinned(self) -> bool:
+        return self._chess_board.is_pinned(
+            self.piece_at.color,
+            self._chess_lib_square,
+        )
 
     def __str__(self) -> str:
         return f"{self.piece_role} at {self.square}"

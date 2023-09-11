@@ -153,27 +153,67 @@ class DailyChallengeGamePresenter(GamePresenter):
                 square=self._challenge.intro_turn_speech_square,
             )
 
+        if self.game_phase == "game_over:won":
+            return SpeechBubbleData(
+                text="We did it, folks! 🎉",
+                square=self._my_king_square,
+            )
+
+        if self.game_phase == "game_over:lost":
+            return SpeechBubbleData(
+                text="We win today, humans!",
+                square=self._bot_leftmost_piece_square,
+            )
+
+        if self.selected_piece and self.selected_piece.is_pinned:
+            return SpeechBubbleData(
+                text="Moving would put our king in too much danger, I'm pinned here 😬",
+                square=self.selected_piece.square,
+            )
+
         if (
             self.is_player_turn
             and self.is_htmx_request
             and not self.restart_daily_challenge_ask_confirmation
+            and not self.selected_piece
             and self.naive_score < -3
         ):
             probability = 0.6 if self.naive_score < -6 else 0.3
-            if random.random() > probability:
-                king_square = square_from_int(
-                    self._chess_board.king(
-                        player_side_to_chess_lib_color(self._challenge.my_side)
-                    )
-                )
+            die_result = random.random()  # 🎲
+            if die_result > probability:
                 return SpeechBubbleData(
                     text="We're in a tough situation, folks 😬<br>"
                     "Maybe restarting from the beginning, "
-                    "by using the ↩️ button, could be a good idea?",
-                    square=king_square,
+                    "by using the ↩️ button below, could be a good idea?",
+                    square=self._my_king_square,
                     time_out=8,
                 )
+
         return None
+
+    @property
+    def _my_king_square(self) -> "Square":
+        return self._king_square(self._challenge.my_side)
+
+    @property
+    def _bot_leftmost_piece_square(self) -> "Square":
+        leftmost_rank = 9  # *will* be overridden by our loop
+        leftmost_square: "Square" = "h8"  # ditto
+        bot_color = player_side_to_chess_lib_color(self._challenge.bot_side)
+        for square_int, piece in self._chess_board.piece_map().items():
+            if piece.color != bot_color:
+                continue
+            square = square_from_int(square_int)
+            rank = int(square[1])
+            if rank < leftmost_rank:
+                leftmost_rank = rank
+                leftmost_square = square
+        return leftmost_square
+
+    def _king_square(self, player_side: "PlayerSide") -> "Square":
+        return square_from_int(
+            self._chess_board.king(player_side_to_chess_lib_color(player_side))
+        )
 
 
 class DailyChallengeGamePresenterUrls(GamePresenterUrls):

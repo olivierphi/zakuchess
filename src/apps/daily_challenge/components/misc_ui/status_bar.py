@@ -62,10 +62,13 @@ def status_bar(
     else:
         match game_presenter.game_phase:
             case "game_over:won":
+                turns_counter = game_presenter.challenge_turns_counter + 1
+                attempts_counter = game_presenter.challenge_attempts_counter + 1
                 msg = raw(
                     "Today it took you "
-                    f"<b>{game_presenter.challenge_turns_counter}</b> turns, "
-                    f"across <b>{game_presenter.challenge_attempts_counter}</b> attempts."
+                    f"<b>{turns_counter}</b> turns, "
+                    f"across <b>{attempts_counter}</b> "
+                    f"attempt{'s' if attempts_counter > 1 else ''}."
                 )
                 inner_content = div(
                     div("You won! 🎉"),

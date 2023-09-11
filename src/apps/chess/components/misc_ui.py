@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from dominate.tags import div, dom_tag
+from dominate.tags import a, div, dom_tag
 from dominate.util import raw
 
 from .chess_helpers import square_to_square_center_tailwind_classes
@@ -38,9 +38,11 @@ def speech_bubble(
         "absolute",
         "bottom-7",
         "left-0",
+        # TODO: if the bubble is too close to the right edge of the screen,
+        #  we should move it to the left a bit (the tail can stay where it is).
         # Size:
         "min-w-40",
-        "p-1 ",
+        "p-2 ",
         # Cosmetics:
         _SPEECH_BUBBLE_BACKGROUND_COLOR[0],
         "text-amber-400",
@@ -49,7 +51,18 @@ def speech_bubble(
         "rounded-md",
     )
     bubble = div(
-        raw(text),
+        div(
+            raw(text),
+            cls="text-center",
+        ),
+        div(
+            a(
+                "close [x]",
+                href="javascript:closeSpeechBubble()",
+                cls="text-slate-100 text-xs italic pointer-events-auto",
+            ),
+            cls="text-right mt-2",
+        ),
         cls=" ".join(bubble_classes),
     )
 
@@ -66,6 +79,8 @@ def speech_bubble(
         style=" ".join(
             (
                 # @link https://css-tricks.com/snippets/css/css-triangle/
+                # We could do that using Tailwind, but it's just easier to use
+                # good old CSS here...
                 "border-left:",
                 f"{_SPEECH_BUBBLE_TAIL_SIZE}px solid transparent;",
                 "border-right:",
@@ -79,8 +94,7 @@ def speech_bubble(
     bubble_container = div(
         bubble,
         bubble_tail,
-        cls="relative",
-        data_remove_me=f"{time_out}s",
+        cls="relative drop-shadow-speech-bubble",
     )
 
     outer_classes = (
@@ -94,7 +108,6 @@ def speech_bubble(
         bubble_container,
         id=f"speech-container-{board_id}",
         cls=" ".join(outer_classes),
-        # @link https://htmx.org/extensions/remove-me/
-        data_hx_ext="remove-me",
+        data_speech_bubble=True,
         **extra_attrs,
     )

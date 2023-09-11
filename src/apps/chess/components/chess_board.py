@@ -100,6 +100,7 @@ def chess_arena(
                 cls="absolute inset-0 pointer-events-none z-30",
                 id=f"chess-available-speech-container-{board_id}",
             ),
+            id=f"chess-board-components-{board_id}",
             cls="aspect-square relative",
         ),
         chess_bot_data(board_id),
@@ -167,6 +168,8 @@ def chess_pieces(
         id=f"chess-board-pieces-{board_id}",
         cls="relative aspect-square",
         **extra_attrs,
+        # Mostly for debugging purposes:
+        data_naive_score=game_presenter.naive_score,
     )
 
 
@@ -221,14 +224,15 @@ def chess_piece(
         and game_presenter.selected_piece
         and game_presenter.selected_piece.square == square
     )
+    is_game_over = game_presenter.is_game_over
 
     classes = [
         "absolute",
         "aspect-square",
         "w-1/8",
         *square_to_piece_tailwind_classes(square),
-        "cursor-pointer",
-        "pointer-events-auto",
+        "cursor-pointer" if not is_game_over else "cursor-default",
+        "pointer-events-auto" if not is_game_over else "pointer-events-none",
         # Transition-related classes:
         "transition-coordinates",
         "duration-300",
@@ -236,19 +240,22 @@ def chess_piece(
         "transform-gpu",
     ]
 
-    htmx_attributes = {
-        "data_hx_trigger": "click",
-        "data_hx_get": (
-            game_presenter.urls.htmx_game_select_piece_url(
-                square=square,
-                board_id=board_id,
-            )
-            if not is_selected_piece
-            # Re-selecting an already selected piece de-selects it:
-            else game_presenter.urls.htmx_game_no_selection_url(board_id=board_id)
-        ),
-        "data_hx_target": f"#chess-board-pieces-{board_id}",
-    }
+    if is_game_over:
+        htmx_attributes = {}
+    else:
+        htmx_attributes = {
+            "data_hx_trigger": "click",
+            "data_hx_get": (
+                game_presenter.urls.htmx_game_select_piece_url(
+                    square=square,
+                    board_id=board_id,
+                )
+                if not is_selected_piece
+                # Re-selecting an already selected piece de-selects it:
+                else game_presenter.urls.htmx_game_no_selection_url(board_id=board_id)
+            ),
+            "data_hx_target": f"#chess-board-pieces-{board_id}",
+        }
 
     return div(
         ground_marker,
