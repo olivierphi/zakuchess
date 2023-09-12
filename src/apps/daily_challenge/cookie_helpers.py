@@ -31,6 +31,7 @@ def get_or_create_daily_challenge_state_for_player(
             current_attempt_turns_counter=0,
             fen=challenge.fen,
             piece_role_by_square=challenge.piece_role_by_square,
+            moves="",
         )
         save_daily_challenge_state_in_session(
             request=request,

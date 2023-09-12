@@ -53,6 +53,16 @@ You can take a look at [the Makefile](./Makefile) to see more commands.
 
 ### Roadmap
 
+##### Before launch
+
+ - [ ] Users' personal stats (current streak, etc)
+ - [ ] "End of game" screen
+ - [ ] Validate data, using good ol' Django forms 
+
+##### Post launch
+
+ - [ ] Test all the things! (the "Pytest + Playwright" combo should be our friend here)
  - [ ] Translate the user interface for other languages
  - [ ] Allow seasoned chess players to play more difficult challenges
  - [ ] Score sharing
+ - [ ] The UI should allow "replays" - whether it's for the current game or someone else's

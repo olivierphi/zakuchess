@@ -57,6 +57,7 @@ class GamePresenter(ABC):
         selected_piece_square: "Square | None" = None,
         target_to_confirm: "Square | None" = None,
         forced_bot_move: tuple["Square", "Square"] | None = None,
+        last_move: tuple["Square", "Square"] | None = None,
     ):
         self._fen = fen
         self._chess_board = chess.Board(fen=fen)
@@ -64,6 +65,7 @@ class GamePresenter(ABC):
         self._teams = teams
 
         self.forced_bot_move = forced_bot_move
+        self.last_move = last_move
         self.is_htmx_request = is_htmx_request
 
         if selected_square is not None:

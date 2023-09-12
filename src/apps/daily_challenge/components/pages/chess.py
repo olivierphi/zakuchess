@@ -5,6 +5,7 @@ from django.conf import settings
 from apps.chess.components.chess_board import (
     chess_arena,
     chess_available_targets,
+    chess_last_move,
     chess_pieces,
 )
 from apps.chess.components.misc_ui import speech_bubble_container
@@ -57,6 +58,11 @@ def daily_challenge_moving_parts_fragment(
                     board_id=board_id,
                 ),
                 chess_available_targets(
+                    game_presenter=game_presenter,
+                    board_id=board_id,
+                    data_hx_swap_oob="outerHTML",
+                ),
+                chess_last_move(
                     game_presenter=game_presenter,
                     board_id=board_id,
                     data_hx_swap_oob="outerHTML",
