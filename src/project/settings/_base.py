@@ -99,6 +99,10 @@ DATABASES = {
 
 SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
 
+# 6 months by default, so users can stop playing for a few months, come back, and see
+# that they didn't lose their stats.
+SESSION_COOKIE_AGE = int(env.get("SESSION_COOKIE_AGE", str(3600 * 24 * 30 * 6)))
+
 
 #  Customizing authentication
 # https://docs.djangoproject.com/en/4.2/topics/auth/customizing/

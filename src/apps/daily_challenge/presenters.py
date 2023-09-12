@@ -7,7 +7,11 @@ from django.urls import reverse
 
 from apps.chess.presenters import GamePresenter, GamePresenterUrls, SpeechBubbleData
 
-from ..chess.helpers import player_side_to_chess_lib_color, square_from_int
+from ..chess.helpers import (
+    player_side_to_chess_lib_color,
+    square_from_int,
+    uci_move_squares,
+)
 from .business_logic import get_daily_challenge_turns_state
 from .consts import MAXIMUM_TURNS_PER_CHALLENGE
 from .models import DailyChallenge
@@ -43,6 +47,7 @@ class DailyChallengeGamePresenter(GamePresenter):
             selected_piece_square=selected_piece_square,
             target_to_confirm=target_to_confirm,
             forced_bot_move=forced_bot_move,
+            last_move=self._last_move_from_game_state(game_state),
         )
         self._challenge = challenge
         self.game_state = game_state
@@ -214,6 +219,14 @@ class DailyChallengeGamePresenter(GamePresenter):
         return square_from_int(
             self._chess_board.king(player_side_to_chess_lib_color(player_side))
         )
+
+    @staticmethod
+    def _last_move_from_game_state(
+        game_state: "PlayerGameState",
+    ) -> tuple["Square", "Square"] | None:
+        if (moves := game_state["moves"]) and len(moves) >= 4:
+            return uci_move_squares(moves[-4:])
+        return None
 
 
 class DailyChallengeGamePresenterUrls(GamePresenterUrls):

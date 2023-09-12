@@ -5,10 +5,10 @@ from django.core.exceptions import SuspiciousOperation
 from apps.chess.business_logic import do_chess_move
 from apps.chess.helpers import get_active_player_side_from_fen
 
+from ..types import PlayerGameState
+
 if TYPE_CHECKING:
     from apps.chess.types import PieceSymbol, Square
-
-    from ..types import PlayerGameState
 
 
 def move_daily_challenge_piece(
@@ -46,15 +46,16 @@ def move_daily_challenge_piece(
         del piece_role_by_square[move_from]  # this square is now empty
 
     # Right, let's return the new game state!
-    new_game_state: "PlayerGameState" = {
+    new_game_state = PlayerGameState(
         # We keep these as-is...
-        "turns_counter": game_state["turns_counter"],
-        "attempts_counter": game_state["attempts_counter"],
-        "current_attempt_turns_counter": game_state["current_attempt_turns_counter"],
+        turns_counter=game_state["turns_counter"],
+        attempts_counter=game_state["attempts_counter"],
+        current_attempt_turns_counter=game_state["current_attempt_turns_counter"],
         # ...but update those:
-        "fen": move_result["fen"],
-        "piece_role_by_square": piece_role_by_square,
-    }
+        fen=move_result["fen"],
+        piece_role_by_square=piece_role_by_square,
+        moves=f"{game_state['moves']}{from_}{to}",
+    )
 
     if is_my_side:
         new_game_state["turns_counter"] += 1

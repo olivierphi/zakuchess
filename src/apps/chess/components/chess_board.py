@@ -82,22 +82,27 @@ def chess_arena(
                 id=f"chess-board-container-{board_id}",
             ),
             div(
-                chess_pieces(game_presenter=game_presenter, board_id=board_id),
+                chess_last_move(game_presenter=game_presenter, board_id=board_id),
                 cls="absolute inset-0 pointer-events-none z-10",
+                id=f"chess-last-move-container-{board_id}",
+            ),
+            div(
+                chess_pieces(game_presenter=game_presenter, board_id=board_id),
+                cls="absolute inset-0 pointer-events-none z-20",
                 id=f"chess-pieces-container-{board_id}",
             ),
             div(
                 chess_available_targets(
                     game_presenter=game_presenter, board_id=board_id
                 ),
-                cls="absolute inset-0 pointer-events-none z-20",
+                cls="absolute inset-0 pointer-events-none z-30",
                 id=f"chess-available-targets-container-{board_id}",
             ),
             div(
                 speech_bubble_container(
                     game_presenter=game_presenter, board_id=board_id
                 ),
-                cls="absolute inset-0 pointer-events-none z-30",
+                cls="absolute inset-0 pointer-events-none z-40",
                 id=f"chess-available-speech-container-{board_id}",
             ),
             id=f"chess-board-components-{board_id}",
@@ -520,6 +525,51 @@ def chess_unit_symbol_display(*, piece_role: "PieceRole", square: "Square") -> d
         cls=" ".join(symbol_display_container_classes),
         aria_label=piece_name,
     )
+
+
+def chess_last_move(
+    *, game_presenter: "GamePresenter", board_id: str, **extra_attrs: str
+) -> dom_tag:
+    children: list[dom_tag] = []
+    if last_move := game_presenter.last_move:
+        children.extend(
+            [
+                chess_last_move_marker(square=last_move[0]),
+                chess_last_move_marker(square=last_move[1]),
+            ]
+        )
+
+    return div(
+        *children,
+        cls="relative aspect-square pointer-events-none",
+        id=f"chess-last-move-{board_id}",
+        **extra_attrs,
+        # Mostly for debugging purposes:
+        data_last_move=str(last_move or ""),
+    )
+
+
+def chess_last_move_marker(*, square: "Square") -> dom_tag:
+    movement_marker_classes = (
+        "w-4/5",
+        "aspect-square",
+        "bg-blue-300",
+        "opacity-90",
+        "rounded-full",
+        "border",
+        "border-blue-800",
+    )
+    movement_marker = div("", cls=" ".join(movement_marker_classes))
+
+    classes = [
+        "absolute",
+        "aspect-square",
+        "w-1/8",
+        "flex items-center justify-center",
+        *square_to_piece_tailwind_classes(square),
+    ]
+
+    return div(movement_marker, cls=" ".join(classes))
 
 
 def _bot_turn_html_elements(

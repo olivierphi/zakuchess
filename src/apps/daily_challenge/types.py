@@ -20,6 +20,9 @@ class PlayerGameState(TypedDict):
     current_attempt_turns_counter: int
     fen: "FEN"
     piece_role_by_square: "PieceRoleBySquare"
+    # Each move is 4 more chars added there (UCI notation).
+    # These are the moves *of the current attempt* only.
+    moves: str
 
 
 class ChallengeTurnsState(NamedTuple):
