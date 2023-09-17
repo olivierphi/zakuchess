@@ -17,6 +17,7 @@ from apps.utils.view_decorators import user_is_staff
 from apps.webui.components.layout import page
 
 from .business_logic import set_daily_challenge_teams_and_pieces_roles
+from .cookie_helpers import clear_daily_challenge_state_in_session
 from .models import DailyChallenge
 from .presenters import DailyChallengeGamePresenter
 from .types import PlayerGameState
@@ -72,6 +73,8 @@ def preview_daily_challenge(request: "HttpRequest") -> HttpResponse:
 
 @user_passes_test(user_is_staff)
 def play_future_daily_challenge(request: "HttpRequest", id: str) -> HttpResponse:
+    clear_daily_challenge_state_in_session(request=request)
+
     response = redirect("daily_challenge:daily_game_view")
     response.set_signed_cookie(
         "admin_daily_challenge_id",

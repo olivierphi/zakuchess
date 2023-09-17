@@ -591,13 +591,13 @@ def chess_last_move_marker(
 
     movement_marker_classes = (
         "aspect-square",
-        "bg-yellow-300",
-        "opacity-60",
+        "bg-sky-300",
+        "opacity-70",
         "border",
-        "border-yellow-500",
+        "border-sky-500",
         "rounded-full",
         "transition-size",
-        "duration-200",
+        "duration-400",
         "ease-in-out",
         start_class,
         target_class,
