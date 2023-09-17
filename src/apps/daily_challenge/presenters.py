@@ -40,6 +40,7 @@ class DailyChallengeGamePresenter(GamePresenter):
         restart_daily_challenge_ask_confirmation: bool = False,
         is_bot_move: bool = False,
         force_square_info: bool = False,
+        is_preview: bool = False,
     ):
         super().__init__(
             fen=game_state["fen"],
@@ -53,6 +54,7 @@ class DailyChallengeGamePresenter(GamePresenter):
             forced_bot_move=forced_bot_move,
             last_move=self._last_move_from_game_state(game_state),
             force_square_info=force_square_info,
+            is_preview=is_preview,
         )
         self._challenge = challenge
         self.game_state = game_state

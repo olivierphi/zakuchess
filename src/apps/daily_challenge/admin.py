@@ -11,9 +11,6 @@ class DailyChallengeAdminForm(forms.ModelForm):
         model = DailyChallenge
         fields = ("id", "fen", "bot_first_move", "intro_turn_speech_square")
 
-    class Media:
-        js = ("daily_challenge/admin_game_preview.js",)
-
     def clean_bot_first_move(self) -> str:
         return self.cleaned_data["bot_first_move"].lower()
 
@@ -22,11 +19,22 @@ class DailyChallengeAdminForm(forms.ModelForm):
 class DailyChallengeAdmin(admin.ModelAdmin):
     form = DailyChallengeAdminForm
 
-    list_display = ("id", "fen", "bot_first_move", "fen_before_bot_first_move", "teams")
+    list_display = ("id", "fen", "bot_first_move")
     readonly_fields = (
         "game_update",
         "game_preview",
+        "fen_before_bot_first_move",
+        "teams",
     )
+
+    class Media:
+        js = ("daily_challenge/admin_game_preview.js",)
+
+    def view_on_site(self, obj: DailyChallenge):
+        url = reverse(
+            "daily_challenge:play_future_daily_challenge", kwargs={"id": obj.id}
+        )
+        return url
 
     @admin.display(description="Game update")
     def game_update(self, instance: DailyChallenge) -> str:

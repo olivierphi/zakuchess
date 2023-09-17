@@ -20,7 +20,7 @@
                     fen: fenInput.value,
                     bot_first_move: botFirstMoveInput.value,
                     intro_turn_speech_square: introTurnSpeechSquareInput.value,
-                    game_update: gameUpdate,
+                    game_update: gameUpdate || "",
                 }).toString()
         }
 
@@ -45,6 +45,8 @@
         }
 
         gameUpdateInput.addEventListener("keyup", onGameUpdateInputKeyUp)
+
+        setTimeout(updatePreview, 100)
     }
 
     setTimeout(init, 1000)

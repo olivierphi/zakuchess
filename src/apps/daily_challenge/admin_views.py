@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import TYPE_CHECKING, Literal, TypeAlias, cast
 
 import chess
@@ -5,6 +6,8 @@ from django import forms
 from django.contrib.auth.decorators import user_passes_test
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse
+from django.shortcuts import redirect
+from django.utils.timezone import now
 from django.views.decorators.clickjacking import xframe_options_exempt
 from dominate.util import raw
 
@@ -65,6 +68,18 @@ def preview_daily_challenge(request: "HttpRequest") -> HttpResponse:
             request=request,
         )
     )
+
+
+@user_passes_test(user_is_staff)
+def play_future_daily_challenge(request: "HttpRequest", id: str) -> HttpResponse:
+    response = redirect("daily_challenge:daily_game_view")
+    response.set_signed_cookie(
+        "admin_daily_challenge_id",
+        id,
+        expires=now() + timedelta(minutes=30),
+    )
+
+    return response
 
 
 class DailyChallengePreviewForm(forms.Form):

@@ -19,7 +19,7 @@ def get_or_create_daily_challenge_state_for_player(
     The second value is a boolean indicating if the game state was created or not.
     """
     player_cookie_content = get_player_session_content(request)
-    challenge_id = today_daily_challenge_id()
+    challenge_id = today_daily_challenge_id(request)
     game_state: PlayerGameState | None = player_cookie_content["games"].get(
         challenge_id
     )
@@ -57,7 +57,7 @@ def save_daily_challenge_state_in_session(
     *, request: "HttpRequest", game_state: PlayerGameState
 ) -> None:
     # Erases other games data!
-    challenge_id = today_daily_challenge_id()
+    challenge_id = today_daily_challenge_id(request)
     request.session[_PLAYER_CONTENT_SESSION_KEY] = {"games": {challenge_id: game_state}}
 
 
@@ -66,5 +66,11 @@ def clear_daily_challenge_state_in_session(*, request: "HttpRequest") -> None:
     request.session[_PLAYER_CONTENT_SESSION_KEY] = {"games": {}}
 
 
-def today_daily_challenge_id() -> str:
+def today_daily_challenge_id(request: "HttpRequest") -> str:
+    if request.user.is_staff:
+        admin_daily_challenge_id = request.get_signed_cookie(
+            "admin_daily_challenge_id", default=None
+        )
+        if admin_daily_challenge_id:
+            return f"admin-preview-{admin_daily_challenge_id}"
     return now().date().isoformat()
