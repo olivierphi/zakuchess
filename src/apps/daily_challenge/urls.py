@@ -38,9 +38,16 @@ urlpatterns = [
     path("debug/reset-today", views.debug_reset_today),
     path("debug/view-cookie", views.debug_view_cookie),
     # Admin views (staff only)
+    # TODO: use ModelAdmin.get_urls instead?
+    #   https://docs.djangoproject.com/en/4.2/ref/contrib/admin/#django.contrib.admin.ModelAdmin.get_urls
     path(
         "admin/daily-challenge/game-preview",
         admin_views.preview_daily_challenge,
         name="admin_game_preview",
+    ),
+    path(
+        "admin/daily-challenge/play-future-daily-challenge/<str:id>/",
+        admin_views.play_future_daily_challenge,
+        name="play_future_daily_challenge",
     ),
 ]

@@ -136,12 +136,13 @@ def chess_bot_data(board_id: str) -> dom_tag:
 
 def chess_board(*, game_presenter: "GamePresenter", board_id: str) -> dom_tag:
     squares: list[dom_tag] = []
+    force_square_info = game_presenter.force_square_info or game_presenter.is_preview
     for file in FILE_NAMES:
         for rank in RANK_NAMES:
             squares.append(
                 chess_board_square(
                     cast("Square", f"{file}{rank}"),
-                    force_square_info=game_presenter.force_square_info,
+                    force_square_info=force_square_info,
                 )
             )
     return div(
