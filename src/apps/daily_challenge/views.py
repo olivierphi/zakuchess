@@ -66,6 +66,7 @@ def game_view(req: "HttpRequest") -> HttpResponse:
         game_state=game_state,
         forced_bot_move=forced_bot_move,
         is_htmx_request=False,
+        refresh_last_move=True,
     )
 
     return HttpResponse(
@@ -92,6 +93,7 @@ def htmx_game_no_selection(req: "HttpRequest") -> HttpResponse:
         challenge=challenge,
         game_state=game_state,
         is_htmx_request=True,
+        refresh_last_move=False,
     )
 
     return HttpResponse(
@@ -119,6 +121,7 @@ def htmx_game_select_piece(req: "HttpRequest") -> "HttpResponse":
         game_state=game_state,
         selected_piece_square=piece_square,
         is_htmx_request=True,
+        refresh_last_move=False,
     )
 
     return HttpResponse(
@@ -160,6 +163,7 @@ def htmx_game_move_piece(
         challenge=challenge,
         game_state=new_game_state,
         is_htmx_request=True,
+        refresh_last_move=True,
     )
 
     return HttpResponse(
@@ -186,6 +190,7 @@ def htmx_restart_daily_challenge_ask_confirmation(req: "HttpRequest") -> HttpRes
         game_state=game_state,
         restart_daily_challenge_ask_confirmation=True,
         is_htmx_request=True,
+        refresh_last_move=False,
     )
 
     return HttpResponse(
@@ -216,6 +221,7 @@ def htmx_restart_daily_challenge_do(req: "HttpRequest") -> HttpResponse:
     game_state[
         "piece_role_by_square"
     ] = challenge.piece_role_by_square_before_bot_first_move
+    game_state["moves"] = ""
 
     save_daily_challenge_state_in_session(
         request=req,
@@ -229,6 +235,7 @@ def htmx_restart_daily_challenge_do(req: "HttpRequest") -> HttpResponse:
         game_state=game_state,
         forced_bot_move=forced_bot_move,
         is_htmx_request=True,
+        refresh_last_move=True,
     )
 
     return HttpResponse(
@@ -323,6 +330,7 @@ def _play_bot_move(
         game_state=new_game_state,
         is_bot_move=True,
         is_htmx_request=True,
+        refresh_last_move=True,
     )
 
     return HttpResponse(

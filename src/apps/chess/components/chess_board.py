@@ -1,7 +1,7 @@
 import json
 from functools import cache
 from string import Template
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Literal, cast
 
 from chess import FILE_NAMES, RANK_NAMES
 from django.templatetags.static import static
@@ -112,6 +112,7 @@ def chess_arena(
         *status_bars,
         id=f"chess-arena-{board_id}",
         cls="w-full md:max-w-lg mx-auto",
+        data_hx_ext="class-tools",  # enable CSS class transitions on the whole arena
         # When the user clicks on anything that is not an interactive element
         # of the chess board, and the state of this chess board is not
         # "waiting_for_player_selection", then the chess board is reset to this state.
@@ -429,7 +430,11 @@ def chess_character_display(
                 else "drop-shadow-opponent-selected-piece"
             )
             if is_highlighted
-            else ""
+            else (
+                "drop-shadow-piece-symbol-w"
+                if piece_player_side == "w"
+                else "drop-shadow-piece-symbol-b"
+            )
         ),
         "drop-shadow-potential-capture" if is_potential_capture else "",
     ]
@@ -534,8 +539,8 @@ def chess_last_move(
     if last_move := game_presenter.last_move:
         children.extend(
             [
-                chess_last_move_marker(square=last_move[0]),
-                chess_last_move_marker(square=last_move[1]),
+                chess_last_move_marker(square=last_move[0], move_part="from"),
+                chess_last_move_marker(square=last_move[1], move_part="to"),
             ]
         )
 
@@ -549,19 +554,43 @@ def chess_last_move(
     )
 
 
-def chess_last_move_marker(*, square: "Square") -> dom_tag:
-    movement_marker_classes = (
-        "w-4/5",
-        "aspect-square",
-        "bg-blue-300",
-        "opacity-90",
-        "rounded-full",
-        "border",
-        "border-blue-800",
-    )
-    movement_marker = div("", cls=" ".join(movement_marker_classes))
+def chess_last_move_marker(
+    *, square: "Square", move_part: Literal["from", "to"]
+) -> dom_tag:
 
-    classes = [
+    match move_part:
+        case "from":
+            start_class = "!w-full"
+            target_class = "w-3/5"
+        case "to":
+            start_class = "!w-3/5"
+            target_class = "w-11/12"
+        case _:
+            raise ValueError(f"Invalid move_part: { move_part }")
+
+    movement_marker_classes = (
+        "aspect-square",
+        "bg-yellow-300",
+        "opacity-60",
+        "border",
+        "border-yellow-500",
+        "rounded-full",
+        "transition-size",
+        "duration-200",
+        "ease-in-out",
+        start_class,
+        target_class,
+    )
+
+    movement_marker = div(
+        "",
+        cls=" ".join(movement_marker_classes),
+        data_classes=f"remove {start_class}",
+        # Mostly for debugging purposes:
+        data_last_move_marker=move_part,
+    )
+
+    movement_marker_container_classes = [
         "absolute",
         "aspect-square",
         "w-1/8",
@@ -569,7 +598,10 @@ def chess_last_move_marker(*, square: "Square") -> dom_tag:
         *square_to_piece_tailwind_classes(square),
     ]
 
-    return div(movement_marker, cls=" ".join(classes))
+    return div(
+        movement_marker,
+        cls=" ".join(movement_marker_container_classes),
+    )
 
 
 def _bot_turn_html_elements(

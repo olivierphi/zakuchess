@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 from django.conf import settings
+from dominate.tags import div
 
 from apps.chess.components.chess_board import (
     chess_arena,
@@ -66,7 +67,9 @@ def daily_challenge_moving_parts_fragment(
                     game_presenter=game_presenter,
                     board_id=board_id,
                     data_hx_swap_oob="outerHTML",
-                ),
+                )
+                if game_presenter.refresh_last_move
+                else div(""),
                 daily_challenge_bar(
                     game_presenter=game_presenter,
                     board_id=board_id,
