@@ -52,6 +52,7 @@ class GamePresenter(ABC):
         fen: "FEN",
         piece_role_by_square: "PieceRoleBySquare",
         teams: "GameTeams",
+        refresh_last_move: bool,
         is_htmx_request: bool,
         selected_square: "Square | None" = None,
         selected_piece_square: "Square | None" = None,
@@ -66,6 +67,7 @@ class GamePresenter(ABC):
 
         self.forced_bot_move = forced_bot_move
         self.last_move = last_move
+        self.refresh_last_move = refresh_last_move
         self.is_htmx_request = is_htmx_request
 
         if selected_square is not None:
