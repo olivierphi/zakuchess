@@ -47,16 +47,16 @@ def set_daily_challenge_teams_and_pieces_roles(
     team_members_counters: dict["PlayerSide", dict["PieceType", list[int]]] = {
         #  - First int of the tuple is the current counter
         #  - Second int is the maximum value for that counter
-        # (9 queens on a player's side is quite an extreme case,
+        # (9 knights/bishops/rooks/queens on a player's side is quite an extreme case,
         # but it's theoretically possible via pawn promotions ^^)
         "w": {
             # fmt: off
-            "p": [1, 8], "n": [1, 2], "b": [1, 2], "r": [1, 2], "q": [0, 9], "k": [0, 1]
+            "p": [1, 8], "n": [1, 9], "b": [1, 9], "r": [1, 9], "q": [0, 9], "k": [0, 1]
             # fmt: on
         },
         "b": {
             # fmt: off
-            "p": [1, 8], "n": [1, 2], "b": [1, 2], "r": [1, 2], "q": [0, 9], "k": [0, 1]
+            "p": [1, 8], "n": [1, 9], "b": [1, 9], "r": [1, 9], "q": [0, 9], "k": [0, 1]
             # fmt: on
         },
     }

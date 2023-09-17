@@ -39,6 +39,7 @@ class DailyChallengeGamePresenter(GamePresenter):
         target_to_confirm: "Square | None" = None,
         restart_daily_challenge_ask_confirmation: bool = False,
         is_bot_move: bool = False,
+        force_square_info: bool = False,
     ):
         super().__init__(
             fen=game_state["fen"],
@@ -51,6 +52,7 @@ class DailyChallengeGamePresenter(GamePresenter):
             target_to_confirm=target_to_confirm,
             forced_bot_move=forced_bot_move,
             last_move=self._last_move_from_game_state(game_state),
+            force_square_info=force_square_info,
         )
         self._challenge = challenge
         self.game_state = game_state

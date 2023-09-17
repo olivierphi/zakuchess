@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal, TypeAlias, cast
 
 import chess
 from django import forms
@@ -21,7 +21,9 @@ from .types import PlayerGameState
 if TYPE_CHECKING:
     from django.http import HttpRequest
 
-    from apps.chess.types import FEN, Square
+    from apps.chess.types import FEN, PieceSymbol, Square
+
+GameUpdate: TypeAlias = tuple["Square", "PieceSymbol" | Literal["x"]]
 
 
 @xframe_options_exempt
@@ -33,10 +35,12 @@ def preview_daily_challenge(request: "HttpRequest") -> HttpResponse:
     if not form.is_valid():
         errors = form.errors
 
+    game_update = form.cleaned_data.get("game_update")
     game_presenter = _get_game_presenter(
         fen=form.cleaned_data.get("fen"),
         bot_first_move=form.cleaned_data.get("bot_first_move"),
         intro_turn_speech_square=form.cleaned_data.get("intro_turn_speech_square"),
+        game_update=game_update,
     )
 
     return HttpResponse(
@@ -50,6 +54,11 @@ def preview_daily_challenge(request: "HttpRequest") -> HttpResponse:
             )
             if errors
             else "",
+            raw(
+                f"""<script>window.parent.document.getElementById("id_fen").value = "{game_presenter.fen}";</script>"""
+            )
+            if game_update
+            else "",
             chess_arena(
                 game_presenter=game_presenter, status_bars=[], board_id="admin"
             ),
@@ -62,6 +71,7 @@ class DailyChallengePreviewForm(forms.Form):
     fen = forms.CharField(min_length=20, max_length=90)
     bot_first_move = forms.CharField(max_length=4, required=False)
     intro_turn_speech_square = forms.CharField(max_length=2, required=False)
+    game_update = forms.CharField(min_length=4, max_length=4, required=False)
 
     def clean_fen(self) -> str:
         try:
@@ -106,6 +116,27 @@ class DailyChallengePreviewForm(forms.Form):
             )
         return intro_turn_speech_square
 
+    def clean_game_update(self) -> GameUpdate | None:
+        try:
+            square, piece = self.cleaned_data.get("game_update").split(":")
+        except ValueError:
+            return None
+        if not all((square, piece)):
+            return None
+        try:
+            chess.parse_square(square)
+        except ValueError as exc:
+            raise ValidationError(f"'{square}' is not a valid square") from exc
+        # fmt: off
+        if piece not in (
+            "p", "n", "b", "r", "q", "k","P", "N", "B", "R", "Q", "K", "x"
+        ):
+            raise ValidationError(
+                f"'{piece}' is not a valid piece code (nor 'x' to remove the piece)"
+            ) 
+        # fmt: on
+        return square, piece
+
 
 _INVALID_FEN_FALLBACK: "FEN" = "3k4/p7/8/8/8/8/7P/3K4 w - - 0 1"
 
@@ -114,9 +145,19 @@ def _get_game_presenter(
     fen: "FEN | None",
     bot_first_move: str | None,
     intro_turn_speech_square: "Square | None",
+    game_update: GameUpdate | None,
 ) -> DailyChallengeGamePresenter:
     if not fen:
         fen = _INVALID_FEN_FALLBACK
+    elif game_update:
+        square, piece = game_update
+        chess_board = chess.Board(fen)
+        square_int = chess.parse_square(square)
+        if piece == "x":
+            chess_board.remove_piece_at(square_int)
+        else:
+            chess_board.set_piece_at(square_int, chess.Piece.from_symbol(piece))
+        fen = cast("FEN", chess_board.fen())
 
     game_teams, piece_role_by_square = set_daily_challenge_teams_and_pieces_roles(
         fen=fen
@@ -144,4 +185,5 @@ def _get_game_presenter(
         forced_speech_bubble=(intro_turn_speech_square, "!")
         if intro_turn_speech_square
         else None,
+        force_square_info=True,  # easier will all the square names :-)
     )

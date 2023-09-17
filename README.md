@@ -55,6 +55,7 @@ You can take a look at [the Makefile](./Makefile) to see more commands.
 
 ##### Before launch
 
+ - [x] Game preview and FEN editing in the Django Admin
  - [ ] Users' personal stats (current streak, etc)
  - [ ] "End of game" screen
  - [ ] Validate data, using good ol' Django forms 
