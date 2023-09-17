@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+import chess
 from django.core.exceptions import ValidationError
 from django.db import models
 
@@ -64,17 +65,32 @@ class DailyChallenge(models.Model):
             set_daily_challenge_teams_and_pieces_roles,
         )
 
+        # FEN normalisation:
+        chess_board = chess.Board(self.fen)
+        chess_board.turn = chess.WHITE  # always starts with the human player
+        self.fen = chess_board.fen()
+
         teams, piece_role_by_square = set_daily_challenge_teams_and_pieces_roles(
             fen=self.fen
         )
         self.teams = teams
         self.piece_role_by_square = piece_role_by_square
 
+        # Set `*_before_bot_first_move` fields. Can raise validation errors.
         try:
             compute_fields_before_bot_first_move(self)
         except ValueError as exc:
-            raise ValidationError(exc) from exc
+            raise ValidationError({"bot_first_move": exc}) from exc
 
-        # TODO: check that the "intro_turn_speech_square" is a valid square
+        # Checks `intro_turn_speech_square` field.
+        piece_at_square = chess_board.piece_at(
+            chess.parse_square(self.intro_turn_speech_square)
+        )
+        if not piece_at_square or piece_at_square.color != chess.WHITE:
+            raise ValidationError(
+                {
+                    "intro_turn_speech_square": f"'{self.intro_turn_speech_square}' is not a valid 'w' square"
+                }
+            )
 
         super().clean()

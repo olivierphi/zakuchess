@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import admin_views, views
 
 app_name = "daily_challenge"
 
@@ -34,6 +34,13 @@ urlpatterns = [
         views.htmx_game_bot_move,
         name="htmx_game_bot_move",
     ),
+    # Debug views (staff only)
     path("debug/reset-today", views.debug_reset_today),
     path("debug/view-cookie", views.debug_view_cookie),
+    # Admin views (staff only)
+    path(
+        "admin/daily-challenge/game-preview",
+        admin_views.preview_daily_challenge,
+        name="admin_game_preview",
+    ),
 ]

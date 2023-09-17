@@ -33,6 +33,7 @@ class DailyChallengeGamePresenter(GamePresenter):
         refresh_last_move: bool,
         is_htmx_request: bool,
         forced_bot_move: tuple["Square", "Square"] | None = None,
+        forced_speech_bubble: tuple["Square", str] | None = None,
         selected_square: "Square | None" = None,
         selected_piece_square: "Square | None" = None,
         target_to_confirm: "Square | None" = None,
@@ -57,6 +58,7 @@ class DailyChallengeGamePresenter(GamePresenter):
             restart_daily_challenge_ask_confirmation
         )
         self.is_bot_move = is_bot_move
+        self._forced_speech_bubble = forced_speech_bubble
 
     @cached_property
     def urls(self) -> "DailyChallengeGamePresenterUrls":
@@ -141,6 +143,11 @@ class DailyChallengeGamePresenter(GamePresenter):
 
     @cached_property
     def speech_bubble(self) -> SpeechBubbleData | None:
+        if forced_speech_bubble := self._forced_speech_bubble:
+            return SpeechBubbleData(
+                text=forced_speech_bubble[1], square=forced_speech_bubble[0], time_out=2
+            )
+
         if self.is_intro_turn:
             text = (
                 self._challenge.intro_turn_speech_text
