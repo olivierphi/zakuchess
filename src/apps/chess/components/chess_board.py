@@ -77,7 +77,7 @@ def chess_arena(
         # stats_modal(),
         div(
             div(
-                chess_board(board_id),
+                chess_board(game_presenter=game_presenter, board_id=board_id),
                 cls="absolute inset-0 pointer-events-none z-0",
                 id=f"chess-board-container-{board_id}",
             ),
@@ -134,11 +134,16 @@ def chess_bot_data(board_id: str) -> dom_tag:
     )
 
 
-def chess_board(board_id: str) -> dom_tag:
+def chess_board(*, game_presenter: "GamePresenter", board_id: str) -> dom_tag:
     squares: list[dom_tag] = []
     for file in FILE_NAMES:
         for rank in RANK_NAMES:
-            squares.append(chess_board_square(cast("Square", f"{file}{rank}")))
+            squares.append(
+                chess_board_square(
+                    cast("Square", f"{file}{rank}"),
+                    force_square_info=game_presenter.force_square_info,
+                )
+            )
     return div(
         *squares,
         id=f"chess-board-{board_id}",
@@ -180,7 +185,7 @@ def chess_pieces(
 
 
 @cache
-def chess_board_square(square: "Square") -> dom_tag:
+def chess_board_square(square: "Square", *, force_square_info: bool = False) -> dom_tag:
     file, rank = file_and_rank_from_square(square)
     square_index = FILE_NAMES.index(file) + RANK_NAMES.index(rank)
     square_color_cls = SQUARE_COLOR_TAILWIND_CLASSES[square_index % 2]
@@ -191,10 +196,25 @@ def chess_board_square(square: "Square") -> dom_tag:
         square_color_cls,
         *square_to_piece_tailwind_classes(square),
     ]
-    square_info = span(
-        "".join((file if rank == "1" else "", rank if file == "a" else "")),
-        cls="text-chess-square-square-info",
-    )
+
+    display_square_info = force_square_info or (rank == "1" or file == "a")
+    if display_square_info:
+        square_name = (
+            f"{file}{rank}"
+            if force_square_info
+            else "".join((file if rank == "1" else "", rank if file == "a" else ""))
+        )
+        square_info = (
+            span(
+                square_name,
+                cls="text-chess-square-square-info",
+            )
+            if display_square_info
+            else ""
+        )
+    else:
+        square_info = ""
+
     return div(
         square_info,
         cls=" ".join(classes),

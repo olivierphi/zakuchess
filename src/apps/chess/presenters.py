@@ -58,6 +58,7 @@ class GamePresenter(ABC):
         selected_piece_square: "Square | None" = None,
         target_to_confirm: "Square | None" = None,
         forced_bot_move: tuple["Square", "Square"] | None = None,
+        force_square_info: bool = False,
         last_move: tuple["Square", "Square"] | None = None,
     ):
         self._fen = fen
@@ -69,6 +70,7 @@ class GamePresenter(ABC):
         self.last_move = last_move
         self.refresh_last_move = refresh_last_move
         self.is_htmx_request = is_htmx_request
+        self.force_square_info = force_square_info
 
         if selected_square is not None:
             self.selected_square = SelectedSquarePresenter(
