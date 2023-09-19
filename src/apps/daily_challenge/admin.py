@@ -9,7 +9,7 @@ from .models import DailyChallenge
 class DailyChallengeAdminForm(forms.ModelForm):
     class Meta:
         model = DailyChallenge
-        fields = ("id", "fen", "bot_first_move", "intro_turn_speech_square")
+        fields = ("lookup_key", "fen", "bot_first_move", "intro_turn_speech_square")
 
     def clean_bot_first_move(self) -> str:
         return self.cleaned_data["bot_first_move"].lower()
@@ -19,7 +19,7 @@ class DailyChallengeAdminForm(forms.ModelForm):
 class DailyChallengeAdmin(admin.ModelAdmin):
     form = DailyChallengeAdminForm
 
-    list_display = ("id", "fen", "bot_first_move")
+    list_display = ("lookup_key", "fen", "bot_first_move")
     readonly_fields = (
         "game_update",
         "game_preview",
@@ -32,7 +32,8 @@ class DailyChallengeAdmin(admin.ModelAdmin):
 
     def view_on_site(self, obj: DailyChallenge):
         url = reverse(
-            "daily_challenge:play_future_daily_challenge", kwargs={"id": obj.id}
+            "daily_challenge:play_future_daily_challenge",
+            kwargs={"lookup_key": obj.lookup_key},
         )
         return url
 
@@ -59,7 +60,7 @@ class DailyChallengeAdmin(admin.ModelAdmin):
             
             <iframe
                 id="preview-iframe"
-                style="width: 400px; aspect-ratio: 1 / 1.3; border: solid navy 1px;">
+                style="width: 400px; aspect-ratio: 1 / 1.3; border: solid white 1px; border-radius: 3px;">
             </iframe>
             
             <div style="margin: 1rem 0;">

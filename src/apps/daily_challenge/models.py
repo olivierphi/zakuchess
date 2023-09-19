@@ -19,11 +19,11 @@ _FEN_MAX_LEN = (
 
 
 class DailyChallenge(models.Model):
-    # This "id" will be the date of the challenge, e.g. "2023-08-28".
+    # This "lookup_key" will be the date of the challenge, e.g. "2023-08-28".
     # But in some cases we also want to have non-date ids, so let's use a CharField
     # (and we're using SQLite, so we can't use "real" date functions anyway)
-    id: str = models.CharField(
-        primary_key=True, max_length=20
+    lookup_key: str = models.CharField(
+        max_length=20, unique=True
     )  # e.g. "2021-10-01" # noqa: A001
     # The following 2 fields carry the state of the game we want
     # the daily challenge to start with...

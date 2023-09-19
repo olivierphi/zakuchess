@@ -21,9 +21,9 @@ def get_current_daily_challenge() -> "DailyChallenge":
         # N.B. On a non-SQLite database we would have tried to use a single query
         # to fetch both cases, but n+1 queries are not a problem with SQlite.
         try:
-            return DailyChallenge.objects.get(id=today_str)
+            return DailyChallenge.objects.get(lookup_key=today_str)
         except DailyChallenge.DoesNotExist:
             pass
 
     # TODO: implement multiple fallback daily challenges (and use a modulo to select 1)
-    return DailyChallenge.objects.get(id="fallback")
+    return DailyChallenge.objects.get(lookup_key="fallback")

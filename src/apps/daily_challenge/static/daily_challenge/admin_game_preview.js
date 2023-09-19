@@ -49,5 +49,5 @@
         setTimeout(updatePreview, 100)
     }
 
-    setTimeout(init, 1000)
+    setTimeout(init, 100)
 })()

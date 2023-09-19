@@ -68,9 +68,9 @@ def clear_daily_challenge_state_in_session(*, request: "HttpRequest") -> None:
 
 def today_daily_challenge_id(request: "HttpRequest") -> str:
     if request.user.is_staff:
-        admin_daily_challenge_id = request.get_signed_cookie(
-            "admin_daily_challenge_id", default=None
+        admin_daily_challenge_lookup_key = request.get_signed_cookie(
+            "admin_daily_challenge_lookup_key", default=None
         )
-        if admin_daily_challenge_id:
-            return f"admin-preview-{admin_daily_challenge_id}"
+        if admin_daily_challenge_lookup_key:
+            return f"admin-preview-{admin_daily_challenge_lookup_key}"
     return now().date().isoformat()
