@@ -6,6 +6,10 @@ ALLOWED_HOSTS = ["*"]
 
 DEBUG = True
 
+INSTALLED_APPS += [
+    "django_extensions",
+]
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
