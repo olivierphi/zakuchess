@@ -308,7 +308,7 @@ def debug_view_cookie(request: "HttpRequest") -> HttpResponse:
         f"""<p>Game state exists before check: {'no' if created else 'yes'}</p>"""
         f"""<p>Game keys: {tuple(player_cookie_content['games'].keys())}</p>"""
         f"""<p>Game_state: <pre>{json.dumps(game_state, indent=2)}</pre></p>"""
-        f"""<p>admin_daily_challenge_id: <pre>{request.get_signed_cookie('admin_daily_challenge_id', default=None)}</pre></p>"""
+        f"""<p>admin_daily_challenge_lookup_key: <pre>{request.get_signed_cookie('admin_daily_challenge_lookup_key', default=None)}</pre></p>"""
     )
 
 
@@ -355,10 +355,13 @@ def get_current_daily_challenge_or_admin_preview(
     from .models import DailyChallenge
 
     if request.user.is_staff:
-        admin_daily_challenge_id = request.get_signed_cookie(
-            "admin_daily_challenge_id", default=None
+        admin_daily_challenge_lookup_key = request.get_signed_cookie(
+            "admin_daily_challenge_lookup_key", default=None
         )
-        if admin_daily_challenge_id:
-            return DailyChallenge.objects.get(id=admin_daily_challenge_id), True
+        if admin_daily_challenge_lookup_key:
+            return (
+                DailyChallenge.objects.get(lookup_key=admin_daily_challenge_lookup_key),
+                True,
+            )
 
     return get_current_daily_challenge(), False

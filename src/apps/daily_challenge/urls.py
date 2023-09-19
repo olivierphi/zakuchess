@@ -46,7 +46,7 @@ urlpatterns = [
         name="admin_game_preview",
     ),
     path(
-        "admin/daily-challenge/play-future-daily-challenge/<str:id>/",
+        "admin/daily-challenge/play-future-daily-challenge/<str:lookup_key>/",
         admin_views.play_future_daily_challenge,
         name="play_future_daily_challenge",
     ),

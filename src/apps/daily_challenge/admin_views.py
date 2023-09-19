@@ -59,6 +59,12 @@ def preview_daily_challenge(request: "HttpRequest") -> HttpResponse:
             if errors
             else "",
             raw(
+                """<div style="background-color: #0f172a; color: #f1f5f9; text-align: center;">"""
+                f"Score advantage: <b>{game_presenter.naive_score}</b></div>"
+            )
+            if not errors
+            else "",
+            raw(
                 f"""<script>window.parent.document.getElementById("id_fen").value = "{game_presenter.fen}";</script>"""
             )
             if game_update
@@ -72,14 +78,17 @@ def preview_daily_challenge(request: "HttpRequest") -> HttpResponse:
 
 
 @user_passes_test(user_is_staff)
-def play_future_daily_challenge(request: "HttpRequest", id: str) -> HttpResponse:
+def play_future_daily_challenge(
+    request: "HttpRequest", lookup_key: str
+) -> HttpResponse:
     clear_daily_challenge_state_in_session(request=request)
 
     response = redirect("daily_challenge:daily_game_view")
     response.set_signed_cookie(
-        "admin_daily_challenge_id",
-        id,
+        "admin_daily_challenge_lookup_key",
+        lookup_key,
         expires=now() + timedelta(minutes=30),
+        httponly=True,
     )
 
     return response

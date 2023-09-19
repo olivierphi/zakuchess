@@ -6,7 +6,7 @@ kill_timeout = 5
 processes = []
 
 [env]
-  DJANGO_SETTINGS_MODULE = "project.settings.production"
+  DJANGO_SETTINGS_MODULE = "project.settings.flyio"
   DATABASE_URL = "sqlite:////zakuchess_sqlite_dbs/zakuchess.dev.sqlite3"
   ALLOWED_HOSTS = "zakuchess.com,www.zakuchess.com,zakuchess.fly.dev"
   CSRF_TRUSTED_ORIGINS = "https://zakuchess.com,https://www.zakuchess.com,https://zakuchess.fly.dev"
