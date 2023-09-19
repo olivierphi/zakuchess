@@ -6,8 +6,6 @@ ALLOWED_HOSTS = ["*"]
 
 DEBUG = True
 
-NO_HTTP_CACHE = True  # disable HTTP caching for development
-
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
