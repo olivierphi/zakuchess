@@ -88,6 +88,7 @@ def play_future_daily_challenge(
         "admin_daily_challenge_lookup_key",
         lookup_key,
         expires=now() + timedelta(minutes=30),
+        httponly=True,
     )
 
     return response
