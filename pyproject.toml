@@ -28,6 +28,7 @@ mypy = "1.5.1"
 pre-commit = "^2.20.0"
 ipython = "^8.6.0"
 types-requests = "^2.31.0.2"
+django-extensions = "^3.2.3"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.2.0"
