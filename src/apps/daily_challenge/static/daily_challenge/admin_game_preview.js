@@ -1,5 +1,11 @@
 ;(function () {
-    const gameUpdateCommandPattern = /^([a-h][1-8]):([pnbrqkx])!\s*$/i
+    const gameUpdateCommandPatterns = [
+        /^[a-h][1-8]:add:[pnbrqkx]!\s*$/i, // "add" command
+        /^[a-h][1-8]:rm!\s*$/i, // "remove" command
+        /^[a-h][1-8]:mv:[a-h][1-8]!\s*$/i, // "move" command
+    ]
+
+    const gameUpdateCommandResetPattern = /^.*!\s*$/i
 
     function init() {
         const adminPreviewUrl = document.getElementById("admin-preview-url-holder").innerText
@@ -13,15 +19,17 @@
         const gameUpdateInput = document.getElementById("id_update_game")
 
         function updatePreview(gameUpdate) {
-            previewIFrame.src =
-                adminPreviewUrl +
-                "?" +
-                new URLSearchParams({
-                    fen: fenInput.value,
-                    bot_first_move: botFirstMoveInput.value,
-                    intro_turn_speech_square: introTurnSpeechSquareInput.value,
-                    game_update: gameUpdate || "",
-                }).toString()
+            const fen = fenInput.value
+            if (!fen) {
+                return
+            }
+            const queryString = new URLSearchParams({
+                fen,
+                bot_first_move: botFirstMoveInput.value,
+                intro_turn_speech_square: introTurnSpeechSquareInput.value,
+                game_update: gameUpdate || "",
+            }).toString()
+            previewIFrame.src = adminPreviewUrl + "?" + queryString
         }
 
         function onChessBoardFieldKeyUp(event) {
@@ -33,15 +41,21 @@
         introTurnSpeechSquareInput.addEventListener("keyup", onChessBoardFieldKeyUp)
 
         function onGameUpdateInputKeyUp() {
-            const match = gameUpdateCommandPattern.exec(gameUpdateInput.value)
-            if (!match) {
+            const inputValue = gameUpdateInput.value
+            for (const pattern of gameUpdateCommandPatterns) {
+                const match = pattern.exec(inputValue)
+                if (!match) {
+                    continue
+                }
+                updatePreview(inputValue)
+                gameUpdateInput.value = ""
+                gameUpdateInput.focus()
                 return
             }
-            const square = match[1]
-            const piece = match[2]
-            console.log(`Updating ${square} to ${piece}`)
-            gameUpdateInput.value = ""
-            updatePreview(`${square}:${piece}`)
+            if (gameUpdateCommandResetPattern.exec(inputValue)) {
+                gameUpdateInput.value = ""
+                gameUpdateInput.focus()
+            }
         }
 
         gameUpdateInput.addEventListener("keyup", onGameUpdateInputKeyUp)
