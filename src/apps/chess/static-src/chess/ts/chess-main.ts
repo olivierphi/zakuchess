@@ -1,9 +1,11 @@
-import { playFromFEN } from "./chess-bot"
+import { playFromFEN, getScoreFromFEN } from "./chess-bot"
 
 // @ts-ignore
 window.cursorIsNotOnChessBoardInteractiveElement = cursorIsNotOnChessBoardInteractiveElement
 // @ts-ignore
 window.playBotMove = playBotMove
+// @ts-ignore
+window.computeScore = computeScore
 // @ts-ignore
 window.closeSpeechBubble = closeSpeechBubble
 
@@ -89,6 +91,13 @@ function playBotMove(
     playFromFEN(fen, 1, botAssetsDataHolderElementId).then((move) => {
         console.log(`bot wants to move from ${move[0]} to ${move[1]}`)
         doPlayBotMove(`${move[0]}${move[1]}`)
+    })
+}
+
+function computeScore(fen: string, botAssetsDataHolderElementId: string): Promise<number> {
+    return getScoreFromFEN(fen, 1, botAssetsDataHolderElementId).then((score) => {
+        console.log(`Stockfish says score is ${score}`)
+        return score
     })
 }
 

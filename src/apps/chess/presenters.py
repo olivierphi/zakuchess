@@ -216,6 +216,10 @@ class GamePresenter(ABC):
             score += _PIECES_VALUES[piece_symbol] * multiplier
         return score
 
+    @property
+    def chess_board(self) -> chess.Board:
+        return self._chess_board
+
 
 class GamePresenterUrls(ABC):
     def __init__(self, *, game_presenter: GamePresenter):

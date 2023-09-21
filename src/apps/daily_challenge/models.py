@@ -43,6 +43,10 @@ class DailyChallenge(models.Model):
     )
     intro_turn_speech_square: "Square" = models.CharField(max_length=2)
     intro_turn_speech_text: str = models.CharField(max_length=100, blank=True)
+    starting_advantage: int = models.IntegerField(
+        default=0,
+        help_text="positive number means the human player has an advantage, negative number means the bot has an advantage",
+    )
 
     def __str__(self) -> str:
         return f"{self.id}: {self.fen}"
