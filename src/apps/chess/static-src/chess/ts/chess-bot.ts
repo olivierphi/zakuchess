@@ -1,6 +1,7 @@
 import type { Square } from "chess.js"
 
 const BEST_MOVE_STOCKFISH_ANSWER_PATTERN = /^bestmove ([a-h][1-8])([a-h][1-8])/
+const SCORE_STOCKFISH_ANSWER_PATTERN = / score cp (-?\d+)/
 
 const wasmSupported =
     typeof WebAssembly === "object" &&
@@ -33,6 +34,33 @@ export async function playFromFEN(
             stockfish!.removeEventListener("message", onStockFishMessage)
             console.log("bestMoveAnswerMatch: ", [bestMoveAnswerMatch[1], bestMoveAnswerMatch[2]])
             resolve([bestMoveAnswerMatch[1] as Square, bestMoveAnswerMatch[2] as Square])
+        }
+
+        stockfish!.addEventListener("message", onStockFishMessage)
+        stockfish!.postMessage("go depth " + depth)
+    })
+}
+
+export async function getScoreFromFEN(
+    fen: string,
+    depth: number,
+    botAssetsDataHolderElementId: string,
+): Promise<number> {
+    await initBot(botAssetsDataHolderElementId)
+
+    console.log("onBotInitialized ; initialize with fen: ", fen)
+    stockfish!.postMessage("position fen " + fen)
+
+    return new Promise((resolve, reject) => {
+        function onStockFishMessage(e: WorkerEvent) {
+            console.debug("onStockFishMessage", e.data)
+            const scoreAnswerMatch = SCORE_STOCKFISH_ANSWER_PATTERN.exec(e.data)
+            if (!scoreAnswerMatch) {
+                return
+            }
+            stockfish!.removeEventListener("message", onStockFishMessage)
+            console.log("scoreAnswerMatch: ", scoreAnswerMatch[1])
+            resolve(parseInt(scoreAnswerMatch[1], 10))
         }
 
         stockfish!.addEventListener("message", onStockFishMessage)

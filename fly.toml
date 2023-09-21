@@ -13,8 +13,6 @@ processes = []
   PORT = "8080"
   # from Docker we see non-HTTPS requests; it's ok, Fly.io does manage the TLS layer for us at an higher level:
   SECURE_SSL_REDIRECT = "" 
-  # Our VM is pretty small, so we need to increase the Stockfish time limit:
-  STOCKFISH_TIME_LIMIT = "1.0"
 
 [mounts]
   source="zakuchess_sqlite_dbs"

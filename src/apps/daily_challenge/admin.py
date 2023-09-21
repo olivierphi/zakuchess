@@ -14,7 +14,7 @@ from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 from django.views.decorators.clickjacking import xframe_options_exempt
 
-from ..chess.business_logic import calculate_fen_before_move, compute_game_score
+from ..chess.business_logic import calculate_fen_before_move
 from .business_logic import set_daily_challenge_teams_and_pieces_roles
 from .cookie_helpers import clear_daily_challenge_state_in_session
 from .models import DailyChallenge
@@ -129,7 +129,7 @@ class DailyChallengeAdmin(admin.ModelAdmin):
             game_update_cmd=game_update_cmd,
         )
 
-        advantage = compute_game_score(chess_board=game_presenter.chess_board)
+        board_id = "admin"
 
         return HttpResponse(
             page(
@@ -148,7 +148,7 @@ class DailyChallengeAdmin(admin.ModelAdmin):
                 raw(
                     """<div style="background-color: #0f172a; color: #f1f5f9; text-align: center;">"""
                     f"Naive score advantage: <b>{game_presenter.naive_score}</b><br>"
-                    f"Stockfish score advantage: <b>{advantage}</b>"
+                    """Stockfish score advantage: <b id="stockfish-score">⏳</b>"""
                     "</div>"
                 )
                 if not errors
@@ -158,12 +158,20 @@ class DailyChallengeAdmin(admin.ModelAdmin):
                     f"""
                     <script>
                         window.parent.document.getElementById("id_fen").value = "{game_presenter.fen}";
-                        window.parent.document.getElementById("id_starting_advantage").value = {advantage};
+                        
+                        setTimeout(function () {{
+                            computeScore("{game_presenter.fen}", "chess-bot-data-{board_id}")
+                                .then((score) => {{
+                                    document.getElementById("stockfish-score").innerText = score;
+                                    window.parent.document.getElementById("id_starting_advantage").value = score;
+                                }})
+                                .catch((err) => console.error(err));
+                        }}, 100)
                     </script>"""
                 ),
                 # Last but certainly not least, display the chess board:
                 chess_arena(
-                    game_presenter=game_presenter, status_bars=[], board_id="admin"
+                    game_presenter=game_presenter, status_bars=[], board_id=board_id
                 ),
                 request=request,
             )
