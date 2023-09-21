@@ -14,7 +14,7 @@ from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 from django.views.decorators.clickjacking import xframe_options_exempt
 
-from ..chess.business_logic import calculate_fen_before_move
+from ..chess.business_logic import calculate_fen_before_move, compute_game_score
 from .business_logic import set_daily_challenge_teams_and_pieces_roles
 from .cookie_helpers import clear_daily_challenge_state_in_session
 from .models import DailyChallenge
@@ -43,7 +43,13 @@ _INVALID_FEN_FALLBACK: "FEN" = "3k4/p7/8/8/8/8/7P/3K4 w - - 0 1"
 class DailyChallengeAdminForm(forms.ModelForm):
     class Meta:
         model = DailyChallenge
-        fields = ("lookup_key", "fen", "bot_first_move", "intro_turn_speech_square")
+        fields = (
+            "lookup_key",
+            "fen",
+            "bot_first_move",
+            "intro_turn_speech_square",
+            "starting_advantage",
+        )
 
     def clean_bot_first_move(self) -> str:
         return self.cleaned_data["bot_first_move"].lower()
@@ -53,7 +59,7 @@ class DailyChallengeAdminForm(forms.ModelForm):
 class DailyChallengeAdmin(admin.ModelAdmin):
     form = DailyChallengeAdminForm
 
-    list_display = ("lookup_key", "fen", "bot_first_move")
+    list_display = ("lookup_key", "fen", "starting_advantage", "bot_first_move")
     readonly_fields = (
         "game_update",
         "game_preview",
@@ -123,6 +129,8 @@ class DailyChallengeAdmin(admin.ModelAdmin):
             game_update_cmd=game_update_cmd,
         )
 
+        advantage = compute_game_score(chess_board=game_presenter.chess_board)
+
         return HttpResponse(
             page(
                 # Hide the Zakuchess chrome:
@@ -139,16 +147,20 @@ class DailyChallengeAdmin(admin.ModelAdmin):
                 # Display the score advantage:
                 raw(
                     """<div style="background-color: #0f172a; color: #f1f5f9; text-align: center;">"""
-                    f"Score advantage: <b>{game_presenter.naive_score}</b></div>"
+                    f"Naive score advantage: <b>{game_presenter.naive_score}</b><br>"
+                    f"Stockfish score advantage: <b>{advantage}</b>"
+                    "</div>"
                 )
                 if not errors
                 else "",
-                # Update the parent form with the new FEN:
+                # Update the parent form with the new FEN and starting advantage:
                 raw(
-                    f"""<script>window.parent.document.getElementById("id_fen").value = "{game_presenter.fen}";</script>"""
-                )
-                if game_update_cmd
-                else "",
+                    f"""
+                    <script>
+                        window.parent.document.getElementById("id_fen").value = "{game_presenter.fen}";
+                        window.parent.document.getElementById("id_starting_advantage").value = {advantage};
+                    </script>"""
+                ),
                 # Last but certainly not least, display the chess board:
                 chess_arena(
                     game_presenter=game_presenter, status_bars=[], board_id="admin"

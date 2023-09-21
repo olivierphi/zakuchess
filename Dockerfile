@@ -104,6 +104,7 @@ ENV PYTHONDONTWRITEBYTECODE=0 PYTHONUNBUFFERED=1
 
 RUN apt-get update && apt-get install -y \
     libpq5 \
+    stockfish \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /app
@@ -141,6 +142,7 @@ RUN DJANGO_SETTINGS_MODULE=project.settings.docker_build \
 EXPOSE 8080
 
 ENV DJANGO_SETTINGS_MODULE=project.settings.production
+ENV STOCKFISH_PATH=/usr/games/stockfish
 
 ENV GUNICORN_CMD_ARGS="--bind :8080 --workers 2 --max-requests 120 --max-requests-jitter 20 --timeout 8"
 
