@@ -1,5 +1,6 @@
 import type { FC } from "hono/jsx"
 import { Header } from "./Header.js"
+import { Footer } from "./Footer.js"
 
 export type LayoutProps = {
   title?: string
@@ -22,7 +23,8 @@ export const Layout: FC<LayoutProps> = (props) => {
       <Head title={props.title} />
       <body class="bg-slate-900">
         <Header />
-        {props.children}
+        <section class="w-full md:max-w-lg mx-auto">{props.children}</section>
+        <Footer />
       </body>
     </html>
   )
@@ -36,7 +38,7 @@ const Head: FC<HeadProps> = (props) => {
   return (
     <head>
       <meta charset="utf-8" />
-      <title>${props.title || "ZakuChess ♞"}</title>
+      <title>{props.title || "ZakuChess ♞"}</title>
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <meta name="description" content="ZakuChess" />
       <meta name="keywords" content="chess roleplay pixel-art" />

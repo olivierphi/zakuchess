@@ -3,6 +3,7 @@ import { serveStatic } from "@hono/node-server/serve-static"
 import { Hono } from "hono"
 import { logger } from "hono/logger"
 import { Layout } from "./components/layout/Layout.js"
+import { ChessArena } from "components/chess/ChessArena.js"
 
 const app = new Hono()
 app.use("*", logger())
@@ -12,7 +13,7 @@ app.get("/", (c) => {
     `<!DOCTYPE html>` +
     (
       <Layout>
-        <div>Hello World</div>
+        <ChessArena />
       </Layout>
     ),
   )

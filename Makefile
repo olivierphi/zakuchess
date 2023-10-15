@@ -80,5 +80,24 @@ frontend/js/compile_app_files:
 
 # Here starts the "misc util targets" stuff
 
+
+.PHONY: code-quality/all
+code-quality/all: code-quality/lint code-quality/format code-quality/ts  ## Run all our code quality tools
+
+.PHONY: code-quality/lint
+code-quality/lint: lint_opts ?=
+code-quality/lint: ## Runs ESLint
+	@${NODE_BIN}/eslint ${lint_ops} src/
+
+.PHONY: code-quality/format
+code-quality/format: format_opts ?= --write
+code-quality/format: ## Runs Prettier
+	@${NODE_BIN}/prettier ${format_opts} src/
+
+.PHONY: code-quality/ts
+code-quality/ts: ts_opts ?=
+code-quality/ts: ## Runs a TypeScript check pass
+	@${NODE_BIN}/tsc --noEmit ${ts_opts}
+
 .env.local:
 	cp .env.dist .env.local

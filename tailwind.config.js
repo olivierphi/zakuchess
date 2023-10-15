@@ -19,7 +19,7 @@ const SPEECH_BUBBLE_DROP_SHADOW_COLOR = "#fbbf24" // amber-400
 
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ["./src/components/**/*.tsx"],
+  content: ["./src/components/**/*.{ts,tsx}"],
   safelist: chessRelatedClassesSafeList(),
   theme: {
     fontFamily: {

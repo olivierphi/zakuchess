@@ -1,5 +1,8 @@
 import { Readable } from "node:stream"
+import type { PipelinePromise, Writable } from "node:stream"
+import { pipeline } from "node:stream/promises"
 import { copyFile } from "node:fs/promises"
+import pLimit from "p-limit"
 import { sprintf } from "sprintf-js"
 import Path from "@mojojs/path"
 
@@ -38,16 +41,26 @@ const ASSETS_TO_COPY_MAP: Record<string, string> = {
 }
 
 async function downloadAssets() {
+  const promisesLimiter = pLimit(3) // we'll run 3 downloads in parallel
+
+  const downloadPromises: PipelinePromise<Writable>[] = []
   for (const [url, pathString] of Object.entries(ASSETS_TO_DOWNLOAD_MAP)) {
-    console.log(`Downloading ${url} to ${pathString}`)
-    const path = new Path(pathString)
-    await path.dirname().mkdir({ recursive: true })
-    const response = await fetch(url)
-    // @ts-ignore
-    const readableNodeStream = Readable.fromWeb(response.body)
-    const targetFileStream = path.createWriteStream({ encoding: "binary" })
-    await readableNodeStream.pipe(targetFileStream)
+    const downloadPromiseGenerator = async () => {
+      console.log(`Downloading ${url} to ${pathString}`)
+      const path = new Path(pathString)
+      await path.dirname().mkdir({ recursive: true })
+      const response: Response = await fetch(url)
+      if (!response.body) {
+        throw new Error(`Response body is empty for ${url}`)
+      }
+      // @ts-ignore
+      const readableNodeStream = Readable.fromWeb(response.body) //TODO: fix types here
+      const targetFileStream = path.createWriteStream({ encoding: "binary" })
+      return pipeline(readableNodeStream, targetFileStream)
+    }
+    downloadPromises.push(promisesLimiter(downloadPromiseGenerator))
   }
+  return Promise.all(downloadPromises)
 }
 
 async function copyAssets() {
