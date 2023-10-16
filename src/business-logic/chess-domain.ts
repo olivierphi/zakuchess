@@ -9,3 +9,8 @@ export const SQUARES: Readonly<ChessSquare[]> = FILE_NAMES.map((file) => {
 export type ChessFile = (typeof FILE_NAMES)[number]
 export type ChessRank = (typeof RANK_NAMES)[number]
 export type ChessSquare = `${ChessFile}${ChessRank}`
+
+export type FEN = string
+
+export type PieceType = "p" | "n" | "b" | "r" | "q" | "k"
+export type PlayerSide = "w" | "b"

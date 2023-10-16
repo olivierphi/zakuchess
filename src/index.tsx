@@ -4,16 +4,20 @@ import { Hono } from "hono"
 import { logger } from "hono/logger"
 import { Layout } from "./components/layout/Layout.js"
 import { ChessArena } from "components/chess/ChessArena.js"
+import { ChessGamePresenter } from "business-logic/ChessGamePresenter.js"
 
 const app = new Hono()
 app.use("*", logger())
 app.use("/static/*", serveStatic({ root: "./" }))
 app.get("/", (c) => {
+  const gamePresenter = new ChessGamePresenter({
+    fen: "6k1/7p/1Q2P2p/4P3/qb2Nr2/1n3N1P/5PP1/5RK1 w - - 3 27",
+  })
   return c.html(
     `<!DOCTYPE html>` +
     (
       <Layout>
-        <ChessArena />
+        <ChessArena gamePresenter={gamePresenter} />
       </Layout>
     ),
   )

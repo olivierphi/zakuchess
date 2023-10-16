@@ -28,9 +28,9 @@ backend/watch: dotenv_file ?= .env.local
 backend/watch: ## Start the Hono development server
 	@SERVER_HOST=${address} SERVER_PORT=${port} ${NODE_BIN}/tsx watch src/index.tsx
 
-.PHONY: download_assets
-download_assets:
-	${NODE_BIN}/tsx scripts/download-assets.ts
+.PHONY: assets/download-and-copy
+assets/download-and-copy:
+	${NODE_BIN}/tsx scripts/assets-download-and-copy.ts
 
 # Here starts the frontend stuff
 
