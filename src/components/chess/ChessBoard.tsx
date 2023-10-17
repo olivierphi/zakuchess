@@ -4,6 +4,13 @@ import { squareToFileAndRank } from "business-logic/chess-helpers.js"
 import { squareToPieceTailwindClasses } from "components/chess-components-helpers.js"
 import { FC, memo } from "hono/jsx"
 
+export const CHESS_PIECE_Z_INDEXES: Record<string, string> = {
+  // N.B. z-indexes must be multiples of 10 in Tailwind.
+  ground_marker: "z-0",
+  symbol: "z-10",
+  character: "z-20",
+} as const
+
 const SQUARE_COLOR_TAILWIND_CLASSES = [
   "bg-chess-square-dark",
   "bg-chess-square-light",

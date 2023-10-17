@@ -120,7 +120,7 @@ function chessCharactersBackgroundImages() {
     FACTIONS.map((faction) =>
       PIECE_NAMES.map((pieceName) => [
         `${faction}-${pieceName}`,
-        `url('/static/chess/units/${faction}/${pieceName}.png')`,
+        `url('/static/img/chess/units/${faction}/${pieceName}.png')`,
       ]),
     ).flat(),
   )
@@ -131,7 +131,7 @@ function chessSymbolsBackgroundImages() {
     PLAYER_SIDES.map((playerSide) =>
       PIECE_NAMES.map((pieceName) => [
         `${playerSide}-${pieceName}`,
-        `url('/static/chess/symbols/${playerSide}-${pieceName}.svg')`,
+        `url('/static/img/chess/symbols/${playerSide}-${pieceName}.svg')`,
       ]),
     ).flat(),
   )

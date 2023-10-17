@@ -1,11 +1,24 @@
-import type { ChessSquare, PieceType, PlayerSide } from "business-logic/chess-domain.js"
-import { squareToPieceTailwindClasses } from "components/chess-components-helpers.js"
 import { FC } from "hono/jsx"
+import type {
+  ChessSquare,
+  GameFactions,
+  PieceRole,
+} from "../../business-logic/chess-domain.js"
+import { squareToPieceTailwindClasses } from "../chess-components-helpers.js"
+import { ChessCharacterDisplay } from "./ChessCharacterDisplay.js"
+import { ChessGroundMarker } from "./ChessGroundMarker.js"
+import { ChessUnitSymbolDisplay } from "./ChessUnitSymbolDisplay.js"
 
-export const ChessPiece: FC<{
-  piece: { square: ChessSquare; type: PieceType; side: PlayerSide }
-}> = ({ piece: { square, type, side } }) => {
+export type ChessPieceProps = {
+  square: ChessSquare
+  role: PieceRole
+  factions: GameFactions
+}
+
+export const ChessPiece: FC<ChessPieceProps> = ({ square, role, factions }) => {
+  const [side, type] = role
   const isGameOver = false //TODO
+
   const classes = [
     "absolute",
     "aspect-square",
@@ -20,5 +33,11 @@ export const ChessPiece: FC<{
     "transform-gpu",
   ]
 
-  return <div class={classes.join(" ")}>{type}</div>
+  return (
+    <div class={classes.join(" ")}>
+      <ChessGroundMarker side={side} />
+      <ChessCharacterDisplay side={side} pieceType={type} factions={factions} />
+      <ChessUnitSymbolDisplay role={role} />
+    </div>
+  )
 }

@@ -1,6 +1,6 @@
 import { FC } from "hono/jsx"
 import { ChessBoard } from "./ChessBoard.js"
-import { ChessGamePresenter } from "business-logic/ChessGamePresenter.js"
+import { ChessGamePresenter } from "business-logic/chess-domain.js"
 import { ChessPieces } from "./ChessPieces.js"
 
 export type ChessArenaProps = {

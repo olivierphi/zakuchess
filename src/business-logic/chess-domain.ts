@@ -12,5 +12,29 @@ export type ChessSquare = `${ChessFile}${ChessRank}`
 
 export type FEN = string
 
+export type PieceName = "pawn" | "knight" | "bishop" | "rook" | "queen" | "king"
 export type PieceType = "p" | "n" | "b" | "r" | "q" | "k"
 export type PlayerSide = "w" | "b"
+export type PieceRoleIndex = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+export type PieceRole = [PlayerSide, PieceType, PieceRoleIndex]
+
+export type GameFactions = Record<PlayerSide, Faction>
+
+export type Faction = "humans" | "undeads" // more to come?
+
+export type GamePiece = { square: ChessSquare; role: PieceRole }
+
+export interface ChessGamePresenter {
+  fen: FEN
+  pieces: GamePiece[]
+  factions: GameFactions
+}
+
+export const PIECE_TYPE_TO_PIECE_NAME_MAP: Record<PieceType, PieceName> = {
+  p: "pawn",
+  n: "knight",
+  b: "bishop",
+  r: "rook",
+  q: "queen",
+  k: "king",
+}

@@ -26,7 +26,7 @@ backend/watch: host ?= localhost
 backend/watch: port ?= 3000
 backend/watch: dotenv_file ?= .env.local
 backend/watch: ## Start the Hono development server
-	@SERVER_HOST=${address} SERVER_PORT=${port} ${NODE_BIN}/tsx watch src/index.tsx
+	@SERVER_HOST=${address} SERVER_PORT=${port} ${NODE_BIN}/tsx watch --clear-screen=false src/server.ts
 
 .PHONY: assets/download-and-copy
 assets/download-and-copy:
