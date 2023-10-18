@@ -42,13 +42,13 @@ PieceRole = Literal[
     # fmt: off
     # Same than TeamMemberRole, but applied to the board:
     # --> following chess conventions, "w player"'s pieces are uppercase while "b player"'s pieces are lowercase.
-    # "w" side:
+    # ----- "w" player side:
     "P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8",
     "R1", "N1", "B1", "Q", "K", "B2", "N2", "R2",
     # Promoted pawns have a 3 letters role, where the last one is the promoted piece:
     # Let's consider "Queen" promotions only for now:
     "P1Q", "P2Q", "P3Q", "P4Q", "P5Q", "P6Q", "P7Q", "P8Q",
-    # "b" side:
+    # ----- "b" player side:
     "p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8",
     "r1", "n1", "b1", "q", "k", "b2", "n2", "r2",
     # And same for "b" side promotions:
@@ -126,7 +126,8 @@ class ChessMoveResult(TypedDict):
 
 class TeamMember(TypedDict, total=False):
     role: Required["TeamMemberRole"]
-    name: str
+    # TODO: change this to just `lst[str]` when we finished migrating to a list-name
+    name: Required[list[str] | str]
     faction: "Faction"
 
 

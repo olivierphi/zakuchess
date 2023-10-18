@@ -79,11 +79,6 @@ def do_chess_move(*, fen: "FEN", from_: "Square", to: "Square") -> ChessMoveResu
 
     targeted_piece = chess_board.piece_at(chess_to)
     is_capture = targeted_piece is not None
-    # print(
-    #     f"board.turn={board_player_turn} "
-    #     f":: move_piece_to({to=}) "
-    #     f":: from {from_} :: {targeted_piece=}"
-    # )
 
     previous_castling_rights = chess_board.castling_rights
     chess_board.push(chess_move)

@@ -8,7 +8,7 @@ from apps.chess.helpers import get_active_player_side_from_fen
 from ..types import PlayerGameState
 
 if TYPE_CHECKING:
-    from apps.chess.types import PieceSymbol, Square
+    from apps.chess.types import PieceRole, PieceSymbol, Square
 
 
 def move_daily_challenge_piece(
@@ -17,7 +17,7 @@ def move_daily_challenge_piece(
     from_: "Square",
     to: "Square",
     is_my_side: bool,
-) -> "PlayerGameState":
+) -> tuple["PlayerGameState", "PieceRole | None"]:
     fen = game_state["fen"]
     active_player_side = get_active_player_side_from_fen(fen)
     try:
@@ -36,6 +36,10 @@ def move_daily_challenge_piece(
             "PieceSymbol", promotion.upper() if active_player_side == "w" else promotion
         )
         piece_role_by_square[from_] += piece_promotion  # type: ignore
+
+    captured_piece: "PieceRole | None" = None
+    if move_result["is_capture"]:
+        captured_piece = game_state["piece_role_by_square"][to]
 
     for move_from, move_to in move_result["changes"].items():
         if move_to is None:
@@ -61,4 +65,4 @@ def move_daily_challenge_piece(
         new_game_state["turns_counter"] += 1
         new_game_state["current_attempt_turns_counter"] += 1
 
-    return new_game_state
+    return new_game_state, captured_piece

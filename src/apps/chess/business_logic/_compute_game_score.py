@@ -45,4 +45,4 @@ def compute_game_score(
     advantage = info["score"].white().score()
     engine.quit()
 
-    return advantage
+    return advantage or 0

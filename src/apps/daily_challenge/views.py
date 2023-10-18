@@ -150,7 +150,7 @@ def htmx_game_move_piece(
     is_my_side = active_player_side != challenge.bot_side
     _logger.info("Game state from player cookie: %s", previous_game_state)
 
-    new_game_state = move_daily_challenge_piece(
+    new_game_state, captured_piece_role = move_daily_challenge_piece(
         game_state=previous_game_state, from_=from_, to=to, is_my_side=is_my_side
     )
 
@@ -165,6 +165,7 @@ def htmx_game_move_piece(
         game_state=new_game_state,
         is_htmx_request=True,
         refresh_last_move=True,
+        captured_team_member_role=captured_piece_role,
     )
 
     return HttpResponse(
@@ -321,7 +322,7 @@ def _play_bot_move(
     board_id: str,
 ) -> HttpResponse:
     bot_next_move = uci_move_squares(move)
-    new_game_state = move_daily_challenge_piece(
+    new_game_state, captured_piece_role = move_daily_challenge_piece(
         game_state=game_state,
         from_=bot_next_move[0],
         to=bot_next_move[1],
@@ -339,6 +340,7 @@ def _play_bot_move(
         is_bot_move=True,
         is_htmx_request=True,
         refresh_last_move=True,
+        captured_team_member_role=captured_piece_role,
     )
 
     return HttpResponse(
