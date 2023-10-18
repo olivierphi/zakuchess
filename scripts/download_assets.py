@@ -1,15 +1,21 @@
 #!/usr/bin/env python
 
+import asyncio
 from pathlib import Path
 from time import monotonic
-from typing import TypeAlias
+from typing import TYPE_CHECKING, TypeAlias
 
-import requests
-from requests.utils import default_user_agent as requests_default_user_agent
+import aiohttp
+
+if TYPE_CHECKING:
+    from collections.abc import Coroutine
+
 
 URL: TypeAlias = str
 
 BASE_DIR = Path(__file__).parent.resolve() / ".."  # points to our git repo's root
+
+DOWNLOADS_CONCURRENCY = 3
 
 WEBUI_STATIC = BASE_DIR / "src" / "apps" / "webui" / "static" / "webui"
 CHESS_STATIC = BASE_DIR / "src" / "apps" / "chess" / "static" / "chess"
@@ -30,7 +36,7 @@ _USER_AGENT = " ".join(
     (
         "AssetsDownloaderBot/0.0",
         "(https://zakuchess.fly.dev/; zakuchess@dunsap.com)",
-        requests_default_user_agent(),
+        aiohttp.http.SERVER_SOFTWARE,
     )
 )
 
@@ -76,10 +82,13 @@ ASSETS_MAP: dict[URL, Path] = {
 }
 
 
-def download_assets(*, even_if_exists: bool) -> None:
-    with requests.Session() as session:
-        session.headers["User-Agent"] = _USER_AGENT
+async def download_assets(*, even_if_exists: bool) -> None:
+    download_coros: list["Coroutine"] = []
 
+    connector = aiohttp.TCPConnector(limit=DOWNLOADS_CONCURRENCY)
+    async with aiohttp.ClientSession(
+        connector=connector, headers={"User-Agent": _USER_AGENT}
+    ) as session:
         for asset_url, target_path in ASSETS_MAP.items():
             if not even_if_exists and target_path.exists():
                 print(
@@ -90,24 +99,32 @@ def download_assets(*, even_if_exists: bool) -> None:
             target_folder = target_path.parent
             if not target_folder.exists():
                 target_folder.mkdir(parents=True)
-            print(f"Downloading '{asset_url}' to '{target_path.relative_to(BASE_DIR)}'...")
-            dl_start_time = monotonic()
-            _download_file(session=session, url=asset_url, target_path=target_path)
-            print(f"Downloaded (took {monotonic() - dl_start_time:.1f}s.)")
+            download_coros.append(
+                _download_file(session=session, url=asset_url, target_path=target_path)
+            )
+
+        await asyncio.gather(*download_coros)
 
 
-def _download_file(*, session: requests.Session, url: str, target_path: Path) -> None:
-    with session.get(url, stream=True) as response:
+async def _download_file(
+    *, session: aiohttp.ClientSession, url: str, target_path: Path
+) -> None:
+    dl_start_time = monotonic()
+    async with session.get(url) as response:
+        print(f"Downloading '{url}' to '{target_path.relative_to(BASE_DIR)}'...")
         response.raise_for_status()
         with target_path.open("wb") as target_file:
-            for chunk in response.iter_content(chunk_size=8192):
+            async for chunk in response.content.iter_chunked(8192):
                 target_file.write(chunk)
+    print(f"Downloaded '{url}'. (took {monotonic() - dl_start_time:.1f}s.)")
 
 
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="Download some assets that are not versioned (yet).")
+    parser = argparse.ArgumentParser(
+        description="Download some assets that are not versioned (yet)."
+    )
     parser.add_argument(
         "--even-if-exists",
         action="store_true",
@@ -116,4 +133,4 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    download_assets(even_if_exists=args.even_if_exists)
+    asyncio.run(download_assets(even_if_exists=args.even_if_exists))

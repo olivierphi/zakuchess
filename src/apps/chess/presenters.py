@@ -60,6 +60,7 @@ class GamePresenter(ABC):
         forced_bot_move: tuple["Square", "Square"] | None = None,
         force_square_info: bool = False,
         last_move: tuple["Square", "Square"] | None = None,
+        captured_piece_role: "PieceRole | None" = None,
         is_preview: bool = False,
     ):
         self._fen = fen
@@ -68,10 +69,11 @@ class GamePresenter(ABC):
         self._teams = teams
 
         self.forced_bot_move = forced_bot_move
-        self.last_move = last_move
         self.refresh_last_move = refresh_last_move
         self.is_htmx_request = is_htmx_request
         self.force_square_info = force_square_info
+        self.last_move = last_move
+        self.captured_piece_role = captured_piece_role
         self.is_preview = is_preview
 
         if selected_square is not None:
@@ -350,3 +352,4 @@ class SpeechBubbleData(NamedTuple):
     text: str
     square: "Square"
     time_out: int = 4  # seconds
+    character_display: "PieceRole | None" = None

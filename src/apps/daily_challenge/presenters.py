@@ -10,6 +10,7 @@ from apps.chess.presenters import GamePresenter, GamePresenterUrls, SpeechBubble
 from ..chess.helpers import (
     player_side_to_chess_lib_color,
     square_from_int,
+    team_member_role_from_piece_role,
     uci_move_squares,
 )
 from .business_logic import get_daily_challenge_turns_state
@@ -17,7 +18,14 @@ from .consts import MAXIMUM_TURNS_PER_CHALLENGE
 from .models import DailyChallenge
 
 if TYPE_CHECKING:
-    from apps.chess.types import Factions, GamePhase, PlayerSide, Square
+    from apps.chess.types import (
+        Factions,
+        GamePhase,
+        PieceRole,
+        PlayerSide,
+        Square,
+        TeamMember,
+    )
 
     from .types import ChallengeTurnsState, PlayerGameState
 
@@ -40,6 +48,7 @@ class DailyChallengeGamePresenter(GamePresenter):
         restart_daily_challenge_ask_confirmation: bool = False,
         is_bot_move: bool = False,
         force_square_info: bool = False,
+        captured_team_member_role: "PieceRole | None" = None,
         is_preview: bool = False,
     ):
         super().__init__(
@@ -54,6 +63,7 @@ class DailyChallengeGamePresenter(GamePresenter):
             forced_bot_move=forced_bot_move,
             last_move=self._last_move_from_game_state(game_state),
             force_square_info=force_square_info,
+            captured_piece_role=captured_team_member_role,
             is_preview=is_preview,
         )
         self._challenge = challenge
@@ -94,14 +104,14 @@ class DailyChallengeGamePresenter(GamePresenter):
 
     @cached_property
     def game_phase(self) -> "GamePhase":
-        if self.challenge_turns_state.time_s_up:
-            return "game_over:lost"
         if (winner := self.winner) is not None:
             return (
                 "game_over:won"
                 if winner == self._challenge.my_side
                 else "game_over:lost"
             )
+        if self.challenge_turns_state.time_s_up:
+            return "game_over:lost"
         if self.is_my_turn:
             if self.selected_piece is None:
                 return "waiting_for_player_selection"
@@ -159,6 +169,27 @@ class DailyChallengeGamePresenter(GamePresenter):
             )
             return SpeechBubbleData(
                 text=text, square=self._challenge.intro_turn_speech_square, time_out=8
+            )
+
+        if self.is_bot_move and self.captured_piece_role:
+            team_member_role = team_member_role_from_piece_role(
+                self.captured_piece_role
+            )
+            captured_team_member: "TeamMember" = self.team_members_by_role_by_side[
+                self._challenge.my_side
+            ][team_member_role]
+            if isinstance(name := captured_team_member["name"], str):
+                # TODO: remove that code when we finished migrating to a list-name
+                captured_team_member_display = name.split(" ")[0]
+            else:
+                captured_team_member_display = name[0]
+            reaction = random.choice(
+                ("They got {}!", "We lost {}!", "We'll avenge you, {}!")
+            )
+            return SpeechBubbleData(
+                text=reaction.format(captured_team_member_display),
+                square=self._my_king_square,
+                character_display=self.captured_piece_role,
             )
 
         if (

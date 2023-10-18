@@ -17,11 +17,11 @@ WORKDIR /app
 # Install dependencies based on the preferred package manager
 COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
 RUN \
-  if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
-  elif [ -f package-lock.json ]; then npm ci; \
-  elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && pnpm i; \
-  else echo "Lockfile not found." && exit 1; \
-  fi
+    if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
+    elif [ -f package-lock.json ]; then npm ci; \
+    elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && pnpm i; \
+    else echo "Lockfile not found." && exit 1; \
+    fi
 
 
 # 2. Rebuild the source code only when needed
@@ -32,11 +32,11 @@ WORKDIR /app
 
 COPY --from=frontend_deps /app/node_modules ./node_modules
 
-# Assets source: 
+# Assets source:
 COPY src/lib/frontend-common ./src/lib/frontend-common
 COPY src/apps/webui/static-src ./src/apps/webui/static-src
 COPY src/apps/chess/static-src ./src/apps/chess/static-src
-# We have to copy our components too, 
+# We have to copy our components too,
 # so that Tailwind see the classes used in them:
 COPY src/apps/chess/components ./src/apps/chess/components
 COPY src/apps/daily_challenge/components ./src/apps/daily_challenge/components
@@ -86,9 +86,10 @@ FROM python:3.11-slim-bookworm AS assets_download
 # By having a separate build stage for downloading assets, we can cache them
 # as long as the `download_assets.py` doesn't change.
 
-ENV PYTHON_REQUESTS_VERSION=2.31.0
+# should preferably be the same as in `poetry.lock`:
+ENV PYTHON_AIOHTTP_VERSION=3.8.6
 
-RUN pip install -U pip requests==$PYTHON_REQUESTS_VERSION
+RUN pip install -U pip aiohttp==${PYTHON_AIOHTTP_VERSION}
 
 RUN mkdir -p /app
 WORKDIR /app
@@ -111,7 +112,7 @@ WORKDIR /app
 
 RUN addgroup -gid 1001 webapp
 RUN useradd --gid 1001 --uid 1001 webapp
-RUN chown -R 1001:1001 /app 
+RUN chown -R 1001:1001 /app
 
 COPY --chown=1001:1001 scripts scripts
 COPY --chown=1001:1001 src src

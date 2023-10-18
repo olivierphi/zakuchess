@@ -98,6 +98,7 @@ def set_daily_challenge_teams_and_pieces_roles(
 
         team_member: "TeamMember" = {
             "role": team_member_role,
+            "name": "",  # will be filled below by `_set_character_names_for_non_bot_side`
             "faction": piece_faction[piece_player_side],
         }
         teams[piece_player_side].append(team_member)
@@ -118,4 +119,4 @@ def _set_character_names_for_non_bot_side(
     first_names = random.sample(FIRST_NAMES, k=len(player_team_members))
     last_names = random.sample(LAST_NAMES, k=len(player_team_members))
     for team_member in player_team_members:
-        team_member["name"] = f"{first_names.pop()} {last_names.pop()}"
+        team_member["name"] = [first_names.pop(), last_names.pop()]

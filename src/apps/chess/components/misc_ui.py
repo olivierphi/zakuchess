@@ -7,7 +7,7 @@ from .chess_helpers import square_to_square_center_tailwind_classes
 
 if TYPE_CHECKING:
     from ..presenters import GamePresenter
-    from ..types import Square
+    from ..types import PieceRole, Square
 
 
 # tailwind name, hex value:
@@ -20,9 +20,11 @@ def speech_bubble_container(
 ) -> dom_tag:
     if speech_bubble_data := game_presenter.speech_bubble:
         return speech_bubble(
+            game_presenter=game_presenter,
             text=speech_bubble_data.text,
             square=speech_bubble_data.square,
             time_out=speech_bubble_data.time_out,
+            character_display=speech_bubble_data.character_display,
             board_id=board_id,
             **extra_attrs,
         )
@@ -31,8 +33,17 @@ def speech_bubble_container(
 
 
 def speech_bubble(
-    *, text: str, square: "Square", time_out: int, board_id: str, **extra_attrs: str
+    *,
+    game_presenter: "GamePresenter",
+    text: str,
+    square: "Square",
+    time_out: int,
+    character_display: "PieceRole | None" = None,
+    board_id: str,
+    **extra_attrs: str,
 ) -> dom_tag:
+    from .chess_board import chess_character_display
+
     bubble_classes = (
         # Positioning:
         "absolute",
@@ -50,11 +61,24 @@ def speech_bubble(
         "font-medium",
         "rounded-md",
     )
+
+    character_display_tag: dom_tag = (
+        div(
+            chess_character_display(
+                game_presenter=game_presenter, piece_role=character_display
+            ),
+            cls="w-1/2 mx-auto",
+        )
+        if character_display
+        else raw("")
+    )
+
     bubble = div(
         div(
             raw(text),
             cls="text-center",
         ),
+        character_display_tag,
         div(
             a(
                 "close [x]",
