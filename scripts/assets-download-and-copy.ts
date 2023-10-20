@@ -1,11 +1,11 @@
+import { copyFile } from "node:fs/promises"
 import { argv } from "node:process"
 import { Readable } from "node:stream"
 import type { PipelinePromise, Writable } from "node:stream"
 import { pipeline } from "node:stream/promises"
-import { copyFile } from "node:fs/promises"
+import Path from "@mojojs/path"
 import pLimit from "p-limit"
 import { sprintf } from "sprintf-js"
-import Path from "@mojojs/path"
 
 const downloadEvenIfExists = argv.includes("--download-even-if-exists")
 

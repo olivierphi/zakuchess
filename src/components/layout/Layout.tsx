@@ -1,6 +1,11 @@
 import type { FC } from "hono/jsx"
-import { Header } from "./Header.js"
+import {
+  getStaticAssetsViteDevServerURL,
+  staticAssetPath,
+} from "../../helpers/assets-helpers.js"
+import { getSettings } from "../../settings.js"
 import { Footer } from "./Footer.js"
+import { Header } from "./Header.js"
 
 export type LayoutProps = {
   title?: string
@@ -35,6 +40,9 @@ type HeadProps = {
 }
 
 const Head: FC<HeadProps> = (props) => {
+  const isDevelopmentMode = getSettings().DEVELOPMENT_MODE
+  const jsTypeAttributes = isDevelopmentMode ? { type: "module" } : {}
+
   return (
     <head>
       <meta charset="utf-8" />
@@ -43,7 +51,11 @@ const Head: FC<HeadProps> = (props) => {
       <meta name="description" content="ZakuChess" />
       <meta name="keywords" content="chess roleplay pixel-art" />
       <style dangerouslySetInnerHTML={{ __html: _FONTS_CSS }} />
-      <link rel="stylesheet" href="/static/css/tailwind.css" />
+      {isDevelopmentMode ? (
+        <script type="module" src={`${getStaticAssetsViteDevServerURL()}/@vite/client`} />
+      ) : null}
+      <link rel="stylesheet" href={staticAssetPath("static-src/css/tailwind.css")} />
+      <script src={staticAssetPath("src/frontend/js/main.ts")} {...jsTypeAttributes} />
     </head>
   )
 }

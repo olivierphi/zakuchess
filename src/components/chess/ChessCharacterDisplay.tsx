@@ -1,10 +1,10 @@
+import { FC } from "hono/jsx"
 import type {
   Faction,
   GameFactions,
   PieceType,
   PlayerSide,
 } from "business-logic/chess-domain.js"
-import { FC } from "hono/jsx"
 import { CHESS_PIECE_Z_INDEXES } from "./ChessBoard.js"
 
 export type ChessCharacterDisplayProps = {

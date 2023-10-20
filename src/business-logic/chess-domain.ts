@@ -24,12 +24,6 @@ export type Faction = "humans" | "undeads" // more to come?
 
 export type GamePiece = { square: ChessSquare; role: PieceRole }
 
-export interface ChessGamePresenter {
-  fen: FEN
-  pieces: GamePiece[]
-  factions: GameFactions
-}
-
 export const PIECE_TYPE_TO_PIECE_NAME_MAP: Record<PieceType, PieceName> = {
   p: "pawn",
   n: "knight",

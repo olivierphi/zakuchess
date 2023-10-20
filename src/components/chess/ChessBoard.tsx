@@ -1,8 +1,8 @@
+import { FC, memo } from "hono/jsx"
 import { FILE_NAMES, RANK_NAMES, SQUARES } from "business-logic/chess-domain.js"
 import type { ChessSquare } from "business-logic/chess-domain.js"
 import { squareToFileAndRank } from "business-logic/chess-helpers.js"
 import { squareToPieceTailwindClasses } from "components/chess-components-helpers.js"
-import { FC, memo } from "hono/jsx"
 
 export const CHESS_PIECE_Z_INDEXES: Record<string, string> = {
   // N.B. z-indexes must be multiples of 10 in Tailwind.
@@ -16,9 +16,13 @@ const SQUARE_COLOR_TAILWIND_CLASSES = [
   "bg-chess-square-light",
 ] as const
 
-export const ChessBoard: FC = memo(() => {
+export type ChessBoardProps = {
+  boardId: string
+}
+
+export const ChessBoard: FC<ChessBoardProps> = memo(({ boardId }) => {
   return (
-    <div class="relative aspect-square pointer-events-none">
+    <div class="relative aspect-square pointer-events-none" id={`chess-board-${boardId}`}>
       {SQUARES.map((square) => {
         return <ChessBoardSquare square={square} />
       })}

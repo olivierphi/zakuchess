@@ -1,0 +1,10 @@
+/node_modules
+
+/static
+/dist
+
+/db.sqlite3
+
+/.git
+/.idea
+/.docker

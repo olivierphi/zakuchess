@@ -1,7 +1,18 @@
 {
-	"useTabs": false,
-	"singleQuote": false,
-	"trailingComma": "all",
-	"semi": false,
-	"printWidth": 90
+  "useTabs": false,
+  "singleQuote": false,
+  "trailingComma": "all",
+  "semi": false,
+  "printWidth": 90,
+  "plugins": ["@trivago/prettier-plugin-sort-imports"],
+  "importOrder": [
+    "^node:",
+    "^hono",
+    "^@hono",
+    "<THIRD_PARTY_MODULES>",
+    "^../",
+    "^./"
+  ],
+  "importOrderSeparation": false,
+  "importOrderSortSpecifiers": true
 }

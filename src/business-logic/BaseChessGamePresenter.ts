@@ -1,5 +1,5 @@
+import { Chess } from "chess.js"
 import type {
-  ChessGamePresenter,
   ChessSquare,
   FEN,
   GameFactions,
@@ -7,15 +7,15 @@ import type {
   PieceType,
   PlayerSide,
 } from "./chess-domain.js"
-import { Chess } from "chess.js"
+import { ChessGamePresenter, ChessGamePresenterUrls } from "./view-domain.js"
 
-export class BaseChessGamePresenter implements ChessGamePresenter {
-  protected _fen: FEN
+export abstract class BaseChessGamePresenter implements ChessGamePresenter {
+  public readonly fen: FEN
 
-  protected _cache: Record<string, unknown> = {}
+  private _cacheStorage: Record<string, unknown> = {}
 
   constructor({ fen }: { fen: FEN }) {
-    this._fen = fen
+    this.fen = fen
   }
 
   get factions(): GameFactions {
@@ -26,13 +26,9 @@ export class BaseChessGamePresenter implements ChessGamePresenter {
     }
   }
 
-  get fen(): FEN {
-    return this._fen
-  }
-
   get pieces(): GamePiece[] {
-    if (!this._cache.pieces) {
-      const pieces: GamePiece[] = this.chessBoard
+    return this.cache("pieces", () => {
+      return this.chessBoard
         .board()
         .flat()
         .filter((piece) => !!piece)
@@ -44,15 +40,23 @@ export class BaseChessGamePresenter implements ChessGamePresenter {
             role: [piece.color as PlayerSide, piece.type as PieceType, 1],
           }
         })
-      this._cache.pieces = pieces
-    }
-    return this._cache.pieces as GamePiece[]
+    })
   }
 
-  private get chessBoard(): Chess {
-    if (!this._cache.chessBoard) {
-      this._cache.chessBoard = new Chess(this.fen)
+  abstract get urls(): ChessGamePresenterUrls
+
+  protected get chessBoard(): Chess {
+    return this.cache("chessBoard", () => {
+      return new Chess(this.fen)
+    })
+  }
+
+  protected cache<T>(cacheKey: string, valueInitialisation: () => T): T {
+    if (cacheKey in this._cacheStorage) {
+      return this._cacheStorage as T
     }
-    return this._cache.chessBoard as Chess
+    const value = valueInitialisation()
+    this._cacheStorage[cacheKey] = value
+    return value
   }
 }
