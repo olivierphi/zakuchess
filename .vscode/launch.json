@@ -10,10 +10,11 @@
       "request": "launch",
       "name": "Web server",
       "skipFiles": ["<node_internals>/**"],
-      "program": "${workspaceFolder}/src/server.ts",
+      "program": "${workspaceFolder}/src/server-nodejs.ts",
       "env": {
         // @link https://github.com/esbuild-kit/tsx#nodejs-loader
-        "NODE_OPTIONS": "--loader tsx"
+        "NODE_OPTIONS": "--loader tsx",
+        "COOKIES_SIGNING_SECRET": "JAzDLdM-FeOVvLWcFvkbjyyYyokDL6I87oHDp9D2f3GhdueoU"
       }
     }
   ]

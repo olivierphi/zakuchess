@@ -1,5 +1,6 @@
 import { FC } from "hono/jsx"
-import type { ChessSquare, PieceRole } from "../../business-logic/chess-domain.js"
+import { playerSideFromPieceState } from "business-logic/chess-helpers.js"
+import type { ChessSquare, PieceState } from "../../business-logic/chess-domain.js"
 import type { ChessGamePresenter } from "../../business-logic/view-domain.js"
 import { squareToPieceTailwindClasses } from "../chess-components-helpers.js"
 import { ChessCharacterDisplay } from "./ChessCharacterDisplay.js"
@@ -10,16 +11,16 @@ export type ChessPieceProps = {
   boardId: string
   gamePresenter: ChessGamePresenter
   square: ChessSquare
-  role: PieceRole
+  state: PieceState
 }
 
 export const ChessPiece: FC<ChessPieceProps> = ({
   boardId,
   gamePresenter,
   square,
-  role,
+  state,
 }) => {
-  const [side, type] = role
+  const side = playerSideFromPieceState(state)
   const isSelectedPiece = false //TODO
   const isGameOver = false //TODO
 
@@ -45,19 +46,15 @@ export const ChessPiece: FC<ChessPieceProps> = ({
         ? // Re-selecting an already selected piece de-selects it:
           gamePresenter.urls.htmxGameNoSelection({ boardId })
         : gamePresenter.urls.htmxGameSelectPiece({ square, boardId }),
-      "data-hx-target": `chess-board-pieces-${boardId}`,
+      "data-hx-target": `#chess-board-pieces-${boardId}`,
     })
   }
 
   return (
     <div class={classes.join(" ")} {...htmxAttributes}>
       <ChessGroundMarker side={side} />
-      <ChessCharacterDisplay
-        side={side}
-        pieceType={type}
-        factions={gamePresenter.factions}
-      />
-      <ChessUnitSymbolDisplay role={role} />
+      <ChessCharacterDisplay state={state} factions={gamePresenter.factions} />
+      <ChessUnitSymbolDisplay state={state} />
     </div>
   )
 }

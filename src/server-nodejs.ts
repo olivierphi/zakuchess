@@ -21,6 +21,7 @@ const isProduction = process.env.NODE_ENV === "production"
 const settings: Settings = {
   DEVELOPMENT_MODE: !isProduction,
   ZAKUCHESS_VERSION: process.env.ZAKUCHESS_VERSION || "dev",
+  COOKIES_SIGNING_SECRET: process.env.COOKIES_SIGNING_SECRET || "",
 }
 setSettings(settings)
 

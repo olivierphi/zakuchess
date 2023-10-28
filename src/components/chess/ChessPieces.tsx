@@ -8,14 +8,17 @@ export type ChessPiecesProps = {
 }
 export const ChessPieces: FC<ChessPiecesProps> = ({ gamePresenter, boardId }) => {
   return (
-    <div class="absolute inset-0 pointer-events-none z-10">
-      {gamePresenter.pieces.map(({ square, role }) => {
+    <div
+      class="absolute inset-0 pointer-events-none z-10"
+      id={`chess-board-pieces-${boardId}`}
+    >
+      {gamePresenter.pieces.map(({ square, state }) => {
         return (
           <ChessPiece
             boardId={boardId}
             gamePresenter={gamePresenter}
             square={square}
-            role={role}
+            state={state}
           />
         )
       })}

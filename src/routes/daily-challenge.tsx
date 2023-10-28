@@ -1,22 +1,64 @@
 import { Hono } from "hono"
+import { ChessSquare } from "business-logic/chess-domain.js"
 import { ChessArena } from "components/chess/ChessArena.js"
 import { Layout } from "components/layout/Layout.js"
+import { DAILY_CHALLENGE_PATHS, routes } from "daily-challenge/urls.js"
+import { DailyChallengeMovingPartsFragment } from "../components/daily-challenge/DailyChallengeMovingPartsFragment.js"
 import { DailyChallengeGamePresenter } from "../daily-challenge/presenters.js"
+import { getCurrentDailyChallengeOrAdminPreview } from "../http/controller-helpers.js"
+import { getOrCreateDailyChallengeStateForPlayer } from "../http/cookie-helpers.js"
+import { logger } from "../logging.js"
 
 export const dailyChallengeApp = new Hono()
 
-dailyChallengeApp.get("/", (c) => {
-  // Temporarily hard-coding a GamePresenter here:
-  const gamePresenter = new DailyChallengeGamePresenter({
-    fen: "6k1/7p/1Q2P2p/4P3/qb2Nr2/1n3N1P/5PP1/5RK1 w - - 3 27",
+dailyChallengeApp.get(DAILY_CHALLENGE_PATHS["main-page"], async (c) => {
+  const [challenge, isPreview] = await getCurrentDailyChallengeOrAdminPreview(c.req)
+  const boardId = "main" //hard-coded for now
+  const [gameState, created] = await getOrCreateDailyChallengeStateForPlayer({
+    c,
+    challenge,
   })
+  const gamePresenter = new DailyChallengeGamePresenter({
+    challenge,
+    gameState,
+    isPreview,
+  })
+
+  logger.debug({ gameStateFromPlayerCookie: gameState })
 
   return c.html(
     `<!DOCTYPE html>` +
     (
       <Layout>
-        <ChessArena gamePresenter={gamePresenter} boardId="main" />
+        <ChessArena gamePresenter={gamePresenter} boardId={boardId} />
       </Layout>
     ),
+  )
+})
+
+dailyChallengeApp.get(DAILY_CHALLENGE_PATHS["htmx:select-piece"], async (c) => {
+  // TODO: validate the input data, using Zod
+  const { boardId, square } = c.req.query()
+  logger.debug({ boardId, square })
+
+  const [challenge, isPreview] = await getCurrentDailyChallengeOrAdminPreview(c.req)
+  const [gameState, created] = await getOrCreateDailyChallengeStateForPlayer({
+    c,
+    challenge,
+  })
+  if (created) {
+    // we shouldn't have been creating a game at this point... Let's start a new game!
+    return c.redirect(routes["main-page"]())
+  }
+
+  const gamePresenter = new DailyChallengeGamePresenter({
+    challenge,
+    gameState,
+    isPreview,
+    selectedPieceSquare: square as ChessSquare, //TODO: validate and remove cast
+  })
+
+  return c.html(
+    <DailyChallengeMovingPartsFragment gamePresenter={gamePresenter} boardId={boardId} />,
   )
 })

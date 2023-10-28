@@ -2,27 +2,34 @@ import { FC } from "hono/jsx"
 import type {
   Faction,
   GameFactions,
-  PieceType,
+  PieceState,
+  PieceSymbol,
   PlayerSide,
 } from "business-logic/chess-domain.js"
+import {
+  pieceSymbolFromPieceState,
+  playerSideFromPieceState,
+} from "business-logic/chess-helpers.js"
 import { CHESS_PIECE_Z_INDEXES } from "./ChessBoard.js"
 
 export type ChessCharacterDisplayProps = {
-  side: PlayerSide
-  pieceType: PieceType
+  state: PieceState
   factions: GameFactions
 }
 
 export const ChessCharacterDisplay: FC<ChessCharacterDisplayProps> = ({
-  side,
-  pieceType,
+  state,
   factions,
 }) => {
   const isActivePlayerPiece = false // TODO
   const isHighlighted = false // TODO
   const isPotentialCapture = false // TODO
+  const [pieceSymbol, side] = [
+    pieceSymbolFromPieceState(state),
+    playerSideFromPieceState(state),
+  ]
 
-  const [isKnight, isKing] = [pieceType === "n", pieceType === "k"] // eslint-disable-line @typescript-eslint/no-unused-vars
+  const [isKnight, isKing] = [pieceSymbol === "n", pieceSymbol === "k"] // eslint-disable-line @typescript-eslint/no-unused-vars
 
   const horizontalTranslation =
     side === "w" ? (isKnight ? "left-3" : "left-0") : "right-0"
@@ -37,7 +44,7 @@ export const ChessCharacterDisplay: FC<ChessCharacterDisplayProps> = ({
     CHESS_PIECE_Z_INDEXES["character"],
     horizontalTranslation,
     verticalTranslation,
-    ...pieceCharacterClasses({ pieceType, side, factions }),
+    ...pieceCharacterClasses({ pieceSymbol, side, factions }),
     // Conditional classes:
     isHighlighted
       ? isActivePlayerPiece
@@ -49,10 +56,10 @@ export const ChessCharacterDisplay: FC<ChessCharacterDisplayProps> = ({
     isPotentialCapture ? "drop-shadow-potential-capture" : "",
   ]
 
-  return <div class={classes.join(" ")} data-piece-role={`${side}-${pieceType}`}></div>
+  return <div class={classes.join(" ")} data-piece-role={`${side}-${pieceSymbol}`}></div>
 }
 
-const _PIECE_UNITS_CLASSES: Record<Faction, Record<PieceType, string>> = {
+const _PIECE_UNITS_CLASSES: Record<Faction, Record<PieceSymbol, string>> = {
   // We need Tailwind to see these classes, so that it bundles them in the final CSS file.
   humans: {
     p: "bg-humans-pawn",
@@ -73,15 +80,15 @@ const _PIECE_UNITS_CLASSES: Record<Faction, Record<PieceType, string>> = {
 }
 
 const pieceCharacterClasses = ({
-  pieceType,
+  pieceSymbol,
   side,
   factions,
 }: {
-  pieceType: PieceType
+  pieceSymbol: PieceSymbol
   side: PlayerSide
   factions: GameFactions
 }): string[] => {
-  const classes = [_PIECE_UNITS_CLASSES[factions[side]][pieceType]]
+  const classes = [_PIECE_UNITS_CLASSES[factions[side]][pieceSymbol]]
   if (side === "b") {
     classes.push("-scale-x-100")
   }

@@ -1,21 +1,51 @@
 import { BaseChessGamePresenter } from "../business-logic/BaseChessGamePresenter.js"
-import type { ChessSquare, FEN } from "../business-logic/chess-domain.js"
+import type { ChessSquare } from "../business-logic/chess-domain.js"
 import type { ChessGamePresenterUrls, URLString } from "../business-logic/view-domain.js"
+import type { PlayerGameState } from "./domain.js"
+import type { DailyChallenge } from "./models.js"
+import { routes } from "./urls.js"
 
 type DailyChallengeGamePresenterArgs = {
-  fen: FEN
+  challenge: DailyChallenge
+  gameState: PlayerGameState
+  selectedSquare?: ChessSquare
+  selectedPieceSquare?: ChessSquare
+  isPreview: boolean
 }
 
 export class DailyChallengeGamePresenter extends BaseChessGamePresenter {
-  private readonly _urls: DailyChallengeGameUrlsPresenter
+  public readonly gameState: PlayerGameState
 
-  constructor({ fen }: DailyChallengeGamePresenterArgs) {
-    super({ fen })
-    this._urls = new DailyChallengeGameUrlsPresenter()
+  private readonly challenge: DailyChallenge
+  private readonly isPreview: boolean
+  private readonly urlsPresenter: DailyChallengeGameUrlsPresenter
+
+  constructor({
+    challenge,
+    gameState,
+    selectedSquare,
+    selectedPieceSquare,
+    isPreview,
+  }: DailyChallengeGamePresenterArgs) {
+    super({
+      fen: challenge.fen,
+      teams: challenge.teams,
+      pieceStateBySquare: gameState.pieceStateBySquare,
+      selectedSquare,
+      selectedPieceSquare,
+    })
+    this.challenge = challenge
+    this.gameState = gameState
+    this.isPreview = isPreview
+    this.urlsPresenter = new DailyChallengeGameUrlsPresenter()
+  }
+
+  get isGameOver(): boolean {
+    return false // TODO
   }
 
   get urls(): ChessGamePresenterUrls {
-    return this._urls
+    return this.urlsPresenter
   }
 }
 
@@ -51,6 +81,6 @@ export class DailyChallengeGameUrlsPresenter implements ChessGamePresenterUrls {
     square: ChessSquare
     boardId: string
   }): URLString {
-    return `htmx/pieces/select?${new URLSearchParams({ square, boardId })}`
+    return routes["htmx:select-piece"]({ square, boardId })
   }
 }
