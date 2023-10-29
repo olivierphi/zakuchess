@@ -21,7 +21,10 @@ export const ChessPiece: FC<ChessPieceProps> = ({
   state,
 }) => {
   const side = playerSideFromPieceState(state)
-  const isSelectedPiece = false //TODO
+  const pieceCanMove =
+    gamePresenter.isPlayerTurn &&
+    gamePresenter.squaresWithPiecesThatCanMove.includes(square)
+  const isSelectedPiece = gamePresenter.selectedPiece?.square === square
   const isGameOver = false //TODO
 
   const classes = [
@@ -51,9 +54,18 @@ export const ChessPiece: FC<ChessPieceProps> = ({
   }
 
   return (
-    <div class={classes.join(" ")} {...htmxAttributes}>
-      <ChessGroundMarker side={side} />
-      <ChessCharacterDisplay state={state} factions={gamePresenter.factions} />
+    <div
+      class={classes.join(" ")}
+      data-square={square}
+      data-piece-state={state}
+      {...htmxAttributes}
+    >
+      <ChessGroundMarker side={side} pieceCanMove={pieceCanMove} />
+      <ChessCharacterDisplay
+        state={state}
+        gamePresenter={gamePresenter}
+        square={square}
+      />
       <ChessUnitSymbolDisplay state={state} />
     </div>
   )

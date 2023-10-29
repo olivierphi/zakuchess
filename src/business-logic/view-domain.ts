@@ -19,10 +19,14 @@ export interface ChessGamePresenter {
   readonly urls: ChessGamePresenterUrls
   readonly selectedSquare: ChessGameSelectedSquarePresenter | null
   readonly selectedPiece: ChessGameSelectedPiecePresenter | null
+  readonly playerSideToHighlightAllPiecesFor: PlayerSide | null
   // ...from which we can derive the following:
   readonly pieces: GamePiece[]
+  readonly squaresWithPiecesThatCanMove: ChessSquare[]
   readonly activePlayerSide: PlayerSide
+  readonly isPlayerTurn: boolean
   readonly teamMembersByIDBySide: TeamMembersByIDBySide
+  readonly isInCheck: boolean
   readonly isGameOver: boolean
 
   pieceStateAtSquare(square: ChessSquare): PieceState | null
@@ -39,9 +43,12 @@ export interface ChessGameSelectedSquarePresenter {
   readonly square: ChessSquare
   readonly teamMember: TeamMember
   readonly playerSide: PlayerSide
+  readonly pieceAt: PieceState | null
 }
 
 export interface ChessGameSelectedPiecePresenter
   extends ChessGameSelectedSquarePresenter {
   readonly availableTargets: ChessSquare[]
+
+  isPotentialCapture(square: ChessSquare): boolean
 }

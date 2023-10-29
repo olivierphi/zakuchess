@@ -24,6 +24,7 @@ export type BaseChessGamePresenterArgs = {
   pieceStateBySquare: PieceStateBySquare
   selectedSquare?: ChessSquare
   selectedPieceSquare?: ChessSquare
+  playerSideToHighlightAllPiecesFor?: PlayerSide
 }
 
 export abstract class BaseChessGamePresenter implements ChessGamePresenter {
@@ -32,6 +33,7 @@ export abstract class BaseChessGamePresenter implements ChessGamePresenter {
   public readonly pieceStateBySquare: PieceStateBySquare
   public readonly selectedSquare: ChessGameSelectedSquarePresenter | null = null
   public readonly selectedPiece: ChessGameSelectedPiecePresenter | null = null
+  public readonly playerSideToHighlightAllPiecesFor: PlayerSide | null
 
   private cacheStorage: Record<string, unknown> = {}
 
@@ -41,10 +43,12 @@ export abstract class BaseChessGamePresenter implements ChessGamePresenter {
     pieceStateBySquare,
     selectedSquare,
     selectedPieceSquare,
+    playerSideToHighlightAllPiecesFor,
   }: BaseChessGamePresenterArgs) {
     this.fen = fen
     this.teams = teams
     this.pieceStateBySquare = pieceStateBySquare
+    this.playerSideToHighlightAllPiecesFor = playerSideToHighlightAllPiecesFor ?? null
 
     if (selectedSquare) {
       this.selectedSquare = new BaseSelectedSquarePresenter({
@@ -107,14 +111,27 @@ export abstract class BaseChessGamePresenter implements ChessGamePresenter {
     })
   }
 
+  get squaresWithPiecesThatCanMove(): ChessSquare[] {
+    return this.cache("squaresWithPiecesThatCanMove", () => {
+      return this.chessBoard
+        .moves({ verbose: true })
+        .map((move) => move.from as ChessSquare)
+    })
+  }
+
   get activePlayerSide(): PlayerSide {
     return this.chessBoard.turn()
+  }
+
+  get isInCheck(): boolean {
+    return this.chessBoard.isCheck()
   }
 
   pieceStateAtSquare(square: ChessSquare): PieceState | null {
     return this.pieceStateBySquare[square] ?? null
   }
 
+  abstract get isPlayerTurn(): boolean
   abstract get isGameOver(): boolean
   abstract get urls(): ChessGamePresenterUrls
 
@@ -153,19 +170,24 @@ export class BaseSelectedSquarePresenter implements ChessGameSelectedSquarePrese
     this.chessBoard = chessBoard
   }
 
-  public get teamMember(): TeamMember {
+  get teamMember(): TeamMember {
     return this.cache("teamMember", () => {
       const playerSide = this.gamePresenter.selectedPiece
         ? this.gamePresenter.selectedPiece.playerSide
         : this.gamePresenter.activePlayerSide
-      const pieceID = pieceIDFromPieceState(
-        this.gamePresenter.pieceStateAtSquare(this.square)!,
-      )
+      const pieceState = this.pieceAt!
+      const pieceID = pieceIDFromPieceState(pieceState)
       return this.gamePresenter.teamMembersByIDBySide[playerSide][pieceID]!
     })
   }
 
-  public get playerSide(): PlayerSide {
+  get pieceAt(): PieceState | null {
+    return this.cache("pieceAt", () => {
+      return this.gamePresenter.pieceStateAtSquare(this.square)
+    })
+  }
+
+  get playerSide(): PlayerSide {
     return this.cache("playerSide", () => {
       return playerSideFromPieceState(this.gamePresenter.pieceStateAtSquare(this.square)!)
     })
@@ -194,5 +216,9 @@ export class BaseSelectedPiecePresenter
         .moves({ square: this.square, verbose: true })
         .map((move) => move.to as ChessSquare)
     })
+  }
+
+  isPotentialCapture(square: ChessSquare): boolean {
+    return Boolean(this.pieceAt && this.availableTargets.includes(square))
   }
 }

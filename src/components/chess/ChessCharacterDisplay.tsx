@@ -1,5 +1,6 @@
 import { FC } from "hono/jsx"
 import type {
+  ChessSquare,
   Faction,
   GameFactions,
   PieceState,
@@ -10,30 +11,58 @@ import {
   pieceSymbolFromPieceState,
   playerSideFromPieceState,
 } from "business-logic/chess-helpers.js"
+import type { ChessGamePresenter } from "business-logic/view-domain.js"
 import { CHESS_PIECE_Z_INDEXES } from "./ChessBoard.js"
 
 export type ChessCharacterDisplayProps = {
+  gamePresenter?: ChessGamePresenter
+  factions?: GameFactions
   state: PieceState
-  factions: GameFactions
+  square?: ChessSquare
 }
 
 export const ChessCharacterDisplay: FC<ChessCharacterDisplayProps> = ({
-  state,
+  gamePresenter,
   factions,
+  state,
+  square,
 }) => {
-  const isActivePlayerPiece = false // TODO
-  const isHighlighted = false // TODO
-  const isPotentialCapture = false // TODO
-  const [pieceSymbol, side] = [
+  if (!gamePresenter && !factions) {
+    throw new Error(
+      "Either 'gamePresenter' or 'factions' must be passed to ChessCharacterDisplay.",
+    )
+  }
+
+  const [pieceSymbol, piecePlayerSide] = [
     pieceSymbolFromPieceState(state),
     playerSideFromPieceState(state),
   ]
-
+  const isActivePlayerPiece = gamePresenter?.activePlayerSide === piecePlayerSide
+  const isWSide = piecePlayerSide === "w"
   const [isKnight, isKing] = [pieceSymbol === "n", pieceSymbol === "k"] // eslint-disable-line @typescript-eslint/no-unused-vars
 
-  const horizontalTranslation =
-    side === "w" ? (isKnight ? "left-3" : "left-0") : "right-0"
-  const verticalTranslation = isKnight && side === "w" ? "top-2" : "top-1"
+  let isHighlighted = false
+  let isPotentialCapture = false
+  if (gamePresenter) {
+    if (square) {
+      if (gamePresenter.selectedPiece?.square === square) {
+        isHighlighted = true
+      } else if (gamePresenter.playerSideToHighlightAllPiecesFor === piecePlayerSide) {
+        isHighlighted = true
+      }
+      if (gamePresenter?.selectedPiece?.isPotentialCapture(square)) {
+        isPotentialCapture = true
+      }
+    }
+    if (!isPotentialCapture && isKing && isActivePlayerPiece && gamePresenter.isInCheck) {
+      isPotentialCapture = true
+    }
+  }
+
+  // Right, let's do this shall we?
+  const horizontalTranslation = isWSide ? (isKnight ? "left-3" : "left-0") : "right-0"
+  const verticalTranslation = isKnight && isWSide ? "top-2" : "top-1"
+  const gameFactions = (gamePresenter ? gamePresenter.factions : factions) as GameFactions
 
   const classes = [
     "relative",
@@ -44,19 +73,23 @@ export const ChessCharacterDisplay: FC<ChessCharacterDisplayProps> = ({
     CHESS_PIECE_Z_INDEXES["character"],
     horizontalTranslation,
     verticalTranslation,
-    ...pieceCharacterClasses({ pieceSymbol, side, factions }),
+    ...pieceCharacterClasses({
+      pieceSymbol,
+      side: piecePlayerSide,
+      factions: gameFactions,
+    }),
     // Conditional classes:
     isHighlighted
       ? isActivePlayerPiece
         ? "drop-shadow-active-selected-piece"
         : "drop-shadow-opponent-selected-piece"
-      : side === "w"
+      : piecePlayerSide === "w"
       ? "drop-shadow-piece-symbol-w"
       : "drop-shadow-piece-symbol-b",
     isPotentialCapture ? "drop-shadow-potential-capture" : "",
   ]
 
-  return <div class={classes.join(" ")} data-piece-role={`${side}-${pieceSymbol}`}></div>
+  return <div class={classes.join(" ")} data-piece-state={state} />
 }
 
 const _PIECE_UNITS_CLASSES: Record<Faction, Record<PieceSymbol, string>> = {

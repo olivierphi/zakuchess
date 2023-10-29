@@ -4,10 +4,10 @@ import { CHESS_PIECE_Z_INDEXES } from "./ChessBoard.js"
 
 export type ChessGroundMarkerProps = {
   side: PlayerSide
-  canMove?: boolean
+  pieceCanMove?: boolean
 }
 
-export const ChessGroundMarker: FC<ChessGroundMarkerProps> = ({ side, canMove }) => {
+export const ChessGroundMarker: FC<ChessGroundMarkerProps> = ({ side, pieceCanMove }) => {
   const classes = [
     "absolute",
     "w-11/12",
@@ -18,7 +18,7 @@ export const ChessGroundMarker: FC<ChessGroundMarkerProps> = ({ side, canMove })
     CHESS_PIECE_Z_INDEXES["ground_marker"],
     "border-solid",
     PIECE_GROUND_MARKER_COLOR_TAILWIND_CLASSES[
-      `${side}-${canMove ? "canMove" : "cannotMove"}`
+      `${side}-${pieceCanMove ? "canMove" : "cannotMove"}`
     ],
   ]
 

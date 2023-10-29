@@ -1,5 +1,5 @@
-import { BaseChessGamePresenter } from "../business-logic/BaseChessGamePresenter.js"
 import type { ChessSquare } from "../business-logic/chess-domain.js"
+import { BaseChessGamePresenter } from "../business-logic/presenters.js"
 import type { ChessGamePresenterUrls, URLString } from "../business-logic/view-domain.js"
 import type { PlayerGameState } from "./domain.js"
 import type { DailyChallenge } from "./models.js"
@@ -38,6 +38,10 @@ export class DailyChallengeGamePresenter extends BaseChessGamePresenter {
     this.gameState = gameState
     this.isPreview = isPreview
     this.urlsPresenter = new DailyChallengeGameUrlsPresenter()
+  }
+
+  get isPlayerTurn(): boolean {
+    return this.activePlayerSide === this.challenge.mySide
   }
 
   get isGameOver(): boolean {
@@ -81,6 +85,6 @@ export class DailyChallengeGameUrlsPresenter implements ChessGamePresenterUrls {
     square: ChessSquare
     boardId: string
   }): URLString {
-    return routes["htmx:select-piece"]({ square, boardId })
+    return routes.HTMX_SELECT_PIECE({ square, boardId })
   }
 }

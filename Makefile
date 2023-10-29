@@ -40,11 +40,11 @@ assets/download-and-copy:
 
 .PHONY: frontend/watch
 frontend/watch: ## Compile the JS assets via Vite, in 'watch & development' mode
-	@${NODE_BIN}/vite --strictPort --mode development 
+	@${NODE_BIN}/vite --strictPort --mode development
 
 .PHONY: frontend/build
 frontend/build: ## Compile the JS assets via Vite,
-	@${NODE_BIN}/vite build --mode production 
+	@${NODE_BIN}/vite build --mode production
 
 
 # Production-related stuff
@@ -60,12 +60,12 @@ build: ## Build the production assets
 code-quality/all: code-quality/lint code-quality/format code-quality/ts  ## Run all our code quality tools
 
 .PHONY: code-quality/lint
-code-quality/lint: lint_opts ?=
+code-quality/lint: lint_opts ?= --fix
 code-quality/lint: ## Runs ESLint
 	@${NODE_BIN}/eslint ${lint_ops} src/
 
 .PHONY: code-quality/format
-code-quality/format: format_opts ?= --write
+code-quality/format: format_opts ?= --write --list-different
 code-quality/format: ## Runs Prettier
 	@${NODE_BIN}/prettier ${format_opts} src/
 
@@ -88,7 +88,7 @@ docker/build: use_buildkit ?= 1 # @link https://docs.docker.com/develop/develop-
 docker/build: docker_build_args ?=
 docker/build: ## Docker: build the image
 	DOCKER_BUILDKIT=${use_buildkit} docker build -t ${DOCKER_IMG_NAME}:${DOCKER_TAG} ${docker_build_args} .
-	
+
 
 .PHONY: docker/local/run
 docker/local/run: port ?= 3000

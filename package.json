@@ -2,7 +2,8 @@
   "type": "module",
   "scripts": {
     "dev": "make dev",
-    "lint": "eslint src",
+    "lint:check": "eslint src",
+    "lint:fix": "eslint --fix src",
     "format:write": "prettier --write src",
     "format:check": "prettier --check src",
     "ts:check": "tsc --noEmit"

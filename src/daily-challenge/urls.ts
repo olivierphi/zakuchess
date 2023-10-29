@@ -1,8 +1,8 @@
 import type { ChessSquare } from "business-logic/chess-domain.js"
 
 export const DAILY_CHALLENGE_PATHS = {
-  "main-page": "/",
-  "htmx:select-piece": "/htmx/pieces/select",
+  MAIN_PAGE: "/",
+  HTMX_SELECT_PIECE: "/htmx/pieces/select",
 } as const
 
 export type DailyChallengePath = keyof typeof DAILY_CHALLENGE_PATHS
@@ -11,8 +11,8 @@ export type DailyChallengePath = keyof typeof DAILY_CHALLENGE_PATHS
 type RoutingFunction = (...args: any[]) => string
 
 export const routes: Record<DailyChallengePath, RoutingFunction> = {
-  "main-page": () => "/",
-  "htmx:select-piece": ({
+  MAIN_PAGE: () => "/",
+  HTMX_SELECT_PIECE: ({
     square,
     boardId,
   }: {
@@ -20,7 +20,8 @@ export const routes: Record<DailyChallengePath, RoutingFunction> = {
     boardId: string
   }): string => {
     return (
-      "/htmx/pieces/select?" +
+      DAILY_CHALLENGE_PATHS.HTMX_SELECT_PIECE +
+      "?" +
       new URLSearchParams({ square: square, boardId: boardId }).toString()
     )
   },

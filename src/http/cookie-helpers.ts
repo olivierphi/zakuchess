@@ -89,6 +89,7 @@ const saveDailyChallengeStateInSession = async ({
   )
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const clearDailyChallengesStateInSession = async (c: Context): Promise<void> => {
   // Erases all games data!
   const cookieValue: PlayerSessionContent = { games: {} }

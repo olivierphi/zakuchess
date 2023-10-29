@@ -11,9 +11,10 @@ import { logger } from "../logging.js"
 
 export const dailyChallengeApp = new Hono()
 
-dailyChallengeApp.get(DAILY_CHALLENGE_PATHS["main-page"], async (c) => {
+dailyChallengeApp.get(DAILY_CHALLENGE_PATHS.MAIN_PAGE, async (c) => {
   const [challenge, isPreview] = await getCurrentDailyChallengeOrAdminPreview(c.req)
   const boardId = "main" //hard-coded for now
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [gameState, created] = await getOrCreateDailyChallengeStateForPlayer({
     c,
     challenge,
@@ -36,7 +37,7 @@ dailyChallengeApp.get(DAILY_CHALLENGE_PATHS["main-page"], async (c) => {
   )
 })
 
-dailyChallengeApp.get(DAILY_CHALLENGE_PATHS["htmx:select-piece"], async (c) => {
+dailyChallengeApp.get(DAILY_CHALLENGE_PATHS.HTMX_SELECT_PIECE, async (c) => {
   // TODO: validate the input data, using Zod
   const { boardId, square } = c.req.query()
   logger.debug({ boardId, square })
@@ -48,7 +49,7 @@ dailyChallengeApp.get(DAILY_CHALLENGE_PATHS["htmx:select-piece"], async (c) => {
   })
   if (created) {
     // we shouldn't have been creating a game at this point... Let's start a new game!
-    return c.redirect(routes["main-page"]())
+    return c.redirect(routes.MAIN_PAGE())
   }
 
   const gamePresenter = new DailyChallengeGamePresenter({
