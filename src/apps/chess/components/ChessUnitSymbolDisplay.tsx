@@ -1,14 +1,14 @@
-import { FC } from "hono/jsx"
+import { type FC } from "hono/jsx"
 import {
   PIECE_SYMBOL_TO_PIECE_NAME_MAP,
   type PieceState,
   type PieceSymbol,
   type PlayerSide,
-} from "business-logic/chess-domain.js"
+} from "../business-logic/chess-domain.js"
 import {
   pieceSymbolFromPieceState,
   playerSideFromPieceState,
-} from "business-logic/chess-helpers.js"
+} from "../business-logic/chess-helpers.js"
 import { CHESS_PIECE_Z_INDEXES } from "./ChessBoard.js"
 
 export type ChessUnitSymbolDisplayProps = {

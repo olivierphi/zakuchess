@@ -1,3 +1,5 @@
+// Let's start with "pure chess" logic:
+
 export const FILE_NAMES = ["a", "b", "c", "d", "e", "f", "g", "h"] as const
 export const RANK_NAMES = ["1", "2", "3", "4", "5", "6", "7", "8"] as const
 export const SQUARES: Readonly<ChessSquare[]> = FILE_NAMES.map((file) => {
@@ -25,16 +27,27 @@ export type PieceOnBoard =
 export type PieceIDIndex = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
 // prettier-ignore
 export type PieceID =
-  // 8 pawns, "w" player side:
+  // --- 8 pawns, "w" player side:
   | "P1" | "P2" | "P3" | "P4" | "P5" | "P6" | "P7" | "P8"
   // Same, "b" player side:
   | "p1" | "p2" | "p3" | "p4" | "p5" | "p6" | "p7" | "p8"
-  //  8 pieces, "w" player side:
-  | "N1" | "N2" | "B1" | "B2" | "R1" |  "B2" | "Q" |  "K"
+  // --- 8 pieces, "w" player side:
+  | "N1" | "N2" | "B1" | "B2" | "R1" |  "R2" | "Q" |  "K"
   // Same, "b" player side:
-  | "n1" | "n2" | "b1" | "b2" | "r1" |  "b2" | "q" |  "k"
+  | "n1" | "n2" | "b1" | "b2" | "r1" |  "r2" | "q" |  "k"
 export type Promotion = "q" | "r" | "b" | "n"
 export type PieceState = `${PieceID}${Promotion | ""}`
+
+export type GameEndReason =
+  | "checkmate"
+  | "stalemate"
+  | "insufficient_material"
+  // | "seventyfive_moves" // not managed by Chess.js?
+  | "threefold_repetition"
+  // | "fivefold_repetition" // not managed by Chess.js?
+  | "fifty_moves"
+
+// Ok, now our "Zakuchess" logic on top of this:
 
 export type GameFactions = Record<PlayerSide, Faction>
 
@@ -54,6 +67,24 @@ export type TeamMembersByIDBySide = Record<
   PlayerSide,
   Partial<Record<PieceID, TeamMember>>
 >
+
+// Keys are the starting square of each moved piece, values are the ending square.
+// `null` is used when the piece on that Square was captured.
+export type ChessMoveChanges = Partial<Record<ChessSquare, ChessSquare | null>>
+
+export type GameOverDescription = {
+  winner: PlayerSide | null
+  reason: GameEndReason
+}
+
+export type ChessMoveResult = {
+  fen: FEN
+  changes: ChessMoveChanges
+  isCapture: boolean
+  isCastling: boolean
+  promotion: Promotion | null
+  gameOver: GameOverDescription | null
+}
 
 export const PIECE_SYMBOL_TO_PIECE_NAME_MAP: Record<PieceSymbol, PieceName> = {
   p: "pawn",

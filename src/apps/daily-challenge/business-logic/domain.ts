@@ -1,4 +1,4 @@
-import type { FEN, PieceStateBySquare } from "../business-logic/chess-domain.js"
+import type { FEN, PieceStateBySquare } from "apps/chess/business-logic/chess-domain.js"
 
 export type GameID = string
 

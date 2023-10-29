@@ -1,11 +1,11 @@
-import { FC } from "hono/jsx"
-import { playerSideFromPieceState } from "business-logic/chess-helpers.js"
-import type { ChessSquare, PieceState } from "../../business-logic/chess-domain.js"
-import type { ChessGamePresenter } from "../../business-logic/view-domain.js"
-import { squareToPieceTailwindClasses } from "../chess-components-helpers.js"
+import { type FC } from "hono/jsx"
+import type { ChessSquare, PieceState } from "../business-logic/chess-domain.js"
+import { playerSideFromPieceState } from "../business-logic/chess-helpers.js"
+import type { ChessGamePresenter } from "../business-logic/view-domain.js"
 import { ChessCharacterDisplay } from "./ChessCharacterDisplay.js"
 import { ChessGroundMarker } from "./ChessGroundMarker.js"
 import { ChessUnitSymbolDisplay } from "./ChessUnitSymbolDisplay.js"
+import { squareToPieceTailwindClasses } from "./chess-components-helpers.js"
 
 export type ChessPieceProps = {
   boardId: string

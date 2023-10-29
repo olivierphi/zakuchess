@@ -3,7 +3,7 @@ import type {
   PieceStateBySquare,
   PlayerSide,
   TeamMember,
-} from "../business-logic/chess-domain.js"
+} from "apps/chess/business-logic/chess-domain.js"
 
 export type DailyChallenge = {
   lookupKey: string

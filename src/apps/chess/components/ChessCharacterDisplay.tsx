@@ -1,4 +1,4 @@
-import { FC } from "hono/jsx"
+import { type FC } from "hono/jsx"
 import type {
   ChessSquare,
   Faction,
@@ -6,12 +6,12 @@ import type {
   PieceState,
   PieceSymbol,
   PlayerSide,
-} from "business-logic/chess-domain.js"
+} from "../business-logic/chess-domain.js"
 import {
   pieceSymbolFromPieceState,
   playerSideFromPieceState,
-} from "business-logic/chess-helpers.js"
-import type { ChessGamePresenter } from "business-logic/view-domain.js"
+} from "../business-logic/chess-helpers.js"
+import type { ChessGamePresenter } from "../business-logic/view-domain.js"
 import { CHESS_PIECE_Z_INDEXES } from "./ChessBoard.js"
 
 export type ChessCharacterDisplayProps = {

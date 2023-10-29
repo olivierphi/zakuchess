@@ -1,5 +1,5 @@
-import type { ChessFile, ChessRank, ChessSquare } from "business-logic/chess-domain.js"
-import { squareToFileAndRank } from "business-logic/chess-helpers.js"
+import type { ChessFile, ChessRank, ChessSquare } from "../business-logic/chess-domain.js"
+import { squareToFileAndRank } from "../business-logic/chess-helpers.js"
 
 const _PIECE_FILE_TO_TAILWIND_POSITIONING_CLASS: Readonly<Record<ChessFile, string>> = {
   a: "translate-y-0/1",

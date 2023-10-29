@@ -1,9 +1,12 @@
-import type { ChessSquare } from "../business-logic/chess-domain.js"
-import { BaseChessGamePresenter } from "../business-logic/presenters.js"
-import type { ChessGamePresenterUrls, URLString } from "../business-logic/view-domain.js"
+import type { ChessSquare } from "apps/chess/business-logic/chess-domain.js"
+import { BaseChessGamePresenter } from "apps/chess/business-logic/presenters.js"
+import type {
+  ChessGamePresenterUrls,
+  URLString,
+} from "apps/chess/business-logic/view-domain.js"
+import { routes } from "../urls.js"
 import type { PlayerGameState } from "./domain.js"
 import type { DailyChallenge } from "./models.js"
-import { routes } from "./urls.js"
 
 type DailyChallengeGamePresenterArgs = {
   challenge: DailyChallenge

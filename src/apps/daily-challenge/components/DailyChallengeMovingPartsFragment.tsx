@@ -1,7 +1,7 @@
-import { FC, Fragment } from "hono/jsx"
-import { ChessPieceAvailableTargets } from "components/chess/ChessPieceAvailableTargets.js"
-import type { DailyChallengeGamePresenter } from "../../daily-challenge/presenters.js"
-import { ChessPieces } from "../chess/ChessPieces.js"
+import { type FC, Fragment } from "hono/jsx"
+import { ChessPieceAvailableTargets } from "apps/chess/components/ChessPieceAvailableTargets.js"
+import { ChessPieces } from "apps/chess/components/ChessPieces.js"
+import type { DailyChallengeGamePresenter } from "../business-logic/presenters.js"
 
 export type DailyChallengeMovingPartsFragmentProps = {
   gamePresenter: DailyChallengeGamePresenter

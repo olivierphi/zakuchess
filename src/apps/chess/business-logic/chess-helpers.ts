@@ -32,3 +32,7 @@ export const pieceIDFromPieceState = (state: PieceState): PieceID => {
 export const playerSideFromPieceOnBoard = (piece: PieceOnBoard): PlayerSide => {
   return piece.toUpperCase() === piece ? "w" : "b"
 }
+
+export const getActivePlayerSideFromFen = (fen: string): PlayerSide => {
+  return fen.split(" ")[1] as PlayerSide
+}

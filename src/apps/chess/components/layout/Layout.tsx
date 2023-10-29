@@ -2,8 +2,8 @@ import type { FC } from "hono/jsx"
 import {
   getStaticAssetsViteDevServerURL,
   staticAssetPath,
-} from "../../helpers/assets-helpers.js"
-import { getSettings } from "../../settings.js"
+} from "../../../../helpers/assets-helpers.js"
+import { getSettings } from "../../../../settings.js"
 import { Footer } from "./Footer.js"
 import { Header } from "./Header.js"
 

@@ -1,5 +1,5 @@
-import { FC } from "hono/jsx"
-import type { PlayerSide } from "business-logic/chess-domain.js"
+import { type FC } from "hono/jsx"
+import type { PlayerSide } from "../business-logic/chess-domain.js"
 import { CHESS_PIECE_Z_INDEXES } from "./ChessBoard.js"
 
 export type ChessGroundMarkerProps = {

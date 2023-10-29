@@ -1,5 +1,5 @@
-import { FC } from "hono/jsx"
-import { ChessGamePresenter } from "../../business-logic/view-domain.js"
+import { type FC } from "hono/jsx"
+import { type ChessGamePresenter } from "../business-logic/view-domain.js"
 import { ChessPiece } from "./ChessPiece.js"
 
 export type ChessPiecesProps = {

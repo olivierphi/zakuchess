@@ -1,7 +1,10 @@
 import type { Context } from "hono"
 import { getSignedCookie, setSignedCookie } from "hono/cookie"
-import type { PlayerGameState, PlayerSessionContent } from "../daily-challenge/domain.js"
-import type { DailyChallenge } from "../daily-challenge/models.js"
+import type {
+  PlayerGameState,
+  PlayerSessionContent,
+} from "../apps/daily-challenge/business-logic/domain.js"
+import type { DailyChallenge } from "../apps/daily-challenge/business-logic/models.js"
 import { getSettings } from "../settings.js"
 
 const PLAYER_CONTENT_SESSION_KEY = "pc"

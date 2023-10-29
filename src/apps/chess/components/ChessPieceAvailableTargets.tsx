@@ -1,7 +1,7 @@
-import { FC } from "hono/jsx"
-import type { ChessSquare, PlayerSide } from "business-logic/chess-domain.js"
-import type { ChessGamePresenter } from "business-logic/view-domain.js"
-import { squareToPieceTailwindClasses } from "components/chess-components-helpers.js"
+import { type FC } from "hono/jsx"
+import type { ChessSquare, PlayerSide } from "../business-logic/chess-domain.js"
+import type { ChessGamePresenter } from "../business-logic/view-domain.js"
+import { squareToPieceTailwindClasses } from "./chess-components-helpers.js"
 
 export type ChessPieceAvailableTargetsProps = {
   gamePresenter: ChessGamePresenter

@@ -1,5 +1,5 @@
 import type { HonoRequest } from "hono"
-import type { DailyChallenge } from "../daily-challenge/models.js"
+import type { DailyChallenge } from "../apps/daily-challenge/business-logic/models.js"
 
 export const getCurrentDailyChallengeOrAdminPreview = async (
   request: HonoRequest, // eslint-disable-line @typescript-eslint/no-unused-vars

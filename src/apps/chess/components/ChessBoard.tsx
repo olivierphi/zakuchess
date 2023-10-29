@@ -1,8 +1,12 @@
-import { FC, memo } from "hono/jsx"
-import { FILE_NAMES, RANK_NAMES, SQUARES } from "business-logic/chess-domain.js"
-import type { ChessSquare } from "business-logic/chess-domain.js"
-import { squareToFileAndRank } from "business-logic/chess-helpers.js"
-import { squareToPieceTailwindClasses } from "components/chess-components-helpers.js"
+import { type FC, memo } from "hono/jsx"
+import {
+  type ChessSquare,
+  FILE_NAMES,
+  RANK_NAMES,
+  SQUARES,
+} from "../business-logic/chess-domain.js"
+import { squareToFileAndRank } from "../business-logic/chess-helpers.js"
+import { squareToPieceTailwindClasses } from "./chess-components-helpers.js"
 
 export const CHESS_PIECE_Z_INDEXES: Record<string, string> = {
   // N.B. z-indexes must be multiples of 10 in Tailwind.

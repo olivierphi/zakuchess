@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { readFileSync } from "node:fs"
 import { serve } from "@hono/node-server"
 import { serveStatic } from "@hono/node-server/serve-static"

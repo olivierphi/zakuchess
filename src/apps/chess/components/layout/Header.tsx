@@ -1,5 +1,4 @@
-import type { FC } from "hono/jsx"
-import { memo } from "hono/jsx"
+import { type FC, memo } from "hono/jsx"
 
 export const Header: FC = memo(() => {
   return (

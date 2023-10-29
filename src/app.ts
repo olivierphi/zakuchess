@@ -2,8 +2,8 @@ import { Hono } from "hono"
 import { logger as honoLogger } from "hono/logger"
 import { secureHeaders } from "hono/secure-headers"
 import { serveStatic } from "@hono/node-server/serve-static"
+import { dailyChallengeApp } from "./apps/daily-challenge/routes.js"
 import { logger } from "./logging.js"
-import { dailyChallengeApp } from "./routes/daily-challenge.js"
 
 export const app = new Hono()
 
