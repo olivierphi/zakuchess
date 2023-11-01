@@ -5,7 +5,7 @@ from pathlib import Path
 from time import monotonic
 from typing import TYPE_CHECKING, TypeAlias
 
-import aiohttp
+import httpx
 
 if TYPE_CHECKING:
     from collections.abc import Coroutine
@@ -23,8 +23,8 @@ CHESS_STATIC = BASE_DIR / "src" / "apps" / "chess" / "static" / "chess"
 ASSETS_PATTERNS: dict[str, str] = {
     "GOOGLE_FONTS": "https://fonts.gstatic.com/s/{font_name}/{v}/{file_id}.woff2",
     "STOCKFISH_CDN": "https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/{file}",
-    "WESNOTH_UNITS_GITHUB": "https://github.com/wesnoth/wesnoth/raw/master/data/core/images/units/{path}",
-    "WESNOTH_CAMPAIGN_UNITS_GITHUB": "https://github.com/wesnoth/wesnoth/raw/master/data/campaigns/{campaign}/images/units/{path}",
+    "WESNOTH_UNITS_GITHUB": "https://raw.githubusercontent.com/wesnoth/wesnoth/master/data/core/images/units/{path}",
+    "WESNOTH_CAMPAIGN_UNITS_GITHUB": "https://raw.githubusercontent.com/wesnoth/wesnoth/master/data/campaigns/{campaign}/images/units/{path}",
     # @link https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces
     "WIKIMEDIA_CHESS_SVG_LIGHT": "https://upload.wikimedia.org/wikipedia/commons/{folder}/Chess_{piece}lt45.svg",
     "WIKIMEDIA_CHESS_SVG_DARK": "https://upload.wikimedia.org/wikipedia/commons/{folder}/Chess_{piece}dt45.svg",
@@ -36,7 +36,7 @@ _USER_AGENT = " ".join(
     (
         "AssetsDownloaderBot/0.0",
         "(https://zakuchess.fly.dev/; zakuchess@dunsap.com)",
-        aiohttp.http.SERVER_SOFTWARE,
+        f"python-httpx/{httpx.__version__}",
     )
 )
 
@@ -85,10 +85,13 @@ ASSETS_MAP: dict[URL, Path] = {
 async def download_assets(*, even_if_exists: bool) -> None:
     download_coros: list["Coroutine"] = []
 
-    connector = aiohttp.TCPConnector(limit=DOWNLOADS_CONCURRENCY)
-    async with aiohttp.ClientSession(
-        connector=connector, headers={"User-Agent": _USER_AGENT}
-    ) as session:
+    limits = httpx.Limits(
+        max_connections=DOWNLOADS_CONCURRENCY,
+        max_keepalive_connections=DOWNLOADS_CONCURRENCY,
+    )
+    async with httpx.AsyncClient(
+        limits=limits, headers={"User-Agent": _USER_AGENT}
+    ) as client:
         for asset_url, target_path in ASSETS_MAP.items():
             if not even_if_exists and target_path.exists():
                 print(
@@ -100,21 +103,21 @@ async def download_assets(*, even_if_exists: bool) -> None:
             if not target_folder.exists():
                 target_folder.mkdir(parents=True)
             download_coros.append(
-                _download_file(session=session, url=asset_url, target_path=target_path)
+                _download_file(client=client, url=asset_url, target_path=target_path)
             )
 
         await asyncio.gather(*download_coros)
 
 
 async def _download_file(
-    *, session: aiohttp.ClientSession, url: str, target_path: Path
+    *, client: httpx.AsyncClient, url: str, target_path: Path
 ) -> None:
     dl_start_time = monotonic()
-    async with session.get(url) as response:
+    async with client.stream("GET", url) as response:
         print(f"Downloading '{url}' to '{target_path.relative_to(BASE_DIR)}'...")
         response.raise_for_status()
         with target_path.open("wb") as target_file:
-            async for chunk in response.content.iter_chunked(8192):
+            async for chunk in response.aiter_bytes(8192):
                 target_file.write(chunk)
     print(f"Downloaded '{url}'. (took {monotonic() - dl_start_time:.1f}s.)")
 

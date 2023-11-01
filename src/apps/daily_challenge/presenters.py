@@ -1,4 +1,3 @@
-import random
 from functools import cached_property
 from typing import TYPE_CHECKING
 from urllib.parse import urlencode
@@ -7,25 +6,15 @@ from django.urls import reverse
 
 from apps.chess.presenters import GamePresenter, GamePresenterUrls, SpeechBubbleData
 
-from ..chess.helpers import (
-    player_side_to_chess_lib_color,
-    square_from_int,
-    team_member_role_from_piece_role,
-    uci_move_squares,
-)
-from .business_logic import get_daily_challenge_turns_state
+from ..chess.helpers import uci_move_squares
+from .business_logic import get_daily_challenge_turns_state, get_speech_bubble
 from .consts import MAXIMUM_TURNS_PER_CHALLENGE
 from .models import DailyChallenge
 
 if TYPE_CHECKING:
-    from apps.chess.types import (
-        Factions,
-        GamePhase,
-        PieceRole,
-        PlayerSide,
-        Square,
-        TeamMember,
-    )
+    import chess
+
+    from apps.chess.types import Factions, GamePhase, PieceRole, PlayerSide, Square
 
     from .types import ChallengeTurnsState, PlayerGameState
 
@@ -157,112 +146,19 @@ class DailyChallengeGamePresenter(GamePresenter):
 
     @cached_property
     def speech_bubble(self) -> SpeechBubbleData | None:
-        if forced_speech_bubble := self._forced_speech_bubble:
-            return SpeechBubbleData(
-                text=forced_speech_bubble[1], square=forced_speech_bubble[0], time_out=2
-            )
-
-        if self.is_intro_turn:
-            text = (
-                self._challenge.intro_turn_speech_text
-                or "Come on folks, we can win this one!"
-            )
-            return SpeechBubbleData(
-                text=text, square=self._challenge.intro_turn_speech_square, time_out=8
-            )
-
-        if self.is_bot_move and self.captured_piece_role:
-            team_member_role = team_member_role_from_piece_role(
-                self.captured_piece_role
-            )
-            captured_team_member: "TeamMember" = self.team_members_by_role_by_side[
-                self._challenge.my_side
-            ][team_member_role]
-            if isinstance(name := captured_team_member["name"], str):
-                # TODO: remove that code when we finished migrating to a list-name
-                captured_team_member_display = name.split(" ")[0]
-            else:
-                captured_team_member_display = name[0]
-            reaction = random.choice(
-                ("They got {}!", "We lost {}!", "We'll avenge you, {}!")
-            )
-            return SpeechBubbleData(
-                text=reaction.format(captured_team_member_display),
-                square=self._my_king_square,
-                character_display=self.captured_piece_role,
-            )
-
-        if (
-            self.is_bot_move
-            and self.game_state["turns_counter"] > 1
-            and self.game_state["current_attempt_turns_counter"] == 0
-        ):
-            return SpeechBubbleData(
-                text="Let's try that again, folks! 🤞",
-                square=self._challenge.intro_turn_speech_square,
-            )
-
-        if self.game_phase == "game_over:won":
-            return SpeechBubbleData(
-                text="We did it, folks! 🎉",
-                square=self._my_king_square,
-            )
-
-        if self.game_phase == "game_over:lost":
-            return SpeechBubbleData(
-                text="We win today, humans!",
-                square=self._bot_leftmost_piece_square,
-            )
-
-        if self.selected_piece and self.selected_piece.is_pinned:
-            return SpeechBubbleData(
-                text="Moving would put our king in too much danger, I'm pinned here 😬",
-                square=self.selected_piece.square,
-            )
-
-        if (
-            self.is_player_turn
-            and self.is_htmx_request
-            and not self.restart_daily_challenge_ask_confirmation
-            and not self.selected_piece
-            and self.naive_score < -3
-        ):
-            probability = 0.6 if self.naive_score < -6 else 0.3
-            die_result = random.random()  # 🎲
-            if die_result > probability:
-                return SpeechBubbleData(
-                    text="We're in a tough situation, folks 😬<br>"
-                    "Maybe restarting from the beginning, "
-                    "by using the ↩️ button below, could be a good idea?",
-                    square=self._my_king_square,
-                    time_out=8,
-                )
-
-        return None
+        return get_speech_bubble(self)
 
     @property
-    def _my_king_square(self) -> "Square":
-        return self._king_square(self._challenge.my_side)
+    def chess_board(self) -> "chess.Board":
+        return self._chess_board
 
     @property
-    def _bot_leftmost_piece_square(self) -> "Square":
-        leftmost_rank = 9  # *will* be overridden by our loop
-        leftmost_square: "Square" = "h8"  # ditto
-        bot_color = player_side_to_chess_lib_color(self._challenge.bot_side)
-        for square_int, piece in self._chess_board.piece_map().items():
-            if piece.color != bot_color:
-                continue
-            square = square_from_int(square_int)
-            rank = int(square[1])
-            if rank < leftmost_rank:
-                leftmost_rank = rank
-                leftmost_square = square
-        return leftmost_square
+    def challenge(self) -> DailyChallenge:
+        return self._challenge
 
-    def _king_square(self, player_side: "PlayerSide") -> "Square":
-        return square_from_int(
-            self._chess_board.king(player_side_to_chess_lib_color(player_side))
-        )
+    @property
+    def forced_speech_bubble(self) -> tuple["Square", str] | None:
+        return self._forced_speech_bubble
 
     @staticmethod
     def _last_move_from_game_state(
