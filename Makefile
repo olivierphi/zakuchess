@@ -53,9 +53,12 @@ backend/createsuperuser: ## Creates a Django superuser for the development envir
 	@echo 'You can log in to http://localhost:8000/admin/ with the following credentials: ${email} / ${password}'
 
 .PHONY: test
+test: dotenv_file ?= .env.local
 test: pytest_opts ?=
 test: ## Launch the pytest tests suite
-	@PYTHONPATH=${PYTHONPATH} ${PYTHON_BINS}/pytest ${pytest_opts}
+	@PYTHONPATH=${PYTHONPATH} \
+		${PYTHON_BINS}/dotenv -f '${dotenv_file}' run -- \
+		${PYTHON_BINS}/pytest ${pytest_opts}
 
 .PHONY: code-quality/all
 code-quality/all: code-quality/black code-quality/isort code-quality/ruff code-quality/mypy  ## Run all our code quality tools

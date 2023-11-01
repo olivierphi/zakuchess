@@ -1,0 +1,42 @@
+---
+name: Test Suite
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  tests:
+    name: "Python ${{ matrix.python-version }}"
+    runs-on: "ubuntu-latest"
+
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - uses: "actions/checkout@v4"
+      - name: "Install poetry"
+        env:
+          POETRY_VERSION: "1.6.0"
+        run: pipx install poetry==${POETRY_VERSION}        
+      - uses: "actions/setup-python@v4"
+        with:
+          python-version: "${{ matrix.python-version }}"
+          cache: 'poetry' 
+      - name: "Install dependencies via Poetry"
+        run: poetry install
+      - name: "Run linting checks: Black"
+        run: poetry run black src/ tests/
+      - name: "Run linting checks: Isort"
+        run: poetry run isort --settings-file=pyproject.toml --check-only src/ tests/
+      - name: "Run linting checks: Ruff"
+        run: poetry run ruff check --quiet  src/ tests/
+      - name: "Run linting checks: Mypy"
+        run: poetry run mypy src/ tests/
+      - name: "Run tests"
+        env:
+          PYTHONPATH: "src/"
+        run: poetry run pytest
