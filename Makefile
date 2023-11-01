@@ -26,8 +26,9 @@ dev: ## Start Django in "development" mode, as well as our frontend assets compi
 # Here starts the backend stuff
 
 .PHONY: download_assets
+download_assets: download_assets_opts ?=
 download_assets:
-	${PYTHON_BINS}/python scripts/download_assets.py
+	${PYTHON_BINS}/python scripts/download_assets.py ${download_assets_opts}
 
 .PHONY: backend/watch
 backend/watch: address ?= localhost
