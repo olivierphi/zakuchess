@@ -165,6 +165,33 @@ django/manage: .venv .env.local ## Run a Django management command
 frontend/install:
 	npm install
 
+# Here starts the "Lichess database" stuff
+
+data/lichess_db_puzzle.csv: ## Download the Lichess puzzles database (CSV format)
+	@curl 'https://database.lichess.org/lichess_db_puzzle.csv.zst' \
+		| zstd -d > data/lichess_db_puzzle.csv
+
+data/lichess_db_puzzle.sqlite3: batch_size ?= 1000
+data/lichess_db_puzzle.sqlite3: sqlite_utils_ops ?=
+data/lichess_db_puzzle.sqlite3: data/lichess_db_puzzle.csv ## Convert the Lichess puzzles database into a SQLite database
+# @link https://sqlite-utils.datasette.io/en/stable/cli.html#inserting-csv-or-tsv-data
+# N.B. use `make data/lichess_db_puzzle.csv sqlite_utils_ops='--stop-after 50'` for quick tests 
+	@rm -f data/puzzles.sqlite3
+	@${PYTHON_BINS}/sqlite-utils create-database data/lichess_db_puzzle.sqlite3 --enable-wal
+	@${PYTHON_BINS}/sqlite-utils insert data/lichess_db_puzzle.sqlite3 puzzles data/lichess_db_puzzle.csv \
+		--csv --detect-types --pk PuzzleId --batch-size ${batch_size} \
+		${sqlite_utils_ops}
+	@${PYTHON_BINS}/sqlite-utils create-index data/lichess_db_puzzle.sqlite3 puzzles \
+		PuzzleId Rating Popularity NbPlays
+	@${SUB_MAKE} data/lichess_db_puzzle.sqlite3/stats
+
+.PHONY: data/lichess_db_puzzle.sqlite3/stats
+data/lichess_db_puzzle.sqlite3/stats:
+	@${PYTHON_BINS}/sqlite-utils query data/lichess_db_puzzle.sqlite3 \
+		'select count(*) as puzzles_count from puzzles' --csv
+	@${PYTHON_BINS}/sqlite-utils query data/lichess_db_puzzle.sqlite3 \
+		'select avg(Rating), avg(Popularity) from puzzles' --csv
+
 # Here starts Docker-related stuff
 
 DOCKER_IMG_NAME ?= zakuchess

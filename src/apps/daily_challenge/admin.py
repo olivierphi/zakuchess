@@ -13,6 +13,8 @@ from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 from django.views.decorators.clickjacking import xframe_options_exempt
+from import_export import resources
+from import_export.admin import ImportExportModelAdmin
 
 from ..chess.business_logic import calculate_fen_before_move
 from .business_logic import set_daily_challenge_teams_and_pieces_roles
@@ -55,8 +57,27 @@ class DailyChallengeAdminForm(forms.ModelForm):
         return self.cleaned_data["bot_first_move"].lower()
 
 
+class DailyChallengeImportResource(resources.ModelResource):
+    class Meta:
+        model = DailyChallenge
+        fields = "fen"
+
+
+class DailyChallengeExportResource(resources.ModelResource):
+    class Meta:
+        model = DailyChallenge
+        fields = (
+            "lookup_key",
+            "fen",
+            "bot_first_move",
+            "fen_before_bot_first_move",
+            "starting_advantage",
+        )
+        export_order = fields
+
+
 @admin.register(DailyChallenge)
-class DailyChallengeAdmin(admin.ModelAdmin):
+class DailyChallengeAdmin(ImportExportModelAdmin):
     form = DailyChallengeAdminForm
 
     list_display = ("lookup_key", "fen", "starting_advantage", "bot_first_move")
@@ -69,6 +90,12 @@ class DailyChallengeAdmin(admin.ModelAdmin):
 
     class Media:
         js = ("daily_challenge/admin_game_preview.js",)
+
+    def get_import_resource_classes(self):
+        return [DailyChallengeImportResource]
+
+    def get_export_resource_classes(self):
+        return [DailyChallengeExportResource]
 
     def view_on_site(self, obj: DailyChallenge):
         url = reverse(
