@@ -87,9 +87,9 @@ FROM python:3.11-slim-bookworm AS assets_download
 # as long as the `download_assets.py` doesn't change.
 
 # should preferably be the same as in `poetry.lock`:
-ENV PYTHON_AIOHTTP_VERSION=3.8.6
+ENV PYTHON_HTTPX_VERSION=0.25.0
 
-RUN pip install -U pip aiohttp==${PYTHON_AIOHTTP_VERSION}
+RUN pip install -U pip httpx==${PYTHON_HTTPX_VERSION}
 
 RUN mkdir -p /app
 WORKDIR /app
