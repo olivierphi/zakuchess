@@ -8,6 +8,7 @@
 cd ${0:A:h}/ # Change to the directory of the current file
 
 source .venv/bin/activate
+export PYTHONPATH=src/
 
 export DJANGO_SETTINGS_MODULE=project.settings.development
 alias run_in_dotenv='dotenv -f .env.local run -- '

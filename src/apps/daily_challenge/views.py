@@ -45,6 +45,13 @@ def game_view(request: "HttpRequest") -> HttpResponse:
     if created:
         # The player hasn't played this challenge before,
         # so we need to start from the beginning, with the bot's first move:
+
+        # These fields are always set on a published challenge:
+        assert (
+            challenge.fen_before_bot_first_move
+            and challenge.piece_role_by_square_before_bot_first_move
+        )
+
         game_state["fen"] = challenge.fen_before_bot_first_move
         game_state[
             "piece_role_by_square"
@@ -215,6 +222,12 @@ def htmx_restart_daily_challenge_do(request: "HttpRequest") -> HttpResponse:
     )
     if created:
         return htmx_aware_redirect(request, "daily_challenge:daily_game_view")
+
+    # These fields are always set on a published challenge:
+    assert (
+        challenge.fen_before_bot_first_move
+        and challenge.piece_role_by_square_before_bot_first_move
+    )
 
     game_state["attempts_counter"] += 1
     game_state["current_attempt_turns_counter"] = 0

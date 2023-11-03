@@ -21,12 +21,16 @@ if TYPE_CHECKING:
 def get_speech_bubble(
     game_presenter: "DailyChallengeGamePresenter",
 ) -> SpeechBubbleData | None:
+    # A published challenge always has a `intro_turn_speech_square`,
+
     if forced_speech_bubble := game_presenter.forced_speech_bubble:
         return SpeechBubbleData(
             text=forced_speech_bubble[1], square=forced_speech_bubble[0], time_out=2
         )
 
     if game_presenter.is_intro_turn:
+        if not game_presenter.challenge.intro_turn_speech_square:
+            return None
         text = (
             game_presenter.challenge.intro_turn_speech_text
             or "Come on folks, we can win this one!"
@@ -65,6 +69,8 @@ def get_speech_bubble(
         and game_presenter.game_state["turns_counter"] > 1
         and game_presenter.game_state["current_attempt_turns_counter"] == 0
     ):
+        if not game_presenter.challenge.intro_turn_speech_square:
+            return None
         return SpeechBubbleData(
             text="Let's try that again, folks! 🤞",
             square=game_presenter.challenge.intro_turn_speech_square,
