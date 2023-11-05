@@ -40,7 +40,7 @@ def _create_fallback_game(apps, schema_editor):
                 {"role": "P4", "faction": "humans", "name": "Kelly Wang"},
                 {"role": "P5", "faction": "humans", "name": "Luis Hermosa"},
                 {"role": "K", "faction": "humans", "name": "Roger Stevens"},
-                {"role": "R1", "faction": "humans", "name": "Fab Force"},
+                {"role": "R1", "faction": "humans", "name": "Ayden Force"},
             ],
             "b": [
                 {"role": "k", "faction": "undeads"},

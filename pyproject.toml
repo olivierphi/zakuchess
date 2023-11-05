@@ -18,6 +18,7 @@ dj-database-url = "^2.1.0"
 requests = "^2.31.0"
 django-axes = {extras = ["ipware"], version = "^6.1.1"}
 whitenoise = "^6.5.0"
+django-import-export = "^3.3.1"
 
 [tool.poetry.group.dev.dependencies]
 python-dotenv = "^1.0.0"
@@ -29,7 +30,8 @@ pre-commit = "^2.20.0"
 ipython = "^8.6.0"
 types-requests = "^2.31.0.2"
 django-extensions = "^3.2.3"
-httpx = "^0.25.0"
+httpx = "^0.25.0" # only used in "scripts/download_assets.py" for parallel downloads
+sqlite-utils = "^3.35.1"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.2.0"
@@ -67,13 +69,11 @@ exclude = [
     '^src/lib/chess_engines/[^/]+/.*\.py$',
 ]
 [[tool.mypy.overrides]]
-module = "django.*"
-ignore_missing_imports = true
-[[tool.mypy.overrides]]
-module = "environ"
-ignore_missing_imports = true
-[[tool.mypy.overrides]]
-module = "dominate.*"
+module = [
+    "django.*",
+    "dominate.*",
+    "import_export.*",
+]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

@@ -40,6 +40,9 @@ class DailyChallengeGamePresenter(GamePresenter):
         captured_team_member_role: "PieceRole | None" = None,
         is_preview: bool = False,
     ):
+        # A published challenge always has a `teams` non-null field:
+        assert challenge.teams
+
         super().__init__(
             fen=game_state["fen"],
             piece_role_by_square=game_state["piece_role_by_square"],

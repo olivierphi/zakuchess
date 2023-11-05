@@ -16,6 +16,9 @@ def compute_fields_before_bot_first_move(
     Set the `*_before_bot_first_move` fields on the given challenge models,
     from the value of the other fields.
     """
+    # A published challenge always has a `bot_first_move` & `piece_role_by_square`:
+    assert challenge.bot_first_move and challenge.piece_role_by_square
+
     # `fen_before_bot_first_move` field:
     challenge.fen_before_bot_first_move = calculate_fen_before_move(
         fen_after_move=challenge.fen,

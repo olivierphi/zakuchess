@@ -18,6 +18,9 @@ def get_or_create_daily_challenge_state_for_player(
     Returns the game state for the given challenge, creating it if it doesn't exist yet.
     The second value is a boolean indicating if the game state was created or not.
     """
+    # A published challenge always has a `piece_role_by_square` non-null field:
+    assert challenge.piece_role_by_square
+
     player_cookie_content = get_player_session_content(request)
     challenge_id = today_daily_challenge_id(request)
     game_state: PlayerGameState | None = player_cookie_content["games"].get(

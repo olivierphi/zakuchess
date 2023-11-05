@@ -3,6 +3,7 @@
         /^[a-h][1-8]:add:[pnbrqkx]!\s*$/i, // "add" command
         /^[a-h][1-8]:rm!\s*$/i, // "remove" command
         /^[a-h][1-8]:mv:[a-h][1-8]!\s*$/i, // "move" command
+        /^mirror!\s*$/i, // "mirror" command
     ]
 
     const gameUpdateCommandResetPattern = /^.*!\s*$/i

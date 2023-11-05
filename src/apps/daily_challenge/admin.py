@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, Callable, Literal, TypeAlias, TypedDict, 
 import chess
 from django import forms
 from django.contrib import admin
+from django.contrib.admin import ModelAdmin
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse
 from django.shortcuts import redirect
@@ -12,7 +13,10 @@ from django.urls import path, reverse
 from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
+from django.utils.translation import gettext_lazy as _
 from django.views.decorators.clickjacking import xframe_options_exempt
+from import_export import resources
+from import_export.admin import ImportExportModelAdmin
 
 from ..chess.business_logic import calculate_fen_before_move
 from .business_logic import set_daily_challenge_teams_and_pieces_roles
@@ -21,18 +25,20 @@ from .models import DailyChallenge
 from .presenters import DailyChallengeGamePresenter
 
 if TYPE_CHECKING:
+    from django.db.models import QuerySet
     from django.http import HttpRequest
 
     from apps.chess.types import FEN, PieceSymbol, Square
 
 GameUpdateCommandParams: TypeAlias = dict[str, Any]
-GameUpdateCommandType = Literal["add", "move", "remove"]
+GameUpdateCommandType = Literal["add", "move", "remove", "mirror"]
 GameUpdateCommand: TypeAlias = tuple[GameUpdateCommandType, GameUpdateCommandParams]
 
 _GAME_UPDATE_COMMAND_PATTERNS: dict[GameUpdateCommandType, re.Pattern] = {
     "add": re.compile(r"(?P<target>[a-hA-H][1-8]):add:(?P<piece>[pnbrqkPNBRQK])!"),
     "move": re.compile(r"(?P<from_>[a-hA-H][1-8]):mv:(?P<to>[a-hA-H][1-8])!"),
     "remove": re.compile(r"(?P<target>[a-hA-H][1-8]):rm!"),
+    "mirror": re.compile(r"mirror!"),
 }
 
 _FUTURE_DAILY_CHALLENGE_COOKIE_DURATION = timedelta(minutes=20)
@@ -45,21 +51,82 @@ class DailyChallengeAdminForm(forms.ModelForm):
         model = DailyChallenge
         fields = (
             "lookup_key",
+            "source",
+            "status",
             "fen",
             "bot_first_move",
             "intro_turn_speech_square",
             "starting_advantage",
         )
+        widgets = {
+            "status": forms.RadioSelect(),
+        }
 
     def clean_bot_first_move(self) -> str:
         return self.cleaned_data["bot_first_move"].lower()
 
 
+class DailyChallengeImportResource(resources.ModelResource):
+    class Meta:
+        model = DailyChallenge
+        fields = ("source", "fen")
+
+
+class DailyChallengeExportResource(resources.ModelResource):
+    class Meta:
+        model = DailyChallenge
+        fields = (
+            "lookup_key",
+            "source",
+            "status",
+            "fen",
+            "bot_first_move",
+            "starting_advantage",
+        )
+        export_order = fields
+
+
+class SourceTypeListFilter(admin.SimpleListFilter):
+    # @link https://docs.djangoproject.com/en/4.2/ref/contrib/admin/filters/
+    title = _("source type")
+    parameter_name = "source_type"
+
+    def lookups(self, request: "HttpRequest", model_admin: ModelAdmin):
+        return [
+            ("none", _("None")),
+            ("lichess", _("Lichess")),
+        ]
+
+    def queryset(self, request: "HttpRequest", queryset: "QuerySet[DailyChallenge]"):
+        match self.value():
+            case "none":
+                return queryset.filter(source__isnull=True)
+            case "lichess":
+                return queryset.filter(source__startswith="lichess-")
+            case None:
+                return queryset
+            case _:
+                raise NotImplementedError(f"Unknown source type: {self.value()}")
+
+
 @admin.register(DailyChallenge)
-class DailyChallengeAdmin(admin.ModelAdmin):
+class DailyChallengeAdmin(ImportExportModelAdmin):
     form = DailyChallengeAdminForm
 
-    list_display = ("lookup_key", "fen", "starting_advantage", "bot_first_move")
+    list_display = (
+        "lookup_key",
+        "source",
+        "status_display",
+        "created_at",
+        "updated_at",
+        "fen",
+        "starting_advantage",
+        "bot_first_move",
+    )
+    ordering = ("-created_at",)
+    list_display_links = ("lookup_key", "source")
+    list_filter = ["status", SourceTypeListFilter]
+
     readonly_fields = (
         "game_update",
         "game_preview",
@@ -69,6 +136,16 @@ class DailyChallengeAdmin(admin.ModelAdmin):
 
     class Media:
         js = ("daily_challenge/admin_game_preview.js",)
+
+    @admin.display(description="Status")
+    def status_display(self, obj: DailyChallenge) -> str:
+        return obj.get_status_display()
+
+    def get_import_resource_classes(self):
+        return [DailyChallengeImportResource]
+
+    def get_export_resource_classes(self):
+        return [DailyChallengeExportResource]
 
     def view_on_site(self, obj: DailyChallenge):
         url = reverse(
@@ -188,6 +265,7 @@ class DailyChallengeAdmin(admin.ModelAdmin):
                     <li><code>[square]:rm!</code>: removes the piece from a square - e.g. `e4:rm!`</li>
                     <li><code>[square]:add:[piece]!</code>: adds a piece to a square - e.g. `e4:add:p!`, `f6:add:N!`</li>
                     <li><code>[square_from]:mv:[square_to]!</code>: moves a piece- e.g. `e4:mv:e5!`, `f6:mv:f8!`</li>
+                    <li><code>mirror!</code>: mirrors the 2 player sides</li>
                 </ul>
                 Any other string will be removed as soon as an exclamation mark is typed.
             </div>
@@ -290,10 +368,18 @@ def _remove_piece_from_square(*, fen: "FEN", target: "Square") -> str:
     return cast("FEN", chess_board.fen())
 
 
+def _mirror_board(*, fen: "FEN") -> str:
+    chess_board = chess.Board(fen)
+    chess_board.apply_mirror()
+    chess_board.turn = chess.WHITE  # it's still the human player's turn
+    return cast("FEN", chess_board.fen())
+
+
 _GAME_UPDATE_MAPPING: dict[GameUpdateCommandType, Callable] = {
     "add": _add_piece_to_square,
     "move": _move_piece_to_square,
     "remove": _remove_piece_from_square,
+    "mirror": _mirror_board,
 }
 
 

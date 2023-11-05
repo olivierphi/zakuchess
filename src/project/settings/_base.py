@@ -40,6 +40,7 @@ INSTALLED_APPS = (
         "whitenoise",
         "django_htmx",
         "axes",  # https://github.com/jazzband/django-axes
+        "import_export",  # https://django-import-export.readthedocs.io/
     ]
     + [
         "apps.authentication",
