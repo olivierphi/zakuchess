@@ -3,7 +3,7 @@ import logging
 from typing import TYPE_CHECKING, cast
 
 from django.contrib.auth.decorators import user_passes_test
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import redirect
 from django.views.decorators.http import require_POST, require_safe
 
@@ -21,6 +21,7 @@ from .cookie_helpers import (
     get_or_create_daily_challenge_state_for_player,
     save_daily_challenge_state_in_session,
 )
+from .forms import HtmxGameSelectPieceForm
 from .presenters import DailyChallengeGamePresenter
 
 if TYPE_CHECKING:
@@ -100,13 +101,15 @@ def htmx_game_no_selection(request: "HttpRequest") -> HttpResponse:
 
 @require_safe
 def htmx_game_select_piece(request: "HttpRequest") -> "HttpResponse":
-    # TODO: validate the `square` data, using a Form
-    piece_square = cast(Square, request.GET.get("square"))
+    form = HtmxGameSelectPieceForm(request.GET)
+    if not form.is_valid():
+        return HttpResponseBadRequest("Invalid request")
 
     ctx = GameContext.create_from_request(request)
     if ctx.created:
         return htmx_aware_redirect(request, "daily_challenge:daily_game_view")
 
+    piece_square = form.cleaned_data["square"]
     game_presenter = DailyChallengeGamePresenter(
         challenge=ctx.challenge,
         game_state=ctx.game_state,
