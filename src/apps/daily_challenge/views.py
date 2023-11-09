@@ -12,6 +12,7 @@ from apps.chess.types import Square
 from apps.utils.view_decorators import user_is_staff
 from apps.utils.views_helpers import htmx_aware_redirect
 
+from ..chess.decorators import handle_chess_logic_exceptions
 from .business_logic import move_daily_challenge_piece
 from .components.pages.chess import (
     daily_challenge_moving_parts_fragment,
@@ -21,7 +22,7 @@ from .cookie_helpers import (
     get_or_create_daily_challenge_state_for_player,
     save_daily_challenge_state_in_session,
 )
-from .forms import HtmxGameSelectPieceForm
+from .forms import HtmxGameMovePieceForm, HtmxGameSelectPieceForm
 from .presenters import DailyChallengeGamePresenter
 
 if TYPE_CHECKING:
@@ -100,6 +101,7 @@ def htmx_game_no_selection(request: "HttpRequest") -> HttpResponse:
 
 
 @require_safe
+@handle_chess_logic_exceptions
 def htmx_game_select_piece(request: "HttpRequest") -> "HttpResponse":
     form = HtmxGameSelectPieceForm(request.GET)
     if not form.is_valid():
@@ -124,10 +126,14 @@ def htmx_game_select_piece(request: "HttpRequest") -> "HttpResponse":
 
 
 @require_POST
+@handle_chess_logic_exceptions
 def htmx_game_move_piece(
     request: "HttpRequest", from_: "Square", to: "Square"
 ) -> HttpResponse:
-    # TODO: validate `from_` and `to`
+    form = HtmxGameMovePieceForm({"from_": from_, "to": to})
+    if not form.is_valid():
+        return HttpResponseBadRequest("Invalid request")
+
     ctx = GameContext.create_from_request(request)
 
     if ctx.created:

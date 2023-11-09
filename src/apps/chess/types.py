@@ -132,3 +132,15 @@ class TeamMember(TypedDict, total=False):
 
 
 GameTeams: TypeAlias = dict["PlayerSide", list["TeamMember"]]
+
+
+class ChessLogicException(Exception):
+    pass
+
+
+class ChessInvalidStateException(ChessLogicException):
+    pass
+
+
+class ChessInvalidMoveException(ChessLogicException):
+    pass

@@ -67,12 +67,12 @@ code-quality/all: code-quality/black code-quality/isort code-quality/ruff code-q
 code-quality/black: black_opts ?=
 code-quality/black: ## Automated 'a la Prettier' code formatting
 # @link https://black.readthedocs.io/en/stable/
-	@${PYTHON_BINS}/black ${black_opts} src/ tests/
+	@${PYTHON_BINS}/black ${black_opts} src/
 
 .PHONY: code-quality/isort
 code-quality/isort: isort_opts ?=
 code-quality/isort: ## Automated Python imports formatting
-	@${PYTHON_BINS}/isort --settings-file=pyproject.toml ${isort_opts} src/ tests/
+	@${PYTHON_BINS}/isort --settings-file=pyproject.toml ${isort_opts} src/
 
 .PHONY: code-quality/ruff
 code-quality/ruff: ruff_opts ?= --fix

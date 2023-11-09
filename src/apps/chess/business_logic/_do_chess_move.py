@@ -5,7 +5,11 @@ from typing import TYPE_CHECKING, Literal, cast
 import chess
 
 from apps.chess.helpers import piece_from_int
-from apps.chess.types import ChessMoveResult, GameOverDescription
+from apps.chess.types import (
+    ChessInvalidMoveException,
+    ChessMoveResult,
+    GameOverDescription,
+)
 
 if TYPE_CHECKING:
     from apps.chess.types import (
@@ -75,7 +79,7 @@ def do_chess_move(*, fen: "FEN", from_: "Square", to: "Square") -> ChessMoveResu
     )
     board_legal_moves = frozenset(chess_board.legal_moves)
     if chess_move not in board_legal_moves:
-        raise ValueError(f"Invalid move '{from_}{to}' for FEN '{fen}'")
+        raise ChessInvalidMoveException(f"Invalid move '{from_}{to}' for FEN '{fen}'")
 
     targeted_piece = chess_board.piece_at(chess_to)
     is_capture = targeted_piece is not None

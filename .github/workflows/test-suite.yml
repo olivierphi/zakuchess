@@ -29,13 +29,13 @@ jobs:
       - name: "Install dependencies via Poetry"
         run: poetry install
       - name: "Run linting checks: Black"
-        run: poetry run black src/ tests/
+        run: poetry run black src/
       - name: "Run linting checks: Isort"
-        run: poetry run isort --settings-file=pyproject.toml --check-only src/ tests/
+        run: poetry run isort --settings-file=pyproject.toml --check-only src/
       - name: "Run linting checks: Ruff"
-        run: poetry run ruff check --quiet  src/ tests/
+        run: poetry run ruff check --quiet src/
       - name: "Run linting checks: Mypy"
-        run: poetry run mypy src/ tests/
+        run: poetry run mypy src/
       - name: "Run tests"
         env:
           PYTHONPATH: "src/"

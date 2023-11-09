@@ -1,9 +1,8 @@
 from typing import TYPE_CHECKING, cast
 
-from django.core.exceptions import SuspiciousOperation
-
 from apps.chess.business_logic import do_chess_move
 from apps.chess.helpers import get_active_player_side_from_fen
+from apps.chess.types import ChessInvalidStateException
 
 from ..types import PlayerGameState
 
@@ -27,7 +26,7 @@ def move_daily_challenge_piece(
             to=to,
         )
     except ValueError as err:
-        raise SuspiciousOperation(f"Suspicious chess move: '{err}'") from err
+        raise ChessInvalidStateException(f"Suspicious chess move: '{err}'") from err
 
     piece_role_by_square = game_state["piece_role_by_square"].copy()
     if promotion := move_result["promotion"]:

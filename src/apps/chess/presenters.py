@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from functools import cache, cached_property
+from functools import cached_property
 from typing import TYPE_CHECKING, NamedTuple, cast
 
 import chess
@@ -16,6 +16,7 @@ from .helpers import (
     symbol_from_piece_role,
     team_member_role_from_piece_role,
 )
+from .types import ChessInvalidStateException
 
 if TYPE_CHECKING:
     from .types import (
@@ -182,9 +183,11 @@ class GamePresenter(ABC):
     def piece_role_by_square(self) -> "PieceRoleBySquare":
         return self._piece_role_by_square
 
-    @cache
     def piece_role_at_square(self, square: "Square") -> "PieceRole":
-        return self._piece_role_by_square[square]
+        try:
+            return self._piece_role_by_square[square]
+        except KeyError as exc:
+            raise ChessInvalidStateException(f"No piece at square {square}") from exc
 
     @cached_property
     def team_members_by_role_by_side(
@@ -330,7 +333,6 @@ class SelectedPiecePresenter(SelectedSquarePresenter):
             chess_board=chess_board, piece_square=self.square
         )
 
-    @cache
     def is_potential_capture(self, square: "Square") -> bool:
         return square in self.available_targets and self.piece_at is not None
 

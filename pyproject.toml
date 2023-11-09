@@ -77,9 +77,11 @@ module = [
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["src/apps/*/tests/","src/project/tests/"]
+python_files = ["test_*.py"]
 addopts = "--reuse-db"
 DJANGO_SETTINGS_MODULE = "project.settings.test"
+
 
 [build-system]
 requires = ["poetry-core>=1.2.0"]
