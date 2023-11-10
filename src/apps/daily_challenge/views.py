@@ -3,12 +3,12 @@ import logging
 from typing import TYPE_CHECKING, cast
 
 from django.contrib.auth.decorators import user_passes_test
-from django.http import HttpResponse, HttpResponseBadRequest
+from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.views.decorators.http import require_POST, require_safe
 
 from apps.chess.helpers import get_active_player_side_from_fen, uci_move_squares
-from apps.chess.types import Square
+from apps.chess.types import ChessInvalidMoveException, Square
 from apps.utils.view_decorators import user_is_staff
 from apps.utils.views_helpers import htmx_aware_redirect
 
@@ -22,11 +22,6 @@ from .cookie_helpers import (
     save_daily_challenge_state_in_session,
 )
 from .decorators import handle_chess_logic_exceptions
-from .forms import (
-    HtmxGameMovePieceForm,
-    HtmxGamePlayBotMoveForm,
-    HtmxGameSelectPieceForm,
-)
 from .presenters import DailyChallengeGamePresenter
 
 if TYPE_CHECKING:
@@ -108,20 +103,17 @@ def htmx_game_no_selection(request: "HttpRequest") -> HttpResponse:
 
 @require_safe
 @handle_chess_logic_exceptions
-def htmx_game_select_piece(request: "HttpRequest") -> "HttpResponse":
-    form = HtmxGameSelectPieceForm(request.GET)
-    if not form.is_valid():
-        return HttpResponseBadRequest("Invalid request")
-
+def htmx_game_select_piece(
+    request: "HttpRequest", location: "Square"
+) -> "HttpResponse":
     ctx = GameContext.create_from_request(request)
     if ctx.created:
         return htmx_aware_redirect(request, "daily_challenge:daily_game_view")
 
-    piece_square = form.cleaned_data["square"]
     game_presenter = DailyChallengeGamePresenter(
         challenge=ctx.challenge,
         game_state=ctx.game_state,
-        selected_piece_square=piece_square,
+        selected_piece_square=location,
         is_htmx_request=True,
         refresh_last_move=False,
     )
@@ -136,9 +128,8 @@ def htmx_game_select_piece(request: "HttpRequest") -> "HttpResponse":
 def htmx_game_move_piece(
     request: "HttpRequest", from_: "Square", to: "Square"
 ) -> HttpResponse:
-    form = HtmxGameMovePieceForm({"from_": from_, "to": to})
-    if not form.is_valid():
-        return HttpResponseBadRequest("Invalid request")
+    if from_ == to:
+        raise ChessInvalidMoveException("Not a move")
 
     ctx = GameContext.create_from_request(request)
 
@@ -240,10 +231,11 @@ def htmx_restart_daily_challenge_do(request: "HttpRequest") -> HttpResponse:
 
 @require_POST
 @handle_chess_logic_exceptions
-def htmx_game_bot_move(request: "HttpRequest") -> HttpResponse:
-    form = HtmxGamePlayBotMoveForm(request.GET)
-    if not form.is_valid():
-        return HttpResponseBadRequest("Invalid request")
+def htmx_game_bot_move(
+    request: "HttpRequest", from_: "Square", to: "Square"
+) -> HttpResponse:
+    if from_ == to:
+        raise ChessInvalidMoveException("Not a move")
 
     ctx = GameContext.create_from_request(request)
 
@@ -261,7 +253,7 @@ def htmx_game_bot_move(request: "HttpRequest") -> HttpResponse:
         request=request,
         challenge=ctx.challenge,
         game_state=ctx.game_state,
-        move=form.cleaned_data["move"],
+        move=f"{from_}{to}",
         board_id=ctx.board_id,
     )
 

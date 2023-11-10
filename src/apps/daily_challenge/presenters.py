@@ -185,9 +185,14 @@ class DailyChallengeGamePresenterUrls(GamePresenterUrls):
     def htmx_game_select_piece_url(self, *, square: "Square", board_id: str) -> str:
         return "".join(
             (
-                reverse("daily_challenge:htmx_game_select_piece"),
+                reverse(
+                    "daily_challenge:htmx_game_select_piece",
+                    kwargs={
+                        "location": square,
+                    },
+                ),
                 "?",
-                urlencode({"square": square, "board_id": board_id}),
+                urlencode({"board_id": board_id}),
             )
         )
 
@@ -210,8 +215,16 @@ class DailyChallengeGamePresenterUrls(GamePresenterUrls):
     def htmx_game_play_bot_move_url(self, *, board_id: str) -> str:
         return "".join(
             (
-                reverse("daily_challenge:htmx_game_bot_move"),
+                reverse(
+                    "daily_challenge:htmx_game_bot_move",
+                    kwargs={
+                        # By convention we use "a1" and "a2" as placeholders - our JS
+                        # code will replace them with the actual squares.
+                        "from_": "a1",
+                        "to": "a2",
+                    },
+                ),
                 "?",
-                urlencode({"board_id": board_id, "move": "BOT_MOVE"}),
+                urlencode({"board_id": board_id}),
             )
         )

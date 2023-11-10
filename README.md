@@ -56,9 +56,12 @@ You can take a look at [the Makefile](./Makefile) to see more commands.
 ##### Before launch
 
  - [x] Game preview and FEN editing in the Django Admin
+ - [x] Being able to import games from the Lichess puzzles database, ready to be editorliased in our Django Admin
+ - [x] Validate input data, using good ol' Django path converters 
  - [ ] Users' personal stats (current streak, etc)
  - [ ] "End of game" screen
- - [ ] Validate data, using good ol' Django forms 
+ - [ ] Fix bubble speech when it's at the top of the chess board 
+ - [ ] Fix bubble speech priority (win/lose should always have priority over the rest for example)
 
 ##### Post launch
 

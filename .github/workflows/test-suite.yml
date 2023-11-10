@@ -48,6 +48,7 @@ jobs:
       - name: "Report coverage"
         # @link https://github.com/orgoro/coverage
         uses: "orgoro/coverage@v3.1"
+        continue-on-error: true
         with:
           coverageFile: coverage.xml
           token: ${{ secrets.GITHUB_TOKEN }}
