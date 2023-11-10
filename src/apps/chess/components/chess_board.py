@@ -632,11 +632,7 @@ def _bot_turn_html_elements(
         return []
 
     play_move_htmx_element_id = f"chess-bot-play-move-{ board_id }"
-    forced_bot_move = json.dumps(
-        "".join(game_presenter.forced_bot_move)
-        if game_presenter.forced_bot_move
-        else None
-    )
+    forced_bot_move = json.dumps(game_presenter.forced_bot_move or None)
     move_delay = (
         _BOT_MOVE_DELAY * 2 if game_presenter.forced_bot_move else _BOT_MOVE_DELAY
     )

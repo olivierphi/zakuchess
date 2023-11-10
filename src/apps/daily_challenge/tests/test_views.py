@@ -1,7 +1,6 @@
 from http import HTTPStatus
 from typing import TYPE_CHECKING
 from unittest import mock
-from urllib.parse import urlencode
 
 import pytest
 
@@ -12,12 +11,15 @@ if TYPE_CHECKING:
 
 
 @pytest.mark.parametrize(
-    ("input_", "expected_status_code"),
+    ("location", "expected_status_code"),
     (
-        ({"square": "a9"}, HTTPStatus.BAD_REQUEST),
-        ({"square": "nope"}, HTTPStatus.BAD_REQUEST),
-        ({"square": "a1"}, HTTPStatus.OK),  # my piece: can be selected
-        ({"square": "a8"}, HTTPStatus.OK),  # opponent's piece: can be selected too
+        # bad move format --> our ChessSquareConverter will not let this pass
+        ("a9", HTTPStatus.NOT_FOUND),
+        ("nope", HTTPStatus.NOT_FOUND),
+        # my piece: can be selected
+        ("a1", HTTPStatus.OK),
+        # opponent's piece: can be selected too
+        ("a8", HTTPStatus.OK),
     ),
 )
 @mock.patch("apps.daily_challenge.business_logic.get_current_daily_challenge")
@@ -29,7 +31,7 @@ def test_htmx_game_select_piece_input_validation(
     challenge_minimalist: "DailyChallenge",
     client: "DjangoClient",
     # Test parameters
-    input_: dict,
+    location: str,
     expected_status_code: int,
 ):
     get_current_challenge_mock.return_value = challenge_minimalist
@@ -37,15 +39,16 @@ def test_htmx_game_select_piece_input_validation(
     client.get("/")
     _play_bot_move(client, challenge_minimalist.bot_first_move)
 
-    response = client.get("/htmx/pieces/select/", data=input_)
+    response = client.get(f"/htmx/pieces/{location}/select/")
     assert response.status_code == expected_status_code
 
 
 @pytest.mark.parametrize(
     ("input_", "expected_status_code"),
     (
-        ({"from_": "a9", "to": "a8"}, HTTPStatus.BAD_REQUEST),
-        ({"from_": "nope", "to": "a8"}, HTTPStatus.BAD_REQUEST),
+        # bad move format --> our ChessSquareConverter will not let this pass
+        ({"from_": "a9", "to": "a8"}, HTTPStatus.NOT_FOUND),
+        ({"from_": "nope", "to": "a8"}, HTTPStatus.NOT_FOUND),
         # my piece, valid move:
         ({"from_": "a1", "to": "b1"}, HTTPStatus.OK),
         # my piece, invalid move:
@@ -78,13 +81,14 @@ def test_htmx_game_move_piece_input_validation(
 @pytest.mark.parametrize(
     ("input_", "expected_status_code"),
     (
-        # bad move format
-        ({"move": "a7"}, HTTPStatus.BAD_REQUEST),
-        ({"move": "a8a8"}, HTTPStatus.BAD_REQUEST),
+        # bad move format --> our ChessSquareConverter will not let this pass
+        ({"from_": "a7", "to": "h9"}, HTTPStatus.NOT_FOUND),
+        # Not actually a move:
+        ({"from_": "a8", "to": "a8"}, HTTPStatus.BAD_REQUEST),
         # Legal move, but the king is in check so cannot actually do that:
-        ({"move": "a7a6"}, HTTPStatus.BAD_REQUEST),
+        ({"from_": "a7", "to": "a6"}, HTTPStatus.BAD_REQUEST),
         # Legal move:
-        ({"move": "b8a8"}, HTTPStatus.OK),
+        ({"from_": "b8", "to": "a8"}, HTTPStatus.OK),
     ),
 )
 @mock.patch("apps.daily_challenge.business_logic.get_current_daily_challenge")
@@ -103,10 +107,7 @@ def test_htmx_game_play_bot_move_validation(
 
     client.get("/")
 
-    response = client.post(
-        "/htmx/bot/move/",
-        QUERY_STRING=urlencode({"move": input_["move"]}, doseq=True),
-    )
+    response = client.post(f"/htmx/bot/pieces/{input_['from_']}/move/{input_['to']}/")
     assert response.status_code == expected_status_code
 
 
@@ -125,13 +126,11 @@ def test_htmx_game_select_piece_should_fail_on_empty_square(
     _play_bot_move(client, challenge_minimalist.bot_first_move)
 
     empty_square = "a2"
-    response = client.get("/htmx/pieces/select/", data={"square": empty_square})
+    response = client.get(f"/htmx/pieces/{empty_square}/select/")
     assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
 def _play_bot_move(client: "DjangoClient", move) -> None:
-    response = client.post(
-        "/htmx/bot/move/",
-        QUERY_STRING=urlencode({"move": move}, doseq=True),
-    )
+    bot_move_url = f"/htmx/bot/pieces/{move[0:2]}/move/{move[2:4]}/"
+    response = client.post(bot_move_url)
     assert response.status_code == HTTPStatus.OK

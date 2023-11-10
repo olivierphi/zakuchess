@@ -70,27 +70,28 @@ function playBotMove(
     fen: string,
     htmxElementId: string,
     botAssetsDataHolderElementId: string,
-    forcedMove: string | null,
+    forcedMove: [string, string] | null,
 ): void {
     const htmxElement = document.getElementById(htmxElementId)
     if (!htmxElement) {
         throw `no #${botAssetsDataHolderElementId} element found to play bot's move!`
     }
 
-    const doPlayBotMove = (move: string) => {
-        htmxElement.dataset.hxPost = htmxElement.dataset.hxPost!.replace("BOT_MOVE", move)
+    const doPlayBotMove = (from: string, to: string) => {
+        // By convention we use "a1" and "a2" as placeholders on the server side for the "from" and "to" squares.
+        htmxElement.dataset.hxPost = htmxElement.dataset.hxPost!.replace("a1", from).replace("a2", to)
         window.htmx.process(htmxElement)
         window.htmx.trigger(htmxElement, "playMove", {})
     }
 
     if (forcedMove) {
-        doPlayBotMove(forcedMove)
+        doPlayBotMove(forcedMove[0], forcedMove[1])
         return
     }
 
     playFromFEN(fen, 1, botAssetsDataHolderElementId).then((move) => {
         console.log(`bot wants to move from ${move[0]} to ${move[1]}`)
-        doPlayBotMove(`${move[0]}${move[1]}`)
+        doPlayBotMove(move[0], move[1])
     })
 }
 

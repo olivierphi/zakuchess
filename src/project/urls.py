@@ -15,7 +15,11 @@ Including another URLconf
 """
 from django.conf import settings
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, register_converter
+
+from apps.chess.url_converters import ChessSquareConverter
+
+register_converter(ChessSquareConverter, "square")
 
 urlpatterns = [
     path("", include("apps.daily_challenge.urls")),
