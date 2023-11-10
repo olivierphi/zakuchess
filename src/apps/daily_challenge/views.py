@@ -3,7 +3,7 @@ import logging
 from typing import TYPE_CHECKING, cast
 
 from django.contrib.auth.decorators import user_passes_test
-from django.http import Http404, HttpResponse, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import redirect
 from django.views.decorators.http import require_POST, require_safe
 
@@ -12,7 +12,6 @@ from apps.chess.types import Square
 from apps.utils.view_decorators import user_is_staff
 from apps.utils.views_helpers import htmx_aware_redirect
 
-from ..chess.decorators import handle_chess_logic_exceptions
 from .business_logic import move_daily_challenge_piece
 from .components.pages.chess import (
     daily_challenge_moving_parts_fragment,
@@ -22,11 +21,18 @@ from .cookie_helpers import (
     get_or_create_daily_challenge_state_for_player,
     save_daily_challenge_state_in_session,
 )
-from .forms import HtmxGameMovePieceForm, HtmxGameSelectPieceForm
+from .decorators import handle_chess_logic_exceptions
+from .forms import (
+    HtmxGameMovePieceForm,
+    HtmxGamePlayBotMoveForm,
+    HtmxGameSelectPieceForm,
+)
 from .presenters import DailyChallengeGamePresenter
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
+
+    from apps.chess.types import Move
 
     from .models import DailyChallenge
     from .types import PlayerGameState
@@ -233,7 +239,12 @@ def htmx_restart_daily_challenge_do(request: "HttpRequest") -> HttpResponse:
 
 
 @require_POST
+@handle_chess_logic_exceptions
 def htmx_game_bot_move(request: "HttpRequest") -> HttpResponse:
+    form = HtmxGamePlayBotMoveForm(request.GET)
+    if not form.is_valid():
+        return HttpResponseBadRequest("Invalid request")
+
     ctx = GameContext.create_from_request(request)
 
     if ctx.created:
@@ -246,15 +257,11 @@ def htmx_game_bot_move(request: "HttpRequest") -> HttpResponse:
         # This is not bot's turn 😅
         return htmx_aware_redirect(request, "daily_challenge:daily_game_view")
 
-    # TODO: validate the data. Move it to the View path?
-    if not (move := request.GET.get("move")):
-        raise Http404("Missing bot move")
-
     return _play_bot_move(
         request=request,
         challenge=ctx.challenge,
         game_state=ctx.game_state,
-        move=move,
+        move=form.cleaned_data["move"],
         board_id=ctx.board_id,
     )
 
@@ -297,7 +304,7 @@ def _play_bot_move(
     request: "HttpRequest",
     challenge: "DailyChallenge",
     game_state: "PlayerGameState",
-    move: str,
+    move: "Move",
     board_id: str,
 ) -> HttpResponse:
     bot_next_move = uci_move_squares(move)

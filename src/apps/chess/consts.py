@@ -29,6 +29,8 @@ SQUARES: Final[tuple["Square", ...]] = (
     # fmt: on
 )
 
+MOVES = frozenset(f"{sq1}{sq2}" for sq1 in SQUARES for sq2 in SQUARES if sq1 != sq2)
+
 STARTING_PIECES: dict["PlayerSide", tuple["PieceSymbol"]] = {
     "w": (*("P" * 8), *("N" * 2), *("B" * 2), *("R" * 2), "Q", "K"),  # type: ignore
     "b": (*("p" * 8), *("n" * 2), *("b" * 2), *("r" * 2), "q", "k"),  # type: ignore

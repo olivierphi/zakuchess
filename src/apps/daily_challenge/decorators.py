@@ -2,7 +2,7 @@ import functools
 
 from django.core.exceptions import BadRequest
 
-from .types import ChessLogicException
+from apps.chess.types import ChessLogicException
 
 
 def handle_chess_logic_exceptions(func):

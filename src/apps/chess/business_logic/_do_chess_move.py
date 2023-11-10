@@ -79,7 +79,10 @@ def do_chess_move(*, fen: "FEN", from_: "Square", to: "Square") -> ChessMoveResu
     )
     board_legal_moves = frozenset(chess_board.legal_moves)
     if chess_move not in board_legal_moves:
-        raise ChessInvalidMoveException(f"Invalid move '{from_}{to}' for FEN '{fen}'")
+        raise ChessInvalidMoveException(
+            f"Invalid move '{from_}{to}' for FEN '{fen}' - "
+            f"can only be one of {board_legal_moves}"
+        )
 
     targeted_piece = chess_board.piece_at(chess_to)
     is_capture = targeted_piece is not None

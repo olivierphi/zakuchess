@@ -75,6 +75,41 @@ def test_htmx_game_move_piece_input_validation(
     assert response.status_code == expected_status_code
 
 
+@pytest.mark.parametrize(
+    ("input_", "expected_status_code"),
+    (
+        # bad move format
+        ({"move": "a7"}, HTTPStatus.BAD_REQUEST),
+        ({"move": "a8a8"}, HTTPStatus.BAD_REQUEST),
+        # Legal move, but the king is in check so cannot actually do that:
+        ({"move": "a7a6"}, HTTPStatus.BAD_REQUEST),
+        # Legal move:
+        ({"move": "b8a8"}, HTTPStatus.OK),
+    ),
+)
+@mock.patch("apps.daily_challenge.business_logic.get_current_daily_challenge")
+@pytest.mark.django_db
+def test_htmx_game_play_bot_move_validation(
+    # Mocks
+    get_current_challenge_mock: mock.MagicMock,
+    # Test dependencies
+    challenge_minimalist: "DailyChallenge",
+    client: "DjangoClient",
+    # Test parameters
+    input_: dict,
+    expected_status_code: int,
+):
+    get_current_challenge_mock.return_value = challenge_minimalist
+
+    client.get("/")
+
+    response = client.post(
+        "/htmx/bot/move/",
+        QUERY_STRING=urlencode({"move": input_["move"]}, doseq=True),
+    )
+    assert response.status_code == expected_status_code
+
+
 @mock.patch("apps.daily_challenge.business_logic.get_current_daily_challenge")
 @pytest.mark.django_db
 def test_htmx_game_select_piece_should_fail_on_empty_square(

@@ -32,6 +32,7 @@ types-requests = "^2.31.0.2"
 django-extensions = "^3.2.3"
 httpx = "^0.25.0" # only used in "scripts/download_assets.py" for parallel downloads
 sqlite-utils = "^3.35.1"
+pytest-cov = "^4.1.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.2.0"

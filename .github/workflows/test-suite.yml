@@ -7,6 +7,9 @@ on:
   pull_request:
     branches: ["main"]
 
+permissions:
+  pull-requests: write
+
 jobs:
   tests:
     name: "Python ${{ matrix.python-version }}"
@@ -14,7 +17,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.11"]
 
     steps:
       - uses: "actions/checkout@v4"
@@ -39,4 +42,13 @@ jobs:
       - name: "Run tests"
         env:
           PYTHONPATH: "src/"
-        run: poetry run pytest
+        # TODO: progressively  increase minimum coverage to something closer to 80%
+        run: poetry run pytest --cov=src --cov-report xml:coverage.xml
+        # --cov-fail-under=60 --> we'll actually do that with the "Report coverage" step
+      - name: "Report coverage"
+        # @link https://github.com/orgoro/coverage
+        uses: "orgoro/coverage@v3.1"
+        with:
+          coverageFile: coverage.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          thresholdAll: 0.6
