@@ -1,8 +1,9 @@
+import dataclasses
 import logging
 from typing import TYPE_CHECKING, cast
 
 from django.contrib.auth.decorators import user_passes_test
-from django.http import Http404, HttpResponse
+from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import redirect
 from django.views.decorators.http import require_POST, require_safe
 
@@ -20,10 +21,18 @@ from .cookie_helpers import (
     get_or_create_daily_challenge_state_for_player,
     save_daily_challenge_state_in_session,
 )
+from .decorators import handle_chess_logic_exceptions
+from .forms import (
+    HtmxGameMovePieceForm,
+    HtmxGamePlayBotMoveForm,
+    HtmxGameSelectPieceForm,
+)
 from .presenters import DailyChallengeGamePresenter
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
+
+    from apps.chess.types import Move
 
     from .models import DailyChallenge
     from .types import PlayerGameState
@@ -31,134 +40,117 @@ if TYPE_CHECKING:
 
 _logger = logging.getLogger(__name__)
 
-# TODO: extract game logic to a separate module
-
 
 @require_safe
 def game_view(request: "HttpRequest") -> HttpResponse:
-    challenge, is_preview = get_current_daily_challenge_or_admin_preview(request)
-    board_id = "main"
-    game_state, created = get_or_create_daily_challenge_state_for_player(
-        request=request, challenge=challenge
-    )
+    ctx = GameContext.create_from_request(request)
 
-    if created:
+    if ctx.created:
         # The player hasn't played this challenge before,
         # so we need to start from the beginning, with the bot's first move:
 
         # These fields are always set on a published challenge:
         assert (
-            challenge.fen_before_bot_first_move
-            and challenge.piece_role_by_square_before_bot_first_move
+            ctx.challenge.fen_before_bot_first_move
+            and ctx.challenge.piece_role_by_square_before_bot_first_move
         )
 
-        game_state["fen"] = challenge.fen_before_bot_first_move
-        game_state[
+        ctx.game_state["fen"] = ctx.challenge.fen_before_bot_first_move
+        ctx.game_state[
             "piece_role_by_square"
-        ] = challenge.piece_role_by_square_before_bot_first_move
+        ] = ctx.challenge.piece_role_by_square_before_bot_first_move
 
         save_daily_challenge_state_in_session(
             request=request,
-            game_state=game_state,
+            game_state=ctx.game_state,
         )
 
-        forced_bot_move = uci_move_squares(challenge.bot_first_move)
+        forced_bot_move = uci_move_squares(ctx.challenge.bot_first_move)
     else:
         forced_bot_move = None
 
-    _logger.info("Game state from player cookie: %s", game_state)
+    _logger.info("Game state from player cookie: %s", ctx.game_state)
 
     game_presenter = DailyChallengeGamePresenter(
-        challenge=challenge,
-        game_state=game_state,
+        challenge=ctx.challenge,
+        game_state=ctx.game_state,
         forced_bot_move=forced_bot_move,
         is_htmx_request=False,
         refresh_last_move=True,
-        is_preview=is_preview,
+        is_preview=ctx.is_preview,
     )
 
     return HttpResponse(
         daily_challenge_page(
-            game_presenter=game_presenter, request=request, board_id=board_id
+            game_presenter=game_presenter, request=request, board_id=ctx.board_id
         )
     )
 
 
 @require_safe
 def htmx_game_no_selection(request: "HttpRequest") -> HttpResponse:
-    # TODO: validate this data, using a Form
-    board_id = cast(str, request.GET.get("board_id"))
+    ctx = GameContext.create_from_request(request)
 
-    challenge, is_preview = get_current_daily_challenge_or_admin_preview(request)
-    board_id = "main"
-    game_state, created = get_or_create_daily_challenge_state_for_player(
-        request=request, challenge=challenge
-    )
-    if created:
+    if ctx.created:
         return htmx_aware_redirect(request, "daily_challenge:daily_game_view")
 
     game_presenter = DailyChallengeGamePresenter(
-        challenge=challenge,
-        game_state=game_state,
+        challenge=ctx.challenge,
+        game_state=ctx.game_state,
         is_htmx_request=True,
         refresh_last_move=False,
     )
 
-    return HttpResponse(
-        daily_challenge_moving_parts_fragment(
-            game_presenter=game_presenter, request=request, board_id=board_id
-        ),
+    return _daily_challenge_moving_parts_fragment_response(
+        game_presenter=game_presenter, request=request, board_id=ctx.board_id
     )
 
 
 @require_safe
+@handle_chess_logic_exceptions
 def htmx_game_select_piece(request: "HttpRequest") -> "HttpResponse":
-    # TODO: validate this data, using a Form
-    piece_square = cast(Square, request.GET.get("square"))
-    board_id = cast(str, request.GET.get("board_id"))
+    form = HtmxGameSelectPieceForm(request.GET)
+    if not form.is_valid():
+        return HttpResponseBadRequest("Invalid request")
 
-    challenge, is_preview = get_current_daily_challenge_or_admin_preview(request)
-    game_state, created = get_or_create_daily_challenge_state_for_player(
-        request=request, challenge=challenge
-    )
-    if created:
+    ctx = GameContext.create_from_request(request)
+    if ctx.created:
         return htmx_aware_redirect(request, "daily_challenge:daily_game_view")
 
+    piece_square = form.cleaned_data["square"]
     game_presenter = DailyChallengeGamePresenter(
-        challenge=challenge,
-        game_state=game_state,
+        challenge=ctx.challenge,
+        game_state=ctx.game_state,
         selected_piece_square=piece_square,
         is_htmx_request=True,
         refresh_last_move=False,
     )
 
-    return HttpResponse(
-        daily_challenge_moving_parts_fragment(
-            game_presenter=game_presenter, request=request, board_id=board_id
-        )
+    return _daily_challenge_moving_parts_fragment_response(
+        game_presenter=game_presenter, request=request, board_id=ctx.board_id
     )
 
 
 @require_POST
+@handle_chess_logic_exceptions
 def htmx_game_move_piece(
     request: "HttpRequest", from_: "Square", to: "Square"
 ) -> HttpResponse:
-    # TODO: validate the whole data, using a Form
-    board_id = cast(str, request.GET.get("board_id"))
+    form = HtmxGameMovePieceForm({"from_": from_, "to": to})
+    if not form.is_valid():
+        return HttpResponseBadRequest("Invalid request")
 
-    challenge, is_preview = get_current_daily_challenge_or_admin_preview(request)
-    previous_game_state, created = get_or_create_daily_challenge_state_for_player(
-        request=request, challenge=challenge
-    )
-    if created:
+    ctx = GameContext.create_from_request(request)
+
+    if ctx.created:
         return htmx_aware_redirect(request, "daily_challenge:daily_game_view")
 
-    active_player_side = get_active_player_side_from_fen(previous_game_state["fen"])
-    is_my_side = active_player_side != challenge.bot_side
-    _logger.info("Game state from player cookie: %s", previous_game_state)
+    active_player_side = get_active_player_side_from_fen(ctx.game_state["fen"])
+    is_my_side = active_player_side != ctx.challenge.bot_side
+    _logger.info("Game state from player cookie: %s", ctx.game_state)
 
     new_game_state, captured_piece_role = move_daily_challenge_piece(
-        game_state=previous_game_state, from_=from_, to=to, is_my_side=is_my_side
+        game_state=ctx.game_state, from_=from_, to=to, is_my_side=is_my_side
     )
 
     _logger.info("New game state: %s", new_game_state)
@@ -168,17 +160,15 @@ def htmx_game_move_piece(
     )
 
     game_presenter = DailyChallengeGamePresenter(
-        challenge=challenge,
+        challenge=ctx.challenge,
         game_state=new_game_state,
         is_htmx_request=True,
         refresh_last_move=True,
         captured_team_member_role=captured_piece_role,
     )
 
-    return HttpResponse(
-        daily_challenge_moving_parts_fragment(
-            game_presenter=game_presenter, request=request, board_id=board_id
-        ),
+    return _daily_challenge_moving_parts_fragment_response(
+        game_presenter=game_presenter, request=request, board_id=ctx.board_id
     )
 
 
@@ -186,58 +176,46 @@ def htmx_game_move_piece(
 def htmx_restart_daily_challenge_ask_confirmation(
     request: "HttpRequest",
 ) -> HttpResponse:
-    # TODO: validate the whole data, using a Form
-    board_id = cast(str, request.GET.get("board_id"))
+    ctx = GameContext.create_from_request(request)
 
-    challenge, is_preview = get_current_daily_challenge_or_admin_preview(request)
-    game_state, created = get_or_create_daily_challenge_state_for_player(
-        request=request, challenge=challenge
-    )
-    if created:
+    if ctx.created:
         return htmx_aware_redirect(request, "daily_challenge:daily_game_view")
 
     game_presenter = DailyChallengeGamePresenter(
-        challenge=challenge,
-        game_state=game_state,
+        challenge=ctx.challenge,
+        game_state=ctx.game_state,
         restart_daily_challenge_ask_confirmation=True,
         is_htmx_request=True,
         refresh_last_move=False,
     )
 
-    return HttpResponse(
-        daily_challenge_moving_parts_fragment(
-            game_presenter=game_presenter, request=request, board_id=board_id
-        ),
+    return _daily_challenge_moving_parts_fragment_response(
+        game_presenter=game_presenter, request=request, board_id=ctx.board_id
     )
 
 
 @require_POST
 def htmx_restart_daily_challenge_do(request: "HttpRequest") -> HttpResponse:
-    # TODO: validate the whole data, using a Form
-    board_id = cast(str, request.GET.get("board_id"))
-
-    challenge, is_preview = get_current_daily_challenge_or_admin_preview(request)
-    game_state, created = get_or_create_daily_challenge_state_for_player(
-        request=request, challenge=challenge
-    )
-    if created:
+    ctx = GameContext.create_from_request(request)
+    if ctx.created:
         return htmx_aware_redirect(request, "daily_challenge:daily_game_view")
 
     # These fields are always set on a published challenge:
     assert (
-        challenge.fen_before_bot_first_move
-        and challenge.piece_role_by_square_before_bot_first_move
+        ctx.challenge.fen_before_bot_first_move
+        and ctx.challenge.piece_role_by_square_before_bot_first_move
     )
 
+    game_state = ctx.game_state
     game_state["attempts_counter"] += 1
     game_state["current_attempt_turns_counter"] = 0
     # Restarting the daily challenge costs one move:
     game_state["turns_counter"] += 1
     # Back to the initial state:
-    game_state["fen"] = challenge.fen_before_bot_first_move
+    game_state["fen"] = ctx.challenge.fen_before_bot_first_move
     game_state[
         "piece_role_by_square"
-    ] = challenge.piece_role_by_square_before_bot_first_move
+    ] = ctx.challenge.piece_role_by_square_before_bot_first_move
     game_state["moves"] = ""
 
     save_daily_challenge_state_in_session(
@@ -245,51 +223,46 @@ def htmx_restart_daily_challenge_do(request: "HttpRequest") -> HttpResponse:
         game_state=game_state,
     )
 
-    forced_bot_move = uci_move_squares(challenge.bot_first_move)
+    forced_bot_move = uci_move_squares(ctx.challenge.bot_first_move)
 
     game_presenter = DailyChallengeGamePresenter(
-        challenge=challenge,
+        challenge=ctx.challenge,
         game_state=game_state,
         forced_bot_move=forced_bot_move,
         is_htmx_request=True,
         refresh_last_move=True,
     )
 
-    return HttpResponse(
-        daily_challenge_moving_parts_fragment(
-            game_presenter=game_presenter, request=request, board_id=board_id
-        ),
+    return _daily_challenge_moving_parts_fragment_response(
+        game_presenter=game_presenter, request=request, board_id=ctx.board_id
     )
 
 
 @require_POST
+@handle_chess_logic_exceptions
 def htmx_game_bot_move(request: "HttpRequest") -> HttpResponse:
-    # TODO: validate this data, using a Form
-    board_id = cast(str, request.GET.get("board_id"))
+    form = HtmxGamePlayBotMoveForm(request.GET)
+    if not form.is_valid():
+        return HttpResponseBadRequest("Invalid request")
 
-    challenge, is_preview = get_current_daily_challenge_or_admin_preview(request)
-    game_state, created = get_or_create_daily_challenge_state_for_player(
-        request=request, challenge=challenge
-    )
-    if created:
+    ctx = GameContext.create_from_request(request)
+
+    if ctx.created:
         return htmx_aware_redirect(request, "daily_challenge:daily_game_view")
 
-    _logger.info("Game state from player cookie: %s", game_state)
+    _logger.info("Game state from player cookie: %s", ctx.game_state)
 
-    active_player_side = get_active_player_side_from_fen(game_state["fen"])
-    if active_player_side != challenge.bot_side:
+    active_player_side = get_active_player_side_from_fen(ctx.game_state["fen"])
+    if active_player_side != ctx.challenge.bot_side:
         # This is not bot's turn 😅
         return htmx_aware_redirect(request, "daily_challenge:daily_game_view")
 
-    if not (move := request.GET.get("move")):  # TODO: move this to the view path
-        raise Http404("Missing bot move")
-
     return _play_bot_move(
         request=request,
-        challenge=challenge,
-        game_state=game_state,
-        move=move,
-        board_id=board_id,
+        challenge=ctx.challenge,
+        game_state=ctx.game_state,
+        move=form.cleaned_data["move"],
+        board_id=ctx.board_id,
     )
 
 
@@ -331,7 +304,7 @@ def _play_bot_move(
     request: "HttpRequest",
     challenge: "DailyChallenge",
     game_state: "PlayerGameState",
-    move: str,
+    move: "Move",
     board_id: str,
 ) -> HttpResponse:
     bot_next_move = uci_move_squares(move)
@@ -356,10 +329,8 @@ def _play_bot_move(
         captured_team_member_role=captured_piece_role,
     )
 
-    return HttpResponse(
-        daily_challenge_moving_parts_fragment(
-            game_presenter=game_presenter, request=request, board_id=board_id
-        ),
+    return _daily_challenge_moving_parts_fragment_response(
+        game_presenter=game_presenter, request=request, board_id=board_id
     )
 
 
@@ -380,3 +351,44 @@ def get_current_daily_challenge_or_admin_preview(
             )
 
     return get_current_daily_challenge(), False
+
+
+@dataclasses.dataclass(frozen=True)
+class GameContext:
+    challenge: "DailyChallenge"
+    # if we're in admin preview mode:
+    is_preview: bool
+    game_state: "PlayerGameState"
+    # if the game state was created on the fly as we were initialising that object:
+    created: bool
+    board_id: str = "main"
+
+    @classmethod
+    def create_from_request(cls, request: "HttpRequest") -> "GameContext":
+        challenge, is_preview = get_current_daily_challenge_or_admin_preview(request)
+        game_state, created = get_or_create_daily_challenge_state_for_player(
+            request=request, challenge=challenge
+        )
+        # TODO: validate the "board_id" data
+        board_id = cast(str, request.GET.get("board_id", "main"))
+
+        return cls(
+            challenge=challenge,
+            is_preview=is_preview,
+            game_state=game_state,
+            created=created,
+            board_id=board_id,
+        )
+
+
+def _daily_challenge_moving_parts_fragment_response(
+    *,
+    game_presenter: DailyChallengeGamePresenter,
+    request: "HttpRequest",
+    board_id: str,
+) -> HttpResponse:
+    return HttpResponse(
+        daily_challenge_moving_parts_fragment(
+            game_presenter=game_presenter, request=request, board_id=board_id
+        ),
+    )
