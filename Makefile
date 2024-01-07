@@ -248,7 +248,7 @@ fly.io/deploy: ## Fly.io: deploy the previously built Docker image
 		--env ZAKUCHESS_VERSION="${version}"
 		
 .PHONY: fly.io/db/local_backup
-fly.io/db/local_backup: backup_name ?= $$(date --iso-8601)
+fly.io/db/local_backup: backup_name ?= $$(date --iso-8601=seconds | cut -d + -f 1)
 fly.io/db/local_backup: ## Fly.io: backup the SQLite database locally
 	@flyctl ssh sftp get /zakuchess_sqlite_dbs/zakuchess.dev.sqlite3
 	@mv zakuchess.dev.sqlite3 "zakuchess.prod.backup.${backup_name}.sqlite3"
