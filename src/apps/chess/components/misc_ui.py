@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from dominate.tags import a, div, dom_tag
 from dominate.util import raw
@@ -44,15 +44,15 @@ def speech_bubble(
 ) -> dom_tag:
     from .chess_board import chess_character_display
 
+    relative_position: Literal["left", "right"] = "right" if square[1] < "5" else "left"
+
     bubble_classes = (
         # Positioning:
         "absolute",
-        "bottom-7",
-        "left-0",
-        # TODO: if the bubble is too close to the right edge of the screen,
-        #  we should move it to the left a bit (the tail can stay where it is).
+        "-top-10",
+        "left-10" if relative_position == "right" else "right-10",
         # Size:
-        "min-w-40",
+        "w-40",
         "p-2 ",
         # Cosmetics:
         _SPEECH_BUBBLE_BACKGROUND_COLOR[0],
@@ -94,8 +94,8 @@ def speech_bubble(
         "absolute",
         "w-0",
         "h-0",
-        "bottom-5",
-        "left-1",
+        "bottom-1",
+        "left-8" if relative_position == "right" else "right-8",
     )
     bubble_tail = div(
         "",
@@ -105,11 +105,11 @@ def speech_bubble(
                 # @link https://css-tricks.com/snippets/css/css-triangle/
                 # We could do that using Tailwind, but it's just easier to use
                 # good old CSS here...
-                "border-left:",
-                f"{_SPEECH_BUBBLE_TAIL_SIZE}px solid transparent;",
-                "border-right:",
-                f"{_SPEECH_BUBBLE_TAIL_SIZE}px solid transparent;",
                 "border-top:",
+                f"{_SPEECH_BUBBLE_TAIL_SIZE}px solid transparent;",
+                "border-bottom:",
+                f"{_SPEECH_BUBBLE_TAIL_SIZE}px solid transparent;",
+                f"border-{'right' if relative_position == 'right' else 'left'}:",
                 f"{_SPEECH_BUBBLE_TAIL_SIZE}px solid {_SPEECH_BUBBLE_BACKGROUND_COLOR[1]}",
             )
         ),

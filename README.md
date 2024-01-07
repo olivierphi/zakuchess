@@ -60,8 +60,8 @@ You can take a look at [the Makefile](./Makefile) to see more commands.
  - [x] Validate input data, using good ol' Django path converters 
  - [ ] Users' personal stats (current streak, etc)
  - [ ] "End of game" screen
- - [ ] Fix bubble speech when it's at the top of the chess board 
- - [ ] Fix bubble speech priority (win/lose should always have priority over the rest for example)
+ - [x] Fix bubble speech when it's at the top of the chess board 
+ - [x] Fix bubble speech priority (win/lose should always have priority over the rest for example)
 
 ##### Post launch
 

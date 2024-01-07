@@ -23,10 +23,28 @@ def get_speech_bubble(
 ) -> SpeechBubbleData | None:
     # A published challenge always has a `intro_turn_speech_square`,
 
+    # Uncommenting the following line and playing with different squares
+    # is handy when working on this feature :-)
+    # return SpeechBubbleData(text="this is a test speech bubble", square="h6")
+
     if forced_speech_bubble := game_presenter.forced_speech_bubble:
         return SpeechBubbleData(
             text=forced_speech_bubble[1], square=forced_speech_bubble[0], time_out=2
         )
+
+    if game_presenter.game_phase.startswith("game_over"):
+        if game_presenter.game_phase == "game_over:won":
+            return SpeechBubbleData(
+                text="We did it, folks! 🎉",
+                square=_my_king_square(game_presenter),
+            )
+        if game_presenter.game_phase == "game_over:lost":
+            return SpeechBubbleData(
+                text="We win today, humans!",
+                square=_bot_leftmost_piece_square(
+                    game_presenter.chess_board, game_presenter.challenge.bot_side
+                ),
+            )
 
     if game_presenter.is_intro_turn:
         if not game_presenter.challenge.intro_turn_speech_square:
@@ -76,21 +94,11 @@ def get_speech_bubble(
             square=game_presenter.challenge.intro_turn_speech_square,
         )
 
-    if game_presenter.game_phase == "game_over:won":
-        return SpeechBubbleData(
-            text="We did it, folks! 🎉",
-            square=_my_king_square(game_presenter),
-        )
-
-    if game_presenter.game_phase == "game_over:lost":
-        return SpeechBubbleData(
-            text="We win today, humans!",
-            square=_bot_leftmost_piece_square(
-                game_presenter.chess_board, game_presenter.challenge.bot_side
-            ),
-        )
-
-    if game_presenter.selected_piece and game_presenter.selected_piece.is_pinned:
+    if (
+        game_presenter.selected_piece
+        and game_presenter.selected_piece.is_pinned
+        and not game_presenter.selected_piece.available_targets
+    ):
         return SpeechBubbleData(
             text="Moving would put our king in too much danger, I'm pinned here 😬",
             square=game_presenter.selected_piece.square,
@@ -103,7 +111,7 @@ def get_speech_bubble(
         and not game_presenter.selected_piece
         and game_presenter.naive_score < -3
     ):
-        probability = 0.6 if game_presenter.naive_score < -6 else 0.3
+        probability = 0.6 if game_presenter.naive_score < -5 else 0.3
         die_result = random.random()  # 🎲
         if die_result > probability:
             return SpeechBubbleData(
