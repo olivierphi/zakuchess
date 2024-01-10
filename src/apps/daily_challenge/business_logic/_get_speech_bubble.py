@@ -84,8 +84,8 @@ def get_speech_bubble(
 
     if (
         game_presenter.is_bot_move
-        and game_presenter.game_state["turns_counter"] > 1
-        and game_presenter.game_state["current_attempt_turns_counter"] == 0
+        and game_presenter.game_state.turns_counter > 1
+        and game_presenter.game_state.current_attempt_turns_counter == 0
     ):
         if not game_presenter.challenge.intro_turn_speech_square:
             return None

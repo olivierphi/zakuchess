@@ -10,13 +10,13 @@ if TYPE_CHECKING:
 def get_daily_challenge_turns_state(
     game_state: "PlayerGameState",
 ) -> ChallengeTurnsState:
-    turns_left = MAXIMUM_TURNS_PER_CHALLENGE - game_state["turns_counter"]
+    turns_left = MAXIMUM_TURNS_PER_CHALLENGE - game_state.turns_counter
     percentage_left = round(turns_left / MAXIMUM_TURNS_PER_CHALLENGE * 100)
     time_s_up = turns_left <= 0
 
     return ChallengeTurnsState(
-        attempts_counter=game_state["attempts_counter"],
-        current_attempt_turns=game_state["current_attempt_turns_counter"],
+        attempts_counter=game_state.attempts_counter,
+        current_attempt_turns=game_state.current_attempt_turns_counter,
         turns_total=MAXIMUM_TURNS_PER_CHALLENGE,
         turns_left=turns_left,
         percentage_left=percentage_left,

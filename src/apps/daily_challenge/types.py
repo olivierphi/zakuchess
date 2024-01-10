@@ -1,28 +1,54 @@
-from typing import TYPE_CHECKING, NamedTuple, TypeAlias, TypedDict
+from typing import NamedTuple, TypeAlias
 
-if TYPE_CHECKING:
-    from apps.chess.types import FEN, PieceRoleBySquare
+import msgspec
+
+from apps.chess.types import FEN, PieceRoleBySquare
 
 GameID: TypeAlias = str
 
 
-class PlayerSessionContent(TypedDict):
-    # That is the content of the session cookie for the player.
-    # Since it's just a Python dict, Django knows how to serialize it.
-    games: dict[GameID, "PlayerGameState"]
+class PlayerGameState(
+    msgspec.Struct,
+    kw_only=True,  # type: ignore[call-arg]
+    rename={
+        # Let's make the cookie content a bit shorter, with shorter field names
+        "attempts_counter": "ac",
+        "turns_counter": "tc",
+        "current_attempt_turns_counter": "catc",
+        "fen": "f",
+        "piece_role_by_square": "prbs",
+        "moves": "m",
+    },
+):
+    """
+    This is the state of a daily challenge, stored in a cookie for the player.
+    """
 
-
-class PlayerGameState(TypedDict):
-    # That is the state of a daily challenge, stored in a cookie for the player.
-    # Since it's just a Python dict, Django knows how to serialize it.
     attempts_counter: int
     turns_counter: int
     current_attempt_turns_counter: int
-    fen: "FEN"
-    piece_role_by_square: "PieceRoleBySquare"
+    fen: FEN
+    piece_role_by_square: PieceRoleBySquare
     # Each move is 4 more chars added there (UCI notation).
     # These are the moves *of the current attempt* only.
     moves: str
+
+
+class PlayerSessionContent(
+    msgspec.Struct,
+    kw_only=True,  # type: ignore[call-arg]
+    rename={
+        # Let's make the cookie content a bit shorter, with shorter field names
+        "encoding_version": "ev",
+        "games": "g",
+    },
+):
+    """
+    This is the whole content of the session cookie for the player.
+    """
+
+    encoding_version: int = 1
+    games: dict[GameID, PlayerGameState]
 
 
 class ChallengeTurnsState(NamedTuple):

@@ -1,5 +1,7 @@
+import logging
 from typing import TYPE_CHECKING
 
+import msgspec
 from django.utils.timezone import now
 
 from .models import DailyChallenge
@@ -9,6 +11,8 @@ if TYPE_CHECKING:
     from django.http import HttpRequest
 
 _PLAYER_CONTENT_SESSION_KEY = "pc"
+
+_logger = logging.getLogger(__name__)
 
 
 def get_or_create_daily_challenge_state_for_player(
@@ -23,9 +27,7 @@ def get_or_create_daily_challenge_state_for_player(
 
     player_cookie_content = get_player_session_content(request)
     challenge_id = today_daily_challenge_id(request)
-    game_state: PlayerGameState | None = player_cookie_content["games"].get(
-        challenge_id
-    )
+    game_state: PlayerGameState | None = player_cookie_content.games.get(challenge_id)
 
     if game_state is None:
         game_state = PlayerGameState(
@@ -48,12 +50,17 @@ def get_or_create_daily_challenge_state_for_player(
 
 
 def get_player_session_content(request: "HttpRequest") -> PlayerSessionContent:
-    player_cookie_content: PlayerSessionContent | None = request.session.get(
-        _PLAYER_CONTENT_SESSION_KEY
-    )
-    if player_cookie_content is None:
+    cookie_content: str | None = request.session.get(_PLAYER_CONTENT_SESSION_KEY)
+    if cookie_content is None or len(cookie_content) < 10:
         return PlayerSessionContent(games={})
-    return player_cookie_content
+
+    try:
+        return msgspec.json.decode(cookie_content.encode(), type=PlayerSessionContent)
+    except msgspec.MsgspecError:
+        _logger.exception(
+            "Could not decode cookie content; restarting with a blank one."
+        )
+        return PlayerSessionContent(games={})
 
 
 def save_daily_challenge_state_in_session(
@@ -61,7 +68,9 @@ def save_daily_challenge_state_in_session(
 ) -> None:
     # Erases other games data!
     challenge_id = today_daily_challenge_id(request)
-    request.session[_PLAYER_CONTENT_SESSION_KEY] = {"games": {challenge_id: game_state}}
+    session_content = PlayerSessionContent(games={challenge_id: game_state})
+    cookie_content: str = msgspec.json.encode(session_content).decode()
+    request.session[_PLAYER_CONTENT_SESSION_KEY] = cookie_content
 
 
 def clear_daily_challenge_state_in_session(*, request: "HttpRequest") -> None:

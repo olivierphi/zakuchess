@@ -44,8 +44,8 @@ class DailyChallengeGamePresenter(GamePresenter):
         assert challenge.teams
 
         super().__init__(
-            fen=game_state["fen"],
-            piece_role_by_square=game_state["piece_role_by_square"],
+            fen=game_state.fen,
+            piece_role_by_square=game_state.piece_role_by_square,
             teams=challenge.teams,
             refresh_last_move=refresh_last_move,
             is_htmx_request=is_htmx_request,
@@ -80,7 +80,7 @@ class DailyChallengeGamePresenter(GamePresenter):
 
     @property
     def challenge_turns_counter(self) -> int:
-        return self.game_state["turns_counter"]
+        return self.game_state.turns_counter
 
     @property
     def challenge_total_turns(self) -> int:
@@ -167,7 +167,7 @@ class DailyChallengeGamePresenter(GamePresenter):
     def _last_move_from_game_state(
         game_state: "PlayerGameState",
     ) -> tuple["Square", "Square"] | None:
-        if (moves := game_state["moves"]) and len(moves) >= 4:
+        if (moves := game_state.moves) and len(moves) >= 4:
             return uci_move_squares(moves[-4:])
         return None
 

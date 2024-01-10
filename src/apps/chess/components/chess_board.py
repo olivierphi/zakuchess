@@ -173,7 +173,7 @@ def chess_pieces(
     return div(
         div(
             data_board_state=game_presenter.game_phase,
-            data_aria_hidden="true",
+            aria_hidden="true",
         ),
         *pieces,
         *bot_turn_html_elements,
@@ -549,7 +549,7 @@ def chess_unit_symbol_display(*, piece_role: "PieceRole", square: "Square") -> d
     return div(
         symbol_display,
         cls=" ".join(symbol_display_container_classes),
-        aria_label=piece_name,
+        data_label=piece_name,
     )
 
 
@@ -599,6 +599,7 @@ def chess_last_move_marker(
         "transition-size",
         "duration-400",
         "ease-in-out",
+        "transform-gpu",
         start_class,
         target_class,
     )

@@ -19,6 +19,7 @@ requests = "^2.31.0"
 django-axes = {extras = ["ipware"], version = "^6.1.1"}
 whitenoise = "^6.5.0"
 django-import-export = "^3.3.1"
+msgspec = "^0.18.5"
 
 [tool.poetry.group.dev.dependencies]
 python-dotenv = "^1.0.0"
