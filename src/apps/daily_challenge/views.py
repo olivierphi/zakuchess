@@ -50,10 +50,10 @@ def game_view(request: "HttpRequest") -> HttpResponse:
             and ctx.challenge.piece_role_by_square_before_bot_first_move
         )
 
-        ctx.game_state["fen"] = ctx.challenge.fen_before_bot_first_move
-        ctx.game_state[
-            "piece_role_by_square"
-        ] = ctx.challenge.piece_role_by_square_before_bot_first_move
+        ctx.game_state.fen = ctx.challenge.fen_before_bot_first_move
+        ctx.game_state.piece_role_by_square = (
+            ctx.challenge.piece_role_by_square_before_bot_first_move
+        )
 
         save_daily_challenge_state_in_session(
             request=request,
@@ -136,7 +136,7 @@ def htmx_game_move_piece(
     if ctx.created:
         return htmx_aware_redirect(request, "daily_challenge:daily_game_view")
 
-    active_player_side = get_active_player_side_from_fen(ctx.game_state["fen"])
+    active_player_side = get_active_player_side_from_fen(ctx.game_state.fen)
     is_my_side = active_player_side != ctx.challenge.bot_side
     _logger.info("Game state from player cookie: %s", ctx.game_state)
 
@@ -198,16 +198,16 @@ def htmx_restart_daily_challenge_do(request: "HttpRequest") -> HttpResponse:
     )
 
     game_state = ctx.game_state
-    game_state["attempts_counter"] += 1
-    game_state["current_attempt_turns_counter"] = 0
+    game_state.attempts_counter += 1
+    game_state.current_attempt_turns_counter = 0
     # Restarting the daily challenge costs one move:
-    game_state["turns_counter"] += 1
+    game_state.turns_counter += 1
     # Back to the initial state:
-    game_state["fen"] = ctx.challenge.fen_before_bot_first_move
-    game_state[
-        "piece_role_by_square"
-    ] = ctx.challenge.piece_role_by_square_before_bot_first_move
-    game_state["moves"] = ""
+    game_state.fen = ctx.challenge.fen_before_bot_first_move
+    game_state.piece_role_by_square = (
+        ctx.challenge.piece_role_by_square_before_bot_first_move
+    )
+    game_state.moves = ""
 
     save_daily_challenge_state_in_session(
         request=request,
@@ -244,7 +244,7 @@ def htmx_game_bot_move(
 
     _logger.info("Game state from player cookie: %s", ctx.game_state)
 
-    active_player_side = get_active_player_side_from_fen(ctx.game_state["fen"])
+    active_player_side = get_active_player_side_from_fen(ctx.game_state.fen)
     if active_player_side != ctx.challenge.bot_side:
         # This is not bot's turn 😅
         return htmx_aware_redirect(request, "daily_challenge:daily_game_view")
@@ -285,7 +285,7 @@ def debug_view_cookie(request: "HttpRequest") -> HttpResponse:
 
     return HttpResponse(
         f"""<p>Game state exists before check: {'no' if created else 'yes'}</p>"""
-        f"""<p>Game keys: {tuple(player_cookie_content['games'].keys())}</p>"""
+        f"""<p>Game keys: {tuple(player_cookie_content.games.keys())}</p>"""
         f"""<p>Game_state: <pre>{json.dumps(game_state, indent=2)}</pre></p>"""
         f"""<p>admin_daily_challenge_lookup_key: <pre>{request.get_signed_cookie('admin_daily_challenge_lookup_key', default=None)}</pre></p>"""
     )

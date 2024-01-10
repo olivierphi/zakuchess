@@ -10,6 +10,27 @@ if TYPE_CHECKING:
     from ..models import DailyChallenge
 
 
+@mock.patch("apps.daily_challenge.business_logic.get_current_daily_challenge")
+@pytest.mark.django_db
+def test_game_smoke_test(
+    # Mocks
+    get_current_challenge_mock: mock.MagicMock,
+    # Test dependencies
+    challenge_minimalist: "DailyChallenge",
+    client: "DjangoClient",
+):
+    get_current_challenge_mock.return_value = challenge_minimalist
+
+    response = client.get("/")
+    assert response.status_code == HTTPStatus.OK
+    assert "csrftoken" in response.cookies
+    assert 200 < len(response.cookies["sessionid"].value) < 250
+    assert response.cookies["sessionid"].value.startswith(
+        # This part of the signed+compressed session data is deterministic:
+        ".eJw9zMEKwyAMBuBXkZwnGjtq6bHXnnrPRWXdoAxkG70U330h6UYOfz5NckAtMMJBcNsJRrwQ3DnZwYer9WjRq1Ph9Pz_-TUl_duVkwC33tXaLcHF6gapOLk5mmwslzdIwMP1ld96c42yt8hzVlQdSqeC6NGrOlUQTeckimY9Mgg2gsZ6CrhvDdoXSYo9qw:"
+    )
+
+
 @pytest.mark.parametrize(
     ("location", "expected_status_code"),
     (

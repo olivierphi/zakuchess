@@ -62,6 +62,7 @@ You can take a look at [the Makefile](./Makefile) to see more commands.
  - [ ] "End of game" screen
  - [x] Fix bubble speech when it's at the top of the chess board 
  - [x] Fix bubble speech priority (win/lose should always have priority over the rest for example)
+ - [x] Make the session cookie shorter, by using [msgspec](https://jcristharif.com/msgspec/index.html)
 
 ##### Post launch
 
