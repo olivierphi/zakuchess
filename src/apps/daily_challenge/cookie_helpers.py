@@ -5,7 +5,7 @@ import msgspec
 from django.utils.timezone import now
 
 from .models import DailyChallenge
-from .types import PlayerGameState, PlayerSessionContent
+from .types import PlayerGameState, PlayerSessionContent, PlayerStats
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
@@ -17,7 +17,7 @@ _logger = logging.getLogger(__name__)
 
 def get_or_create_daily_challenge_state_for_player(
     *, request: "HttpRequest", challenge: DailyChallenge
-) -> tuple[PlayerGameState, bool]:
+) -> tuple[PlayerGameState, PlayerStats, bool]:
     """
     Returns the game state for the given challenge, creating it if it doesn't exist yet.
     The second value is a boolean indicating if the game state was created or not.
@@ -26,6 +26,9 @@ def get_or_create_daily_challenge_state_for_player(
     assert challenge.piece_role_by_square
 
     player_cookie_content = get_player_session_content(request)
+    # TODO: remove this assertion once all cookies have been migrated
+    assert player_cookie_content.stats
+
     challenge_id = today_daily_challenge_id(request)
     game_state: PlayerGameState | None = player_cookie_content.games.get(challenge_id)
 
@@ -41,34 +44,46 @@ def get_or_create_daily_challenge_state_for_player(
         save_daily_challenge_state_in_session(
             request=request,
             game_state=game_state,
+            player_stats=player_cookie_content.stats,
         )
         created = True
     else:
         created = False
 
-    return game_state, created
+    return game_state, player_cookie_content.stats, created
 
 
 def get_player_session_content(request: "HttpRequest") -> PlayerSessionContent:
+    def new_content():
+        return PlayerSessionContent(games={}, stats=PlayerStats())
+
     cookie_content: str | None = request.session.get(_PLAYER_CONTENT_SESSION_KEY)
     if cookie_content is None or len(cookie_content) < 10:
-        return PlayerSessionContent(games={})
+        return new_content()
 
     try:
-        return msgspec.json.decode(cookie_content.encode(), type=PlayerSessionContent)
+        session_content = msgspec.json.decode(
+            cookie_content.encode(), type=PlayerSessionContent
+        )
+        if not session_content.stats:
+            # TODO: remove this condition once all cookies have been migrated
+            session_content.stats = PlayerStats()
+        return session_content
     except msgspec.MsgspecError:
         _logger.exception(
             "Could not decode cookie content; restarting with a blank one."
         )
-        return PlayerSessionContent(games={})
+        return new_content()
 
 
 def save_daily_challenge_state_in_session(
-    *, request: "HttpRequest", game_state: PlayerGameState
+    *, request: "HttpRequest", game_state: PlayerGameState, player_stats: PlayerStats
 ) -> None:
     # Erases other games data!
     challenge_id = today_daily_challenge_id(request)
-    session_content = PlayerSessionContent(games={challenge_id: game_state})
+    session_content = PlayerSessionContent(
+        games={challenge_id: game_state}, stats=player_stats
+    )
     cookie_content: str = msgspec.json.encode(session_content).decode()
     request.session[_PLAYER_CONTENT_SESSION_KEY] = cookie_content
 

@@ -24,10 +24,10 @@ def test_game_smoke_test(
     response = client.get("/")
     assert response.status_code == HTTPStatus.OK
     assert "csrftoken" in response.cookies
-    assert 200 < len(response.cookies["sessionid"].value) < 250
+    assert 250 < len(response.cookies["sessionid"].value) < 300
     assert response.cookies["sessionid"].value.startswith(
         # This part of the signed+compressed session data is deterministic:
-        ".eJw9zMEKwyAMBuBXkZwnGjtq6bHXnnrPRWXdoAxkG70U330h6UYOfz5NckAtMMJBcNsJRrwQ3DnZwYer9WjRq1Ph9Pz_-TUl_duVkwC33tXaLcHF6gapOLk5mmwslzdIwMP1ld96c42yt8hzVlQdSqeC6NGrOlUQTeckimY9Mgg2gsZ6CrhvDdoXSYo9qw:"
+        ".eJxNkD0PgkAMhv8K6Sy5D1AIIysT-y1wCiZIvIjRgdx_t7SFmA5vn35eb4XgoYLVwe3joDInByMqstU2T7VJrWbuPKrG_Ht3fHe4A6oDM11UCFlrVRFUSVbUqimSPknRdGIcYHF49QvPHArqayncMwQu6oQs0f3ClDFZoloqDVHDQ0qCyUFEmgkoMT63p8YtKstHLwd_j4MWicy78wg04f8vtoYrTzDSZ0Uz0Vz0zCsjxB_0D11b:"
     )
 
 

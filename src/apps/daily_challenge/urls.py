@@ -25,6 +25,11 @@ urlpatterns = [
         name="htmx_restart_daily_challenge_ask_confirmation",
     ),
     path(
+        "htmx/daily-challenge/stats/",
+        views.htmx_daily_challenge_stats_modal,
+        name="htmx_daily_challenge_stats",
+    ),
+    path(
         "htmx/daily-challenge/restart/do/",
         views.htmx_restart_daily_challenge_do,
         name="htmx_restart_daily_challenge_do",

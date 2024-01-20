@@ -59,6 +59,7 @@ def document(
             header(),
             *children,
             footer(),
+            modals_container(),
             cls="bg-slate-900",
             data_hx_headers=json.dumps(
                 {"X-CSRFToken": get_token(request) if request else "[no request]"}
@@ -147,5 +148,28 @@ def footer() -> "text":
                 ),
             ),
             cls="w-full text-slate-100 text-sm text-center mb-10 md:max-w-xl mx-auto",
+        ).render(pretty=settings.DEBUG)
+    )
+
+
+@cache
+def modals_container() -> "text":
+    return raw(
+        div(
+            script(
+                raw(
+                    r"""
+                function closeModal() { 
+                    const modal = document.getElementById("modals-container")
+                    modal.innerHTML = ""
+                    modal.className = "hidden"
+                }
+                """
+                )
+            ),
+            div(
+                id="modals-container",
+                cls="hidden",
+            ),
         ).render(pretty=settings.DEBUG)
     )
