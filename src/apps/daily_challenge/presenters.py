@@ -38,6 +38,7 @@ class DailyChallengeGamePresenter(GamePresenter):
         is_bot_move: bool = False,
         force_square_info: bool = False,
         captured_team_member_role: "PieceRole | None" = None,
+        just_won: bool = False,
         is_preview: bool = False,
     ):
         # A published challenge always has a `teams` non-null field:
@@ -64,6 +65,7 @@ class DailyChallengeGamePresenter(GamePresenter):
             restart_daily_challenge_ask_confirmation
         )
         self.is_bot_move = is_bot_move
+        self.just_won = just_won
         self._forced_speech_bubble = forced_speech_bubble
 
     @cached_property

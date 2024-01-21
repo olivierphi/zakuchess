@@ -1,6 +1,5 @@
-import dataclasses
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse
@@ -11,7 +10,6 @@ from apps.chess.helpers import get_active_player_side_from_fen, uci_move_squares
 from apps.chess.types import (
     ChessInvalidActionException,
     ChessInvalidMoveException,
-    ChessLogicException,
     Square,
 )
 from apps.utils.view_decorators import user_is_staff
@@ -20,11 +18,10 @@ from apps.utils.views_helpers import htmx_aware_redirect
 from .business_logic import (
     manage_daily_challenge_defeat_logic,
     manage_daily_challenge_victory_logic,
-    manage_new_daily_challenge_logic,
     move_daily_challenge_piece,
 )
 from .components.misc_ui.stats_modal import stats_modal
-from .components.pages.chess import (
+from .components.pages.daily_chess import (
     daily_challenge_moving_parts_fragment,
     daily_challenge_page,
 )
@@ -35,6 +32,7 @@ from .cookie_helpers import (
 from .decorators import handle_chess_logic_exceptions
 from .presenters import DailyChallengeGamePresenter
 from .types import PlayerGameOverState
+from .view_helpers import GameContext, get_current_daily_challenge_or_admin_preview
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
@@ -145,6 +143,7 @@ def htmx_game_move_piece(
         raise ChessInvalidMoveException("Not a move")
 
     ctx = GameContext.create_from_request(request)
+    game_over_already = ctx.game_state.game_over != PlayerGameOverState.PLAYING
 
     if ctx.game_state.game_over != PlayerGameOverState.PLAYING:
         raise ChessInvalidActionException("Game is over, cannot move pieces")
@@ -160,26 +159,26 @@ def htmx_game_move_piece(
         game_state=ctx.game_state, from_=from_, to=to, is_my_side=is_my_side
     )
 
+    just_won, just_lost = False, False
+    if not game_over_already:
+        just_won = new_game_state.game_over == PlayerGameOverState.WON
+        just_lost = new_game_state.game_over == PlayerGameOverState.LOST
+
+    if just_won:
+        # The player won! GGWP 🏆
+        manage_daily_challenge_victory_logic(game_state=new_game_state, stats=ctx.stats)
+    elif just_lost:
+        # Sorry - hopefully victory will be yours next time! 🤞
+        manage_daily_challenge_defeat_logic(game_state=new_game_state, stats=ctx.stats)
+
     game_presenter = DailyChallengeGamePresenter(
         challenge=ctx.challenge,
         game_state=new_game_state,
         is_htmx_request=True,
         refresh_last_move=True,
         captured_team_member_role=captured_piece_role,
+        just_won=just_won,
     )
-
-    if game_presenter.is_game_over:
-        game_phase = game_presenter.game_phase
-        if game_phase == "game_over:won":
-            # The player won! GGWP 🏆
-            manage_daily_challenge_victory_logic(
-                game_state=new_game_state, stats=ctx.stats
-            )
-        else:
-            # Sorry - hopefully victory will be yours next time! 🤞
-            manage_daily_challenge_defeat_logic(
-                game_state=new_game_state, stats=ctx.stats
-            )
 
     _logger.info("New game state: %s", new_game_state)
     save_daily_challenge_state_in_session(
@@ -306,9 +305,25 @@ def htmx_game_bot_move(
 def debug_reset_today(request: "HttpRequest") -> HttpResponse:
     # This function is dangerous, so let's make sure we're not using it
     # in another view accidentally 😅
-    from .cookie_helpers import clear_daily_challenge_state_in_session
+    from .cookie_helpers import clear_daily_challenge_game_state_in_session
 
-    clear_daily_challenge_state_in_session(request=request)
+    ctx = GameContext.create_from_request(request)
+
+    clear_daily_challenge_game_state_in_session(request=request, player_stats=ctx.stats)
+
+    return redirect("daily_challenge:daily_game_view")
+
+
+@require_safe
+@user_passes_test(user_is_staff)
+def debug_reset_stats(request: "HttpRequest") -> HttpResponse:
+    # This function is VERY dangerous, so let's make sure we're not using it
+    # in another view accidentally 😅
+    from .cookie_helpers import clear_daily_challenge_stats_in_session
+
+    ctx = GameContext.create_from_request(request)
+
+    clear_daily_challenge_stats_in_session(request=request, game_state=ctx.game_state)
 
     return redirect("daily_challenge:daily_game_view")
 
@@ -351,6 +366,8 @@ def _play_bot_move(
     move: "Move",
     board_id: str,
 ) -> HttpResponse:
+    game_over_already = game_state.game_over != PlayerGameOverState.PLAYING
+
     bot_next_move = uci_move_squares(move)
     new_game_state, captured_piece_role = move_daily_challenge_piece(
         game_state=game_state,
@@ -368,11 +385,11 @@ def _play_bot_move(
         captured_team_member_role=captured_piece_role,
     )
 
-    if game_presenter.is_game_over:
-        if game_presenter.game_phase == "game_over:won":
-            raise ChessLogicException(
-                "Player won during bot's turn, this should not happen"
-            )
+    just_lost = (
+        not game_over_already and new_game_state.game_over == PlayerGameOverState.LOST
+    )
+
+    if just_lost:
         # Sorry - hopefully victory will be yours next time! 🤞
         manage_daily_challenge_defeat_logic(
             game_state=new_game_state, stats=player_stats
@@ -387,59 +404,6 @@ def _play_bot_move(
     return _daily_challenge_moving_parts_fragment_response(
         game_presenter=game_presenter, request=request, board_id=board_id
     )
-
-
-def get_current_daily_challenge_or_admin_preview(
-    request: "HttpRequest",
-) -> tuple["DailyChallenge", bool]:
-    from .business_logic import get_current_daily_challenge
-    from .models import DailyChallenge
-
-    if request.user.is_staff:
-        admin_daily_challenge_lookup_key = request.get_signed_cookie(
-            "admin_daily_challenge_lookup_key", default=None
-        )
-        if admin_daily_challenge_lookup_key:
-            return (
-                DailyChallenge.objects.get(lookup_key=admin_daily_challenge_lookup_key),
-                True,
-            )
-
-    return get_current_daily_challenge(), False
-
-
-@dataclasses.dataclass(frozen=True)
-class GameContext:
-    challenge: "DailyChallenge"
-
-    is_preview: bool
-    """if we're in admin preview mode"""
-    game_state: "PlayerGameState"
-    stats: "PlayerStats"
-    created: bool
-    """if the game state was created on the fly as we were initialising that object"""
-    board_id: str = "main"
-
-    @classmethod
-    def create_from_request(cls, request: "HttpRequest") -> "GameContext":
-        challenge, is_preview = get_current_daily_challenge_or_admin_preview(request)
-        game_state, stats, created = get_or_create_daily_challenge_state_for_player(
-            request=request, challenge=challenge
-        )
-        # TODO: validate the "board_id" data
-        board_id = cast(str, request.GET.get("board_id", "main"))
-
-        if created:
-            manage_new_daily_challenge_logic(stats)
-
-        return cls(
-            challenge=challenge,
-            is_preview=is_preview,
-            game_state=game_state,
-            stats=stats,
-            created=created,
-            board_id=board_id,
-        )
 
 
 def _daily_challenge_moving_parts_fragment_response(

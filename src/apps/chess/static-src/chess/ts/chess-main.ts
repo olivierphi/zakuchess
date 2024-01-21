@@ -62,6 +62,11 @@ function cursorIsNotOnChessBoardInteractiveElement(boardId: string): boolean {
         return false // don't actually cancel the selection when closing the speech bubble
     }
 
+    const modalContainer = document.getElementById("modal-container")
+    if (modalContainer && hoveredElements.includes(modalContainer)) {
+        return false // don't actually cancel the selection when interacting with a modal
+    }
+
     console.log("no interactive UI element clicked: we reset the board state")
     return true
 }

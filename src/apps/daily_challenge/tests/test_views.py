@@ -24,10 +24,10 @@ def test_game_smoke_test(
     response = client.get("/")
     assert response.status_code == HTTPStatus.OK
     assert "csrftoken" in response.cookies
-    assert 250 < len(response.cookies["sessionid"].value) < 300
+    assert 280 < len(response.cookies["sessionid"].value) < 310
     assert response.cookies["sessionid"].value.startswith(
         # This part of the signed+compressed session data is deterministic:
-        ".eJxNkD0PgkAMhv8K6Sy5D1AIIysT-y1wCiZIvIjRgdx_t7SFmA5vn35eb4XgoYLVwe3joDInByMqstU2T7VJrWbuPKrG_Ht3fHe4A6oDM11UCFlrVRFUSVbUqimSPknRdGIcYHF49QvPHArqayncMwQu6oQs0f3ClDFZoloqDVHDQ0qCyUFEmgkoMT63p8YtKstHLwd_j4MWicy78wg04f8vtoYrTzDSZ0Uz0Vz0zCsjxB_0D11b:"
+        ".eJxNkLsOgzAMRX8FeS4KCRRQR1Ym9iyQFioBbVTaMiD-vcY2qPJwffy4eSzgHVxgsXD7Wrjok4UOFdlEJgkjHRrNXDvUCPvvPXH1kbaoFnSfKu_jyqjMq5wiK1SZBU0QYkQBWuGwfzUTe7YZ7VVUbhg8D9VChuieMsVMhqiQSU1UsklO0FtYkUYCanTP7arrVpXDOycPno8HTZKMezJ4cvj_i606Y_XxGYZt-cpuWjaMaCyaiJ75-BXWH59eYVs:"
     )
 
 
@@ -149,6 +149,23 @@ def test_htmx_game_select_piece_should_fail_on_empty_square(
     empty_square = "a2"
     response = client.get(f"/htmx/pieces/{empty_square}/select/")
     assert response.status_code == HTTPStatus.BAD_REQUEST
+
+
+@mock.patch("apps.daily_challenge.business_logic.get_current_daily_challenge")
+@pytest.mark.django_db
+def test_stats_modal_smoke_test(
+    # Mocks
+    get_current_challenge_mock: mock.MagicMock,
+    # Test dependencies
+    challenge_minimalist: "DailyChallenge",
+    client: "DjangoClient",
+):
+    get_current_challenge_mock.return_value = challenge_minimalist
+
+    response = client.get("/htmx/daily-challenge/modals/stats/")
+    assert response.status_code == HTTPStatus.OK
+    response_content = response.content.decode()
+    assert "Statistics" in response_content
 
 
 def _play_bot_move(client: "DjangoClient", move) -> None:

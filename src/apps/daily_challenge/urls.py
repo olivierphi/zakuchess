@@ -7,7 +7,9 @@ app_name = "daily_challenge"
 urlpatterns = [
     path("", views.game_view, name="daily_game_view"),
     path(
-        "htmx/no-selection", views.htmx_game_no_selection, name="htmx_game_no_selection"
+        "htmx/no-selection/",
+        views.htmx_game_no_selection,
+        name="htmx_game_no_selection",
     ),
     path(
         "htmx/pieces/<square:location>/select/",
@@ -25,7 +27,7 @@ urlpatterns = [
         name="htmx_restart_daily_challenge_ask_confirmation",
     ),
     path(
-        "htmx/daily-challenge/stats/",
+        "htmx/daily-challenge/modals/stats/",
         views.htmx_daily_challenge_stats_modal,
         name="htmx_daily_challenge_stats",
     ),
@@ -40,6 +42,7 @@ urlpatterns = [
         name="htmx_game_bot_move",
     ),
     # Debug views (staff only)
-    path("debug/reset-today", views.debug_reset_today),
-    path("debug/view-cookie", views.debug_view_cookie),
+    path("debug/reset-today/", views.debug_reset_today),
+    path("debug/reset-all-stats/", views.debug_reset_stats),
+    path("debug/view-cookie/", views.debug_view_cookie),
 ]

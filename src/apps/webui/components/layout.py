@@ -45,22 +45,28 @@ _FONTS_CSS = """
 
 
 def page(
-    *children: "dom_tag", request: "HttpRequest", title: str = "ZakuChess ♞"
+    *children: "dom_tag",
+    request: "HttpRequest",
+    stats_button: "dom_tag | None" = None,
+    title: str = "ZakuChess ♞",
 ) -> str:
-    return f"<!DOCTYPE html>{document(*children, request=request, title=title)}"
+    return f"<!DOCTYPE html>{document(*children, request=request, stats_button=stats_button,title=title)}"
 
 
 def document(
-    *children: "dom_tag", request: "HttpRequest", title: str = "ZakuChess ♞"
+    *children: "dom_tag",
+    request: "HttpRequest",
+    stats_button: "dom_tag | None",
+    title: str = "ZakuChess ♞",
 ) -> "dom_tag":
     return html(
         head(title=title),
         body(
-            header(),
+            header(stats_button),
             *children,
             footer(),
             modals_container(),
-            cls="bg-slate-900",
+            cls="bg-gray-950",
             data_hx_headers=json.dumps(
                 {"X-CSRFToken": get_token(request) if request else "[no request]"}
             ),
@@ -95,17 +101,28 @@ def head(*, title: str) -> "dom_tag":
     )
 
 
-def header() -> "dom_tag":
+def header(stats_button: "dom_tag | None") -> "dom_tag":
+    def side_wrapper(*children: "dom_tag", align: str) -> "dom_tag":
+        return div(
+            *children,
+            cls=f"flex w-1/6 {align}",
+        )
+
     return base_header(
-        h1(
-            "ZakuChess",
-            cls="text-slate-50 text-2xl leading-none font-pixel",
+        side_wrapper(stats_button or div(""), align="justify-start"),
+        div(
+            h1(
+                "ZakuChess",
+                cls="text-slate-50 text-2xl leading-none font-pixel",
+            ),
+            h2(
+                "Chess with character(s)",
+                cls="text-slate-50 text-xl leading-none font-pixel",
+            ),
+            cls="grow text-center md:mx-auto md:max-w-2xl",
         ),
-        h2(
-            "Chess with character(s)",
-            cls="text-slate-50 text-xl leading-none font-pixel",
-        ),
-        cls="text-center md:mx-auto md:max-w-2xl",
+        side_wrapper(div(" "), align="justify-end"),
+        cls="flex items-center p-4",
     )
 
 
@@ -120,6 +137,7 @@ def footer() -> "text":
         "cls": "underline hover:no-underline",
     }
 
+    # TODO: manage i18n
     return raw(
         base_footer(
             div(
@@ -128,7 +146,7 @@ def footer() -> "text":
             ),
             div("© 2023 ZakuChess", cls="text-center mb-3"),
             div(
-                "This website is open source. ",
+                "This web game is open source. ",
                 a(
                     img(
                         src=f"data:image/svg+xml;base64,{svg_b64}",

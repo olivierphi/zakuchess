@@ -74,7 +74,6 @@ def chess_arena(
     *, game_presenter: "GamePresenter", status_bars: list[dom_tag], board_id: str
 ) -> dom_tag:
     return section(
-        # stats_modal(),
         div(
             div(
                 chess_board(game_presenter=game_presenter, board_id=board_id),
@@ -111,7 +110,7 @@ def chess_arena(
         chess_bot_data(board_id),
         *status_bars,
         id=f"chess-arena-{board_id}",
-        cls="w-full md:max-w-lg mx-auto",
+        cls="w-full mx-auto bg-slate-900 md:max-w-lg",
         data_hx_ext="class-tools",  # enable CSS class transitions on the whole arena
         # When the user clicks on anything that is not an interactive element
         # of the chess board, and the state of this chess board is not

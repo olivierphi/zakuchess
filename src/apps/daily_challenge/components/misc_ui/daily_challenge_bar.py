@@ -6,7 +6,7 @@ from django.urls import reverse
 from dominate.tags import button, div, dom_tag, span
 from dominate.util import raw
 
-from .svg_icons import ICON_SVG_RESTART, ICON_SVG_STATS
+from .svg_icons import ICON_SVG_RESTART
 
 if TYPE_CHECKING:
     from ...presenters import DailyChallengeGamePresenter
@@ -101,10 +101,8 @@ def _current_state_display(
 
     blocks, danger = _challenge_turns_left_display_with_blocks(percentage_left)
 
-    stats_button = _stats_button()
-
     restart_button: dom_tag = span("")
-    if not time_s_up:
+    if not time_s_up and current_attempt_turns > 1:
         restart_button = _restart_button(board_id)
 
     turns_left_display = (
@@ -124,14 +122,15 @@ def _current_state_display(
             cls="text-center",
         ),
         div(
-            raw(f"Today's turns left: {turns_left_display}/{turns_total}"),
-            cls="text-center",
-        ),
-        div(
-            stats_button,
-            blocks,
-            restart_button,
-            cls="flex justify-between items-center",
+            div(
+                f"Today's turns left: {turns_left_display}/{turns_total}",
+                cls="text-center",
+            ),
+            div(
+                blocks,
+                restart_button,
+                cls="flex justify-center items-center",
+            ),
         ),
         cls="w-full",
     )
@@ -154,24 +153,8 @@ def _challenge_turns_left_display_with_blocks(
         blocks.append(PROGRESS_BAR_BLOCKS[current_block_color])
 
     return (
-        div("".join(blocks)),
+        span("".join(blocks)),
         blocks_color == "red",
-    )
-
-
-def _stats_button() -> dom_tag:
-    htmx_attributes = {
-        "data_hx_get": "".join((reverse("daily_challenge:htmx_daily_challenge_stats"))),
-        "data_hx_target": "#modals-container",
-        "data_hx_swap": "outerHTML",
-    }
-
-    return button(
-        "Stats ",
-        ICON_SVG_STATS,
-        cls="block px-2 py-1 text-sm border bg-blue-900 text-lime-400 border-lime-400 rounded-md font-bold hover:bg-cyan-700",
-        title="Visualise your stats for daily challenges",
-        **htmx_attributes,
     )
 
 
@@ -191,9 +174,9 @@ def _restart_button(board_id: str) -> dom_tag:
     }
 
     return button(
-        "Restart ",
+        "restart ",
         ICON_SVG_RESTART,
-        cls="block px-2 py-1 text-sm border bg-blue-900 text-yellow-400 border-yellow-400 rounded-md font-bold hover:bg-cyan-700",
+        cls="block ml-2 py-0.5 px-1 text-sm text-yellow-400 hover:text-yellow-200 border border-yellow-400 rounded-md hover:text-yellow-70",
         title="Try this daily challenge again, from the start",
         id=f"chess-board-restart-daily-challenge-{board_id}",
         **htmx_attributes,

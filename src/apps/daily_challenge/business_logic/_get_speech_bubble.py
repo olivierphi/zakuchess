@@ -116,8 +116,8 @@ def get_speech_bubble(
         if die_result > probability:
             return SpeechBubbleData(
                 text="We're in a tough situation, folks 😬<br>"
-                "Maybe restarting from the beginning, "
-                "by using the ↩️ button below, could be a good idea?",
+                "Maybe trying again from the beginning, "
+                "by using the 'restart' button below, could be a good idea?",
                 square=_my_king_square(game_presenter),
                 time_out=8,
             )
