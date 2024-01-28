@@ -58,15 +58,21 @@ You can take a look at [the Makefile](./Makefile) to see more commands.
  - [x] Game preview and FEN editing in the Django Admin
  - [x] Being able to import games from the Lichess puzzles database, ready to be editorliased in our Django Admin
  - [x] Validate input data, using good ol' Django path converters 
- - [ ] Users' personal stats (current streak, etc)
+ - [x] Users' personal stats (current streak, etc)
  - [ ] "End of game" screen
+ - [x] Make the session cookie shorter, by using [msgspec](https://jcristharif.com/msgspec/index.html)
+
+Bugs:
  - [x] Fix bubble speech when it's at the top of the chess board 
  - [x] Fix bubble speech priority (win/lose should always have priority over the rest for example)
- - [x] Make the session cookie shorter, by using [msgspec](https://jcristharif.com/msgspec/index.html)
+ - [x] Fix unit names display (missing space between names)
+ - [x] Fix remaining turns display when in "danger" zone (HTML shouldn't be escaped)
+ - [x] Fix bug that allows the player to select/de-select a piece during the bot's turn, which can cancel the delayed bot move
+
 
 ##### Post launch
 
- - [ ] Test all the things! (the "Pytest + Playwright" combo should be our friend here)
+ - [ ] More testing! (the "Pytest + Playwright" combo should be our friend here)
  - [ ] Translate the user interface for other languages
  - [ ] Allow seasoned chess players to play more difficult challenges
  - [ ] Score sharing

@@ -266,9 +266,8 @@ def chess_piece(
         "transform-gpu",
     ]
 
-    if is_game_over:
-        htmx_attributes = {}
-    else:
+    htmx_attributes = {}
+    if not is_game_over and game_presenter.can_select_pieces:
         htmx_attributes = {
             "data_hx_trigger": "click",
             "data_hx_get": (

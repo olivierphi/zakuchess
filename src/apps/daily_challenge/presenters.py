@@ -123,6 +123,12 @@ class DailyChallengeGamePresenter(GamePresenter):
             return True
         return super().is_game_over
 
+    @property
+    def can_select_pieces(self) -> bool:
+        # During the bot's turn we're not allowed to select any piece, as we're waiting
+        # for the delayed HTMX request to play the bot's move.
+        return self.is_player_turn and not self.is_game_over
+
     @cached_property
     def is_player_turn(self) -> bool:
         return self.active_player_side != self._challenge.bot_side

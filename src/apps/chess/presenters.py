@@ -152,6 +152,10 @@ class GamePresenter(ABC):
         return chess_lib_color_to_player_side(self._chess_board.turn)
 
     @property
+    def can_select_pieces(self) -> bool:
+        return True
+
+    @property
     @abstractmethod
     def is_player_turn(self) -> bool:
         ...

@@ -1,3 +1,4 @@
+import re
 from http import HTTPStatus
 from typing import TYPE_CHECKING
 from unittest import mock
@@ -13,7 +14,10 @@ from ..types import (
 )
 
 if TYPE_CHECKING:
+    from django.http import HttpResponse
     from django.test import Client as DjangoClient
+
+    from apps.chess.types import Square
 
     from ..models import DailyChallenge
 
@@ -39,7 +43,10 @@ def test_game_smoke_test(
         # This part of the signed+compressed session data is deterministic:
         ".eJx"
     )
-    _assert_response_contains_a_bot_move_to_play(response.content)
+
+    # As we're waiting for the bot to play its 1st turn, we should not be able to
+    # select any of our pieces:
+    _assert_response_waiting_for_bot_move(response)
 
     # Ok, let's assert some stuff regarding the session cookie content:
     session_content = _get_session_content(client)
@@ -104,11 +111,51 @@ def test_htmx_game_select_piece_input_validation(
     get_current_challenge_mock.return_value = challenge_minimalist
 
     response = client.get("/")
-    _assert_response_contains_a_bot_move_to_play(response.content)
+    _assert_response_waiting_for_bot_move(response)
     _play_bot_move(client, challenge_minimalist.bot_first_move)
 
     response = client.get(f"/htmx/pieces/{location}/select/")
     assert response.status_code == expected_status_code
+
+
+@pytest.mark.parametrize(
+    (
+        "square",
+        "expected_team_member_name_display",
+    ),
+    (
+        ("a1", "KING 1"),
+        ("f7", "QUEEN 1"),
+    ),
+)
+@mock.patch("apps.daily_challenge.business_logic.get_current_daily_challenge")
+@pytest.mark.django_db
+def test_htmx_game_select_piece_returned_html(
+    # Mocks
+    get_current_challenge_mock: mock.MagicMock,
+    # Test dependencies
+    challenge_minimalist: "DailyChallenge",
+    client: "DjangoClient",
+    # Test parameters
+    square: "Square",
+    expected_team_member_name_display: str,
+):
+    get_current_challenge_mock.return_value = challenge_minimalist
+
+    response = client.get("/")
+    _assert_response_waiting_for_bot_move(response)
+    _play_bot_move(client, challenge_minimalist.bot_first_move)
+
+    response = client.get(f"/htmx/pieces/{square}/select/")
+    assert response.status_code == HTTPStatus.OK
+
+    response_html = response.content.decode()
+    assert expected_team_member_name_display in response_html
+    not_expected_team_member_names_display = {"KING 1", "QUEEN 1", "BISHOP 1"} - {
+        expected_team_member_name_display
+    }
+    for other_team_member_name in not_expected_team_member_names_display:
+        assert other_team_member_name not in response_html
 
 
 @pytest.mark.parametrize(
@@ -140,7 +187,7 @@ def test_htmx_game_move_piece_input_validation(
     get_current_challenge_mock.return_value = challenge_minimalist
 
     response = client.get("/")
-    _assert_response_contains_a_bot_move_to_play(response.content)
+    _assert_response_waiting_for_bot_move(response)
     _play_bot_move(client, challenge_minimalist.bot_first_move)
 
     session_content_before_player_1st_move = _get_session_content(client)
@@ -183,7 +230,7 @@ def test_htmx_game_play_bot_move_validation(
     get_current_challenge_mock.return_value = challenge_minimalist
 
     response = client.get("/")
-    _assert_response_contains_a_bot_move_to_play(response.content)
+    _assert_response_waiting_for_bot_move(response)
 
     response = client.post(f"/htmx/bot/pieces/{input_['from_']}/move/{input_['to']}/")
     assert response.status_code == expected_status_code
@@ -201,7 +248,7 @@ def test_htmx_game_select_piece_should_fail_on_empty_square(
     get_current_challenge_mock.return_value = challenge_minimalist
 
     response = client.get("/")
-    _assert_response_contains_a_bot_move_to_play(response.content)
+    _assert_response_waiting_for_bot_move(response)
     _play_bot_move(client, challenge_minimalist.bot_first_move)
 
     empty_square = "a2"
@@ -226,9 +273,24 @@ def test_stats_modal_smoke_test(
     assert "Statistics" in response_content
 
 
-def _assert_response_contains_a_bot_move_to_play(response_content: bytes) -> None:
-    assert b"playBotMove(" in response_content
-    assert b"Waiting for opponent's turn" in response_content
+def _assert_response_waiting_for_bot_move(response: "HttpResponse") -> None:
+    response_html = response.content.decode()
+    _assert_response_contains_a_bot_move_to_play(response_html)
+    _assert_response_does_not_contain_pieces_selection(response_html)
+
+
+def _assert_response_contains_a_bot_move_to_play(response_content: str) -> None:
+    assert "playBotMove(" in response_content
+    assert "Waiting for opponent's turn" in response_content
+
+
+_PIECE_SELECTION_PATTERN = re.compile(
+    r"""data-hx-get="/htmx/pieces/[a-f][1-8]/select/"""
+)
+
+
+def _assert_response_does_not_contain_pieces_selection(response_content: str) -> None:
+    assert _PIECE_SELECTION_PATTERN.search(response_content) is None
 
 
 def _play_bot_move(client: "DjangoClient", move) -> None:

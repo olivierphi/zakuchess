@@ -123,7 +123,7 @@ def _current_state_display(
         ),
         div(
             div(
-                f"Today's turns left: {turns_left_display}/{turns_total}",
+                raw(f"Today's turns left: {turns_left_display}/{turns_total}"),
                 cls="text-center",
             ),
             div(
