@@ -1,7 +1,7 @@
 import dataclasses
 from typing import TYPE_CHECKING, cast
 
-from .business_logic import manage_new_daily_challenge_logic
+from .business_logic import manage_new_daily_challenge_stats_logic
 from .cookie_helpers import get_or_create_daily_challenge_state_for_player
 
 if TYPE_CHECKING:
@@ -33,7 +33,7 @@ class GameContext:
         board_id = cast(str, request.GET.get("board_id", "main"))
 
         if created:
-            manage_new_daily_challenge_logic(stats)
+            manage_new_daily_challenge_stats_logic(stats)
 
         return cls(
             challenge=challenge,

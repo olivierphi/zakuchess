@@ -3,7 +3,10 @@ import datetime as dt
 import pytest
 import time_machine
 
-from ...business_logic import manage_daily_challenge_victory_logic
+from ...business_logic import (
+    manage_daily_challenge_victory_logic,
+    manage_new_daily_challenge_stats_logic,
+)
 from ...types import PlayerGameOverState, PlayerGameState, PlayerStats
 
 
@@ -101,12 +104,14 @@ def test_manage_daily_challenge_victory_logic_streak_management(
         last_won=dt.date.fromisoformat(last_won_date) if last_won_date else None,
     )
 
-    time_machine.travel(dt.date.fromisoformat(now_date))
-
     # Go!
-    manage_daily_challenge_victory_logic(
-        game_state=player_game_state_minimalist, stats=stats
-    )
+    with time_machine.travel(dt.date.fromisoformat(now_date)):
+        # Start a game...
+        manage_new_daily_challenge_stats_logic(stats=stats)
+        # ...and win it, straight away! ✌
+        manage_daily_challenge_victory_logic(
+            game_state=player_game_state_minimalist, stats=stats
+        )
 
     # Alright, let's check the results:
     assert stats.current_streak == expected_current_streak

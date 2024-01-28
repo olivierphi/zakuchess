@@ -25,16 +25,8 @@ def manage_daily_challenge_victory_logic(
     # One more game won for this player! Happy stats :-)
     stats.win_count += 1
 
-    # Do we increment the current streak, or restart it from the beginning?
-    today = now().date()
-    is_on_a_streak: bool = False
-    if stats.last_won:
-        if (today - stats.last_won).days == 1:
-            is_on_a_streak = True
-    if is_on_a_streak:
-        stats.current_streak += 1
-    else:
-        stats.current_streak = 1  # back to the start of a new streak - may it be long!
+    # Whether the current streak was at zero or not, increment the current streak
+    stats.current_streak += 1
 
     # Max streak management:
     if stats.current_streak > stats.max_streak:

@@ -43,11 +43,13 @@ class PlayerGameState(
     """
     This is the state of a daily challenge,
     stored within a PlayerSessionContent (so, in a cookie).
+
+    Counters are zero-based.
     """
 
-    attempts_counter: int
-    turns_counter: int
-    current_attempt_turns_counter: int
+    attempts_counter: int  # the number of attempts for today's challenge - 0-based
+    turns_counter: int  # the sum of number of turns for all today's attempts
+    current_attempt_turns_counter: int  # the number of turns for the current attempt
     fen: FEN
     piece_role_by_square: PieceRoleBySquare
     # Each move is 4 more chars added there (UCI notation).
@@ -120,7 +122,7 @@ class PlayerSessionContent(
 
     encoding_version: int = 1
     games: dict[GameID, PlayerGameState]
-    stats: PlayerStats | None  # TODO: remove the `| None` when we migrated all cookies
+    stats: PlayerStats
 
     def to_cookie_content(self) -> str:
         return msgspec.json.encode(self).decode()

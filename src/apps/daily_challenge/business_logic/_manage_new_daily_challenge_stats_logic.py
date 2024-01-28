@@ -1,18 +1,21 @@
 from typing import TYPE_CHECKING
 
-from django.utils.timezone import now
+from ._helpers import player_won_yesterday
 
 if TYPE_CHECKING:
     from ..types import PlayerStats
 
 
-def manage_new_daily_challenge_logic(stats: "PlayerStats") -> None:
+def manage_new_daily_challenge_stats_logic(stats: "PlayerStats") -> None:
     """
-    When a player starts a new daily challenge, we need to update part of their stats.
+    When a player starts a new daily challenge,
+    we may need to update part of their stats.
     """
 
-    # One more game played for this player!
-    stats.games_count += 1
+    # Do we restart the current streak from the beginning?
+    if not player_won_yesterday(stats):
+        stats.current_streak = 0  # back to a brand new streak flow
 
-    # Last played date:
-    stats.last_played = now().date()
+    # We could increment the `games_count` counter of the stats here,
+    # but let's do it only when the player moves a piece at least - so we'll do
+    # that in `_manage_daily_challenge_moved_piece_logic` instead.

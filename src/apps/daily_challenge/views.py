@@ -17,6 +17,7 @@ from apps.utils.views_helpers import htmx_aware_redirect
 
 from .business_logic import (
     manage_daily_challenge_defeat_logic,
+    manage_daily_challenge_moved_piece_logic,
     manage_daily_challenge_victory_logic,
     move_daily_challenge_piece,
 )
@@ -26,6 +27,7 @@ from .components.pages.daily_chess import (
     daily_challenge_page,
 )
 from .cookie_helpers import (
+    clear_daily_challenge_game_state_in_session,
     get_or_create_daily_challenge_state_for_player,
     save_daily_challenge_state_in_session,
 )
@@ -96,9 +98,8 @@ def game_view(request: "HttpRequest") -> HttpResponse:
 @require_safe
 def htmx_game_no_selection(request: "HttpRequest") -> HttpResponse:
     ctx = GameContext.create_from_request(request)
-
     if ctx.created:
-        return htmx_aware_redirect(request, "daily_challenge:daily_game_view")
+        return _redirect_to_game_view_screen_with_brand_new_game(request, ctx.stats)
 
     game_presenter = DailyChallengeGamePresenter(
         challenge=ctx.challenge,
@@ -114,12 +115,10 @@ def htmx_game_no_selection(request: "HttpRequest") -> HttpResponse:
 
 @require_safe
 @handle_chess_logic_exceptions
-def htmx_game_select_piece(
-    request: "HttpRequest", location: "Square"
-) -> "HttpResponse":
+def htmx_game_select_piece(request: "HttpRequest", location: "Square") -> HttpResponse:
     ctx = GameContext.create_from_request(request)
     if ctx.created:
-        return htmx_aware_redirect(request, "daily_challenge:daily_game_view")
+        return _redirect_to_game_view_screen_with_brand_new_game(request, ctx.stats)
 
     game_presenter = DailyChallengeGamePresenter(
         challenge=ctx.challenge,
@@ -143,13 +142,13 @@ def htmx_game_move_piece(
         raise ChessInvalidMoveException("Not a move")
 
     ctx = GameContext.create_from_request(request)
+    if ctx.created:
+        return _redirect_to_game_view_screen_with_brand_new_game(request, ctx.stats)
+
     game_over_already = ctx.game_state.game_over != PlayerGameOverState.PLAYING
 
     if ctx.game_state.game_over != PlayerGameOverState.PLAYING:
         raise ChessInvalidActionException("Game is over, cannot move pieces")
-
-    if ctx.created:
-        return htmx_aware_redirect(request, "daily_challenge:daily_game_view")
 
     active_player_side = get_active_player_side_from_fen(ctx.game_state.fen)
     is_my_side = active_player_side != ctx.challenge.bot_side
@@ -170,6 +169,11 @@ def htmx_game_move_piece(
     elif just_lost:
         # Sorry - hopefully victory will be yours next time! 🤞
         manage_daily_challenge_defeat_logic(game_state=new_game_state, stats=ctx.stats)
+    else:
+        # Keep playing. Good luck!
+        manage_daily_challenge_moved_piece_logic(
+            game_state=new_game_state, stats=ctx.stats
+        )
 
     game_presenter = DailyChallengeGamePresenter(
         challenge=ctx.challenge,
@@ -208,9 +212,8 @@ def htmx_restart_daily_challenge_ask_confirmation(
     request: "HttpRequest",
 ) -> HttpResponse:
     ctx = GameContext.create_from_request(request)
-
     if ctx.created:
-        return htmx_aware_redirect(request, "daily_challenge:daily_game_view")
+        return _redirect_to_game_view_screen_with_brand_new_game(request, ctx.stats)
 
     game_presenter = DailyChallengeGamePresenter(
         challenge=ctx.challenge,
@@ -229,9 +232,10 @@ def htmx_restart_daily_challenge_ask_confirmation(
 def htmx_restart_daily_challenge_do(request: "HttpRequest") -> HttpResponse:
     ctx = GameContext.create_from_request(request)
     if ctx.created:
-        return htmx_aware_redirect(request, "daily_challenge:daily_game_view")
+        return _redirect_to_game_view_screen_with_brand_new_game(request, ctx.stats)
 
-    # These fields are always set on a published challenge:
+    # These fields are always set on a published challenge - let's make the
+    # type checker happy:
     assert (
         ctx.challenge.fen_before_bot_first_move
         and ctx.challenge.piece_role_by_square_before_bot_first_move
@@ -279,9 +283,8 @@ def htmx_game_bot_move(
         raise ChessInvalidMoveException("Not a move")
 
     ctx = GameContext.create_from_request(request)
-
     if ctx.created:
-        return htmx_aware_redirect(request, "daily_challenge:daily_game_view")
+        return _redirect_to_game_view_screen_with_brand_new_game(request, ctx.stats)
 
     _logger.info("Game state from player cookie: %s", ctx.game_state)
 
@@ -303,10 +306,6 @@ def htmx_game_bot_move(
 @require_safe
 @user_passes_test(user_is_staff)
 def debug_reset_today(request: "HttpRequest") -> HttpResponse:
-    # This function is dangerous, so let's make sure we're not using it
-    # in another view accidentally 😅
-    from .cookie_helpers import clear_daily_challenge_game_state_in_session
-
     ctx = GameContext.create_from_request(request)
 
     clear_daily_challenge_game_state_in_session(request=request, player_stats=ctx.stats)
@@ -404,6 +403,16 @@ def _play_bot_move(
     return _daily_challenge_moving_parts_fragment_response(
         game_presenter=game_presenter, request=request, board_id=board_id
     )
+
+
+def _redirect_to_game_view_screen_with_brand_new_game(
+    request: "HttpRequest", player_stats: "PlayerStats"
+) -> HttpResponse:
+    clear_daily_challenge_game_state_in_session(
+        request=request, player_stats=player_stats
+    )
+
+    return htmx_aware_redirect(request, "daily_challenge:daily_game_view")
 
 
 def _daily_challenge_moving_parts_fragment_response(

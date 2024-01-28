@@ -60,9 +60,9 @@ def move_daily_challenge_piece(
     # Right, let's return the new game state!
     new_game_state = PlayerGameState(
         # We keep these as-is...
-        turns_counter=game_state.turns_counter,
+        turns_counter=game_state.turns_counter,  # may be updated below
+        current_attempt_turns_counter=game_state.current_attempt_turns_counter,  # ditto
         attempts_counter=game_state.attempts_counter,
-        current_attempt_turns_counter=game_state.current_attempt_turns_counter,
         # ...but update those:
         fen=move_result["fen"],
         piece_role_by_square=piece_role_by_square,
