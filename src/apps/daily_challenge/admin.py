@@ -218,23 +218,27 @@ class DailyChallengeAdmin(ImportExportModelAdmin):
                 # Hide the Zakuchess chrome:
                 raw("<style>header, footer { display: none; }</style>"),
                 # Display errors, if any:
-                raw(
-                    """<pre style="white-space: pre-wrap; background-color: #0f172a; color: #f1f5f9;">"""
-                    "Errors:\n"
-                    f"{errors!r}"
-                    "</pre>"
-                )
-                if errors
-                else "",
+                (
+                    raw(
+                        """<pre style="white-space: pre-wrap; background-color: #0f172a; color: #f1f5f9;">"""
+                        "Errors:\n"
+                        f"{errors!r}"
+                        "</pre>"
+                    )
+                    if errors
+                    else ""
+                ),
                 # Display the score advantage:
-                raw(
-                    """<div style="background-color: #0f172a; color: #f1f5f9; text-align: center;">"""
-                    f"Naive score advantage: <b>{game_presenter.naive_score}</b><br>"
-                    """Stockfish score advantage: <b id="stockfish-score">⏳</b>"""
-                    "</div>"
-                )
-                if not errors
-                else "",
+                (
+                    raw(
+                        """<div style="background-color: #0f172a; color: #f1f5f9; text-align: center;">"""
+                        f"Naive score advantage: <b>{game_presenter.naive_score}</b><br>"
+                        """Stockfish score advantage: <b id="stockfish-score">⏳</b>"""
+                        "</div>"
+                    )
+                    if not errors
+                    else ""
+                ),
                 # Update the parent form with the new FEN and starting advantage:
                 raw(
                     f"""
@@ -336,9 +340,9 @@ def _get_game_presenter(
         game_state=game_state,
         refresh_last_move=True,
         is_htmx_request=False,
-        forced_speech_bubble=(intro_turn_speech_square, "!")
-        if intro_turn_speech_square
-        else None,
+        forced_speech_bubble=(
+            (intro_turn_speech_square, "!") if intro_turn_speech_square else None
+        ),
         force_square_info=True,  # easier will all the square names :-)
     )
 

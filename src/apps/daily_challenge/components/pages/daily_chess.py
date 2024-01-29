@@ -69,13 +69,15 @@ def daily_challenge_moving_parts_fragment(
                     board_id=board_id,
                     data_hx_swap_oob="outerHTML",
                 ),
-                chess_last_move(
-                    game_presenter=game_presenter,
-                    board_id=board_id,
-                    data_hx_swap_oob="outerHTML",
-                )
-                if game_presenter.refresh_last_move
-                else div(""),
+                (
+                    chess_last_move(
+                        game_presenter=game_presenter,
+                        board_id=board_id,
+                        data_hx_swap_oob="outerHTML",
+                    )
+                    if game_presenter.refresh_last_move
+                    else div("")
+                ),
                 daily_challenge_bar(
                     game_presenter=game_presenter,
                     board_id=board_id,

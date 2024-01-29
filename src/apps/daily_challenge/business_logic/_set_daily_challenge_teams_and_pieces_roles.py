@@ -78,9 +78,11 @@ def set_daily_challenge_teams_and_pieces_roles(
         ][piece_type]
         piece_role = cast(
             "PieceRole",
-            f"{piece_type}{team_member_role_counter}"
-            if team_member_role_counter > 0
-            else piece_type,
+            (
+                f"{piece_type}{team_member_role_counter}"
+                if team_member_role_counter > 0
+                else piece_type
+            ),
         )
         team_member_role = cast(
             "TeamMemberRole",
