@@ -20,6 +20,7 @@ from .business_logic import (
     manage_daily_challenge_moved_piece_logic,
     manage_daily_challenge_victory_logic,
     move_daily_challenge_piece,
+    restart_daily_challenge,
 )
 from .components.misc_ui.stats_modal import stats_modal
 from .components.pages.daily_chess import (
@@ -233,28 +234,13 @@ def htmx_restart_daily_challenge_do(request: "HttpRequest") -> HttpResponse:
     if ctx.created:
         return _redirect_to_game_view_screen_with_brand_new_game(request, ctx.stats)
 
-    # These fields are always set on a published challenge - let's make the
-    # type checker happy:
-    assert (
-        ctx.challenge.fen_before_bot_first_move
-        and ctx.challenge.piece_role_by_square_before_bot_first_move
+    new_game_state = restart_daily_challenge(
+        challenge=ctx.challenge, game_state=ctx.game_state
     )
-
-    game_state = ctx.game_state
-    game_state.attempts_counter += 1
-    game_state.current_attempt_turns_counter = 0
-    # Restarting the daily challenge costs one move:
-    game_state.turns_counter += 1
-    # Back to the initial state:
-    game_state.fen = ctx.challenge.fen_before_bot_first_move
-    game_state.piece_role_by_square = (
-        ctx.challenge.piece_role_by_square_before_bot_first_move
-    )
-    game_state.moves = ""
 
     save_daily_challenge_state_in_session(
         request=request,
-        game_state=game_state,
+        game_state=new_game_state,
         player_stats=ctx.stats,
     )
 
@@ -262,7 +248,7 @@ def htmx_restart_daily_challenge_do(request: "HttpRequest") -> HttpResponse:
 
     game_presenter = DailyChallengeGamePresenter(
         challenge=ctx.challenge,
-        game_state=game_state,
+        game_state=new_game_state,
         forced_bot_move=forced_bot_move,
         is_htmx_request=True,
         refresh_last_move=True,

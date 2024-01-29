@@ -21,7 +21,7 @@ from import_export.admin import ImportExportModelAdmin
 from ..chess.business_logic import calculate_fen_before_move
 from .business_logic import set_daily_challenge_teams_and_pieces_roles
 from .cookie_helpers import clear_daily_challenge_game_state_in_session
-from .models import DailyChallenge
+from .models import DailyChallenge, DailyChallengeStats
 from .presenters import DailyChallengeGamePresenter
 from .view_helpers import GameContext
 
@@ -302,6 +302,52 @@ class DailyChallengeAdmin(ImportExportModelAdmin):
                 "${ADMIN_PREVIEW_URL}", reverse("admin:daily_challenge_game_preview")
             )
         )
+
+
+@admin.register(DailyChallengeStats)
+class DailyChallengeStatsAdmin(admin.ModelAdmin):
+    list_display = (
+        "day",
+        "challenge_link",
+        "challenge_starting_advantage",
+        "wins_percentage",
+        "created_count",
+        "played_count",
+        "turns_count",
+        "restarts_count",
+        "wins_count",
+    )
+    ordering = ("-day",)
+    list_select_related = ("challenge",)
+    list_display_links = None
+    view_on_site = False
+
+    def challenge_link(self, obj: DailyChallengeStats) -> str:
+        return mark_safe(
+            f"""<a href="/admin/daily_challenge/dailychallenge/{obj.challenge_id}/change/">"""
+            f"{obj.challenge.lookup_key} 🔗"
+            "</a>"
+        )
+
+    def challenge_starting_advantage(self, obj: DailyChallengeStats) -> int:
+        return obj.challenge.starting_advantage
+
+    def wins_percentage(self, obj: DailyChallengeStats) -> str:
+        return f"{obj.wins_count/obj.played_count:.1%}"
+
+    # Stats are read-only:
+    def has_add_permission(self, request: "HttpRequest") -> bool:
+        return False
+
+    def has_change_permission(
+        self, request: "HttpRequest", obj: DailyChallengeStats | None = None
+    ) -> bool:
+        return False
+
+    def has_delete_permission(
+        self, request: "HttpRequest", obj: DailyChallengeStats | None = None
+    ) -> bool:
+        return False
 
 
 def _get_game_presenter(

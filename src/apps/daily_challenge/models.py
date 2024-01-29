@@ -1,12 +1,14 @@
+import datetime as dt
 import enum
 import math
-from datetime import date
 from typing import TYPE_CHECKING, ClassVar, Literal, NamedTuple, Self, TypeAlias
 
 import chess
 import msgspec
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import F
+from django.utils.timezone import now
 
 from apps.chess.types import (  # we need real imports on these because they're used by msgspec models
     FEN,
@@ -167,6 +169,55 @@ class DailyChallenge(models.Model):
             )
 
 
+class DailyChallengeStatsManager(models.Manager):
+    def get_or_create_for_today(self) -> "DailyChallengeStats":
+        from .business_logic import get_current_daily_challenge
+
+        today = now().date()
+        stats, _ = self.get_or_create(
+            day=today, defaults={"challenge": get_current_daily_challenge}
+        )
+        return stats
+
+
+class DailyChallengeStats(models.Model):
+    """
+    Quick stats about the daily challenges. Doesn't store any data about any players.
+    """
+
+    day = models.DateField(unique=True)
+    challenge = models.ForeignKey(DailyChallenge, on_delete=models.CASCADE)
+    created_count = models.IntegerField(default=0, help_text="Number of games created")
+    played_count = models.IntegerField(
+        default=0, help_text="Number of games where the player played at least 1 move"
+    )
+    turns_count = models.IntegerField(default=0)
+    restarts_count = models.IntegerField(default=0)
+    wins_count = models.IntegerField(default=0)
+
+    objects = DailyChallengeStatsManager()
+
+    def increment_created_count(self) -> None:
+        self.created_count = F("created_count") + 1
+        self.save(update_fields=["created_count"])
+
+    def increment_played_count(self) -> None:
+        self.played_count = F("played_count") + 1
+        self.save(update_fields=["played_count"])
+
+    def increment_turns_count(self) -> None:
+        self.turns_count = F("turns_count") + 1
+        self.save(update_fields=["turns_count"])
+
+    def increment_restarts_count(self) -> None:
+        self.restarts_count = F("restarts_count") + 1
+        self.save(update_fields=["restarts_count"])
+
+    def increment_wins_count(self) -> None:
+        self.wins_count = F("wins_count") + 1
+        self.save(update_fields=["wins_count"])
+
+
 @enum.unique
 class PlayerGameOverState(enum.IntEnum):
     """
@@ -186,6 +237,7 @@ class PlayerGameOverState(enum.IntEnum):
 class PlayerGameState(
     msgspec.Struct,
     kw_only=True,  # type: ignore[call-arg]
+    forbid_unknown_fields=True,
     rename={
         # Let's make the cookie content a bit shorter, with shorter field names
         "attempts_counter": "ac",
@@ -218,6 +270,7 @@ class PlayerGameState(
 class PlayerStats(
     msgspec.Struct,
     kw_only=True,  # type: ignore[call-arg]
+    forbid_unknown_fields=True,
     rename={
         # ditto
         "games_count": "gc",
@@ -240,8 +293,8 @@ class PlayerStats(
     win_count: int = 0
     current_streak: int = 0
     max_streak: int = 0
-    last_played: date | None = None
-    last_won: date | None = None
+    last_played: dt.date | None = None
+    last_won: dt.date | None = None
     wins_distribution: dict[Literal[1, 2, 3, 4, 5], int] = msgspec.field(
         default_factory=lambda: {
             1: 0,  # challenges won in less than a 5th of the turns allowance
@@ -266,6 +319,7 @@ class PlayerStats(
 class PlayerSessionContent(
     msgspec.Struct,
     kw_only=True,  # type: ignore[call-arg]
+    forbid_unknown_fields=True,
     rename={
         # ditto
         "encoding_version": "ev",
