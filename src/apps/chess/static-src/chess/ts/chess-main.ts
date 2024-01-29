@@ -28,6 +28,13 @@ function cursorIsNotOnChessBoardInteractiveElement(boardId: string): boolean {
     if (chessBoardState === "waiting_for_player_selection") {
         return false // there's no current selection, so we actually have nothing to do here
     }
+    if (chessBoardState === "waiting_for_bot_turn") {
+        // As we're 100% server-side-rendered in this 1st version, de-selecting a piece
+        // triggers a HTMX refresh of the board, which may conflict with the wait for
+        // the bot's move.
+        // --> let's not allow de-selecting a piece when it's the bot's turn.
+        return false
+    }
 
     if (chessBoardState.includes("game_over")) {
         return false // the UI stops being interactive when the game is over
@@ -60,6 +67,11 @@ function cursorIsNotOnChessBoardInteractiveElement(boardId: string): boolean {
     const speechBubble = getSpeechBubble()
     if (speechBubble && hoveredElements.includes(speechBubble)) {
         return false // don't actually cancel the selection when closing the speech bubble
+    }
+
+    const modalContainer = document.getElementById("modal-container")
+    if (modalContainer && hoveredElements.includes(modalContainer)) {
+        return false // don't actually cancel the selection when interacting with a modal
     }
 
     console.log("no interactive UI element clicked: we reset the board state")

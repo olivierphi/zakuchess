@@ -38,6 +38,7 @@ class DailyChallengeGamePresenter(GamePresenter):
         is_bot_move: bool = False,
         force_square_info: bool = False,
         captured_team_member_role: "PieceRole | None" = None,
+        just_won: bool = False,
         is_preview: bool = False,
     ):
         # A published challenge always has a `teams` non-null field:
@@ -64,6 +65,7 @@ class DailyChallengeGamePresenter(GamePresenter):
             restart_daily_challenge_ask_confirmation
         )
         self.is_bot_move = is_bot_move
+        self.just_won = just_won
         self._forced_speech_bubble = forced_speech_bubble
 
     @cached_property
@@ -120,6 +122,12 @@ class DailyChallengeGamePresenter(GamePresenter):
         if self.challenge_turns_state.time_s_up:
             return True
         return super().is_game_over
+
+    @property
+    def can_select_pieces(self) -> bool:
+        # During the bot's turn we're not allowed to select any piece, as we're waiting
+        # for the delayed HTMX request to play the bot's move.
+        return self.is_player_turn and not self.is_game_over
 
     @cached_property
     def is_player_turn(self) -> bool:

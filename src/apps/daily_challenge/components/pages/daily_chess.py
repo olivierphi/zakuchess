@@ -1,7 +1,10 @@
+import functools
 from typing import TYPE_CHECKING
 
 from django.conf import settings
-from dominate.tags import div
+from django.urls import reverse
+from dominate.tags import button, div, script
+from dominate.util import raw
 
 from apps.chess.components.chess_board import (
     chess_arena,
@@ -13,9 +16,11 @@ from apps.chess.components.misc_ui import speech_bubble_container
 from apps.webui.components.layout import page
 
 from ..misc_ui import daily_challenge_bar, status_bar
+from ..misc_ui.svg_icons import ICON_SVG_STATS
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
+    from dominate.tags import dom_tag
 
     from ...presenters import DailyChallengeGamePresenter
 
@@ -41,6 +46,7 @@ def daily_challenge_page(
             ],
         ),
         request=request,
+        stats_button=_stats_button(),
     )
 
 
@@ -85,6 +91,36 @@ def daily_challenge_moving_parts_fragment(
                     board_id=board_id,
                     data_hx_swap_oob="outerHTML",
                 ),
+                _open_stats_modal() if game_presenter.just_won else div(""),
             )
         )
+    )
+
+
+def _stats_button() -> "dom_tag":
+    htmx_attributes = {
+        "data_hx_get": "".join((reverse("daily_challenge:htmx_daily_challenge_stats"))),
+        "data_hx_target": "#modals-container",
+        "data_hx_swap": "outerHTML",
+    }
+
+    return button(
+        ICON_SVG_STATS,
+        cls="block px-2 py-1 text-sm text-slate-50 hover:text-slate-400",
+        title="Visualise your stats for daily challenges",
+        id="stats-button",
+        **htmx_attributes,
+    )
+
+
+@functools.cache
+def _open_stats_modal() -> "dom_tag":
+    return div(
+        script(
+            raw(
+                """setTimeout(() => { htmx.trigger("#stats-button", "click", {}) }, 2000)"""
+            ),
+        ),
+        id="modals-container",
+        data_hx_swap_oob="innerHTML",
     )

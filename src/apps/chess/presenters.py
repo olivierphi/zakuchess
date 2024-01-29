@@ -47,6 +47,13 @@ _PIECES_VALUES: dict["PieceType", int] = {
 
 
 class GamePresenter(ABC):
+    """
+    Such a presenter is passed to our HTML rendering layer: it exposes the chess logic
+    we need to display the game in its current state.
+    The presenter only exposes data for a given immutable state of the game, which is
+    why many of its properties are cached.
+    """
+
     def __init__(
         self,
         *,
@@ -143,6 +150,10 @@ class GamePresenter(ABC):
     @cached_property
     def active_player_side(self) -> "PlayerSide":
         return chess_lib_color_to_player_side(self._chess_board.turn)
+
+    @property
+    def can_select_pieces(self) -> bool:
+        return True
 
     @property
     @abstractmethod

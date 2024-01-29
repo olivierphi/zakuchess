@@ -198,7 +198,12 @@ def _chess_status_bar_selected_piece(
     unit_display = _unit_display_container(
         piece_role=piece_role, factions=game_presenter.factions
     )
-    name_display = team_member.get("name", "")
+    team_member_name = team_member.get("name", "")
+    name_display = (
+        " ".join(team_member_name)
+        if isinstance(team_member_name, list)
+        else team_member_name
+    )
 
     unit_about = div(
         div(name_display),

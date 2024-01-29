@@ -20,9 +20,10 @@ from import_export.admin import ImportExportModelAdmin
 
 from ..chess.business_logic import calculate_fen_before_move
 from .business_logic import set_daily_challenge_teams_and_pieces_roles
-from .cookie_helpers import clear_daily_challenge_state_in_session
+from .cookie_helpers import clear_daily_challenge_game_state_in_session
 from .models import DailyChallenge
 from .presenters import DailyChallengeGamePresenter
+from .view_helpers import GameContext
 
 if TYPE_CHECKING:
     from django.db.models import QuerySet
@@ -170,10 +171,14 @@ class DailyChallengeAdmin(ImportExportModelAdmin):
         ]
         return my_urls + urls
 
+    @staticmethod
     def play_future_daily_challenge_view(
-        self, request: "HttpRequest", lookup_key: str
+        request: "HttpRequest", lookup_key: str
     ) -> HttpResponse:
-        clear_daily_challenge_state_in_session(request=request)
+        ctx = GameContext.create_from_request(request)
+        clear_daily_challenge_game_state_in_session(
+            request=request, player_stats=ctx.stats
+        )
 
         response = redirect("daily_challenge:daily_game_view")
         response.set_signed_cookie(

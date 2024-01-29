@@ -4,7 +4,7 @@ from apps.chess.business_logic import do_chess_move
 from apps.chess.helpers import get_active_player_side_from_fen
 from apps.chess.types import ChessInvalidStateException
 
-from ..types import PlayerGameState
+from ..types import PlayerGameOverState, PlayerGameState
 
 if TYPE_CHECKING:
     from apps.chess.types import PieceRole, PieceSymbol, Square
@@ -48,16 +48,26 @@ def move_daily_challenge_piece(
         piece_role_by_square[move_to] = piece_role_by_square[move_from]
         del piece_role_by_square[move_from]  # this square is now empty
 
+    if game_over := move_result["game_over"]:
+        game_over_state = (
+            PlayerGameOverState.WON
+            if game_over["winner"] == "w"
+            else PlayerGameOverState.LOST
+        )
+    else:
+        game_over_state = PlayerGameOverState.PLAYING
+
     # Right, let's return the new game state!
     new_game_state = PlayerGameState(
         # We keep these as-is...
-        turns_counter=game_state.turns_counter,
+        turns_counter=game_state.turns_counter,  # may be updated below
+        current_attempt_turns_counter=game_state.current_attempt_turns_counter,  # ditto
         attempts_counter=game_state.attempts_counter,
-        current_attempt_turns_counter=game_state.current_attempt_turns_counter,
         # ...but update those:
         fen=move_result["fen"],
         piece_role_by_square=piece_role_by_square,
         moves=f"{game_state.moves}{from_}{to}",
+        game_over=game_over_state,
     )
 
     if is_my_side:

@@ -96,11 +96,13 @@ def get_speech_bubble(
 
     if (
         game_presenter.selected_piece
+        and game_presenter.selected_piece.player_side
+        == game_presenter.challenge.my_side
         and game_presenter.selected_piece.is_pinned
         and not game_presenter.selected_piece.available_targets
     ):
         return SpeechBubbleData(
-            text="Moving would put our king in too much danger, I'm pinned here 😬",
+            text="Moving would put our king into great danger, I'm pinned here 😬",
             square=game_presenter.selected_piece.square,
         )
 
@@ -116,8 +118,8 @@ def get_speech_bubble(
         if die_result > probability:
             return SpeechBubbleData(
                 text="We're in a tough situation, folks 😬<br>"
-                "Maybe restarting from the beginning, "
-                "by using the ↩️ button below, could be a good idea?",
+                "Maybe trying again from the beginning, "
+                "by using the 'restart' button below, could be a good idea?",
                 square=_my_king_square(game_presenter),
                 time_out=8,
             )

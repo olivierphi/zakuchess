@@ -1,6 +1,20 @@
 import pytest
 
 from ..models import DailyChallenge, DailyChallengeStatus
+from ..types import PlayerGameOverState, PlayerGameState
+
+_MINIMALIST_GAME = {
+    "fen": "k7/pp3Q2/7p/8/8/8/7B/K7 w - - 0 2",
+    "piece_role_by_square": {
+        "a8": "k",
+        "f7": "Q",
+        "b7": "p1",
+        "a7": "p2",
+        "h6": "p3",
+        "h2": "B1",
+        "a1": "K",
+    },
+}
 
 
 @pytest.fixture
@@ -21,7 +35,7 @@ def challenge_minimalist() -> DailyChallenge:
     @link https://lichess.org/editor/k7/pp3Q2/7p/8/8/8/7B/K7_w_-_-_0_1?color=white
     """
     return DailyChallenge.objects.create(
-        fen="k7/pp3Q2/7p/8/8/8/7B/K7 w - - 0 2",
+        fen=_MINIMALIST_GAME["fen"],
         lookup_key="test-minimal",
         source="test",
         status=DailyChallengeStatus.PUBLISHED,
@@ -30,15 +44,7 @@ def challenge_minimalist() -> DailyChallenge:
         # Inferred fields:
         starting_advantage=9000,
         intro_turn_speech_text="",
-        piece_role_by_square={
-            "a8": "k",
-            "f7": "Q",
-            "b7": "p1",
-            "a7": "p2",
-            "h6": "p3",
-            "h2": "B1",
-            "a1": "K",
-        },
+        piece_role_by_square=_MINIMALIST_GAME["piece_role_by_square"],
         teams={
             "w": [
                 {"role": "Q", "name": ["QUEEN", "1"], "faction": "humans"},
@@ -62,4 +68,18 @@ def challenge_minimalist() -> DailyChallenge:
             "a1": "K",
             "b8": "k",
         },
+    )
+
+
+@pytest.fixture
+def player_game_state_minimalist() -> PlayerGameState:
+    """Same data than challenge_minimalist, but in PlayerGameState format."""
+    return PlayerGameState(
+        attempts_counter=0,
+        turns_counter=0,
+        current_attempt_turns_counter=0,
+        fen=_MINIMALIST_GAME["fen"],  # type: ignore
+        piece_role_by_square=_MINIMALIST_GAME["piece_role_by_square"],  # type: ignore
+        moves="",
+        game_over=PlayerGameOverState.PLAYING,
     )

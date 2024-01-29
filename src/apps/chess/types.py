@@ -144,5 +144,9 @@ class ChessInvalidStateException(ChessLogicException):
     pass
 
 
-class ChessInvalidMoveException(ChessLogicException):
+class ChessInvalidActionException(ChessLogicException):
+    pass
+
+
+class ChessInvalidMoveException(ChessInvalidActionException):
     pass

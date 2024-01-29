@@ -6,6 +6,8 @@ from django.urls import reverse
 from dominate.tags import button, div, dom_tag, span
 from dominate.util import raw
 
+from .svg_icons import ICON_SVG_RESTART
+
 if TYPE_CHECKING:
     from ...presenters import DailyChallengeGamePresenter
 
@@ -65,7 +67,7 @@ def _restart_confirmation_display(*, board_id: str) -> dom_tag:
 
     return div(
         div(
-            "Try this challenge again from the start?",
+            "Retry today's challenge from the start?",
             cls="text-center",
         ),
         div(
@@ -97,48 +99,14 @@ def _current_state_display(
         time_s_up,
     ) = game_presenter.challenge_turns_state
 
-    blocks_color: BlockColor = (
-        "green"
-        if percentage_left >= 60
-        else ("yellow" if percentage_left >= 30 else "red")
-    )
-    blocks: list[str] = []
-    current_block_color = blocks_color
-    for i in range(PROGRESS_BAR_BLOCKS_COUNT):
-        percentage = (i + 1) * 100 / PROGRESS_BAR_BLOCKS_COUNT
-        if percentage > percentage_left:
-            current_block_color = "grey"
-        blocks.append(PROGRESS_BAR_BLOCKS[current_block_color])
+    blocks, danger = _challenge_turns_left_display_with_blocks(percentage_left)
 
     restart_button: dom_tag = span("")
-    if not time_s_up:
-        htmx_attributes = {
-            "data_hx_post": "".join(
-                (
-                    reverse(
-                        "daily_challenge:htmx_restart_daily_challenge_ask_confirmation"
-                    ),
-                    "?",
-                    urlencode({"board_id": board_id}),
-                )
-            ),
-            "data_hx_target": f"#chess-board-pieces-{board_id}",
-            "data_hx_swap": "outerHTML",
-        }
-        restart_button = span(
-            button(
-                "↩️",
-                cls="inline-block m-l-2",
-                title="Try this daily challenge again, from the start",
-                id=f"chess-board-restart-daily-challenge-{board_id}",
-                **htmx_attributes,
-            ),
-        )
+    if not time_s_up and current_attempt_turns > 1:
+        restart_button = _restart_button(board_id)
 
     turns_left_display = (
-        f"""<b class="text-rose-600">{turns_left}</b>"""
-        if blocks_color == "red"
-        else turns_left
+        f"""<b class="text-rose-600">{turns_left}</b>""" if danger else turns_left
     )
 
     return div(
@@ -151,19 +119,65 @@ def _current_state_display(
                     )
                 )
             ),
-            cls="w-full text-center",
+            cls="text-center",
         ),
         div(
-            raw(f"Today's turns left: {turns_left_display}/{turns_total}"),
-            cls="w-full text-center",
-        ),
-        div(
-            span(
-                "".join(blocks),
-                " ",
-                restart_button,
-                cls="inline-block pl-3 pr-3",
+            div(
+                raw(f"Today's turns left: {turns_left_display}/{turns_total}"),
+                cls="text-center",
             ),
-            cls="w-full text-center",
+            div(
+                blocks,
+                restart_button,
+                cls="flex justify-center items-center",
+            ),
         ),
+        cls="w-full",
+    )
+
+
+def _challenge_turns_left_display_with_blocks(
+    percentage_left: int,
+) -> tuple[dom_tag, bool]:
+    blocks_color: BlockColor = (
+        "green"
+        if percentage_left >= 60
+        else ("yellow" if percentage_left >= 30 else "red")
+    )
+    blocks: list[str] = []
+    current_block_color: BlockColor = blocks_color
+    for i in range(PROGRESS_BAR_BLOCKS_COUNT):
+        percentage = (i + 1) * 100 / PROGRESS_BAR_BLOCKS_COUNT
+        if percentage > percentage_left:
+            current_block_color = "grey"
+        blocks.append(PROGRESS_BAR_BLOCKS[current_block_color])
+
+    return (
+        span("".join(blocks)),
+        blocks_color == "red",
+    )
+
+
+def _restart_button(board_id: str) -> dom_tag:
+    htmx_attributes = {
+        "data_hx_post": "".join(
+            (
+                reverse(
+                    "daily_challenge:htmx_restart_daily_challenge_ask_confirmation"
+                ),
+                "?",
+                urlencode({"board_id": board_id}),
+            )
+        ),
+        "data_hx_target": f"#chess-board-pieces-{board_id}",
+        "data_hx_swap": "outerHTML",
+    }
+
+    return button(
+        "restart ",
+        ICON_SVG_RESTART,
+        cls="block ml-2 py-0.5 px-1 text-sm text-yellow-400 hover:text-yellow-200 border border-yellow-400 rounded-md hover:text-yellow-70",
+        title="Try this daily challenge again, from the start",
+        id=f"chess-board-restart-daily-challenge-{board_id}",
+        **htmx_attributes,
     )
