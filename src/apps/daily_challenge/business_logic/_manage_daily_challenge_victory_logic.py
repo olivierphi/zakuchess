@@ -4,12 +4,12 @@ from typing import TYPE_CHECKING, cast
 from django.utils.timezone import now
 
 from ..consts import MAXIMUM_TURNS_PER_CHALLENGE
-from ..types import PlayerGameOverState, PlayerStats
+from ..models import PlayerGameOverState, PlayerStats
 
 if TYPE_CHECKING:
     from typing import Literal
 
-    from ..types import PlayerGameState
+    from ..models import PlayerGameState
 
 
 def manage_daily_challenge_victory_logic(

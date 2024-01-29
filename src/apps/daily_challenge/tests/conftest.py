@@ -1,7 +1,11 @@
 import pytest
 
-from ..models import DailyChallenge, DailyChallengeStatus
-from ..types import PlayerGameOverState, PlayerGameState
+from ..models import (
+    DailyChallenge,
+    DailyChallengeStatus,
+    PlayerGameOverState,
+    PlayerGameState,
+)
 
 _MINIMALIST_GAME = {
     "fen": "k7/pp3Q2/7p/8/8/8/7B/K7 w - - 0 2",

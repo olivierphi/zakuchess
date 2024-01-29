@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
     from apps.chess.types import Factions, GamePhase, PieceRole, PlayerSide, Square
 
-    from .types import ChallengeTurnsState, PlayerGameState
+    from .models import ChallengeTurnsState, PlayerGameState
 
 # Presenters are the objects we pass to our templates.
 

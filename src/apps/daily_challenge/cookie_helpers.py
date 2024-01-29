@@ -4,8 +4,7 @@ from typing import TYPE_CHECKING, NamedTuple
 from django.utils.timezone import now
 from msgspec import MsgspecError
 
-from .models import DailyChallenge
-from .types import PlayerGameState, PlayerSessionContent, PlayerStats
+from .models import DailyChallenge, PlayerGameState, PlayerSessionContent, PlayerStats
 
 if TYPE_CHECKING:
     from django.http import HttpRequest

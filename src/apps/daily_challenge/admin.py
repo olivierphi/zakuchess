@@ -310,7 +310,7 @@ def _get_game_presenter(
     intro_turn_speech_square: "Square | None",
     game_update_cmd: GameUpdateCommand | None,
 ) -> DailyChallengeGamePresenter:
-    from .types import PlayerGameState
+    from .models import PlayerGameState
 
     if not fen:
         fen = _INVALID_FEN_FALLBACK

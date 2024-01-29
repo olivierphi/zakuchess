@@ -32,8 +32,8 @@ from .cookie_helpers import (
     save_daily_challenge_state_in_session,
 )
 from .decorators import handle_chess_logic_exceptions
+from .models import PlayerGameOverState
 from .presenters import DailyChallengeGamePresenter
-from .types import PlayerGameOverState
 from .view_helpers import GameContext, get_current_daily_challenge_or_admin_preview
 
 if TYPE_CHECKING:
@@ -41,8 +41,7 @@ if TYPE_CHECKING:
 
     from apps.chess.types import Move
 
-    from .models import DailyChallenge
-    from .types import PlayerGameState, PlayerStats
+    from .models import DailyChallenge, PlayerGameState, PlayerStats
 
 
 _logger = logging.getLogger(__name__)

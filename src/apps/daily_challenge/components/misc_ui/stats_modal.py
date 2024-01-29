@@ -9,7 +9,7 @@ from .svg_icons import ICON_SVG_CLOSE, ICON_SVG_STATS
 if TYPE_CHECKING:
     from dominate.tags import dom_tag
 
-    from ...types import PlayerStats
+    from ...models import PlayerStats
 
 # TODO: manage i18n
 

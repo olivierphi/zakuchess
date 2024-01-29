@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from ._helpers import player_won_yesterday
 
 if TYPE_CHECKING:
-    from ..types import PlayerStats
+    from ..models import PlayerStats
 
 
 def manage_new_daily_challenge_stats_logic(stats: "PlayerStats") -> None:

@@ -6,7 +6,7 @@ from unittest import mock
 import pytest
 import time_machine
 
-from ..types import (
+from ..models import (
     PlayerGameOverState,
     PlayerGameState,
     PlayerSessionContent,

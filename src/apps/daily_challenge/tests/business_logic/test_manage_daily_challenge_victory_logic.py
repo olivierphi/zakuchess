@@ -7,7 +7,7 @@ from ...business_logic import (
     manage_daily_challenge_victory_logic,
     manage_new_daily_challenge_stats_logic,
 )
-from ...types import PlayerGameOverState, PlayerGameState, PlayerStats
+from ...models import PlayerGameOverState, PlayerGameState, PlayerStats
 
 
 def test_manage_daily_challenge_victory_wins_count(
