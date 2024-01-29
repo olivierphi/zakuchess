@@ -324,7 +324,7 @@ class DailyChallengeStatsAdmin(admin.ModelAdmin):
 
     def challenge_link(self, obj: DailyChallengeStats) -> str:
         return mark_safe(
-            f"""<a href="/admin/daily_challenge/dailychallenge/{obj.challenge_id}/change/">"""
+            f"""<a href="{reverse("admin:daily_challenge_dailychallenge_change", args=(obj.challenge_id,))}">"""
             f"{obj.challenge.lookup_key} 🔗"
             "</a>"
         )
@@ -333,7 +333,7 @@ class DailyChallengeStatsAdmin(admin.ModelAdmin):
         return obj.challenge.starting_advantage
 
     def wins_percentage(self, obj: DailyChallengeStats) -> str:
-        return f"{obj.wins_count/obj.played_count:.1%}"
+        return f"{obj.wins_count/obj.played_count:.1%}" if obj.played_count else "-"
 
     # Stats are read-only:
     def has_add_permission(self, request: "HttpRequest") -> bool:

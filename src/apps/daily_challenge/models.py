@@ -197,6 +197,11 @@ class DailyChallengeStats(models.Model):
 
     objects = DailyChallengeStatsManager()
 
+    class Meta:
+        ordering = ("-day",)
+        verbose_name = "Daily challenge stats"
+        verbose_name_plural = "Daily challenges stats"
+
     def increment_created_count(self) -> None:
         self.created_count = F("created_count") + 1
         self.save(update_fields=["created_count"])
