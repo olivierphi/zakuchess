@@ -1,10 +1,10 @@
 from typing import TYPE_CHECKING
 
 from ..consts import MAXIMUM_TURNS_PER_CHALLENGE
-from ..types import ChallengeTurnsState
+from ..models import ChallengeTurnsState
 
 if TYPE_CHECKING:
-    from ..types import PlayerGameState
+    from ..models import PlayerGameState
 
 
 def get_daily_challenge_turns_state(

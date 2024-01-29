@@ -9,7 +9,7 @@ from .svg_icons import ICON_SVG_CLOSE, ICON_SVG_STATS
 if TYPE_CHECKING:
     from dominate.tags import dom_tag
 
-    from ...types import PlayerStats
+    from ...models import PlayerStats
 
 # TODO: manage i18n
 
@@ -87,7 +87,7 @@ def _wins_distribution(stats: "PlayerStats") -> "dom_tag":
 
     if max_value == 0:
         content: "dom_tag" = div(
-            "No win yet",
+            "No victories yet",
             cls="text-center",
         )
     else:
@@ -123,7 +123,7 @@ def _wins_distribution(stats: "PlayerStats") -> "dom_tag":
         )
 
     return div(
-        div("Wins distribution", cls="font-bold text-center mb-2"),
+        div("Victories distribution", cls="font-bold text-center mb-2"),
         content,
         cls="min-h-24",
     )

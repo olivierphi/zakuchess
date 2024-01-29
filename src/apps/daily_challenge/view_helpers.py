@@ -7,8 +7,7 @@ from .cookie_helpers import get_or_create_daily_challenge_state_for_player
 if TYPE_CHECKING:
     from django.http import HttpRequest
 
-    from .models import DailyChallenge
-    from .types import PlayerGameState, PlayerStats
+    from .models import DailyChallenge, PlayerGameState, PlayerStats
 
 
 @dataclasses.dataclass(frozen=True)

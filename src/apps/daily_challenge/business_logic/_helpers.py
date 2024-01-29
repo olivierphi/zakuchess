@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from django.utils.timezone import now
 
 if TYPE_CHECKING:
-    from ..types import PlayerStats
+    from ..models import PlayerStats
 
 
 def player_won_yesterday(stats: "PlayerStats") -> bool:

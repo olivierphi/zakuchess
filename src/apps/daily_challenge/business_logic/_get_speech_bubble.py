@@ -119,7 +119,7 @@ def get_speech_bubble(
             return SpeechBubbleData(
                 text="We're in a tough situation, folks 😬<br>"
                 "Maybe trying again from the beginning, "
-                "by using the 'restart' button below, could be a good idea?",
+                "by using the 'restart' button, could be a good idea?",
                 square=_my_king_square(game_presenter),
                 time_out=8,
             )

@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING
 
-from ..types import PlayerGameOverState
+from ..models import PlayerGameOverState
 
 if TYPE_CHECKING:
-    from ..types import PlayerGameState, PlayerStats
+    from ..models import PlayerGameState, PlayerStats
 
 
 def manage_daily_challenge_defeat_logic(

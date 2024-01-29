@@ -4,7 +4,7 @@ from apps.chess.business_logic import do_chess_move
 from apps.chess.helpers import get_active_player_side_from_fen
 from apps.chess.types import ChessInvalidStateException
 
-from ..types import PlayerGameOverState, PlayerGameState
+from ..models import PlayerGameOverState, PlayerGameState
 
 if TYPE_CHECKING:
     from apps.chess.types import PieceRole, PieceSymbol, Square

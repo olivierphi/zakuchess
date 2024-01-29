@@ -2,10 +2,10 @@ from typing import TYPE_CHECKING
 
 from django.utils.timezone import now
 
-from ..types import PlayerGameOverState
+from ..models import DailyChallengeStats, PlayerGameOverState
 
 if TYPE_CHECKING:
-    from ..types import PlayerGameState, PlayerStats
+    from ..models import PlayerGameState, PlayerStats
 
 
 def manage_daily_challenge_moved_piece_logic(
@@ -23,3 +23,8 @@ def manage_daily_challenge_moved_piece_logic(
         stats.games_count += 1
         # Last played date:
         stats.last_played = now().date()
+        # Server stats
+        DailyChallengeStats.objects.get_or_create_for_today().increment_played_count()
+
+    # Server stats
+    DailyChallengeStats.objects.get_or_create_for_today().increment_turns_count()

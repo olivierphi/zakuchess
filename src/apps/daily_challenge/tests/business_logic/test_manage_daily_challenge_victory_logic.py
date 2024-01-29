@@ -1,4 +1,5 @@
 import datetime as dt
+from unittest import mock
 
 import pytest
 import time_machine
@@ -7,9 +8,14 @@ from ...business_logic import (
     manage_daily_challenge_victory_logic,
     manage_new_daily_challenge_stats_logic,
 )
-from ...types import PlayerGameOverState, PlayerGameState, PlayerStats
+from ...models import PlayerGameOverState, PlayerGameState, PlayerStats
+
+# N.B. We mock `DailyChallengeStats.objects` in these tests, because the stats logic
+# is not relevant to the tests we're writing here - also, let's not sumon the database
+# when we can avoid it, right? :-)
 
 
+@mock.patch("apps.daily_challenge.models.DailyChallengeStats.objects", mock.MagicMock())
 def test_manage_daily_challenge_victory_wins_count(
     # Test dependencies
     player_game_state_minimalist: PlayerGameState,
@@ -45,6 +51,7 @@ def test_manage_daily_challenge_victory_wins_count(
         (33, [0, 0, 0, 0, 1]),  # 4th tier victory, lower bound
     ),
 )
+@mock.patch("apps.daily_challenge.models.DailyChallengeStats.objects", mock.MagicMock())
 def test_manage_daily_challenge_victory_logic_wins_distribution(
     # Test dependencies
     player_game_state_minimalist: PlayerGameState,
@@ -84,6 +91,7 @@ def test_manage_daily_challenge_victory_logic_wins_distribution(
         (4, 4, "2024-01-19", "2024-01-21", 1, 4),  # more than a day ago: back to 1
     ),
 )
+@mock.patch("apps.daily_challenge.models.DailyChallengeStats.objects", mock.MagicMock())
 def test_manage_daily_challenge_victory_logic_streak_management(
     # Test dependencies
     player_game_state_minimalist: PlayerGameState,

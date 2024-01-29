@@ -21,7 +21,7 @@ from import_export.admin import ImportExportModelAdmin
 from ..chess.business_logic import calculate_fen_before_move
 from .business_logic import set_daily_challenge_teams_and_pieces_roles
 from .cookie_helpers import clear_daily_challenge_game_state_in_session
-from .models import DailyChallenge
+from .models import DailyChallenge, DailyChallengeStats
 from .presenters import DailyChallengeGamePresenter
 from .view_helpers import GameContext
 
@@ -304,13 +304,59 @@ class DailyChallengeAdmin(ImportExportModelAdmin):
         )
 
 
+@admin.register(DailyChallengeStats)
+class DailyChallengeStatsAdmin(admin.ModelAdmin):
+    list_display = (
+        "day",
+        "challenge_link",
+        "challenge_starting_advantage",
+        "wins_percentage",
+        "created_count",
+        "played_count",
+        "turns_count",
+        "restarts_count",
+        "wins_count",
+    )
+    ordering = ("-day",)
+    list_select_related = ("challenge",)
+    list_display_links = None
+    view_on_site = False
+
+    def challenge_link(self, obj: DailyChallengeStats) -> str:
+        return mark_safe(
+            f"""<a href="{reverse("admin:daily_challenge_dailychallenge_change", args=(obj.challenge_id,))}">"""
+            f"{obj.challenge.lookup_key} 🔗"
+            "</a>"
+        )
+
+    def challenge_starting_advantage(self, obj: DailyChallengeStats) -> int:
+        return obj.challenge.starting_advantage
+
+    def wins_percentage(self, obj: DailyChallengeStats) -> str:
+        return f"{obj.wins_count/obj.played_count:.1%}" if obj.played_count else "-"
+
+    # Stats are read-only:
+    def has_add_permission(self, request: "HttpRequest") -> bool:
+        return False
+
+    def has_change_permission(
+        self, request: "HttpRequest", obj: DailyChallengeStats | None = None
+    ) -> bool:
+        return False
+
+    def has_delete_permission(
+        self, request: "HttpRequest", obj: DailyChallengeStats | None = None
+    ) -> bool:
+        return False
+
+
 def _get_game_presenter(
     fen: "FEN | None",
     bot_first_move: str | None,
     intro_turn_speech_square: "Square | None",
     game_update_cmd: GameUpdateCommand | None,
 ) -> DailyChallengeGamePresenter:
-    from .types import PlayerGameState
+    from .models import PlayerGameState
 
     if not fen:
         fen = _INVALID_FEN_FALLBACK
