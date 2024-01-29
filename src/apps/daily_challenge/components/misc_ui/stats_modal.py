@@ -108,9 +108,11 @@ def _wins_distribution(stats: "PlayerStats") -> "dom_tag":
                     cls="bg-lime-800 font-bold text-right px-2",
                     # Cannot use Tailwind for this, as it's totally dynamic - let's just
                     # fall back to good old inline styles ^_^
-                    style=f"width: {max(ceil(count/max_value*100), min_width_percentage)}%"
-                    if count > 0
-                    else "display: inline-block",
+                    style=(
+                        f"width: {max(ceil(count/max_value*100), min_width_percentage)}%"
+                        if count > 0
+                        else "display: inline-block"
+                    ),
                 ),
                 cls="mb-1",
             )
