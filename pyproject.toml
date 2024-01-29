@@ -9,7 +9,7 @@ homepage = "https://github.com/olivierphi/zakuchess"
 [tool.poetry.dependencies]
 python = "^3.11"
 Django = "^5.0.1"
-gunicorn = "^20.1.0"
+gunicorn = "^21.2.0"
 django-alive = "^1.2.1"
 chess = "^1.9.3"
 django-htmx = "^1.13.0"
@@ -23,19 +23,19 @@ msgspec = "^0.18.5"
 
 [tool.poetry.group.dev.dependencies]
 python-dotenv = "^1.0.0"
-black = "^22.10.0"
-isort = "5.12.0"
-ruff = "0.0.286"
-mypy = "1.5.1"
-pre-commit = "^2.20.0"
+black = "^24.1.1"
+isort = "^5.13.2"
+ruff = "0.1.14"
+mypy = "^1.8.0"
+pre-commit = "^3.6.0"
 ipython = "^8.6.0"
 types-requests = "^2.31.0.2"
 django-extensions = "^3.2.3"
-httpx = "^0.25.0" # only used in "scripts/download_assets.py" for parallel downloads
+httpx = "^0.26.0" # only used in "scripts/download_assets.py" for parallel downloads
 sqlite-utils = "^3.35.1"
 
 [tool.poetry.group.test.dependencies]
-pytest = "^7.2.0"
+pytest = "^7.4.4"
 pytest-django = "^4.5.2"
 pytest-cov = "^4.1.0"
 time-machine = "^2.13.0"
