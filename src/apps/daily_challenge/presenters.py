@@ -40,6 +40,7 @@ class DailyChallengeGamePresenter(GamePresenter):
         captured_team_member_role: "PieceRole | None" = None,
         just_won: bool = False,
         is_preview: bool = False,
+        is_very_first_game: bool = False,
     ):
         # A published challenge always has a `teams` non-null field:
         assert challenge.teams
@@ -66,6 +67,7 @@ class DailyChallengeGamePresenter(GamePresenter):
         )
         self.is_bot_move = is_bot_move
         self.just_won = just_won
+        self.is_very_first_game = is_very_first_game
         self._forced_speech_bubble = forced_speech_bubble
 
     @cached_property

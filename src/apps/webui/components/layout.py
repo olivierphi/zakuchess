@@ -66,10 +66,11 @@ def document(
             *children,
             footer(),
             modals_container(),
-            cls="bg-gray-950",
+            cls="bg-gray-900",
             data_hx_headers=json.dumps(
                 {"X-CSRFToken": get_token(request) if request else "[no request]"}
             ),
+            data_hx_ext="class-tools",  # enable CSS class transitions on the whole page
         ),
         __pretty=settings.DEBUG,
     )
@@ -109,20 +110,23 @@ def header(stats_button: "dom_tag | None") -> "dom_tag":
         )
 
     return base_header(
-        side_wrapper(stats_button or div(""), align="justify-start"),
         div(
-            h1(
-                "ZakuChess",
-                cls="text-slate-50 text-2xl leading-none font-pixel",
+            side_wrapper(stats_button or div(""), align="justify-start"),
+            div(
+                h1(
+                    "ZakuChess",
+                    cls="text-slate-50 text-2xl leading-none font-pixel",
+                ),
+                h2(
+                    "Chess with character(s)",
+                    cls="text-slate-50 text-xl leading-none font-pixel",
+                ),
+                cls="grow text-center md:mx-auto md:max-w-2xl",
             ),
-            h2(
-                "Chess with character(s)",
-                cls="text-slate-50 text-xl leading-none font-pixel",
-            ),
-            cls="grow text-center md:mx-auto md:max-w-2xl",
+            side_wrapper(div(" "), align="justify-end"),
+            cls="flex items-center p-2 w-full mx-auto md:max-w-lg",
         ),
-        side_wrapper(div(" "), align="justify-end"),
-        cls="flex items-center p-4",
+        cls="bg-gray-950",
     )
 
 

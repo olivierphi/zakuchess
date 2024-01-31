@@ -111,7 +111,6 @@ def chess_arena(
         *status_bars,
         id=f"chess-arena-{board_id}",
         cls="w-full mx-auto bg-slate-900 md:max-w-lg",
-        data_hx_ext="class-tools",  # enable CSS class transitions on the whole arena
         # When the user clicks on anything that is not an interactive element
         # of the chess board, and the state of this chess board is not
         # "waiting_for_player_selection", then the chess board is reset to this state.

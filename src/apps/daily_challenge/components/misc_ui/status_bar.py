@@ -1,9 +1,10 @@
 import random
 from functools import cache
+from string import Template
 from typing import TYPE_CHECKING, cast
 
 from django.conf import settings
-from dominate.tags import div, dom_tag, h4, p, span
+from dominate.tags import button, div, dom_tag, h4, p, script, span
 from dominate.util import raw
 
 from apps.chess.components.chess_helpers import chess_unit_symbol_class
@@ -13,6 +14,8 @@ from apps.chess.helpers import (
     player_side_from_piece_role,
     type_from_piece_role,
 )
+
+from .common_styles import BUTTON_CLASSES
 
 if TYPE_CHECKING:
     from apps.chess.types import (
@@ -46,6 +49,19 @@ _CHARACTER_TYPE_ROLE_MAPPING: dict["PieceType", "TeamMemberRole"] = {
     "k": "k",
 }
 
+_FIRST_TURN_INTRO_SCRIPT = Template(
+    # Write JavaScript like it's 1999 😎
+    """
+    {
+        setTimeout(() => {
+            let target = document.getElementById("chess-board-status-bar-${board_id}");
+            let targetScroll = target.offsetTop - 70;
+            window.scrollTo({ top: targetScroll, behavior: "smooth"})
+        }, 2000);
+    }
+    """
+)
+
 
 def status_bar(
     *, game_presenter: "DailyChallengeGamePresenter", board_id: str, **extra_attrs: str
@@ -58,6 +74,7 @@ def status_bar(
         inner_content = _first_turn_intro(
             challenge_total_turns=game_presenter.challenge_total_turns,
             factions_tuple=tuple(game_presenter.factions.items()),
+            board_id=board_id,
         )
     else:
         match game_presenter.game_phase:
@@ -108,6 +125,7 @@ def _first_turn_intro(
     *,
     challenge_total_turns: int,
     factions_tuple: "tuple[tuple[PlayerSide, Faction], ...]",
+    board_id: str,
 ) -> dom_tag:
     # N.B. We use a tuple here for the factions, so they're hashable
     # and can be used as cached key
@@ -121,7 +139,7 @@ def _first_turn_intro(
             div(
                 raw(
                     "Your pieces are the ones "
-                    """<span class="font-bold text-emerald-800">"""
+                    """<span class="p-0.5 inline-block rounded font-bold bg-emerald-800">"""
                     "with a green circle"
                     "</span>.<br>"
                     "Tap one of them to start playing."
@@ -147,6 +165,15 @@ def _first_turn_intro(
                 ],
                 cls="mt-2",
             ),
+            div(
+                button(
+                    "Scroll up to the board",
+                    cls=BUTTON_CLASSES,
+                    onclick="""window.scrollTo({ top: 0, behavior: "smooth" })""",
+                ),
+                cls="w-full flex justify-center",
+            ),
+            script(raw(_FIRST_TURN_INTRO_SCRIPT.substitute({"board_id": board_id}))),
             cls="w-full text-center",
         ).render(pretty=settings.DEBUG)
     )
