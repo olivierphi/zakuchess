@@ -50,10 +50,19 @@ def stats_modal(stats: "PlayerStats") -> "dom_tag":
         cls="relative mt-8 bg-gray-950 rounded-lg shadow shadow-slate-950",
     )
 
+    animation_start_class = "translate-y-16"
+    animation_classes = (
+        "transition-transform",
+        "duration-500",
+        "transform-gpu",
+        animation_start_class,
+    )
+
     return div(
         div(
             modal_content,
-            cls="relative w-full mx-auto max-w-2xl max-h-full",
+            cls=f"relative w-full mx-auto max-w-2xl max-h-full {' '.join(animation_classes)}",
+            data_classes=f"remove {animation_start_class}:10ms",
         ),
         cls=" ".join(
             (

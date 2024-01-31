@@ -6,6 +6,7 @@ from django.urls import reverse
 from dominate.tags import button, div, dom_tag, span
 from dominate.util import raw
 
+from .common_styles import BUTTON_CLASSES
 from .svg_icons import ICON_SVG_RESTART
 
 if TYPE_CHECKING:
@@ -176,7 +177,7 @@ def _restart_button(board_id: str) -> dom_tag:
     return button(
         "restart ",
         ICON_SVG_RESTART,
-        cls="block ml-2 py-0.5 px-1 text-sm text-yellow-400 hover:text-yellow-200 border border-yellow-400 rounded-md hover:text-yellow-70",
+        cls=BUTTON_CLASSES,
         title="Try this daily challenge again, from the start",
         id=f"chess-board-restart-daily-challenge-{board_id}",
         **htmx_attributes,

@@ -74,8 +74,10 @@ def game_view(request: "HttpRequest") -> HttpResponse:
         )
 
         forced_bot_move = uci_move_squares(ctx.challenge.bot_first_move)
+        is_very_first_game = ctx.stats.games_count == 0
     else:
         forced_bot_move = None
+        is_very_first_game = False
 
     _logger.info("Game state from player cookie: %s", ctx.game_state)
 
@@ -86,6 +88,7 @@ def game_view(request: "HttpRequest") -> HttpResponse:
         is_htmx_request=False,
         refresh_last_move=True,
         is_preview=ctx.is_preview,
+        is_very_first_game=is_very_first_game,
     )
 
     return HttpResponse(
