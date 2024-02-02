@@ -22,6 +22,7 @@ from .business_logic import (
     move_daily_challenge_piece,
     restart_daily_challenge,
 )
+from .components.misc_ui.help_modal import help_modal
 from .components.misc_ui.stats_modal import stats_modal
 from .components.pages.daily_chess import (
     daily_challenge_moving_parts_fragment,
@@ -206,6 +207,24 @@ def htmx_daily_challenge_stats_modal(
     ctx = GameContext.create_from_request(request)
 
     modal_content = stats_modal(ctx.stats)
+
+    return HttpResponse(str(modal_content))
+
+
+@require_safe
+def htmx_daily_challenge_help_modal(
+    request: "HttpRequest",
+) -> HttpResponse:
+    ctx = GameContext.create_from_request(request)
+
+    game_presenter = DailyChallengeGamePresenter(
+        challenge=ctx.challenge,
+        game_state=ctx.game_state,
+        is_htmx_request=True,
+        refresh_last_move=False,
+    )
+
+    modal_content = help_modal(game_presenter=game_presenter)
 
     return HttpResponse(str(modal_content))
 

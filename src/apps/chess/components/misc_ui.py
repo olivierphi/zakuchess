@@ -1,9 +1,10 @@
 from typing import TYPE_CHECKING, Literal
 
-from dominate.tags import a, div, dom_tag
+from dominate.tags import a, button, div, dom_tag, h3, i, span
 from dominate.util import raw
 
 from .chess_helpers import square_to_square_center_tailwind_classes
+from .svg_icons import ICON_SVG_CLOSE
 
 if TYPE_CHECKING:
     from ..presenters import GamePresenter
@@ -13,6 +14,64 @@ if TYPE_CHECKING:
 # tailwind name, hex value:
 _SPEECH_BUBBLE_BACKGROUND_COLOR = ("bg-slate-900", "#0f172a")
 _SPEECH_BUBBLE_TAIL_SIZE = 10  # px
+
+
+if TYPE_CHECKING:
+    from dominate.tags import dom_tag
+
+
+# TODO: manage i18n
+
+
+def modal_container(*, header: h3, body: div) -> "dom_tag":
+    # Converted from https://flowbite.com/docs/components/modal/
+
+    modal_header = div(
+        header,
+        button(
+            ICON_SVG_CLOSE,
+            span("Close modal", cls="sr-only"),
+            type="button",
+            onclick="closeModal()",
+        ),
+        cls="flex items-start justify-between p-4 border-b rounded-t",
+    )
+
+    modal_footer = div(
+        i("One Zakuchess a day keeps the doctor away."),
+        cls="text-sm text-center p-6 space-x-2 border-t border-gray-200 rounded-b",
+    )
+
+    modal_content = div(
+        modal_header,
+        body,
+        modal_footer,
+        cls="relative mt-8 bg-gray-950 rounded-lg shadow shadow-slate-950",
+    )
+
+    animation_start_class = "translate-y-16"
+    animation_classes = (
+        "transition-transform",
+        "duration-500",
+        "transform-gpu",
+        animation_start_class,
+    )
+
+    return div(
+        div(
+            modal_content,
+            cls=f"relative w-full mx-auto max-w-2xl max-h-full {' '.join(animation_classes)}",
+            data_classes=f"remove {animation_start_class}:10ms",
+        ),
+        cls=" ".join(
+            (
+                "fixed top-0 left-0 right-0 z-50 w-full overflow-x-hidden overflow-y-auto",
+                "md:inset-0 h-[calc(100%-1rem)] max-h-full",
+                "bg-gray-900/75 p-1 text-slate-100 ",
+            )
+        ),
+        id="modals-container",
+    )
 
 
 def speech_bubble_container(

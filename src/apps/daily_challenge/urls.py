@@ -29,7 +29,12 @@ urlpatterns = [
     path(
         "htmx/daily-challenge/modals/stats/",
         views.htmx_daily_challenge_stats_modal,
-        name="htmx_daily_challenge_stats",
+        name="htmx_daily_challenge_modal_stats",
+    ),
+    path(
+        "htmx/daily-challenge/modals/help/",
+        views.htmx_daily_challenge_help_modal,
+        name="htmx_daily_challenge_modal_help",
     ),
     path(
         "htmx/daily-challenge/restart/do/",
