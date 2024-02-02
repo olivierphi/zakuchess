@@ -102,7 +102,9 @@ GameEndReason = Literal[
     "fifty_moves",
 ]
 
-ChessMoveChanges: TypeAlias = "dict[Square, Square | None]"  # None is used when the piece on that Square was captured
+ChessMoveChanges: TypeAlias = (
+    "dict[Square, Square | None]"  # None is used when the piece on that Square was captured
+)
 
 Faction = Literal[
     "humans",

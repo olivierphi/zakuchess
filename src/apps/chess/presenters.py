@@ -102,18 +102,15 @@ class GamePresenter(ABC):
 
     @property
     @abstractmethod
-    def urls(self) -> "GamePresenterUrls":
-        ...
+    def urls(self) -> "GamePresenterUrls": ...
 
     @property
     @abstractmethod
-    def is_my_turn(self) -> bool:
-        ...
+    def is_my_turn(self) -> bool: ...
 
     @property
     @abstractmethod
-    def game_phase(self) -> "GamePhase":
-        ...
+    def game_phase(self) -> "GamePhase": ...
 
     # Properties derived from the chess board:
     @cached_property
@@ -157,38 +154,31 @@ class GamePresenter(ABC):
 
     @property
     @abstractmethod
-    def is_player_turn(self) -> bool:
-        ...
+    def is_player_turn(self) -> bool: ...
 
     @property
     @abstractmethod
-    def is_bot_turn(self) -> bool:
-        ...
+    def is_bot_turn(self) -> bool: ...
 
     @property
     @abstractmethod
-    def game_id(self) -> str:
-        ...
+    def game_id(self) -> str: ...
 
     @property
     @abstractmethod
-    def factions(self) -> "Factions":
-        ...
+    def factions(self) -> "Factions": ...
 
     @property
     @abstractmethod
-    def is_intro_turn(self) -> bool:
-        ...
+    def is_intro_turn(self) -> bool: ...
 
     @property
     @abstractmethod
-    def player_side_to_highlight_all_pieces_for(self) -> "PlayerSide | None":
-        ...
+    def player_side_to_highlight_all_pieces_for(self) -> "PlayerSide | None": ...
 
     @property
     @abstractmethod
-    def speech_bubble(self) -> "SpeechBubbleData | None":
-        ...
+    def speech_bubble(self) -> "SpeechBubbleData | None": ...
 
     @cached_property
     def piece_role_by_square(self) -> "PieceRoleBySquare":
