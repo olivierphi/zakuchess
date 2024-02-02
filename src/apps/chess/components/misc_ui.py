@@ -66,7 +66,7 @@ def modal_container(*, header: h3, body: div) -> "dom_tag":
         cls=" ".join(
             (
                 "fixed top-0 left-0 right-0 z-50 w-full overflow-x-hidden overflow-y-auto",
-                "md:inset-0 h-[calc(100%-1rem)] max-h-full",
+                "md:inset-0 h-[calc(100%)] max-h-full",
                 "bg-gray-900/75 p-1 text-slate-100 ",
             )
         ),
