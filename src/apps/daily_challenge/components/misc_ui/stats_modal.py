@@ -1,10 +1,12 @@
 from math import ceil, floor
 from typing import TYPE_CHECKING
 
-from dominate.tags import button, div, h3, i, span
+from dominate.tags import div, h3
+
+from apps.chess.components.misc_ui import modal_container
 
 from ...consts import MAXIMUM_TURNS_PER_CHALLENGE
-from .svg_icons import ICON_SVG_CLOSE, ICON_SVG_STATS
+from .svg_icons import ICON_SVG_STATS
 
 if TYPE_CHECKING:
     from dominate.tags import dom_tag
@@ -15,63 +17,17 @@ if TYPE_CHECKING:
 
 
 def stats_modal(stats: "PlayerStats") -> "dom_tag":
-    # Converted from https://flowbite.com/docs/components/modal/
-
-    modal_header = div(
-        h3(
+    return modal_container(
+        header=h3(
             "Statistics ",
             ICON_SVG_STATS,
             cls="text-xl",
         ),
-        button(
-            ICON_SVG_CLOSE,
-            span("Close modal", cls="sr-only"),
-            type="button",
-            onclick="closeModal()",
+        body=div(
+            _main_stats(stats),
+            _wins_distribution(stats),
+            cls="p-6 space-y-6",
         ),
-        cls="flex items-start justify-between p-4 border-b rounded-t",
-    )
-
-    modal_body = div(
-        _main_stats(stats),
-        _wins_distribution(stats),
-        cls="p-6 space-y-6",
-    )
-
-    modal_footer = div(
-        i("One Zakuchess a day keeps the doctor away."),
-        cls="text-sm text-center p-6 space-x-2 border-t border-gray-200 rounded-b",
-    )
-
-    modal_content = div(
-        modal_header,
-        modal_body,
-        modal_footer,
-        cls="relative mt-8 bg-gray-950 rounded-lg shadow shadow-slate-950",
-    )
-
-    animation_start_class = "translate-y-16"
-    animation_classes = (
-        "transition-transform",
-        "duration-500",
-        "transform-gpu",
-        animation_start_class,
-    )
-
-    return div(
-        div(
-            modal_content,
-            cls=f"relative w-full mx-auto max-w-2xl max-h-full {' '.join(animation_classes)}",
-            data_classes=f"remove {animation_start_class}:10ms",
-        ),
-        cls=" ".join(
-            (
-                "fixed top-0 left-0 right-0 z-50 w-full overflow-x-hidden overflow-y-auto",
-                "md:inset-0 h-[calc(100%-1rem)] max-h-full",
-                "bg-gray-900/75 p-1 text-slate-100 ",
-            )
-        ),
-        id="modals-container",
     )
 
 

@@ -1,4 +1,5 @@
 import functools
+from string import Template
 from typing import TYPE_CHECKING
 
 from django.conf import settings
@@ -16,9 +17,11 @@ from apps.chess.components.misc_ui import speech_bubble_container
 from apps.webui.components.layout import page
 
 from ..misc_ui import daily_challenge_bar, status_bar
-from ..misc_ui.svg_icons import ICON_SVG_STATS
+from ..misc_ui.svg_icons import ICON_SVG_HELP, ICON_SVG_STATS
 
 if TYPE_CHECKING:
+    from typing import Literal
+
     from django.http import HttpRequest
     from dominate.tags import dom_tag
 
@@ -45,8 +48,10 @@ def daily_challenge_page(
                 ),
             ],
         ),
+        _open_help_modal() if game_presenter.is_very_first_game else div(""),
         request=request,
         stats_button=_stats_button(),
+        help_button=_help_button(),
     )
 
 
@@ -101,7 +106,7 @@ def daily_challenge_moving_parts_fragment(
 
 def _stats_button() -> "dom_tag":
     htmx_attributes = {
-        "data_hx_get": "".join((reverse("daily_challenge:htmx_daily_challenge_stats"))),
+        "data_hx_get": reverse("daily_challenge:htmx_daily_challenge_modal_stats"),
         "data_hx_target": "#modals-container",
         "data_hx_swap": "outerHTML",
     }
@@ -115,13 +120,45 @@ def _stats_button() -> "dom_tag":
     )
 
 
+def _help_button() -> "dom_tag":
+    htmx_attributes = {
+        "data_hx_get": reverse("daily_challenge:htmx_daily_challenge_modal_help"),
+        "data_hx_target": "#modals-container",
+        "data_hx_swap": "outerHTML",
+    }
+
+    return button(
+        ICON_SVG_HELP,
+        cls="block px-2 py-1 text-sm text-slate-50 hover:text-slate-400",
+        title="How to play",
+        id="help-button",
+        **htmx_attributes,
+    )
+
+
 @functools.cache
 def _open_stats_modal() -> "dom_tag":
+    # We open the stats modal 2 seconds after the game is won.
+    return _open_modal("stats", 2_000)
+
+
+@functools.cache
+def _open_help_modal() -> "dom_tag":
+    # We open the stats modal 4 seconds after the bot played their first move.
+    return _open_modal("help", 4_000)
+
+
+_MODAL_TEMPLATE = Template(
+    """{
+        setTimeout(() => { htmx.trigger("#${MODAL_ID}-button", "click", {}) }, ${DELAY});
+    }"""
+)
+
+
+def _open_modal(modal_id: "Literal['stats', 'help']", delay: int) -> "dom_tag":
     return div(
         script(
-            raw(
-                """setTimeout(() => { htmx.trigger("#stats-button", "click", {}) }, 2000)"""
-            ),
+            raw(_MODAL_TEMPLATE.substitute(MODAL_ID=modal_id, DELAY=delay)),
         ),
         id="modals-container",
         data_hx_swap_oob="innerHTML",

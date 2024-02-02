@@ -273,6 +273,25 @@ def test_stats_modal_smoke_test(
     assert "Statistics" in response_content
 
 
+@mock.patch("apps.daily_challenge.business_logic.get_current_daily_challenge")
+@pytest.mark.django_db
+def test_help_modal_smoke_test(
+    # Mocks
+    get_current_challenge_mock: mock.MagicMock,
+    # Test dependencies
+    challenge_minimalist: "DailyChallenge",
+    client: "DjangoClient",
+):
+    get_current_challenge_mock.return_value = challenge_minimalist
+
+    response = client.get("/htmx/daily-challenge/modals/help/")
+    assert response.status_code == HTTPStatus.OK
+    response_content = response.content.decode()
+    assert "How to play" in response_content
+    assert "restart" in response_content
+    assert "characters" in response_content
+
+
 def _assert_response_waiting_for_bot_move(response: "HttpResponse") -> None:
     response_html = response.content.decode()
     _assert_response_contains_a_bot_move_to_play(response_html)

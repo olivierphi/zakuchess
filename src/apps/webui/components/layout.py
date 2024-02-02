@@ -48,21 +48,31 @@ def page(
     *children: "dom_tag",
     request: "HttpRequest",
     stats_button: "dom_tag | None" = None,
+    help_button: "dom_tag | None" = None,
     title: str = "ZakuChess ♞",
 ) -> str:
-    return f"<!DOCTYPE html>{document(*children, request=request, stats_button=stats_button,title=title)}"
+    return "<!DOCTYPE html>" + str(
+        document(
+            *children,
+            request=request,
+            stats_button=stats_button,
+            help_button=help_button,
+            title=title,
+        )
+    )
 
 
 def document(
     *children: "dom_tag",
     request: "HttpRequest",
     stats_button: "dom_tag | None",
+    help_button: "dom_tag | None" = None,
     title: str = "ZakuChess ♞",
 ) -> "dom_tag":
     return html(
         head(title=title),
         body(
-            header(stats_button),
+            header(stats_button=stats_button, help_button=help_button),
             *children,
             footer(),
             modals_container(),
@@ -102,7 +112,9 @@ def head(*, title: str) -> "dom_tag":
     )
 
 
-def header(stats_button: "dom_tag | None") -> "dom_tag":
+def header(
+    *, stats_button: "dom_tag | None", help_button: "dom_tag | None" = None
+) -> "dom_tag":
     def side_wrapper(*children: "dom_tag", align: str) -> "dom_tag":
         return div(
             *children,
@@ -123,7 +135,7 @@ def header(stats_button: "dom_tag | None") -> "dom_tag":
                 ),
                 cls="grow text-center md:mx-auto md:max-w-2xl",
             ),
-            side_wrapper(div(" "), align="justify-end"),
+            side_wrapper(help_button or div(" "), align="justify-end"),
             cls="flex items-center p-2 w-full mx-auto md:max-w-lg",
         ),
         cls="bg-gray-950",
