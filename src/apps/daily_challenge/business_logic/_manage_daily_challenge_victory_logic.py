@@ -53,4 +53,4 @@ def manage_daily_challenge_victory_logic(
     stats.wins_distribution[distribution_slice] += 1
 
     # Server stats
-    DailyChallengeStats.objects.get_or_create_for_today().increment_wins_count()
+    DailyChallengeStats.objects.increment_today_wins_count()
