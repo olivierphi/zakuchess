@@ -103,7 +103,7 @@ def _current_state_display(
     blocks, danger = _challenge_turns_left_display_with_blocks(percentage_left)
 
     restart_button: dom_tag = span("")
-    if not time_s_up and current_attempt_turns > 1:
+    if not time_s_up:
         restart_button = _restart_button(board_id)
 
     turns_left_display = (

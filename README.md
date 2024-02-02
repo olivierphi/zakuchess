@@ -60,6 +60,7 @@ You can take a look at [the Makefile](./Makefile) to see more commands.
  - [x] Validate input data, using good ol' Django path converters 
  - [x] Users' personal stats (current streak, etc)
  - [x] "End of game" screen
+ - [x] "Help" screen, opened automatically on the very 1st visit
  - [x] Server stats _(without any user tracking, of course)_
  - [x] Make the session cookie shorter, by using [msgspec](https://jcristharif.com/msgspec/index.html)
  - [ ] opengraph metatags, so we have a nice preview of the UI when sharing the URL

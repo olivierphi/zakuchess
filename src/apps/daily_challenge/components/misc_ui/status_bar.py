@@ -1,4 +1,3 @@
-from string import Template
 from typing import TYPE_CHECKING
 
 from dominate.tags import button, div, dom_tag, p
@@ -21,20 +20,6 @@ from .help import (
 
 if TYPE_CHECKING:
     from apps.daily_challenge.presenters import DailyChallengeGamePresenter
-
-
-_FIRST_TURN_INTRO_SCRIPT = Template(
-    # Write JavaScript like it's 1999 😎
-    """
-    {
-        setTimeout(() => {
-            let target = document.getElementById("chess-board-status-bar-${board_id}");
-            let targetScroll = target.offsetTop - 70;
-            window.scrollTo({ top: targetScroll, behavior: "smooth"})
-        }, 2000);
-    }
-    """
-)
 
 
 def status_bar(

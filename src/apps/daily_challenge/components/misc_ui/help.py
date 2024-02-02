@@ -3,11 +3,14 @@ from functools import cache
 from typing import TYPE_CHECKING, cast
 
 from django.conf import settings
-from dominate.tags import div, h4, span
+from dominate.tags import br, div, h4, span
 from dominate.util import raw
 
 from apps.chess.components.chess_helpers import chess_unit_symbol_class
 from apps.chess.consts import PIECE_TYPE_TO_NAME
+
+from .common_styles import BUTTON_CLASSES
+from .svg_icons import ICON_SVG_RESTART
 
 if TYPE_CHECKING:
     from dominate.tags import dom_tag
@@ -68,12 +71,6 @@ def help_content(
                     unit_display_container(piece_role="Q", factions=factions),
                     cls="w-full flex justify-center gap-3",
                 ),
-                # div(
-                #     div("", cls="relative z-20 font-bold"),
-                #     chess_unit_ground_marker(player_side="w"),
-                #     cls="inline-block relative whitespace-nowrap",
-                # ),
-                # br(),
                 "Tap one of them to start playing.",
                 cls=f"{spacing}",
             ),
@@ -82,6 +79,18 @@ def help_content(
                     f"You have <b>{challenge_total_turns}</b> "
                     "turns to win this challenge."
                 ),
+                cls=f"{spacing}",
+            ),
+            div(
+                "You can restart from the beginning at any time,",
+                br(),
+                "by clicking the ",
+                span(
+                    "restart",
+                    ICON_SVG_RESTART,
+                    cls=f"{BUTTON_CLASSES} !inline-block !mx-0",
+                ),
+                " button.",
                 cls=f"{spacing}",
             ),
             div("Good luck! 🙂", cls=f"{spacing}"),
