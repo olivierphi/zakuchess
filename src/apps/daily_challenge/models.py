@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, ClassVar, Literal, NamedTuple, Self, TypeAlias
 
 import chess
 import msgspec
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, models
 from django.db.models import F
@@ -31,6 +32,11 @@ _PLAYER_SIDE_CHOICES = literal_to_django_choices(PlayerSide)  # type: ignore
 _FEN_MAX_LEN = (
     90  # @link https://chess.stackexchange.com/questions/30004/longest-possible-fen
 )
+
+_STATS_FOR_TODAY_EXISTS_CACHE = {
+    "KEY_PATTERN": "stats_for_today_exists:{today}",
+    "DURATION": 60 * 5,  # 5 minutes
+}
 
 
 class DailyChallengeStatus(models.IntegerChoices):
@@ -192,16 +198,23 @@ class DailyChallengeStatsManager(models.Manager):
         self.filter(day=self._today()).update(wins_count=F("wins_count") + 1)
 
     def _create_for_today_if_needed(self) -> None:
-        from .business_logic import get_current_daily_challenge
+        today = self._today()
+        cache_key = _STATS_FOR_TODAY_EXISTS_CACHE["KEY_PATTERN"].format(today=today)  # type: ignore[attr-defined]
+        if cache.get(cache_key):
+            return
 
         try:
+            from .business_logic import get_current_daily_challenge
+
             self.create(
-                day=self._today(),
+                day=today,
                 challenge=get_current_daily_challenge(),
             )
         except IntegrityError:
-            print("already exists")
             pass  # already exists? Fine :-)
+
+        # We won't check if today's game stats were created again:
+        cache.set(cache_key, True, _STATS_FOR_TODAY_EXISTS_CACHE["DURATION"])
 
     @staticmethod
     def _today() -> dt.date:
@@ -219,7 +232,9 @@ class DailyChallengeStats(models.Model):
     played_count = models.IntegerField(
         default=0, help_text="Number of games where the player played at least 1 move"
     )
-    turns_count = models.IntegerField(default=0)
+    turns_count = models.IntegerField(
+        default=0, help_text="Number of turns played by players"
+    )
     restarts_count = models.IntegerField(default=0)
     wins_count = models.IntegerField(default=0)
 
