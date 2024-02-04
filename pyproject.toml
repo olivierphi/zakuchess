@@ -40,6 +40,10 @@ pytest-django = "^4.5.2"
 pytest-cov = "^4.1.0"
 time-machine = "^2.13.0"
 
+
+[tool.poetry.group.load-testing.dependencies]
+locust = "^2.21.0"
+
 [tool.black]
 # @link https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html
 target-version = ['py311']
@@ -70,6 +74,8 @@ exclude = [
     '^src/project/settings/.*\.py$',
     '^src/apps/[^/]+/migrations/.*\.py$',
     '^src/lib/chess_engines/[^/]+/.*\.py$',
+    '^locustfile\.py$',
+    '^scripts/load_testing/*\.py$',
 ]
 [[tool.mypy.overrides]]
 module = [

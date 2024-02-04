@@ -10,6 +10,7 @@ repos:
     hooks:
       - id: mypy
         additional_dependencies: [types-requests==2.31.0.2]
+        exclude: "^scripts/load_testing/.*\\.py$"
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     rev: v0.1.14
     hooks:

@@ -192,6 +192,15 @@ data/lichess_db_puzzle.sqlite3/stats:
 	@${PYTHON_BINS}/sqlite-utils query data/lichess_db_puzzle.sqlite3 \
 		'select avg(Rating), avg(Popularity) from puzzles' --csv
 
+# Here starts Load tesing-related stuff
+
+load_testing/locust: processes_count ?= 8
+load_testing/locust: ## Start a load testing session, powered by Locust
+	@${PYTHON_BINS}/locust \
+		--web-host 127.0.0.1 \
+		--processes ${processes_count}
+
+
 # Here starts Docker-related stuff
 
 DOCKER_IMG_NAME ?= zakuchess
