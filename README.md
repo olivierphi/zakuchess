@@ -63,7 +63,7 @@ You can take a look at [the Makefile](./Makefile) to see more commands.
  - [x] "Help" screen, opened automatically on the very 1st visit
  - [x] Server stats _(without any user tracking, of course)_
  - [x] Make the session cookie shorter, by using [msgspec](https://jcristharif.com/msgspec/index.html)
- - [ ] opengraph metatags, so we have a nice preview of the UI when sharing the URL
+ - [x] opengraph metatags, so we have a nice preview of the UI when sharing the URL
 
 Bugs:
  - [x] Fix bubble speech when it's at the top of the chess board 

@@ -35,7 +35,7 @@ _FEN_MAX_LEN = (
 
 _STATS_FOR_TODAY_EXISTS_CACHE = {
     "KEY_PATTERN": "stats_for_today_exists:{today}",
-    "DURATION": 60 * 5,  # 5 minutes
+    "DURATION": 3_600 * 10,  # 10 hours
 }
 
 

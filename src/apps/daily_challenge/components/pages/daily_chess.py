@@ -3,8 +3,9 @@ from string import Template
 from typing import TYPE_CHECKING
 
 from django.conf import settings
+from django.templatetags.static import static
 from django.urls import reverse
-from dominate.tags import button, div, script
+from dominate.tags import button, div, meta, script
 from dominate.util import raw
 
 from apps.chess.components.chess_board import (
@@ -52,6 +53,7 @@ def daily_challenge_page(
         request=request,
         stats_button=_stats_button(),
         help_button=_help_button(),
+        head_children=_open_graph_meta_tags(),
     )
 
 
@@ -149,6 +151,8 @@ def _open_help_modal() -> "dom_tag":
 
 
 _MODAL_TEMPLATE = Template(
+    # Hacky? For sure 😅
+    # (no XSS issue here though, as the variables don't come from the users)
     """{
         setTimeout(() => { htmx.trigger("#${MODAL_ID}-button", "click", {}) }, ${DELAY});
     }"""
@@ -162,4 +166,20 @@ def _open_modal(modal_id: "Literal['stats', 'help']", delay: int) -> "dom_tag":
         ),
         id="modals-container",
         data_hx_swap_oob="innerHTML",
+    )
+
+
+def _open_graph_meta_tags() -> "tuple[dom_tag, ...]":
+    return (
+        meta(
+            property="og:image",
+            content=static("daily_challenge/img/og-image-1200x630.png"),
+        ),
+        meta(property="og:image:type", content="image/png"),
+        meta(property="og:image:width", content="1200"),
+        meta(property="og:image:height", content="630"),
+        meta(
+            property="og:image:alt",
+            content="The starting screen of a new Zakuchess daily challenge",
+        ),
     )

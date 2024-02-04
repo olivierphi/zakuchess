@@ -26,6 +26,8 @@ from dominate.tags import (
 from dominate.util import raw
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from django.http import HttpRequest
     from dominate.tags import dom_tag
     from dominate.util import text
@@ -49,6 +51,7 @@ def page(
     request: "HttpRequest",
     stats_button: "dom_tag | None" = None,
     help_button: "dom_tag | None" = None,
+    head_children: "Sequence[dom_tag] | None" = None,
     title: str = "ZakuChess ♞",
 ) -> str:
     return "<!DOCTYPE html>" + str(
@@ -57,6 +60,7 @@ def page(
             request=request,
             stats_button=stats_button,
             help_button=help_button,
+            head_children=head_children,
             title=title,
         )
     )
@@ -67,10 +71,11 @@ def document(
     request: "HttpRequest",
     stats_button: "dom_tag | None",
     help_button: "dom_tag | None" = None,
+    head_children: "Sequence[dom_tag] | None" = None,
     title: str = "ZakuChess ♞",
 ) -> "dom_tag":
     return html(
-        head(title=title),
+        head(*(head_children or []), title=title),
         body(
             header(stats_button=stats_button, help_button=help_button),
             *children,
@@ -82,16 +87,21 @@ def document(
             ),
             data_hx_ext="class-tools",  # enable CSS class transitions on the whole page
         ),
+        lang="en",  # hopefully we'll have i18n one day :-)
+        prefix="og: https://ogp.me/ns#",  # Open Graph Protocol
         __pretty=settings.DEBUG,
     )
 
 
-def head(*, title: str) -> "dom_tag":
+_META_DESCRIPTION = """A free and open-source "daily chess challenge" game, where you play against a computer opponent with pixel art graphics"""
+
+
+def head(*children: "dom_tag", title: str) -> "dom_tag":
     return base_head(
         meta(charset="utf-8"),
         base_title(title),
         meta(name="viewport", content="width=device-width, initial-scale=1"),
-        meta(name="description", content="ZakuChess"),
+        meta(name="description", content=_META_DESCRIPTION),
         meta(name="keywords", content="chess roleplay"),
         link(
             rel="icon",
@@ -109,6 +119,12 @@ def head(*, title: str) -> "dom_tag":
         link(rel="stylesheet", href=static("webui/css/tailwind.css")),
         script(src=static("webui/js/main.js")),
         script(src=static("chess/js/chess-main.js")),
+        # @link https://ogp.me/
+        meta(property="og:title", content=title),
+        meta(property="og:description", content=_META_DESCRIPTION),
+        # @link https://ogp.me/#types
+        meta(property="og:type", content="website"),
+        *children,
     )
 
 
