@@ -24,7 +24,7 @@ def manage_daily_challenge_moved_piece_logic(
         # Last played date:
         stats.last_played = now().date()
         # Server stats
-        DailyChallengeStats.objects.get_or_create_for_today().increment_played_count()
+        DailyChallengeStats.objects.increment_today_played_count()
 
     # Server stats
-    DailyChallengeStats.objects.get_or_create_for_today().increment_turns_count()
+    DailyChallengeStats.objects.increment_today_turns_count()

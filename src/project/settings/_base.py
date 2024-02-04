@@ -95,6 +95,18 @@ DATABASES = {
 }
 
 
+# Caches
+# https://docs.djangoproject.com/en/5.0/topics/cache/
+# https://docs.djangoproject.com/en/5.0/ref/settings/#std:setting-CACHES
+
+CACHES = {
+    "default": {
+        # Let's kiss things simple for now, and let each Django worker
+        # manage their own in-memory cache.
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+    }
+}
+
 # Sessions
 # https://docs.djangoproject.com/en/5.0/topics/http/sessions/#using-cookie-based-sessions
 
@@ -140,7 +152,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "en-gb"
 
 TIME_ZONE = "UTC"
 

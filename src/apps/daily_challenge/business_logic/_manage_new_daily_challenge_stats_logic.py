@@ -18,7 +18,7 @@ def manage_new_daily_challenge_stats_logic(stats: "PlayerStats") -> None:
         stats.current_streak = 0  # back to a brand new streak flow
 
     # Server stats
-    DailyChallengeStats.objects.get_or_create_for_today().increment_created_count()
+    DailyChallengeStats.objects.increment_today_created_count()
 
     # We could increment the `games_count` counter of the stats here,
     # but let's do it only when the player moves a piece at least - so we'll do

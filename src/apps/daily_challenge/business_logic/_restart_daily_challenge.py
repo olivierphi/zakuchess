@@ -30,6 +30,6 @@ def restart_daily_challenge(
     new_game_state.moves = ""
 
     # Server stats
-    DailyChallengeStats.objects.get_or_create_for_today().increment_restarts_count()
+    DailyChallengeStats.objects.increment_today_restarts_count()
 
     return new_game_state

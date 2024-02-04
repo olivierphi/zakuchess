@@ -5,8 +5,9 @@ from typing import TYPE_CHECKING, ClassVar, Literal, NamedTuple, Self, TypeAlias
 
 import chess
 import msgspec
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import IntegrityError, models
 from django.db.models import F
 from django.utils.timezone import now
 
@@ -31,6 +32,11 @@ _PLAYER_SIDE_CHOICES = literal_to_django_choices(PlayerSide)  # type: ignore
 _FEN_MAX_LEN = (
     90  # @link https://chess.stackexchange.com/questions/30004/longest-possible-fen
 )
+
+_STATS_FOR_TODAY_EXISTS_CACHE = {
+    "KEY_PATTERN": "stats_for_today_exists:{today}",
+    "DURATION": 60 * 5,  # 5 minutes
+}
 
 
 class DailyChallengeStatus(models.IntegerChoices):
@@ -170,14 +176,49 @@ class DailyChallenge(models.Model):
 
 
 class DailyChallengeStatsManager(models.Manager):
-    def get_or_create_for_today(self) -> "DailyChallengeStats":
-        from .business_logic import get_current_daily_challenge
 
-        today = now().date()
-        stats, _ = self.get_or_create(
-            day=today, defaults={"challenge": get_current_daily_challenge}
-        )
-        return stats
+    def increment_today_created_count(self) -> None:
+        self._create_for_today_if_needed()
+        self.filter(day=self._today()).update(created_count=F("created_count") + 1)
+
+    def increment_today_played_count(self) -> None:
+        self._create_for_today_if_needed()
+        self.filter(day=self._today()).update(played_count=F("played_count") + 1)
+
+    def increment_today_turns_count(self) -> None:
+        self._create_for_today_if_needed()
+        self.filter(day=self._today()).update(turns_count=F("turns_count") + 1)
+
+    def increment_today_restarts_count(self) -> None:
+        self._create_for_today_if_needed()
+        self.filter(day=self._today()).update(restarts_count=F("restarts_count") + 1)
+
+    def increment_today_wins_count(self) -> None:
+        self._create_for_today_if_needed()
+        self.filter(day=self._today()).update(wins_count=F("wins_count") + 1)
+
+    def _create_for_today_if_needed(self) -> None:
+        today = self._today()
+        cache_key = _STATS_FOR_TODAY_EXISTS_CACHE["KEY_PATTERN"].format(today=today)  # type: ignore[attr-defined]
+        if cache.get(cache_key):
+            return
+
+        try:
+            from .business_logic import get_current_daily_challenge
+
+            self.create(
+                day=today,
+                challenge=get_current_daily_challenge(),
+            )
+        except IntegrityError:
+            pass  # already exists? Fine :-)
+
+        # We won't check if today's game stats were created again:
+        cache.set(cache_key, True, _STATS_FOR_TODAY_EXISTS_CACHE["DURATION"])
+
+    @staticmethod
+    def _today() -> dt.date:
+        return now().date()
 
 
 class DailyChallengeStats(models.Model):
@@ -191,7 +232,9 @@ class DailyChallengeStats(models.Model):
     played_count = models.IntegerField(
         default=0, help_text="Number of games where the player played at least 1 move"
     )
-    turns_count = models.IntegerField(default=0)
+    turns_count = models.IntegerField(
+        default=0, help_text="Number of turns played by players"
+    )
     restarts_count = models.IntegerField(default=0)
     wins_count = models.IntegerField(default=0)
 
@@ -201,26 +244,6 @@ class DailyChallengeStats(models.Model):
         ordering = ("-day",)
         verbose_name = "Daily challenge stats"
         verbose_name_plural = "Daily challenges stats"
-
-    def increment_created_count(self) -> None:
-        self.created_count = F("created_count") + 1
-        self.save(update_fields=["created_count"])
-
-    def increment_played_count(self) -> None:
-        self.played_count = F("played_count") + 1
-        self.save(update_fields=["played_count"])
-
-    def increment_turns_count(self) -> None:
-        self.turns_count = F("turns_count") + 1
-        self.save(update_fields=["turns_count"])
-
-    def increment_restarts_count(self) -> None:
-        self.restarts_count = F("restarts_count") + 1
-        self.save(update_fields=["restarts_count"])
-
-    def increment_wins_count(self) -> None:
-        self.wins_count = F("wins_count") + 1
-        self.save(update_fields=["wins_count"])
 
 
 @enum.unique
