@@ -9,6 +9,9 @@ on:
 
 permissions:
   pull-requests: write
+  
+env:
+  DJANGO_SETTINGS_MODULE: "project.settings.test"
 
 jobs:
   tests:
@@ -39,6 +42,8 @@ jobs:
         run: poetry run ruff check --quiet src/
       - name: "Run linting checks: Mypy"
         run: poetry run mypy src/
+      - name: "Check that Django DB migrations are up to date"
+        run: poetry run python src/manage.py makemigrations | grep "No changes detected"
       - name: "Run tests"
         env:
           PYTHONPATH: "src/"
