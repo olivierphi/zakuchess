@@ -46,13 +46,20 @@ _FONTS_CSS = """
 """
 
 
+_META_TITLE = "ZakuChess ♞ - A daily chess challenge with pixel art units"
+_META_DESCRIPTION = (
+    """Play chess with character(s) - """
+    """a chess game with pixel art units, with a new challenge each day."""
+)
+
+
 def page(
     *children: "dom_tag",
     request: "HttpRequest",
+    title: str = _META_TITLE,
     stats_button: "dom_tag | None" = None,
     help_button: "dom_tag | None" = None,
     head_children: "Sequence[dom_tag] | None" = None,
-    title: str = "ZakuChess ♞",
 ) -> str:
     return "<!DOCTYPE html>" + str(
         document(
@@ -69,10 +76,10 @@ def page(
 def document(
     *children: "dom_tag",
     request: "HttpRequest",
+    title: str,
     stats_button: "dom_tag | None",
     help_button: "dom_tag | None" = None,
     head_children: "Sequence[dom_tag] | None" = None,
-    title: str = "ZakuChess ♞",
 ) -> "dom_tag":
     return html(
         head(*(head_children or []), title=title),
@@ -93,16 +100,13 @@ def document(
     )
 
 
-_META_DESCRIPTION = """A free and open-source "daily chess challenge" game, where you play against a computer opponent with pixel art graphics"""
-
-
 def head(*children: "dom_tag", title: str) -> "dom_tag":
     return base_head(
         meta(charset="utf-8"),
         base_title(title),
         meta(name="viewport", content="width=device-width, initial-scale=1"),
         meta(name="description", content=_META_DESCRIPTION),
-        meta(name="keywords", content="chess roleplay"),
+        meta(name="keywords", content="chess pixel-art roleplay"),
         link(
             rel="icon",
             type="image/png",

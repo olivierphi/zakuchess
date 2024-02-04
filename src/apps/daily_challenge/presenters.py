@@ -225,15 +225,18 @@ class DailyChallengeGamePresenterUrls(GamePresenterUrls):
     def htmx_game_play_bot_move_url(self, *, board_id: str) -> str:
         return "".join(
             (
+                # We'll use "<from>" and "<to>" as placeholders - our JS
+                # code will replace them with the actual squares when it needs this URL
+                # pattern.
                 reverse(
                     "daily_challenge:htmx_game_bot_move",
                     kwargs={
-                        # By convention we use "a1" and "a2" as placeholders - our JS
-                        # code will replace them with the actual squares.
                         "from_": "a1",
                         "to": "a2",
                     },
-                ),
+                )
+                .replace("a1", "<from>")
+                .replace("a2", "<to>"),
                 "?",
                 urlencode({"board_id": board_id}),
             )

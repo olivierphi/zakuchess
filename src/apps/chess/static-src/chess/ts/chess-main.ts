@@ -93,18 +93,8 @@ function playBotMove(
         // By convention we use "a1" and "a2" as placeholders on the server side for the "from" and "to" squares.
         // As the from and to can contain "a1" and "a2" themselves, we cannot use String.replace() directly.
         // --> hence this somewhat convoluted approach to replace them:
-        let targeUrl = htmxElement.dataset.hxPost!
-        const fromIndex = targeUrl.indexOf("a1")
-        const toIndex = targeUrl.indexOf("a2")
-        if (fromIndex === -1 || toIndex === -1) {
-            throw `invalid hxPost value: ${targeUrl}`
-        }
-        targeUrl =
-            targeUrl.substring(0, fromIndex) +
-            from +
-            targeUrl.substring(fromIndex + 2, toIndex) +
-            to +
-            targeUrl.substring(toIndex + 2)
+        const targeUrlPattern = htmxElement.dataset.hxPost!
+        const targeUrl = targeUrlPattern.replace("<from>", from).replace("<to>", to)
         htmxElement.dataset.hxPost = targeUrl
         window.htmx.process(htmxElement)
         window.htmx.trigger(htmxElement, "playMove", {})
