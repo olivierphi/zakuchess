@@ -9,7 +9,12 @@
 ### Chess with character(s)
 
 A free and open-source "daily chess challenge" game, where you play against a computer opponent
-with pixel art graphics.
+with pixel art units.
+
+No tracking, no ads - it was built purely for fun, and to check how far I could go with 
+a reactive User Interface powered by htmx 🙂
+
+![The starting screen of a new ZakuChess daily challenge](./src/apps/daily_challenge/static/daily_challenge/img/og-image-1200x630.png)
 
 ### The stack
 
@@ -76,8 +81,21 @@ Bugs:
 
 ##### Post launch
 
+ - [ ] Accessibility (at the moment I have no idea how to make the game accessible to visually impaired people, for example)
  - [ ] More testing! (the "Pytest + Playwright" combo should be our friend here)
  - [ ] Translate the user interface for other languages
  - [ ] Allow seasoned chess players to play more difficult challenges
  - [ ] Score sharing
  - [ ] The UI should allow "replays" - whether it's for the current game or someone else's
+
+### Contributing
+
+Improvements and bugfixes are welcome, but also new "daily challenges"!
+
+When playing chess online with other people, if you find yourself in a position that you think 
+could be interesting for others to try to solve ♞, please feel free to open an issue to discuss its
+addition to the daily challenges database. 🙂
+
+### License
+
+This project is licensed under the GNU General Public License v3 - see the [LICENSE](./LICENSE) file for details.

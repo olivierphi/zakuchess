@@ -180,6 +180,6 @@ def _open_graph_meta_tags() -> "tuple[dom_tag, ...]":
         meta(property="og:image:height", content="630"),
         meta(
             property="og:image:alt",
-            content="The starting screen of a new Zakuchess daily challenge",
+            content="The starting screen of a new ZakuChess daily challenge",
         ),
     )
