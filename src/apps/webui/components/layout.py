@@ -128,6 +128,11 @@ def head(*children: "dom_tag", title: str) -> "dom_tag":
         meta(property="og:description", content=_META_DESCRIPTION),
         # @link https://ogp.me/#types
         meta(property="og:type", content="website"),
+        *(
+            link(rel="me", href=settings.MASTODON_PAGE)
+            if settings.MASTODON_PAGE
+            else []
+        ),
         *children,
     )
 

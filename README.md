@@ -58,35 +58,8 @@ You can take a look at [the Makefile](./Makefile) to see more commands.
 
 ### Roadmap
 
-##### Before launch
-
- - [x] Game preview and FEN editing in the Django Admin
- - [x] Being able to import games from the Lichess puzzles database, ready to be editorliased in our Django Admin
- - [x] Validate input data, using good ol' Django path converters 
- - [x] Users' personal stats (current streak, etc)
- - [x] "End of game" screen
- - [x] "Help" screen, opened automatically on the very 1st visit
- - [x] Server stats _(without any user tracking, of course)_
- - [x] Make the session cookie shorter, by using [msgspec](https://jcristharif.com/msgspec/index.html)
- - [x] opengraph metatags, so we have a nice preview of the UI when sharing the URL
- - [x] basic load testing, powered by Locust
-
-Bugs:
- - [x] Fix bubble speech when it's at the top of the chess board 
- - [x] Fix bubble speech priority (win/lose should always have priority over the rest for example)
- - [x] Fix unit names display (missing space between names)
- - [x] Fix remaining turns display when in "danger" zone (HTML shouldn't be escaped)
- - [x] Fix bug that allows the player to select/de-select a piece during the bot's turn, which can cancel the delayed bot move
-
-
-##### Post launch
-
- - [ ] Accessibility (at the moment I have no idea how to make the game accessible to visually impaired people, for example)
- - [ ] More testing! (the "Pytest + Playwright" combo should be our friend here)
- - [ ] Translate the user interface for other languages
- - [ ] Allow seasoned chess players to play more difficult challenges
- - [ ] Score sharing
- - [ ] The UI should allow "replays" - whether it's for the current game or someone else's
+The roadmap now lives in a GitHub project:  
+> https://github.com/users/olivierphi/projects/1/views/1
 
 ### Contributing
 
