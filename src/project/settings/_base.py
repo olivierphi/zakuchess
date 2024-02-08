@@ -178,3 +178,4 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 ZAKUCHESS_VERSION = env.get("ZAKUCHESS_VERSION", "dev")
 STOCKFISH_PATH = env.get("STOCKFISH_PATH", "stockfish")
 STOCKFISH_TIME_LIMIT = float(env.get("STOCKFISH_TIME_LIMIT", "0.1"))
+MASTODON_PAGE = env.get("MASTODON_PAGE")
