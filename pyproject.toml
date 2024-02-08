@@ -8,7 +8,7 @@ homepage = "https://github.com/olivierphi/zakuchess"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-Django = "^5.0.1"
+Django = "^5.0.2"
 gunicorn = "^21.2.0"
 django-alive = "^1.2.1"
 chess = "^1.9.3"
