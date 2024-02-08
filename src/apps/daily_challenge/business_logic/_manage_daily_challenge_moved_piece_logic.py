@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 
 def manage_daily_challenge_moved_piece_logic(
-    *, game_state: "PlayerGameState", stats: "PlayerStats"
+    *, game_state: "PlayerGameState", stats: "PlayerStats", is_preview: bool = False
 ) -> None:
     """
     When a player moves a piece during new daily challenge,
@@ -17,6 +17,9 @@ def manage_daily_challenge_moved_piece_logic(
     """
 
     assert game_state.game_over == PlayerGameOverState.PLAYING
+
+    if is_preview:
+        return None
 
     if game_state.current_attempt_turns_counter == 1:
         # One more game played for this player!

@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 def manage_daily_challenge_victory_logic(
-    *, game_state: "PlayerGameState", stats: PlayerStats
+    *, game_state: "PlayerGameState", stats: PlayerStats, is_preview: bool = False
 ) -> None:
     """
     When a player wins a new daily challenge, we need to update part of their stats
@@ -21,6 +21,9 @@ def manage_daily_challenge_victory_logic(
     """
 
     assert game_state.game_over == PlayerGameOverState.WON
+
+    if is_preview:
+        return None
 
     # One more game won for this player! Happy stats :-)
     stats.win_count += 1

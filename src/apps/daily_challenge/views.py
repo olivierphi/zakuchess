@@ -43,7 +43,7 @@ if TYPE_CHECKING:
 
     from apps.chess.types import Move
 
-    from .models import DailyChallenge, PlayerGameState, PlayerStats
+    from .models import PlayerStats
 
 
 _logger = logging.getLogger(__name__)
@@ -169,14 +169,18 @@ def htmx_game_move_piece(
 
     if just_won:
         # The player won! GGWP 🏆
-        manage_daily_challenge_victory_logic(game_state=new_game_state, stats=ctx.stats)
+        manage_daily_challenge_victory_logic(
+            game_state=new_game_state, stats=ctx.stats, is_preview=ctx.is_preview
+        )
     elif just_lost:
         # Sorry - hopefully victory will be yours next time! 🤞
-        manage_daily_challenge_defeat_logic(game_state=new_game_state, stats=ctx.stats)
+        manage_daily_challenge_defeat_logic(
+            game_state=new_game_state, is_preview=ctx.is_preview
+        )
     else:
         # Keep playing. Good luck!
         manage_daily_challenge_moved_piece_logic(
-            game_state=new_game_state, stats=ctx.stats
+            game_state=new_game_state, stats=ctx.stats, is_preview=ctx.is_preview
         )
 
     game_presenter = DailyChallengeGamePresenter(
@@ -257,7 +261,7 @@ def htmx_restart_daily_challenge_do(request: "HttpRequest") -> HttpResponse:
         return _redirect_to_game_view_screen_with_brand_new_game(request, ctx.stats)
 
     new_game_state = restart_daily_challenge(
-        challenge=ctx.challenge, game_state=ctx.game_state
+        challenge=ctx.challenge, game_state=ctx.game_state, is_preview=ctx.is_preview
     )
 
     save_daily_challenge_state_in_session(
@@ -302,9 +306,7 @@ def htmx_game_bot_move(
 
     return _play_bot_move(
         request=request,
-        challenge=ctx.challenge,
-        game_state=ctx.game_state,
-        player_stats=ctx.stats,
+        ctx=ctx,
         move=f"{from_}{to}",
         board_id=ctx.board_id,
     )
@@ -366,24 +368,22 @@ def debug_view_cookie(request: "HttpRequest") -> HttpResponse:
 def _play_bot_move(
     *,
     request: "HttpRequest",
-    challenge: "DailyChallenge",
-    game_state: "PlayerGameState",
-    player_stats: "PlayerStats",
+    ctx: GameContext,
     move: "Move",
     board_id: str,
 ) -> HttpResponse:
-    game_over_already = game_state.game_over != PlayerGameOverState.PLAYING
+    game_over_already = ctx.game_state.game_over != PlayerGameOverState.PLAYING
 
     bot_next_move = uci_move_squares(move)
     new_game_state, captured_piece_role = move_daily_challenge_piece(
-        game_state=game_state,
+        game_state=ctx.game_state,
         from_=bot_next_move[0],
         to=bot_next_move[1],
         is_my_side=False,
     )
 
     game_presenter = DailyChallengeGamePresenter(
-        challenge=challenge,
+        challenge=ctx.challenge,
         game_state=new_game_state,
         is_bot_move=True,
         is_htmx_request=True,
@@ -398,13 +398,13 @@ def _play_bot_move(
     if just_lost:
         # Sorry - hopefully victory will be yours next time! 🤞
         manage_daily_challenge_defeat_logic(
-            game_state=new_game_state, stats=player_stats
+            game_state=new_game_state, is_preview=ctx.is_preview
         )
 
     save_daily_challenge_state_in_session(
         request=request,
         game_state=new_game_state,
-        player_stats=player_stats,
+        player_stats=ctx.stats,
     )
 
     return _daily_challenge_moving_parts_fragment_response(

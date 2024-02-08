@@ -7,11 +7,16 @@ if TYPE_CHECKING:
     from ..models import PlayerStats
 
 
-def manage_new_daily_challenge_stats_logic(stats: "PlayerStats") -> None:
+def manage_new_daily_challenge_stats_logic(
+    stats: "PlayerStats", *, is_preview: bool = False
+) -> None:
     """
     When a player starts a new daily challenge,
     we may need to update part of their stats.
     """
+
+    if is_preview:
+        return None
 
     # Do we restart the current streak from the beginning?
     if not player_won_yesterday(stats):

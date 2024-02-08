@@ -72,7 +72,7 @@ Square = Literal[
     # fmt: on
 ]
 
-Move = str  # more than 4k possible moves, so let's just use a string to represent ^_^
+Move = str  # >4k possible moves, so... let's just use a string to represent them ^_^
 
 SquareColor = Literal["light", "dark"]
 
