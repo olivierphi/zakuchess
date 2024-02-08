@@ -9,7 +9,6 @@ from dominate.tags import div, dom_tag, section, span
 from dominate.util import raw as unescaped_html
 
 from ..helpers import (
-    chess_square_color,
     file_and_rank_from_square,
     piece_name_from_piece_role,
     player_side_from_piece_role,
@@ -206,7 +205,7 @@ def chess_board_square(square: "Square", *, force_square_info: bool = False) -> 
         square_info = (
             span(
                 square_name,
-                cls="text-chess-square-square-info",
+                cls="text-chess-square-square-info select-none",
             )
             if display_square_info
             else ""
@@ -512,7 +511,6 @@ def chess_unit_symbol_display(*, piece_role: "PieceRole", square: "Square") -> d
     player_side = player_side_from_piece_role(piece_role)
     piece_type = type_from_piece_role(piece_role)
     piece_name = piece_name_from_piece_role(piece_role)
-    chess_square_color(square)
 
     is_knight, is_pawn = piece_type == "n", piece_type == "p"
 

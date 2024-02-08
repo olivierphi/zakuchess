@@ -9,7 +9,6 @@ from .consts import (
     PIECE_TYPE_TO_UNICODE,
     SQUARES,
 )
-from .types import PieceType, SquareColor
 
 if TYPE_CHECKING:
     from .types import (
@@ -18,6 +17,7 @@ if TYPE_CHECKING:
         PieceName,
         PieceRole,
         PieceSymbol,
+        PieceType,
         PlayerSide,
         Rank,
         Square,
@@ -31,7 +31,7 @@ def square_from_int(chess_lib_square: int) -> "Square":
 
 
 @cache
-def piece_from_int(chess_lib_piece: int) -> PieceType:
+def piece_from_int(chess_lib_piece: int) -> "PieceType":
     # a bit hacky but that will do the job for now ^^
     return PIECE_INT_TO_PIECE_TYPE[chess_lib_piece]
 
@@ -144,13 +144,3 @@ def player_side_to_chess_lib_color(player_side: "PlayerSide") -> chess.Color:
 @cache
 def chess_lib_color_to_player_side(color: chess.Color) -> "PlayerSide":
     return "w" if color == chess.WHITE else "b"
-
-
-@cache
-def chess_square_color(square: "Square") -> "SquareColor":
-    file = int(square[1])
-    return (
-        "light"
-        if (file % 2 == 0 if square[0] in ("a", "c", "e", "g") else file % 2 == 1)
-        else "dark"
-    )
