@@ -8,7 +8,10 @@ if TYPE_CHECKING:
 
 
 def restart_daily_challenge(
-    *, challenge: "DailyChallenge", game_state: "PlayerGameState"
+    *,
+    challenge: "DailyChallenge",
+    game_state: "PlayerGameState",
+    is_preview: bool = False,
 ) -> "PlayerGameState":
     # These fields are always set on a published challenge - let's make the
     # type checker happy:
@@ -30,6 +33,7 @@ def restart_daily_challenge(
     new_game_state.moves = ""
 
     # Server stats
-    DailyChallengeStats.objects.increment_today_restarts_count()
+    if not is_preview:
+        DailyChallengeStats.objects.increment_today_restarts_count()
 
     return new_game_state

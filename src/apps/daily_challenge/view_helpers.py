@@ -10,12 +10,17 @@ if TYPE_CHECKING:
     from .models import DailyChallenge, PlayerGameState, PlayerStats
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(eq=False, kw_only=True, frozen=True, slots=True)
 class GameContext:
+    """
+    A context object that holds the current daily challenge, the current game state,
+    and some other data that is useful for our Views (aka "Controllers" in MVC).
+    """
+
     challenge: "DailyChallenge"
 
     is_preview: bool
-    """if we're in admin preview mode"""
+    """`is_preview` is True if we're in admin preview mode"""
     game_state: "PlayerGameState"
     stats: "PlayerStats"
     created: bool
@@ -32,7 +37,7 @@ class GameContext:
         board_id = cast(str, request.GET.get("board_id", "main"))
 
         if created:
-            manage_new_daily_challenge_stats_logic(stats)
+            manage_new_daily_challenge_stats_logic(stats, is_preview=is_preview)
 
         return cls(
             challenge=challenge,

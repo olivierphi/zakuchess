@@ -308,14 +308,14 @@ class DailyChallengeAdmin(ImportExportModelAdmin):
 class DailyChallengeStatsAdmin(admin.ModelAdmin):
     list_display = (
         "day",
-        "challenge_link",
-        "challenge_starting_advantage",
-        "wins_percentage",
-        "created_count",
         "played_count",
-        "turns_count",
         "restarts_count",
         "wins_count",
+        "wins_percentage",
+        "turns_count",
+        "challenge_link",
+        "challenge_starting_advantage",
+        "created_count",
     )
     ordering = ("-day",)
     list_select_related = ("challenge",)
