@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from dominate.tags import button, div, dom_tag, p
+from dominate.tags import b, button, div, dom_tag, p
 from dominate.util import raw
 
 from apps.chess.helpers import (
@@ -67,7 +67,7 @@ def status_bar(
                     p("You lost! 😭"),
                     (
                         p(
-                            "You can try again with the ↩️ button above!",
+                            "But you can try again with the 'restart' button above!",
                             cls="w-full text-center",
                         )
                         if game_presenter.challenge_turns_left > 4
@@ -112,7 +112,7 @@ def _chess_status_bar_selected_piece(
     )
 
     unit_about = div(
-        div(name_display),
+        div("> ", b(name_display), " <"),
         div(
             character_type_tip(type_from_piece_role(piece_role)),
             chess_unit_symbol_display(player_side=player_side, piece_name=piece_name),

@@ -354,5 +354,5 @@ class SelectedPiecePresenter(SelectedSquarePresenter):
 class SpeechBubbleData(NamedTuple):
     text: str
     square: "Square"
-    time_out: int = 4  # seconds
+    time_out: int | None = None  # if it's None, should be expressed in seconds
     character_display: "PieceRole | None" = None

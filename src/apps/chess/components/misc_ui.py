@@ -96,7 +96,7 @@ def speech_bubble(
     game_presenter: "GamePresenter",
     text: str,
     square: "Square",
-    time_out: int,
+    time_out: int | None,
     character_display: "PieceRole | None" = None,
     board_id: str,
     **extra_attrs: str,
@@ -186,6 +186,10 @@ def speech_bubble(
         "opacity-90",
         *square_to_square_center_tailwind_classes(square),
     )
+
+    if time_out:
+        outer_classes += ("hidden !block",)
+        extra_attrs["data_classes"] = f"remove !block:{time_out}s"
 
     return div(
         bubble_container,
