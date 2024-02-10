@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Literal
 
-from dominate.tags import a, button, div, dom_tag, h3, i, span
+from dominate.tags import a, button, div, h3, i, script, span
 from dominate.util import raw
 
 from .chess_helpers import square_to_square_center_tailwind_classes
@@ -76,7 +76,7 @@ def modal_container(*, header: h3, body: div) -> "dom_tag":
 
 def speech_bubble_container(
     *, game_presenter: "GamePresenter", board_id: str, **extra_attrs: str
-) -> dom_tag:
+) -> "dom_tag":
     if speech_bubble_data := game_presenter.speech_bubble:
         return speech_bubble(
             game_presenter=game_presenter,
@@ -96,11 +96,11 @@ def speech_bubble(
     game_presenter: "GamePresenter",
     text: str,
     square: "Square",
-    time_out: int,
+    time_out: float | None,
     character_display: "PieceRole | None" = None,
     board_id: str,
     **extra_attrs: str,
-) -> dom_tag:
+) -> "dom_tag":
     from .chess_board import chess_character_display
 
     relative_position: Literal["left", "right"] = "right" if square[1] < "5" else "left"
@@ -174,21 +174,32 @@ def speech_bubble(
         ),
     )
 
+    bubble_container_no_flickering_classes = ("hidden", "!block")
     bubble_container = div(
         bubble,
         bubble_tail,
-        cls="relative drop-shadow-speech-bubble",
+        # We avoid an annoying flickering effect (still not sure why it happens thb)
+        # by hiding this first and then showing it with JS:
+        cls=f"relative drop-shadow-speech-bubble {bubble_container_no_flickering_classes[0]}",
+        data_classes=f"add {bubble_container_no_flickering_classes[1]}:120ms",
     )
 
-    outer_classes = (
+    outer_classes = [
         "absolute",
         "drop-shadow-lg",
         "opacity-90",
         *square_to_square_center_tailwind_classes(square),
+    ]
+
+    hide_script = (
+        script(f"""setTimeout(closeSpeechBubble, {int(time_out * 1000)})""")
+        if time_out
+        else ""
     )
 
     return div(
         bubble_container,
+        hide_script,
         id=f"speech-container-{board_id}",
         cls=" ".join(outer_classes),
         data_speech_bubble=True,

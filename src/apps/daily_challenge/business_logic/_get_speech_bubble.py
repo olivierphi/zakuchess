@@ -17,6 +17,21 @@ if TYPE_CHECKING:
 # This code was originally part of the DailyChallengeGamePresenter class,
 # but as it grew arms and legs I ended up  moving it to its own file.
 
+_UNIT_LOST_REACTIONS: tuple[tuple[str, float], ...] = (
+    # These disappear after a few seconds, so they have to be short.
+    # The 2nd element of each tuple is the number of seconds
+    # the speech bubble will be displayed.
+    ("{} 😢!", 2),
+    ("They got {}!", 2.5),
+    ("We lost {}!", 2.5),
+    ("We'll avenge you, {}!", 3.5),
+    ("Let's avenge {}, comrades!", 4.5),
+    ("You were such a good companion, {}!", 5),
+    ("Won't be the same without you, {}!", 5),
+    ("Say hi to the healers for us, {}!", 5),
+    ("The undeads will pay for what they did to you, {}!", 6),
+)
+
 
 def get_speech_bubble(
     game_presenter: "DailyChallengeGamePresenter",
@@ -29,7 +44,7 @@ def get_speech_bubble(
 
     if forced_speech_bubble := game_presenter.forced_speech_bubble:
         return SpeechBubbleData(
-            text=forced_speech_bubble[1], square=forced_speech_bubble[0], time_out=2
+            text=forced_speech_bubble[1], square=forced_speech_bubble[0]
         )
 
     if game_presenter.game_phase.startswith("game_over"):
@@ -56,7 +71,7 @@ def get_speech_bubble(
         return SpeechBubbleData(
             text=text,
             square=game_presenter.challenge.intro_turn_speech_square,
-            time_out=8,
+            time_out=15,
         )
 
     if game_presenter.is_bot_move and game_presenter.captured_piece_role:
@@ -73,13 +88,12 @@ def get_speech_bubble(
             captured_team_member_display = name.split(" ")[0]
         else:
             captured_team_member_display = name[0]
-        reaction = random.choice(
-            ("They got {}!", "We lost {}!", "We'll avenge you, {}!")
-        )
+        reaction, reaction_time_out = random.choice(_UNIT_LOST_REACTIONS)
         return SpeechBubbleData(
             text=reaction.format(captured_team_member_display),
             square=_my_king_square(game_presenter),
             character_display=game_presenter.captured_piece_role,
+            time_out=reaction_time_out,
         )
 
     if (
@@ -92,6 +106,7 @@ def get_speech_bubble(
         return SpeechBubbleData(
             text="Let's try that again, folks! 🤞",
             square=game_presenter.challenge.intro_turn_speech_square,
+            time_out=15,
         )
 
     if (
@@ -121,7 +136,6 @@ def get_speech_bubble(
                 "Maybe trying again from the beginning, "
                 "by using the 'restart' button, could be a good idea?",
                 square=_my_king_square(game_presenter),
-                time_out=8,
             )
 
     return None

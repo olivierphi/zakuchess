@@ -95,10 +95,13 @@ def daily_challenge_moving_parts_fragment(
                     board_id=board_id,
                     data_hx_swap_oob="outerHTML",
                 ),
-                speech_bubble_container(
-                    game_presenter=game_presenter,
-                    board_id=board_id,
-                    data_hx_swap_oob="outerHTML",
+                div(
+                    speech_bubble_container(
+                        game_presenter=game_presenter,
+                        board_id=board_id,
+                    ),
+                    id=f"chess-speech-container-{board_id}",
+                    data_hx_swap_oob="innerHTML",
                 ),
                 _open_stats_modal() if game_presenter.just_won else div(""),
             )
