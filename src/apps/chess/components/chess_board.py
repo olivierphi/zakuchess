@@ -101,7 +101,7 @@ def chess_arena(
                     game_presenter=game_presenter, board_id=board_id
                 ),
                 cls="absolute inset-0 pointer-events-none z-40",
-                id=f"chess-available-speech-container-{board_id}",
+                id=f"chess-speech-container-{board_id}",
             ),
             id=f"chess-board-components-{board_id}",
             cls="aspect-square relative",

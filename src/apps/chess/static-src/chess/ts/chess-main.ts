@@ -121,7 +121,7 @@ function computeScore(fen: string, botAssetsDataHolderElementId: string): Promis
 function closeSpeechBubble() {
     const speechBubble = getSpeechBubble()
     if (speechBubble && speechBubble.parentNode) {
-        speechBubble.innerHTML = ""
+        speechBubble.remove()
     }
 }
 

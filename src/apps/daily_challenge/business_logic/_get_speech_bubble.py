@@ -17,15 +17,15 @@ if TYPE_CHECKING:
 # This code was originally part of the DailyChallengeGamePresenter class,
 # but as it grew arms and legs I ended up  moving it to its own file.
 
-_UNIT_LOST_REACTIONS: tuple[tuple[str, int], ...] = (
+_UNIT_LOST_REACTIONS: tuple[tuple[str, float], ...] = (
     # These disappear after a few seconds, so they have to be short.
     # The 2nd element of each tuple is the number of seconds
     # the speech bubble will be displayed.
-    ("{} 😢!", 1),
-    ("They got {}!", 2),
-    ("We lost {}!", 2),
-    ("We'll avenge you, {}!", 3),
-    ("Let's avenge {}, comrades!", 4),
+    ("{} 😢!", 2),
+    ("They got {}!", 2.5),
+    ("We lost {}!", 2.5),
+    ("We'll avenge you, {}!", 3.5),
+    ("Let's avenge {}, comrades!", 4.5),
     ("You were such a good companion, {}!", 5),
     ("Won't be the same without you, {}!", 5),
     ("Say hi to the healers for us, {}!", 5),
