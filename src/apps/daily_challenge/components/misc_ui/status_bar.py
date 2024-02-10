@@ -34,7 +34,6 @@ def status_bar(
     if game_presenter.is_intro_turn:
         inner_content = div(
             help_content(
-                challenge_total_turns=game_presenter.challenge_total_turns,
                 factions_tuple=tuple(game_presenter.factions.items()),
             ),
             div(
@@ -49,8 +48,8 @@ def status_bar(
     else:
         match game_presenter.game_phase:
             case "game_over:won":
-                turns_counter = game_presenter.challenge_turns_counter + 1
-                attempts_counter = game_presenter.challenge_attempts_counter + 1
+                turns_counter = game_presenter.game_state.turns_counter + 1
+                attempts_counter = game_presenter.game_state.attempts_counter + 1
                 msg = raw(
                     "Today it took you "
                     f"<b>{turns_counter}</b> turns, "
@@ -64,14 +63,12 @@ def status_bar(
                 )
             case "game_over:lost":
                 inner_content = div(
-                    p("You lost! 😭"),
+                    p("You didn't make it this time! 😔"),
                     (
                         p(
-                            "But you can try again with the 'restart' button above!",
+                            "But you can try again with the <b>'restart'</b> button above!",
                             cls="w-full text-center",
                         )
-                        if game_presenter.challenge_turns_left > 4
-                        else ""
                     ),
                     cls="w-full text-center",
                 )

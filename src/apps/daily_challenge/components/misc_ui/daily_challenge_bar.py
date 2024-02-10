@@ -1,9 +1,9 @@
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 from urllib.parse import urlencode
 
 from django.contrib.humanize.templatetags.humanize import ordinal
 from django.urls import reverse
-from dominate.tags import button, div, dom_tag, span
+from dominate.tags import button, div, dom_tag
 from dominate.util import raw
 
 from .common_styles import BUTTON_CLASSES
@@ -11,15 +11,6 @@ from .svg_icons import ICON_SVG_RESTART
 
 if TYPE_CHECKING:
     from ...presenters import DailyChallengeGamePresenter
-
-BlockColor = Literal["grey", "green", "yellow", "red"]
-PROGRESS_BAR_BLOCKS: dict[BlockColor, str] = {
-    "grey": "⬜",
-    "green": "🟩",
-    "yellow": "🟨",
-    "red": "🟥",
-}
-PROGRESS_BAR_BLOCKS_COUNT = 10
 
 
 def daily_challenge_bar(
@@ -90,25 +81,11 @@ def _restart_confirmation_display(*, board_id: str) -> dom_tag:
 def _current_state_display(
     *, game_presenter: "DailyChallengeGamePresenter", board_id: str
 ) -> dom_tag:
+    turns_counter = game_presenter.game_state.turns_counter
+    attempts_counter = game_presenter.game_state.attempts_counter
+    current_attempt_turns = game_presenter.game_state.current_attempt_turns_counter
 
-    (
-        attempts_counter,
-        current_attempt_turns,
-        turns_total,
-        turns_left,
-        percentage_left,
-        time_s_up,
-    ) = game_presenter.challenge_turns_state
-
-    blocks, danger = _challenge_turns_left_display_with_blocks(percentage_left)
-
-    restart_button: dom_tag = span("")
-    if not time_s_up:
-        restart_button = _restart_button(board_id)
-
-    turns_left_display = (
-        f"""<b class="text-rose-600">{turns_left}</b>""" if danger else turns_left
-    )
+    restart_button = _restart_button(board_id)
 
     return div(
         div(
@@ -123,39 +100,15 @@ def _current_state_display(
             cls="text-center",
         ),
         div(
-            div(
-                raw(f"Today's turns left: {turns_left_display}/{turns_total}"),
-                cls="text-center",
+            (
+                raw(f"<b>{turns_counter}</b> turns overall")
+                if attempts_counter > 0
+                else ""
             ),
-            div(
-                blocks,
-                restart_button,
-                cls="flex justify-center items-center",
-            ),
+            restart_button,
+            cls="text-center",
         ),
         cls="w-full",
-    )
-
-
-def _challenge_turns_left_display_with_blocks(
-    percentage_left: int,
-) -> tuple[dom_tag, bool]:
-    blocks_color: BlockColor = (
-        "green"
-        if percentage_left >= 60
-        else ("yellow" if percentage_left >= 30 else "red")
-    )
-    blocks: list[str] = []
-    current_block_color: BlockColor = blocks_color
-    for i in range(PROGRESS_BAR_BLOCKS_COUNT):
-        percentage = (i + 1) * 100 / PROGRESS_BAR_BLOCKS_COUNT
-        if percentage > percentage_left:
-            current_block_color = "grey"
-        blocks.append(PROGRESS_BAR_BLOCKS[current_block_color])
-
-    return (
-        span("".join(blocks)),
-        blocks_color == "red",
     )
 
 

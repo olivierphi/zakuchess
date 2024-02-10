@@ -3,7 +3,7 @@ from functools import cache
 from typing import TYPE_CHECKING, cast
 
 from django.conf import settings
-from dominate.tags import br, div, h4, span
+from dominate.tags import div, h4, span
 from dominate.util import raw
 
 from apps.chess.components.chess_helpers import chess_unit_symbol_class
@@ -49,7 +49,6 @@ _CHARACTER_TYPE_ROLE_MAPPING: dict["PieceType", "TeamMemberRole"] = {
 @cache
 def help_content(
     *,
-    challenge_total_turns: int,
     factions_tuple: "tuple[tuple[PlayerSide, Faction], ...]",
 ) -> "dom_tag":
     # N.B. We use a tuple here for the factions, so they're hashable
@@ -75,16 +74,7 @@ def help_content(
                 cls=f"{spacing}",
             ),
             div(
-                raw(
-                    f"You have <b>{challenge_total_turns}</b> "
-                    "turns to win this challenge."
-                ),
-                cls=f"{spacing}",
-            ),
-            div(
-                "You can restart from the beginning at any time,",
-                br(),
-                "by clicking the ",
+                "You can restart from the beginning at any time, by clicking the ",
                 span(
                     "restart",
                     ICON_SVG_RESTART,

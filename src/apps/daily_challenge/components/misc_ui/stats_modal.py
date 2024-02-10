@@ -5,7 +5,6 @@ from dominate.tags import div, h3
 
 from apps.chess.components.misc_ui import modal_container
 
-from ...consts import MAXIMUM_TURNS_PER_CHALLENGE
 from .svg_icons import ICON_SVG_STATS
 
 if TYPE_CHECKING:
@@ -56,16 +55,21 @@ def _wins_distribution(stats: "PlayerStats") -> "dom_tag":
             cls="text-center",
         )
     else:
-        slices_size = MAXIMUM_TURNS_PER_CHALLENGE / stats.WINS_DISTRIBUTION_SLICE_COUNT
+        slices_size = stats.WINS_DISTRIBUTION_SLICE_SIZE
         min_width_percentage = 8
 
         def row(distribution_slice: int, count: int) -> "dom_tag":
             slice_lower_bound = floor(slices_size * (distribution_slice - 1)) + 1
             slice_upper_bound = floor(slice_lower_bound + slices_size) - 1
+            slice_label = (
+                f"{slice_upper_bound} turns or less"
+                if distribution_slice < stats.WINS_DISTRIBUTION_SLICE_COUNT
+                else f"More than {slice_lower_bound - 1} turns "
+            )
 
             return div(
                 div(
-                    f"{slice_lower_bound} - {slice_upper_bound} turns",
+                    slice_label,
                     cls="font-bold",
                 ),
                 div(

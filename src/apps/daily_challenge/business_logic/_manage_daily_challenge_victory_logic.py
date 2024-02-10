@@ -1,15 +1,11 @@
-from math import ceil
 from typing import TYPE_CHECKING, cast
 
 from django.utils.timezone import now
 
-from ..consts import MAXIMUM_TURNS_PER_CHALLENGE
 from ..models import DailyChallengeStats, PlayerGameOverState, PlayerStats
 
 if TYPE_CHECKING:
-    from typing import Literal
-
-    from ..models import PlayerGameState
+    from ..models import PlayerGameState, WinsDistributionSlice
 
 
 def manage_daily_challenge_victory_logic(
@@ -40,14 +36,10 @@ def manage_daily_challenge_victory_logic(
 
     # Wins distribution management:
     total_turns = game_state.turns_counter
-    # This gives us a number between 1 and 5, where 1 is the best performance and 5 the worst:
+    # This gives us a number between 1 and 5, where 1 is the best performance and 5 the less good one:
     distribution_slice = cast(
-        "Literal[1, 2, 3, 4, 5]",
-        ceil(
-            total_turns
-            / MAXIMUM_TURNS_PER_CHALLENGE
-            * PlayerStats.WINS_DISTRIBUTION_SLICE_COUNT
-        ),
+        "WinsDistributionSlice",
+        min(5, (total_turns // PlayerStats.WINS_DISTRIBUTION_SLICE_SIZE) + 1),
     )
     assert 1 <= distribution_slice <= PlayerStats.WINS_DISTRIBUTION_SLICE_COUNT, (
         f"Unexpected distribution slice: {distribution_slice} "

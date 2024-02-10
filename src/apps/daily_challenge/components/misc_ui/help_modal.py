@@ -24,7 +24,6 @@ def help_modal(*, game_presenter: "DailyChallengeGamePresenter") -> "dom_tag":
         ),
         body=div(
             help_content(
-                challenge_total_turns=game_presenter.challenge_total_turns,
                 factions_tuple=tuple(game_presenter.factions.items()),
             ),
             cls="p-6 space-y-6",

@@ -1,7 +1,7 @@
 import datetime as dt
 import enum
 import math
-from typing import TYPE_CHECKING, ClassVar, Literal, NamedTuple, Self, TypeAlias
+from typing import TYPE_CHECKING, ClassVar, Literal, Self, TypeAlias
 
 import chess
 import msgspec
@@ -295,6 +295,10 @@ class PlayerGameState(
     game_over: "PlayerGameOverState" = PlayerGameOverState.PLAYING
 
 
+WinsDistributionSlice = Literal[1, 2, 3, 4, 5]
+WinsDistribution = dict[Literal[1, 2, 3, 4, 5], int]
+
+
 class PlayerStats(
     msgspec.Struct,
     kw_only=True,  # type: ignore[call-arg]
@@ -315,7 +319,10 @@ class PlayerStats(
     stored within a PlayerSessionContent (so, in a cookie).
     """
 
+    # N.B. The following constants have to be marked as ClassVar so that
+    # `msgspec` doesn't try to do its magic with them.
     WINS_DISTRIBUTION_SLICE_COUNT: ClassVar[int] = 5
+    WINS_DISTRIBUTION_SLICE_SIZE: ClassVar[int] = 8
 
     games_count: int = 0
     win_count: int = 0
@@ -323,13 +330,13 @@ class PlayerStats(
     max_streak: int = 0
     last_played: dt.date | None = None
     last_won: dt.date | None = None
-    wins_distribution: dict[Literal[1, 2, 3, 4, 5], int] = msgspec.field(
+    wins_distribution: WinsDistribution = msgspec.field(
         default_factory=lambda: {
-            1: 0,  # challenges won in less than a 5th of the turns allowance
-            2: 0,  # challenges won in less than 2/5th of the turns allowance
-            3: 0,  # ditto for 3/5th
-            4: 0,  # ditto for 4/5th
-            5: 0,  # won in the last few turns
+            1: 0,  # challenges won in 8 turns or less
+            2: 0,  # challenges won in 16 turns or less
+            3: 0,  # ditto for 24
+            4: 0,  # ditto for 32
+            5: 0,  # won in more than 32 turns
         }
     )
 
@@ -369,14 +376,3 @@ class PlayerSessionContent(
     @classmethod
     def from_cookie_content(cls, cookie_content: str) -> Self:
         return msgspec.json.decode(cookie_content.encode(), type=cls)
-
-
-class ChallengeTurnsState(NamedTuple):
-    # the number of attempts the player has made for today's challenge:
-    attempts_counter: int
-    # The number of turns in the current attempt:
-    current_attempt_turns: int
-    turns_total: int
-    turns_left: int
-    percentage_left: int
-    time_s_up: bool  # `True` when there are no more turns left for today's challenge.
