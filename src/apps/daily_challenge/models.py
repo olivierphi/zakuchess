@@ -87,6 +87,9 @@ class DailyChallenge(models.Model):
         help_text="positive number means the human player has an advantage, "
         "negative number means the bot has an advantage",
     )
+    solution: str = models.CharField(
+        max_length=120, blank=True, help_text="A comma-separated list of UCI moves"
+    )
     # ---
     # Fields that are inferred from the above fields:
     # We want the bot to play first, in a deterministic way,
@@ -136,6 +139,8 @@ class DailyChallenge(models.Model):
             errors["intro_turn_speech_square"] = err_msg
         if not self.starting_advantage:
             errors["starting_advantage"] = err_msg
+        if not self.solution:
+            errors["solution"] = err_msg
         if errors:
             raise ValidationError(errors)
 

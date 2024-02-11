@@ -39,6 +39,7 @@ class DailyChallengeGamePresenter(GamePresenter):
         captured_team_member_role: "PieceRole | None" = None,
         just_won: bool = False,
         is_preview: bool = False,
+        is_see_solution_mode: bool = False,
         is_very_first_game: bool = False,
     ):
         # A published challenge always has a `teams` non-null field:

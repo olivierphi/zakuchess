@@ -8,6 +8,8 @@ window.playBotMove = playBotMove
 window.computeScore = computeScore
 // @ts-ignore
 window.closeSpeechBubble = closeSpeechBubble
+// @ts-ignore
+window.__admin__playFromFEN = playFromFEN
 
 function cursorIsNotOnChessBoardInteractiveElement(boardId: string): boolean {
     // Must return `true` only if the user hasn't clicked on one of the game clickable elements.
