@@ -36,7 +36,8 @@ _UNIT_LOST_REACTIONS: tuple[tuple[str, float], ...] = (
 def get_speech_bubble(
     game_presenter: "DailyChallengeGamePresenter",
 ) -> SpeechBubbleData | None:
-    # A published challenge always has a `intro_turn_speech_square`,
+    if game_presenter.game_state.see_solution:
+        return None
 
     # Uncommenting the following line and playing with different squares
     # is handy when working on this feature :-)

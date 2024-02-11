@@ -78,21 +78,27 @@ function cursorIsNotOnChessBoardInteractiveElement(boardId: string): boolean {
     return true
 }
 
-function playBotMove(
-    fen: string,
-    htmxElementId: string,
-    botAssetsDataHolderElementId: string,
-    forcedMove: [string, string] | null,
-): void {
+type BotMoveDescription = {
+    fen: string
+    htmxElementId: string
+    botAssetsDataHolderElementId: string
+    forcedMove: [string, string] | null
+    depth: number
+}
+
+function playBotMove({
+    fen,
+    htmxElementId,
+    botAssetsDataHolderElementId,
+    forcedMove,
+    depth,
+}: BotMoveDescription): void {
     const htmxElement = document.getElementById(htmxElementId)
     if (!htmxElement) {
         throw `no #${botAssetsDataHolderElementId} element found to play bot's move!`
     }
 
     const doPlayBotMove = (from: string, to: string) => {
-        // By convention we use "a1" and "a2" as placeholders on the server side for the "from" and "to" squares.
-        // As the from and to can contain "a1" and "a2" themselves, we cannot use String.replace() directly.
-        // --> hence this somewhat convoluted approach to replace them:
         const targeUrlPattern = htmxElement.dataset.hxPost!
         const targeUrl = targeUrlPattern.replace("<from>", from).replace("<to>", to)
         htmxElement.dataset.hxPost = targeUrl
@@ -105,14 +111,14 @@ function playBotMove(
         return
     }
 
-    playFromFEN(fen, 1, botAssetsDataHolderElementId).then((move) => {
+    playFromFEN(fen, depth, botAssetsDataHolderElementId).then((move) => {
         console.log(`bot wants to move from ${move[0]} to ${move[1]}`)
         doPlayBotMove(move[0], move[1])
     })
 }
 
 function computeScore(fen: string, botAssetsDataHolderElementId: string): Promise<number> {
-    return getScoreFromFEN(fen, 1, botAssetsDataHolderElementId).then((score) => {
+    return getScoreFromFEN(fen, 2, botAssetsDataHolderElementId).then((score) => {
         console.log(`Stockfish says score is ${score}`)
         return score
     })

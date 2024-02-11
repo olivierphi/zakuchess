@@ -265,7 +265,6 @@ class PlayerGameOverState(enum.IntEnum):
 class PlayerGameState(
     msgspec.Struct,
     kw_only=True,  # type: ignore[call-arg]
-    forbid_unknown_fields=True,
     rename={
         # Let's make the cookie content a bit shorter, with shorter field names
         "attempts_counter": "ac",
@@ -275,6 +274,7 @@ class PlayerGameState(
         "piece_role_by_square": "prbs",
         "moves": "m",
         "game_over": "go",
+        "see_solution": "sol",
     },
 ):
     """
@@ -293,12 +293,15 @@ class PlayerGameState(
     # These are the moves *of the current attempt* only.
     moves: str
     game_over: "PlayerGameOverState" = PlayerGameOverState.PLAYING
+    see_solution: bool = False  # `True` when the player gave up to see the solution
+
+    def replace(self, **kwargs) -> Self:
+        return msgspec.structs.replace(self, **kwargs)
 
 
 class PlayerStats(
     msgspec.Struct,
     kw_only=True,  # type: ignore[call-arg]
-    forbid_unknown_fields=True,
     rename={
         # ditto
         "games_count": "gc",
@@ -347,7 +350,6 @@ class PlayerStats(
 class PlayerSessionContent(
     msgspec.Struct,
     kw_only=True,  # type: ignore[call-arg]
-    forbid_unknown_fields=True,
     rename={
         # ditto
         "encoding_version": "ev",

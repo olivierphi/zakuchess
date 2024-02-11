@@ -1,9 +1,10 @@
-import "htmx.org/dist/htmx.js"
-// import "htmx.org/dist/ext/remove-me.js"
-import "htmx.org/dist/ext/class-tools.js"
+import * as htmx from "htmx.org"
 
 // @ts-ignore
 window.htmx = htmx
+
+// import "htmx.org/dist/ext/remove-me.js"
+import("htmx.org/dist/ext/class-tools.js").catch(console.error)
 
 // We want the page to be refreshed when the user comes back to it after a long time.
 // This is to make sure that if they come back the day after they won, they see the

@@ -3,11 +3,11 @@ from urllib.parse import urlencode
 
 from django.contrib.humanize.templatetags.humanize import ordinal
 from django.urls import reverse
-from dominate.tags import button, div, span
+from dominate.tags import b, button, div, p, span
 from dominate.util import raw
 
 from .common_styles import BUTTON_CLASSES
-from .svg_icons import ICON_SVG_RESTART
+from .svg_icons import ICON_SVG_LIGHT_BULB, ICON_SVG_RESTART
 
 if TYPE_CHECKING:
     from dominate.tags import dom_tag
@@ -71,11 +71,56 @@ def restart_confirmation_display(*, board_id: str) -> "dom_tag":
         "data_hx_swap": "outerHTML",
     }
 
-    return div(
-        div(
-            "Retry today's challenge from the start?",
+    return _confirmation_dialog(
+        question=div("Retry today's challenge from the start?", cls="text-center"),
+        htmx_attributes_confirm=htmx_attributes_confirm,
+        htmx_attributes_cancel=htmx_attributes_cancel,
+    )
+
+
+def see_solution_confirmation_display(*, board_id: str) -> "dom_tag":
+    htmx_attributes_confirm = {
+        "data_hx_post": "".join(
+            (
+                reverse("daily_challenge:htmx_see_daily_challenge_solution_do"),
+                "?",
+                urlencode({"board_id": board_id}),
+            )
+        ),
+        "data_hx_target": f"#chess-board-pieces-{board_id}",
+        "data_hx_swap": "outerHTML",
+    }
+    htmx_attributes_cancel = {
+        "data_hx_get": "".join(
+            (
+                reverse("daily_challenge:htmx_game_no_selection"),
+                "?",
+                urlencode({"board_id": board_id}),
+            )
+        ),
+        "data_hx_target": f"#chess-board-pieces-{board_id}",
+        "data_hx_swap": "outerHTML",
+    }
+
+    return _confirmation_dialog(
+        question=div(
+            p("Give up for today, and see a solution?"),
+            b("⚠️ You will not be able to try today's challenge again."),
             cls="text-center",
         ),
+        htmx_attributes_confirm=htmx_attributes_confirm,
+        htmx_attributes_cancel=htmx_attributes_cancel,
+    )
+
+
+def _confirmation_dialog(
+    *,
+    question: "dom_tag",
+    htmx_attributes_confirm: dict[str, str],
+    htmx_attributes_cancel: dict[str, str],
+) -> "dom_tag":
+    return div(
+        question,
         div(
             button(
                 "Confirm",
@@ -95,6 +140,10 @@ def restart_confirmation_display(*, board_id: str) -> "dom_tag":
 def _current_state_display(
     *, game_presenter: "DailyChallengeGamePresenter", board_id: str
 ) -> "dom_tag":
+    if game_presenter.is_see_solution_mode:
+        return _see_solution_mode_display(
+            game_presenter=game_presenter, board_id=board_id
+        )
 
     (
         attempts_counter,
@@ -110,6 +159,10 @@ def _current_state_display(
     restart_button: dom_tag = span("")
     if not time_s_up:
         restart_button = _restart_button(board_id)
+
+    see_solution_button: dom_tag = span("")
+    if not time_s_up and turns_total > 5:
+        see_solution_button = _see_solution_button(board_id)
 
     turns_left_display = (
         f"""<b class="text-rose-600">{turns_left}</b>""" if danger else turns_left
@@ -135,6 +188,7 @@ def _current_state_display(
             div(
                 blocks,
                 restart_button,
+                see_solution_button,
                 cls="flex justify-center items-center",
             ),
         ),
@@ -180,10 +234,71 @@ def _restart_button(board_id: str) -> "dom_tag":
     }
 
     return button(
-        "restart ",
+        "restart",
         ICON_SVG_RESTART,
         cls=BUTTON_CLASSES,
         title="Try this daily challenge again, from the start",
         id=f"chess-board-restart-daily-challenge-{board_id}",
         **htmx_attributes,
+    )
+
+
+def _see_solution_button(board_id: str) -> "dom_tag":
+    htmx_attributes = {
+        "data_hx_post": "".join(
+            (
+                reverse(
+                    "daily_challenge:htmx_see_daily_challenge_solution_ask_confirmation"
+                ),
+                "?",
+                urlencode({"board_id": board_id}),
+            )
+        ),
+        "data_hx_target": f"#chess-board-daily-challenge-bar-{board_id}",
+        "data_hx_swap": "innerHTML",
+    }
+
+    return button(
+        "see solution",
+        ICON_SVG_LIGHT_BULB,
+        cls=BUTTON_CLASSES,
+        title="Give up for today, and see the solution",
+        id=f"chess-board-restart-daily-challenge-{board_id}",
+        **htmx_attributes,
+    )
+
+
+def _see_solution_mode_display(
+    *, game_presenter: "DailyChallengeGamePresenter", board_id: str
+) -> "dom_tag":
+    is_game_over = game_presenter.is_game_over
+    turns_display = game_presenter.game_state.current_attempt_turns_counter + 1
+
+    return div(
+        (
+            p("You are currently seeing a solution, " " and can't make any more moves.")
+            if not is_game_over
+            else ""
+        ),
+        p(
+            (
+                raw("This solution ended the game in " f"<b>{turns_display} turns</b>.")
+                if is_game_over
+                else raw(f"Turn <b>{turns_display}</b>.")
+            ),
+            cls="text-center",
+        ),
+        (
+            p(
+                "You can check a solution again:",
+                cls="w-full text-center",
+            )
+            if is_game_over
+            else ""
+        ),
+        p(
+            (_see_solution_button(board_id=board_id) if is_game_over else ""),
+            cls="w-full text-center",
+        ),
+        cls="w-full text-center",
     )

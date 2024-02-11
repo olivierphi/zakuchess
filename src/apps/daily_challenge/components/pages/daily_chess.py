@@ -17,7 +17,8 @@ from apps.chess.components.chess_board import (
 from apps.chess.components.misc_ui import speech_bubble_container
 from apps.webui.components.layout import page
 
-from ..misc_ui import daily_challenge_bar, status_bar
+from ..misc_ui.daily_challenge_bar import daily_challenge_bar
+from ..misc_ui.status_bar import status_bar
 from ..misc_ui.svg_icons import ICON_SVG_HELP, ICON_SVG_STATS
 
 if TYPE_CHECKING:

@@ -31,7 +31,12 @@ def status_bar(
 
     inner_content: dom_tag = div("status to implement")
 
-    if game_presenter.is_intro_turn:
+    if game_presenter.is_see_solution_mode:
+        inner_content = div(
+            p("See you tomorrow for another challenge! 🙂", cls="text-center"),
+            cls="w-full",
+        )
+    elif game_presenter.is_intro_turn:
         inner_content = div(
             help_content(
                 challenge_total_turns=game_presenter.challenge_total_turns,

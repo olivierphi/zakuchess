@@ -136,6 +136,10 @@ class DailyChallengeGamePresenter(GamePresenter):
         return self.active_player_side == self._challenge.bot_side
 
     @cached_property
+    def is_see_solution_mode(self) -> bool:
+        return self.game_state.see_solution
+
+    @cached_property
     def game_id(self) -> str:
         return str(self._challenge.id)
 
@@ -146,6 +150,10 @@ class DailyChallengeGamePresenter(GamePresenter):
     @cached_property
     def is_intro_turn(self) -> bool:
         return self.is_bot_move and self.challenge_turns_counter == 0
+
+    @cached_property
+    def is_player_move(self) -> bool:
+        return not self.is_bot_move
 
     @cached_property
     def player_side_to_highlight_all_pieces_for(self) -> "PlayerSide | None":

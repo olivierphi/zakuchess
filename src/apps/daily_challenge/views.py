@@ -21,6 +21,7 @@ from .business_logic import (
     manage_daily_challenge_victory_logic,
     move_daily_challenge_piece,
     restart_daily_challenge,
+    see_daily_challenge_solution,
 )
 from .components.misc_ui.help_modal import help_modal
 from .components.misc_ui.stats_modal import stats_modal
@@ -154,6 +155,10 @@ def htmx_game_move_piece(
 
     if ctx.game_state.game_over != PlayerGameOverState.PLAYING:
         raise ChessInvalidActionException("Game is over, cannot move pieces")
+    if ctx.game_state.see_solution:
+        raise ChessInvalidActionException(
+            "'See solution' mode is active, cannot move pieces"
+        )
 
     active_player_side = get_active_player_side_from_fen(ctx.game_state.fen)
     is_my_side = active_player_side != ctx.challenge.bot_side
@@ -238,7 +243,10 @@ def htmx_daily_challenge_help_modal(
 def htmx_restart_daily_challenge_ask_confirmation(
     request: "HttpRequest", *, ctx: "GameContext"
 ) -> HttpResponse:
-    from .components.misc_ui import daily_challenge_bar, restart_confirmation_display
+    from .components.misc_ui.daily_challenge_bar import (
+        daily_challenge_bar,
+        restart_confirmation_display,
+    )
 
     daily_challenge_bar_inner_content = restart_confirmation_display(
         board_id=ctx.board_id
@@ -285,6 +293,58 @@ def htmx_restart_daily_challenge_do(
 
 
 @require_POST
+@with_game_context
+@redirect_if_game_not_started
+def htmx_see_daily_challenge_solution_ask_confirmation(
+    request: "HttpRequest", *, ctx: "GameContext"
+) -> HttpResponse:
+    from .components.misc_ui.daily_challenge_bar import (
+        daily_challenge_bar,
+        see_solution_confirmation_display,
+    )
+
+    daily_challenge_bar_inner_content = see_solution_confirmation_display(
+        board_id=ctx.board_id
+    )
+
+    return HttpResponse(
+        daily_challenge_bar(
+            game_presenter=None,
+            inner_content=daily_challenge_bar_inner_content,
+            board_id=ctx.board_id,
+        )
+    )
+
+
+@require_POST
+@with_game_context
+@redirect_if_game_not_started
+def htmx_see_daily_challenge_solution_do(
+    request: "HttpRequest", *, ctx: "GameContext"
+) -> HttpResponse:
+    new_game_state = see_daily_challenge_solution(
+        challenge=ctx.challenge, game_state=ctx.game_state
+    )
+
+    save_daily_challenge_state_in_session(
+        request=request,
+        game_state=new_game_state,
+        player_stats=ctx.stats,
+    )
+
+    game_presenter = DailyChallengeGamePresenter(
+        challenge=ctx.challenge,
+        game_state=new_game_state,
+        is_htmx_request=True,
+        refresh_last_move=False,
+    )
+
+    return _daily_challenge_moving_parts_fragment_response(
+        game_presenter=game_presenter, request=request, board_id=ctx.board_id
+    )
+
+
+@require_POST
 @handle_chess_logic_exceptions
 @with_game_context
 @redirect_if_game_not_started
@@ -297,8 +357,10 @@ def htmx_game_bot_move(
     _logger.info("Game state from player cookie: %s", ctx.game_state)
 
     active_player_side = get_active_player_side_from_fen(ctx.game_state.fen)
-    if active_player_side != ctx.challenge.bot_side:
-        # This is not bot's turn 😅
+    is_bot_turn = active_player_side == ctx.challenge.bot_side
+    if not ctx.game_state.see_solution and not is_bot_turn:
+        # We're not in "see solution" mode, and this is not bot's turn
+        # --> something fishy is going on 😅
         return htmx_aware_redirect(request, "daily_challenge:daily_game_view")
 
     return _play_bot_move(
@@ -395,6 +457,12 @@ def _play_bot_move(
         manage_daily_challenge_defeat_logic(
             game_state=new_game_state, is_preview=ctx.is_preview
         )
+
+    if ctx.game_state.see_solution and game_presenter.is_bot_turn:
+        # The player is watching the solution, and now the bot moved a piece on their
+        # behalf. Let's increment the turns counter.
+        new_game_state.turns_counter += 1
+        new_game_state.current_attempt_turns_counter += 1
 
     save_daily_challenge_state_in_session(
         request=request,

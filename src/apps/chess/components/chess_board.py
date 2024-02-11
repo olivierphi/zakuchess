@@ -58,12 +58,13 @@ _PLAY_BOT_JS_TEMPLATE = Template(
 <script>
     (function () {
         setTimeout(function () {
-            window.playBotMove(
-                "$FEN",
-                "$PLAY_MOVE_HTMX_ELEMENT_ID",
-                "$BOT_ASSETS_DATA_HOLDER_ELEMENT_ID",
-                $FORCED_MOVE
-            );
+            window.playBotMove({
+                fen: "$FEN",
+                htmxElementId: "$PLAY_MOVE_HTMX_ELEMENT_ID",
+                botAssetsDataHolderElementId: "$BOT_ASSETS_DATA_HOLDER_ELEMENT_ID",
+                forcedMove: $FORCED_MOVE,
+                depth: ${DEPTH},
+            });
         }, $MOVE_DELAY);
     })()</script>"""
 )
@@ -231,7 +232,8 @@ def chess_piece(
     player_side = player_side_from_piece_role(piece_role)
 
     piece_can_be_moved_by_player = (
-        game_presenter.is_player_turn
+        (not game_presenter.is_see_solution_mode)
+        and game_presenter.is_player_turn
         and square in game_presenter.squares_with_pieces_that_can_move
     )
     unit_display = chess_character_display(
@@ -393,7 +395,7 @@ def chess_character_display(
     )
     is_potential_capture: bool = False
     is_highlighted: bool = False
-    if square and game_presenter:
+    if square and game_presenter and not game_presenter.is_see_solution_mode:
         if (
             game_presenter.selected_piece
             and game_presenter.selected_piece.square == square
@@ -419,9 +421,19 @@ def chess_character_display(
         is_king
         and is_active_player_piece
         and game_presenter
+        and not game_presenter.is_see_solution_mode
         and game_presenter.is_check
     ):
         is_potential_capture = True  # let's highlight our king if it's in check
+    if (
+        is_king
+        and is_active_player_piece
+        and game_presenter
+        and game_presenter.is_see_solution_mode
+        and game_presenter.is_check
+    ):
+        is_potential_capture = True  # let's highlight checks in "see solution" mode
+
     horizontal_translation = (
         ("left-3" if is_knight else "left-0") if is_w_side else "right-0"
     )
@@ -624,13 +636,23 @@ def chess_last_move_marker(
 def _bot_turn_html_elements(
     *, game_presenter: "GamePresenter", board_id: str
 ) -> list[dom_tag]:
-    if not game_presenter.is_bot_turn or game_presenter.is_game_over:
+    if not game_presenter.is_see_solution_mode and (
+        not game_presenter.is_bot_turn or game_presenter.is_game_over
+    ):
         return []
 
     play_move_htmx_element_id = f"chess-bot-play-move-{ board_id }"
     forced_bot_move = json.dumps(game_presenter.forced_bot_move or None)
     move_delay = (
-        _BOT_MOVE_DELAY * 2 if game_presenter.forced_bot_move else _BOT_MOVE_DELAY
+        _BOT_MOVE_DELAY * 2
+        if game_presenter.forced_bot_move or game_presenter.is_see_solution_mode
+        else _BOT_MOVE_DELAY
+    )
+    depth = (
+        # We'll use a depth of 2 when the user is in "see solution" mode, 1 otherwise:
+        2
+        if game_presenter.is_see_solution_mode
+        else 1
     )
 
     htmx_attributes = {
@@ -640,19 +662,21 @@ def _bot_turn_html_elements(
         "data_hx_target": f"#chess-board-pieces-{board_id}",
         "data_hx_trigger": "playMove",
     }
+    bot_move_script_tag = unescaped_html(
+        _PLAY_BOT_JS_TEMPLATE.safe_substitute(
+            {
+                "FEN": game_presenter.fen,
+                "PLAY_MOVE_HTMX_ELEMENT_ID": play_move_htmx_element_id,
+                "BOT_ASSETS_DATA_HOLDER_ELEMENT_ID": f"chess-bot-data-{ board_id }",
+                "FORCED_MOVE": forced_bot_move,
+                "DEPTH": depth,
+                "MOVE_DELAY": move_delay,
+            }
+        )
+    )
 
     return [
-        unescaped_html(
-            _PLAY_BOT_JS_TEMPLATE.safe_substitute(
-                {
-                    "FEN": game_presenter.fen,
-                    "PLAY_MOVE_HTMX_ELEMENT_ID": play_move_htmx_element_id,
-                    "BOT_ASSETS_DATA_HOLDER_ELEMENT_ID": f"chess-bot-data-{ board_id }",
-                    "MOVE_DELAY": move_delay,
-                    "FORCED_MOVE": forced_bot_move,
-                }
-            )
-        ),
+        bot_move_script_tag,
         div(
             id=play_move_htmx_element_id,
             **htmx_attributes,

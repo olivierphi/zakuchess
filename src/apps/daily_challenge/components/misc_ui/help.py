@@ -3,14 +3,14 @@ from functools import cache
 from typing import TYPE_CHECKING, cast
 
 from django.conf import settings
-from dominate.tags import br, div, h4, span
+from dominate.tags import div, h4, span
 from dominate.util import raw
 
 from apps.chess.components.chess_helpers import chess_unit_symbol_class
 from apps.chess.consts import PIECE_TYPE_TO_NAME
 
 from .common_styles import BUTTON_CLASSES
-from .svg_icons import ICON_SVG_RESTART
+from .svg_icons import ICON_SVG_LIGHT_BULB, ICON_SVG_RESTART
 
 if TYPE_CHECKING:
     from dominate.tags import dom_tag
@@ -65,7 +65,7 @@ def help_content(
                 cls=f"{spacing} text-yellow-400 font-bold ",
             ),
             div(
-                "Your pieces are the ones with a green circle, like these one:",
+                "Your pieces are the ones with a green circle, like these:",
                 div(
                     unit_display_container(piece_role="N1", factions=factions),
                     unit_display_container(piece_role="Q", factions=factions),
@@ -75,19 +75,29 @@ def help_content(
                 cls=f"{spacing}",
             ),
             div(
-                raw(
-                    f"You have <b>{challenge_total_turns}</b> "
-                    "turns to win this challenge."
-                ),
-                cls=f"{spacing}",
-            ),
-            div(
-                "You can restart from the beginning at any time,",
-                br(),
+                "You can restart from the beginning at any time, ",
                 "by clicking the ",
                 span(
                     "restart",
                     ICON_SVG_RESTART,
+                    cls=f"{BUTTON_CLASSES} !inline-block !mx-0",
+                ),
+                " button.",
+                cls=f"{spacing}",
+            ),
+            div(
+                raw(
+                    "Across all your attempts, you have "
+                    f"<b>{challenge_total_turns} turns</b> to win this challenge."
+                ),
+                cls=f"{spacing}",
+            ),
+            div(
+                "After a few turns, if you can't solve the challenge "
+                "you'll be given the opportunity to see a solution, by clicking the ",
+                span(
+                    "see solution",
+                    ICON_SVG_LIGHT_BULB,
                     cls=f"{BUTTON_CLASSES} !inline-block !mx-0",
                 ),
                 " button.",

@@ -162,6 +162,10 @@ class GamePresenter(ABC):
 
     @property
     @abstractmethod
+    def is_see_solution_mode(self) -> bool: ...
+
+    @property
+    @abstractmethod
     def game_id(self) -> str: ...
 
     @property

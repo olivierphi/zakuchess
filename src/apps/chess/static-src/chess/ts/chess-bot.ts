@@ -12,8 +12,6 @@ let stockfish: Worker | null = null
 
 type WorkerEvent = Event & { data: string }
 
-// TODO: decouple this from HTMX
-
 export async function playFromFEN(
     fen: string,
     depth: number,
@@ -23,6 +21,7 @@ export async function playFromFEN(
 
     console.log("onBotInitialized ; initialize with fen: ", fen)
     stockfish!.postMessage("position fen " + fen)
+    stockfish!.postMessage("go depth " + depth)
 
     return new Promise((resolve, reject) => {
         function onStockFishMessage(e: WorkerEvent) {
@@ -37,7 +36,6 @@ export async function playFromFEN(
         }
 
         stockfish!.addEventListener("message", onStockFishMessage)
-        stockfish!.postMessage("go depth " + depth)
     })
 }
 

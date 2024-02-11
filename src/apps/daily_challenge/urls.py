@@ -5,7 +5,12 @@ from . import views
 app_name = "daily_challenge"
 
 urlpatterns = [
-    path("", views.game_view, name="daily_game_view"),
+    # Core game views
+    path(
+        "",
+        views.game_view,
+        name="daily_game_view",
+    ),
     path(
         "htmx/no-selection/",
         views.htmx_game_no_selection,
@@ -21,11 +26,7 @@ urlpatterns = [
         views.htmx_game_move_piece,
         name="htmx_game_move_piece",
     ),
-    path(
-        "htmx/daily-challenge/restart/ask-confirmation/",
-        views.htmx_restart_daily_challenge_ask_confirmation,
-        name="htmx_restart_daily_challenge_ask_confirmation",
-    ),
+    # Modals
     path(
         "htmx/daily-challenge/modals/stats/",
         views.htmx_daily_challenge_stats_modal,
@@ -36,11 +37,29 @@ urlpatterns = [
         views.htmx_daily_challenge_help_modal,
         name="htmx_daily_challenge_modal_help",
     ),
+    # Restart views
+    path(
+        "htmx/daily-challenge/restart/ask-confirmation/",
+        views.htmx_restart_daily_challenge_ask_confirmation,
+        name="htmx_restart_daily_challenge_ask_confirmation",
+    ),
     path(
         "htmx/daily-challenge/restart/do/",
         views.htmx_restart_daily_challenge_do,
         name="htmx_restart_daily_challenge_do",
     ),
+    # "See the solution" views
+    path(
+        "htmx/daily-challenge/see-solution/ask-confirmation/",
+        views.htmx_see_daily_challenge_solution_ask_confirmation,
+        name="htmx_see_daily_challenge_solution_ask_confirmation",
+    ),
+    path(
+        "htmx/daily-challenge/see-solution/do/",
+        views.htmx_see_daily_challenge_solution_do,
+        name="htmx_see_daily_challenge_solution_do",
+    ),
+    # Bot-related views
     path(
         "htmx/bot/pieces/<square:from_>/move/<square:to>/",
         views.htmx_game_bot_move,

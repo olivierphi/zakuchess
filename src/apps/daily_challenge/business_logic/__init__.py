@@ -13,6 +13,7 @@ from ._manage_new_daily_challenge_stats_logic import (
 )
 from ._move_daily_challenge_piece import move_daily_challenge_piece
 from ._restart_daily_challenge import restart_daily_challenge
+from ._see_daily_challenge_solution import see_daily_challenge_solution
 from ._set_daily_challenge_teams_and_pieces_roles import (
     set_daily_challenge_teams_and_pieces_roles,
 )
