@@ -3,13 +3,15 @@ from urllib.parse import urlencode
 
 from django.contrib.humanize.templatetags.humanize import ordinal
 from django.urls import reverse
-from dominate.tags import button, div, dom_tag, span
+from dominate.tags import button, div, span
 from dominate.util import raw
 
 from .common_styles import BUTTON_CLASSES
 from .svg_icons import ICON_SVG_RESTART
 
 if TYPE_CHECKING:
+    from dominate.tags import dom_tag
+
     from ...presenters import DailyChallengeGamePresenter
 
 BlockColor = Literal["grey", "green", "yellow", "red"]
@@ -23,13 +25,16 @@ PROGRESS_BAR_BLOCKS_COUNT = 10
 
 
 def daily_challenge_bar(
-    *, game_presenter: "DailyChallengeGamePresenter", board_id: str, **extra_attrs: str
-) -> dom_tag:
+    *,
+    game_presenter: "DailyChallengeGamePresenter | None",
+    board_id: str,
+    inner_content: "dom_tag | None" = None,
+    **extra_attrs: str,
+) -> "dom_tag":
     from apps.chess.components.chess_board import INFO_BARS_COMMON_CLASSES
 
-    if game_presenter.restart_daily_challenge_ask_confirmation:
-        inner_content = _restart_confirmation_display(board_id=board_id)
-    else:
+    if not inner_content:
+        assert game_presenter is not None
         inner_content = _current_state_display(
             game_presenter=game_presenter, board_id=board_id
         )
@@ -42,7 +47,7 @@ def daily_challenge_bar(
     )
 
 
-def _restart_confirmation_display(*, board_id: str) -> dom_tag:
+def restart_confirmation_display(*, board_id: str) -> "dom_tag":
     htmx_attributes_confirm = {
         "data_hx_post": "".join(
             (
@@ -89,7 +94,7 @@ def _restart_confirmation_display(*, board_id: str) -> dom_tag:
 
 def _current_state_display(
     *, game_presenter: "DailyChallengeGamePresenter", board_id: str
-) -> dom_tag:
+) -> "dom_tag":
 
     (
         attempts_counter,
@@ -139,7 +144,7 @@ def _current_state_display(
 
 def _challenge_turns_left_display_with_blocks(
     percentage_left: int,
-) -> tuple[dom_tag, bool]:
+) -> "tuple[dom_tag, bool]":
     blocks_color: BlockColor = (
         "green"
         if percentage_left >= 60
@@ -159,7 +164,7 @@ def _challenge_turns_left_display_with_blocks(
     )
 
 
-def _restart_button(board_id: str) -> dom_tag:
+def _restart_button(board_id: str) -> "dom_tag":
     htmx_attributes = {
         "data_hx_post": "".join(
             (
@@ -170,8 +175,8 @@ def _restart_button(board_id: str) -> dom_tag:
                 urlencode({"board_id": board_id}),
             )
         ),
-        "data_hx_target": f"#chess-board-pieces-{board_id}",
-        "data_hx_swap": "outerHTML",
+        "data_hx_target": f"#chess-board-daily-challenge-bar-{board_id}",
+        "data_hx_swap": "innerHTML",
     }
 
     return button(

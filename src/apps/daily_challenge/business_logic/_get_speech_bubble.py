@@ -124,7 +124,6 @@ def get_speech_bubble(
     if (
         game_presenter.is_player_turn
         and game_presenter.is_htmx_request
-        and not game_presenter.restart_daily_challenge_ask_confirmation
         and not game_presenter.selected_piece
         and game_presenter.naive_score < -3
     ):

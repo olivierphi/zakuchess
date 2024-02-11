@@ -34,7 +34,6 @@ class DailyChallengeGamePresenter(GamePresenter):
         selected_square: "Square | None" = None,
         selected_piece_square: "Square | None" = None,
         target_to_confirm: "Square | None" = None,
-        restart_daily_challenge_ask_confirmation: bool = False,
         is_bot_move: bool = False,
         force_square_info: bool = False,
         captured_team_member_role: "PieceRole | None" = None,
@@ -62,9 +61,6 @@ class DailyChallengeGamePresenter(GamePresenter):
         )
         self._challenge = challenge
         self.game_state = game_state
-        self.restart_daily_challenge_ask_confirmation = (
-            restart_daily_challenge_ask_confirmation
-        )
         self.is_bot_move = is_bot_move
         self.just_won = just_won
         self.is_very_first_game = is_very_first_game

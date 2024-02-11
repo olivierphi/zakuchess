@@ -238,16 +238,18 @@ def htmx_daily_challenge_help_modal(
 def htmx_restart_daily_challenge_ask_confirmation(
     request: "HttpRequest", *, ctx: "GameContext"
 ) -> HttpResponse:
-    game_presenter = DailyChallengeGamePresenter(
-        challenge=ctx.challenge,
-        game_state=ctx.game_state,
-        restart_daily_challenge_ask_confirmation=True,
-        is_htmx_request=True,
-        refresh_last_move=False,
+    from .components.misc_ui import daily_challenge_bar, restart_confirmation_display
+
+    daily_challenge_bar_inner_content = restart_confirmation_display(
+        board_id=ctx.board_id
     )
 
-    return _daily_challenge_moving_parts_fragment_response(
-        game_presenter=game_presenter, request=request, board_id=ctx.board_id
+    return HttpResponse(
+        daily_challenge_bar(
+            game_presenter=None,
+            inner_content=daily_challenge_bar_inner_content,
+            board_id=ctx.board_id,
+        )
     )
 
 
