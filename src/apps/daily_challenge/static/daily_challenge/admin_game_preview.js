@@ -71,23 +71,28 @@
         setTimeout(updatePreview, 100)
     }
 
+    const SOLUTION_CHESS_JS_PACKAGE_URL = "https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.min.js"
     const SOLUTION_BOT_ASSETS_DATA_HOLDER_ELEMENT_ID = "chess-bot-data-admin"
     const SOLUTION_PLAYER_TURN_DEPTH = 10
     const SOLUTION_BOT_TURN_DEPTH = 1 // that's the level it really plays at against players :-)
+    const SOLUTION_TURNS_COUNT_MAX = 15 // we want the daily challenges to be short enough
 
     function startSolution() {
-        import("https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.js").then((chessjs) => {
+        const solutionInputHelpText = document.getElementById("id_solution_helptext")
+        solutionInputHelpText.innerText = "Loading chess.js..."
+        import(SOLUTION_CHESS_JS_PACKAGE_URL).then((chessjs) => {
             const fen = document.getElementById("id_fen").value
             const chessBoard = chessjs.Chess(fen)
             const solutionState = {
                 previewIFrame: document.getElementById("preview-iframe"),
                 solutionInput: document.getElementById("id_solution"),
-                solutionInputHelpText: document.getElementById("id_solution_helptext"),
+                solutionInputHelpText,
                 fen,
                 chessBoard,
                 turnsCount: 0,
             }
             solutionState.solutionInput.value = ""
+            solutionInputHelpText.innerText = "Starting solution in 1 second..."
             setTimeout(solutionNextMove.bind(null, solutionState), 1000)
         })
     }
@@ -111,8 +116,18 @@
                     solutionState.turnsCount++
                     solutionInputHelpText.innerText = `Turns: ${solutionState.turnsCount}`
                 }
+                if (solutionState.turnsCount > SOLUTION_TURNS_COUNT_MAX) {
+                    window.alert("Game won't work: too many turns.")
+                    return
+                }
                 if (chessBoard.in_checkmate()) {
                     window.alert(`'${chessBoard.turn()}' player is checkmate in ${solutionState.turnsCount} turns.`)
+                    // Remove the last comma:
+                    solutionInput.value = solutionInput.value.replace(/,$/, "")
+                    return
+                }
+                if (chessBoard.in_draw() || chessBoard.in_stalemate()) {
+                    window.alert("Game finished: draw.")
                     return
                 }
                 solutionState.fen = chessBoard.fen()

@@ -85,6 +85,8 @@ class DailyChallengeExportResource(resources.ModelResource):
             "fen",
             "bot_first_move",
             "starting_advantage",
+            "solution",
+            "solution_moves_count",
         )
         export_order = fields
 
@@ -120,13 +122,10 @@ class DailyChallengeAdmin(ImportExportModelAdmin):
         "lookup_key",
         "source",
         "status_display",
-        "created_at",
-        "updated_at",
-        "fen",
+        "solution_moves_count",
         "starting_advantage",
-        "bot_first_move",
     )
-    ordering = ("-created_at",)
+    ordering = ("-lookup_key",)
     list_display_links = ("lookup_key", "source")
     list_filter = ["status", SourceTypeListFilter]
 

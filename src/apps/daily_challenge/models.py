@@ -7,6 +7,7 @@ import chess
 import msgspec
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 from django.db import IntegrityError, models
 from django.db.models import F
 from django.utils.timezone import now
@@ -88,7 +89,12 @@ class DailyChallenge(models.Model):
         "negative number means the bot has an advantage",
     )
     solution: str = models.CharField(
-        max_length=120, blank=True, help_text="A comma-separated list of UCI moves"
+        max_length=150,
+        blank=True,
+        help_text="A comma-separated list of UCI moves",
+        validators=[
+            RegexValidator(r"^(?:[a-h][1-8][a-h][1-8],){1,}[a-h][1-8][a-h][1-8]$")
+        ],
     )
     # ---
     # Fields that are inferred from the above fields:
@@ -102,6 +108,9 @@ class DailyChallenge(models.Model):
     )
     teams: "GameTeams|None" = models.JSONField(null=True, editable=False)
     intro_turn_speech_text: str = models.CharField(max_length=100, blank=True)
+    solution_moves_count: int = models.PositiveSmallIntegerField(
+        null=True, editable=False
+    )
 
     def __str__(self) -> str:
         return f"{self.id}: {self.fen}"
@@ -139,7 +148,12 @@ class DailyChallenge(models.Model):
             errors["intro_turn_speech_square"] = err_msg
         if not self.starting_advantage:
             errors["starting_advantage"] = err_msg
-        if not self.solution:
+        if (
+            not self.solution
+            or len(self.solution) < 8
+            # It should always end with a move from the player:
+            or self.solution.count(",") % 2 != 0
+        ):
             errors["solution"] = err_msg
         if errors:
             raise ValidationError(errors)
@@ -178,6 +192,9 @@ class DailyChallenge(models.Model):
                     "intro_turn_speech_square": f"'{self.intro_turn_speech_square}' is not a valid 'w' square"
                 }
             )
+
+        # Compute `solution_moves_count` from `solution`
+        self.solution_moves_count = math.ceil(self.solution.count(",") / 2) + 1
 
 
 class DailyChallengeStatsManager(models.Manager):
