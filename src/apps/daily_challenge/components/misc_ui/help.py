@@ -3,7 +3,7 @@ from functools import cache
 from typing import TYPE_CHECKING, cast
 
 from django.conf import settings
-from dominate.tags import div, h4, span
+from dominate.tags import div, h4, p, span
 from dominate.util import raw
 
 from apps.chess.components.chess_helpers import chess_unit_symbol_class
@@ -49,6 +49,7 @@ _CHARACTER_TYPE_ROLE_MAPPING: dict["PieceType", "TeamMemberRole"] = {
 @cache
 def help_content(
     *,
+    challenge_solution_turns_count: int,
     challenge_total_turns: int,
     factions_tuple: "tuple[tuple[PlayerSide, Faction], ...]",
 ) -> "dom_tag":
@@ -63,6 +64,21 @@ def help_content(
             h4(
                 "Welcome to this new daily challenge!",
                 cls=f"{spacing} text-yellow-400 font-bold ",
+            ),
+            div(
+                p(
+                    raw(
+                        "Today's challenge <b>can be solved in "
+                        f"{challenge_solution_turns_count}</b> turns."
+                    )
+                ),
+                p(
+                    raw(
+                        f"and you have <b>{challenge_total_turns} turns "
+                        "across all your attempts</b> to find the solution."
+                    )
+                ),
+                cls=f"{spacing}",
             ),
             div(
                 "Your pieces are the ones with a green circle, like these:",
@@ -83,13 +99,6 @@ def help_content(
                     cls=f"{BUTTON_CLASSES} !inline-block !mx-0",
                 ),
                 " button.",
-                cls=f"{spacing}",
-            ),
-            div(
-                raw(
-                    "Across all your attempts, you have "
-                    f"<b>{challenge_total_turns} turns</b> to win this challenge."
-                ),
                 cls=f"{spacing}",
             ),
             div(

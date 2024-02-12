@@ -31,7 +31,7 @@ def status_bar(
 
     inner_content: dom_tag = div("status to implement")
 
-    if game_presenter.is_see_solution_mode:
+    if game_presenter.solution_index is not None:
         inner_content = div(
             p("See you tomorrow for another challenge! 🙂", cls="text-center"),
             cls="w-full",
@@ -39,6 +39,7 @@ def status_bar(
     elif game_presenter.is_intro_turn:
         inner_content = div(
             help_content(
+                challenge_solution_turns_count=game_presenter.challenge_solution_turns_count,
                 challenge_total_turns=game_presenter.challenge_total_turns,
                 factions_tuple=tuple(game_presenter.factions.items()),
             ),

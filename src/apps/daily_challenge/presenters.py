@@ -8,7 +8,6 @@ from apps.chess.presenters import GamePresenter, GamePresenterUrls, SpeechBubble
 
 from ..chess.helpers import uci_move_squares
 from .business_logic import get_daily_challenge_turns_state, get_speech_bubble
-from .consts import MAXIMUM_TURNS_PER_CHALLENGE
 from .models import DailyChallenge
 
 if TYPE_CHECKING:
@@ -77,15 +76,21 @@ class DailyChallengeGamePresenter(GamePresenter):
 
     @cached_property
     def challenge_turns_state(self) -> "ChallengeTurnsState":
-        return get_daily_challenge_turns_state(self.game_state)
+        return get_daily_challenge_turns_state(
+            challenge=self._challenge, game_state=self.game_state
+        )
 
     @property
     def challenge_turns_counter(self) -> int:
         return self.game_state.turns_counter
 
     @property
+    def challenge_solution_turns_count(self) -> int:
+        return self._challenge.solution_turns_count
+
+    @property
     def challenge_total_turns(self) -> int:
-        return MAXIMUM_TURNS_PER_CHALLENGE
+        return self._challenge.max_turns_count
 
     @property
     def challenge_turns_left(self) -> int:
@@ -137,8 +142,8 @@ class DailyChallengeGamePresenter(GamePresenter):
         return self.active_player_side == self._challenge.bot_side
 
     @cached_property
-    def is_see_solution_mode(self) -> bool:
-        return self.game_state.see_solution
+    def solution_index(self) -> int | None:
+        return self.game_state.solution_index
 
     @cached_property
     def game_id(self) -> str:
@@ -242,6 +247,17 @@ class DailyChallengeGamePresenterUrls(GamePresenterUrls):
                 )
                 .replace("a1", "<from>")
                 .replace("a2", "<to>"),
+                "?",
+                urlencode({"board_id": board_id}),
+            )
+        )
+
+    def htmx_game_play_solution_move_url(self, *, board_id: str) -> str:
+        return "".join(
+            (
+                reverse(
+                    "daily_challenge:htmx_see_daily_challenge_solution_play",
+                ),
                 "?",
                 urlencode({"board_id": board_id}),
             )

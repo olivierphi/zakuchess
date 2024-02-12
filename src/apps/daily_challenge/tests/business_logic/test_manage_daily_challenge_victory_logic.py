@@ -11,13 +11,21 @@ from ...business_logic import (
 from ...models import PlayerGameOverState, PlayerGameState, PlayerStats
 
 # N.B. We mock `DailyChallengeStats.objects` in these tests, because the stats logic
-# is not relevant to the tests we're writing here - also, let's not sumon the database
+# is not relevant to the tests we're writing here - also, let's not summon the database
 # when we can avoid it, right? :-)
+
+
+@pytest.fixture
+def dummy_daily_challenge():
+    # All the `manage_daily_challenge_victory_logic` needs from a DailyChallenge is its
+    # `max_turns_count` attribute, so let's mock only this:
+    return mock.Mock(max_turns_count=40)
 
 
 @mock.patch("apps.daily_challenge.models.DailyChallengeStats.objects", mock.MagicMock())
 def test_manage_daily_challenge_victory_wins_count(
     # Test dependencies
+    dummy_daily_challenge,
     player_game_state_minimalist: PlayerGameState,
 ):
     game_state = player_game_state_minimalist
@@ -28,7 +36,9 @@ def test_manage_daily_challenge_victory_wins_count(
     assert stats.win_count == 0
 
     # Go!
-    manage_daily_challenge_victory_logic(game_state=game_state, stats=stats)
+    manage_daily_challenge_victory_logic(
+        challenge=dummy_daily_challenge, game_state=game_state, stats=stats
+    )
 
     # Alright, let's check the results:
     assert stats.win_count == 1
@@ -54,6 +64,7 @@ def test_manage_daily_challenge_victory_wins_count(
 @mock.patch("apps.daily_challenge.models.DailyChallengeStats.objects", mock.MagicMock())
 def test_manage_daily_challenge_victory_logic_wins_distribution(
     # Test dependencies
+    dummy_daily_challenge,
     player_game_state_minimalist: PlayerGameState,
     # Test parameters
     turns_counter: int,
@@ -65,7 +76,9 @@ def test_manage_daily_challenge_victory_logic_wins_distribution(
     stats = PlayerStats()
 
     # Go!
-    manage_daily_challenge_victory_logic(game_state=game_state, stats=stats)
+    manage_daily_challenge_victory_logic(
+        challenge=dummy_daily_challenge, game_state=game_state, stats=stats
+    )
 
     # Alright, let's check the results:
     assert list(stats.wins_distribution.values()) == expected_wins_distribution
@@ -94,6 +107,7 @@ def test_manage_daily_challenge_victory_logic_wins_distribution(
 @mock.patch("apps.daily_challenge.models.DailyChallengeStats.objects", mock.MagicMock())
 def test_manage_daily_challenge_victory_logic_streak_management(
     # Test dependencies
+    dummy_daily_challenge,
     player_game_state_minimalist: PlayerGameState,
     # Test parameters
     current_streak: int,
@@ -118,7 +132,9 @@ def test_manage_daily_challenge_victory_logic_streak_management(
         manage_new_daily_challenge_stats_logic(stats=stats)
         # ...and win it, straight away! ✌
         manage_daily_challenge_victory_logic(
-            game_state=player_game_state_minimalist, stats=stats
+            challenge=dummy_daily_challenge,
+            game_state=player_game_state_minimalist,
+            stats=stats,
         )
 
     # Alright, let's check the results:

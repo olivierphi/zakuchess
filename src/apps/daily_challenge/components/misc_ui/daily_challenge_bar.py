@@ -1,3 +1,4 @@
+import math
 from typing import TYPE_CHECKING, Literal
 from urllib.parse import urlencode
 
@@ -140,7 +141,7 @@ def _confirmation_dialog(
 def _current_state_display(
     *, game_presenter: "DailyChallengeGamePresenter", board_id: str
 ) -> "dom_tag":
-    if game_presenter.is_see_solution_mode:
+    if game_presenter.solution_index is not None:
         return _see_solution_mode_display(
             game_presenter=game_presenter, board_id=board_id
         )
@@ -243,18 +244,26 @@ def _restart_button(board_id: str) -> "dom_tag":
     )
 
 
-def _see_solution_button(board_id: str) -> "dom_tag":
+def _see_solution_button(
+    board_id: str, *, skip_confirmation: bool = False
+) -> "dom_tag":
     htmx_attributes = {
         "data_hx_post": "".join(
             (
                 reverse(
-                    "daily_challenge:htmx_see_daily_challenge_solution_ask_confirmation"
+                    "daily_challenge:htmx_see_daily_challenge_solution_do"
+                    if skip_confirmation
+                    else "daily_challenge:htmx_see_daily_challenge_solution_ask_confirmation"
                 ),
                 "?",
                 urlencode({"board_id": board_id}),
             )
         ),
-        "data_hx_target": f"#chess-board-daily-challenge-bar-{board_id}",
+        "data_hx_target": (
+            f"#chess-board-pieces-{board_id}"
+            if skip_confirmation
+            else f"#chess-board-daily-challenge-bar-{board_id}"
+        ),
         "data_hx_swap": "innerHTML",
     }
 
@@ -271,8 +280,10 @@ def _see_solution_button(board_id: str) -> "dom_tag":
 def _see_solution_mode_display(
     *, game_presenter: "DailyChallengeGamePresenter", board_id: str
 ) -> "dom_tag":
+    assert game_presenter.game_state.solution_index is not None
+
     is_game_over = game_presenter.is_game_over
-    turns_display = game_presenter.game_state.current_attempt_turns_counter + 1
+    turns_display = math.floor(game_presenter.game_state.solution_index / 2) + 1
 
     return div(
         (
@@ -297,7 +308,11 @@ def _see_solution_mode_display(
             else ""
         ),
         p(
-            (_see_solution_button(board_id=board_id) if is_game_over else ""),
+            (
+                _see_solution_button(board_id=board_id, skip_confirmation=True)
+                if is_game_over
+                else ""
+            ),
             cls="w-full text-center",
         ),
         cls="w-full text-center",

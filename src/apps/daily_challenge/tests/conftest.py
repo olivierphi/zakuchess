@@ -96,7 +96,7 @@ def challenge_quick(challenge_minimalist: DailyChallenge) -> DailyChallenge:
 
     challenge_minimalist.fen = "k7/1p3Q2/p6p/8/8/8/7B/K7 w - - 0 1"
     challenge_minimalist.solution = "f7f8,a8a7,f8d6,a6a5,h2g1,b7b6,d6b6,a7a8,b6a7"
-    challenge_minimalist.solution_moves_count = 5
+    challenge_minimalist.solution_turns_count = 5
     challenge_minimalist.fen_before_bot_first_move = "k7/pp3Q2/7p/8/8/8/7B/K7 b - - 0 1"
     challenge_minimalist.piece_role_by_square_before_bot_first_move = {
         "f7": "Q",

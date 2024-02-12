@@ -53,19 +53,31 @@ _CHESS_PIECE_Z_INDEXES: dict[str, str] = {
 
 # We'll wait that amount of milliseconds before starting the bot move's calculation:
 _BOT_MOVE_DELAY = 700
+_BOT_DEPTH = 1
 _PLAY_BOT_JS_TEMPLATE = Template(
     """
 <script>
     (function () {
         setTimeout(function () {
             window.playBotMove({
-                fen: "$FEN",
-                htmxElementId: "$PLAY_MOVE_HTMX_ELEMENT_ID",
-                botAssetsDataHolderElementId: "$BOT_ASSETS_DATA_HOLDER_ELEMENT_ID",
-                forcedMove: $FORCED_MOVE,
+                fen: "${FEN}",
+                htmxElementId: "${PLAY_MOVE_HTMX_ELEMENT_ID}",
+                botAssetsDataHolderElementId: "${BOT_ASSETS_DATA_HOLDER_ELEMENT_ID}",
+                forcedMove: ${FORCED_MOVE},
                 depth: ${DEPTH},
             });
-        }, $MOVE_DELAY);
+        }, ${MOVE_DELAY});
+    })()</script>"""
+)
+
+_PLAY_SOLUTION_JS_TEMPLATE = Template(
+    """
+<script>
+    (function () {
+        setTimeout(
+            htmx.trigger.bind(null, "${PLAY_MOVE_HTMX_ELEMENT_SELECTOR}", "playSolutionNextMove", {}),
+            ${MOVE_DELAY}
+        );
     })()</script>"""
 )
 
@@ -167,6 +179,9 @@ def chess_pieces(
     bot_turn_html_elements = _bot_turn_html_elements(
         game_presenter=game_presenter, board_id=board_id
     )
+    solution_play_html_elements = _solution_turn_html_elements(
+        game_presenter=game_presenter, board_id=board_id
+    )
 
     return div(
         div(
@@ -175,6 +190,7 @@ def chess_pieces(
         ),
         *pieces,
         *bot_turn_html_elements,
+        *solution_play_html_elements,
         id=f"chess-board-pieces-{board_id}",
         cls="relative aspect-square",
         **extra_attrs,
@@ -232,7 +248,7 @@ def chess_piece(
     player_side = player_side_from_piece_role(piece_role)
 
     piece_can_be_moved_by_player = (
-        (not game_presenter.is_see_solution_mode)
+        game_presenter.solution_index is not None
         and game_presenter.is_player_turn
         and square in game_presenter.squares_with_pieces_that_can_move
     )
@@ -266,7 +282,7 @@ def chess_piece(
         "transform-gpu",
     ]
 
-    htmx_attributes = {}
+    htmx_attributes: dict[str, str] = {}
     if not is_game_over and game_presenter.can_select_pieces:
         htmx_attributes = {
             "data_hx_trigger": "click",
@@ -395,7 +411,7 @@ def chess_character_display(
     )
     is_potential_capture: bool = False
     is_highlighted: bool = False
-    if square and game_presenter and not game_presenter.is_see_solution_mode:
+    if square and game_presenter and game_presenter.solution_index is None:
         if (
             game_presenter.selected_piece
             and game_presenter.selected_piece.square == square
@@ -421,15 +437,15 @@ def chess_character_display(
         is_king
         and is_active_player_piece
         and game_presenter
-        and not game_presenter.is_see_solution_mode
+        and game_presenter.solution_index is None
         and game_presenter.is_check
     ):
         is_potential_capture = True  # let's highlight our king if it's in check
-    if (
+    elif (
         is_king
         and is_active_player_piece
         and game_presenter
-        and game_presenter.is_see_solution_mode
+        and game_presenter.solution_index is not None
         and game_presenter.is_check
     ):
         is_potential_capture = True  # let's highlight checks in "see solution" mode
@@ -636,23 +652,17 @@ def chess_last_move_marker(
 def _bot_turn_html_elements(
     *, game_presenter: "GamePresenter", board_id: str
 ) -> list[dom_tag]:
-    if not game_presenter.is_see_solution_mode and (
-        not game_presenter.is_bot_turn or game_presenter.is_game_over
+    if (
+        game_presenter.solution_index is not None
+        or not game_presenter.is_bot_turn
+        or game_presenter.is_game_over
     ):
         return []
 
     play_move_htmx_element_id = f"chess-bot-play-move-{ board_id }"
     forced_bot_move = json.dumps(game_presenter.forced_bot_move or None)
     move_delay = (
-        _BOT_MOVE_DELAY * 2
-        if game_presenter.forced_bot_move or game_presenter.is_see_solution_mode
-        else _BOT_MOVE_DELAY
-    )
-    depth = (
-        # We'll use a depth of 2 when the user is in "see solution" mode, 1 otherwise:
-        2
-        if game_presenter.is_see_solution_mode
-        else 1
+        _BOT_MOVE_DELAY * 2 if game_presenter.forced_bot_move else _BOT_MOVE_DELAY
     )
 
     htmx_attributes = {
@@ -669,8 +679,42 @@ def _bot_turn_html_elements(
                 "PLAY_MOVE_HTMX_ELEMENT_ID": play_move_htmx_element_id,
                 "BOT_ASSETS_DATA_HOLDER_ELEMENT_ID": f"chess-bot-data-{ board_id }",
                 "FORCED_MOVE": forced_bot_move,
-                "DEPTH": depth,
+                "DEPTH": _BOT_DEPTH,
                 "MOVE_DELAY": move_delay,
+            }
+        )
+    )
+
+    return [
+        bot_move_script_tag,
+        div(
+            id=play_move_htmx_element_id,
+            **htmx_attributes,
+        ),
+    ]
+
+
+def _solution_turn_html_elements(
+    *, game_presenter: "GamePresenter", board_id: str
+) -> list[dom_tag]:
+    if game_presenter.solution_index is None or game_presenter.is_game_over:
+        return []
+
+    play_move_htmx_element_id = f"chess-solution-play-half-move-{board_id}"
+
+    htmx_attributes = {
+        "data_hx_post": game_presenter.urls.htmx_game_play_solution_move_url(
+            board_id=board_id
+        ),
+        "data_hx_target": f"#chess-board-pieces-{board_id}",
+        "data_hx_trigger": "playSolutionNextMove",
+    }
+
+    bot_move_script_tag = unescaped_html(
+        _PLAY_SOLUTION_JS_TEMPLATE.safe_substitute(
+            {
+                "PLAY_MOVE_HTMX_ELEMENT_SELECTOR": f"#{play_move_htmx_element_id}",
+                "MOVE_DELAY": _BOT_MOVE_DELAY,
             }
         )
     )

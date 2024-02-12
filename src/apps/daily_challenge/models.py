@@ -1,5 +1,6 @@
 import datetime as dt
 import enum
+import functools
 import math
 from typing import TYPE_CHECKING, ClassVar, Literal, NamedTuple, Self, TypeAlias
 
@@ -19,7 +20,12 @@ from apps.chess.types import (  # we need real imports on these because they're 
 )
 from lib.django_helpers import literal_to_django_choices
 
-from .consts import BOT_SIDE, FACTIONS, PLAYER_SIDE
+from .consts import (
+    BOT_SIDE,
+    FACTIONS,
+    MAXIMUM_TURNS_PER_CHALLENGE_SOLUTION_MULTIPLIER,
+    PLAYER_SIDE,
+)
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -108,7 +114,7 @@ class DailyChallenge(models.Model):
     )
     teams: "GameTeams|None" = models.JSONField(null=True, editable=False)
     intro_turn_speech_text: str = models.CharField(max_length=100, blank=True)
-    solution_moves_count: int = models.PositiveSmallIntegerField(
+    solution_turns_count: int = models.PositiveSmallIntegerField(
         null=True, editable=False
     )
 
@@ -126,6 +132,16 @@ class DailyChallenge(models.Model):
     @property
     def factions(self) -> "Factions":
         return FACTIONS
+
+    @functools.cached_property
+    def max_turns_count(self) -> int:
+        if not self.solution_turns_count:
+            raise ValueError(
+                f"The `solution_turns_count` field is not set yet on challenge '{self.lookup_key}'"
+            )
+        return (
+            self.solution_turns_count * MAXIMUM_TURNS_PER_CHALLENGE_SOLUTION_MULTIPLIER
+        )
 
     def clean(self) -> None:
         # FEN normalisation:
@@ -194,7 +210,7 @@ class DailyChallenge(models.Model):
             )
 
         # Compute `solution_moves_count` from `solution`
-        self.solution_moves_count = math.ceil(self.solution.count(",") / 2) + 1
+        self.solution_turns_count = math.ceil(self.solution.count(",") / 2) + 1
 
 
 class DailyChallengeStatsManager(models.Manager):
@@ -296,7 +312,7 @@ class PlayerGameState(
         "piece_role_by_square": "prbs",
         "moves": "m",
         "game_over": "go",
-        "see_solution": "sol",
+        "solution_index": "sol",
     },
 ):
     """
@@ -306,16 +322,20 @@ class PlayerGameState(
     Counters are zero-based.
     """
 
-    attempts_counter: int  # the number of attempts for today's challenge - 0-based
-    turns_counter: int  # the sum of number of turns for all today's attempts
-    current_attempt_turns_counter: int  # the number of turns for the current attempt
+    # the number of attempts for today's challenge - 0-based:
+    attempts_counter: int
+    # the sum of number of turns for all today's attempts:
+    turns_counter: int
+    # the number of turns for the current attempt:
+    current_attempt_turns_counter: int
     fen: FEN
     piece_role_by_square: PieceRoleBySquare
     # Each move is 4 more chars added there (UCI notation).
     # These are the moves *of the current attempt* only.
     moves: str
     game_over: "PlayerGameOverState" = PlayerGameOverState.PLAYING
-    see_solution: bool = False  # `True` when the player gave up to see the solution
+    # is a half-move index when the player gave up to see the solution:
+    solution_index: int | None = None
 
     def replace(self, **kwargs) -> Self:
         return msgspec.structs.replace(self, **kwargs)

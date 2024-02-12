@@ -27,7 +27,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name="dailychallenge",
-            name="solution_moves_count",
+            name="solution_turns_count",
             field=models.PositiveSmallIntegerField(editable=False, null=True),
         ),
     ]

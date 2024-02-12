@@ -25,18 +25,18 @@ _UNIT_LOST_REACTIONS: tuple[tuple[str, float], ...] = (
     ("They got {}!", 2.5),
     ("We lost {}!", 2.5),
     ("We'll avenge you, {}!", 3.5),
-    ("Let's avenge {}, comrades!", 4.5),
-    ("You were such a good companion, {}!", 5),
-    ("Won't be the same without you, {}!", 5),
-    ("Say hi to the healers for us, {}!", 5),
-    ("The undeads will pay for what they did to you, {}!", 6),
+    ("Let's avenge {}, comrades!", 3.5),
+    ("You've been a good companion, {}!", 4.5),
+    ("Won't be the same without you, {}!", 4.5),
+    ("Say hi to the healers for us, {}!", 4.5),
+    ("The undeads will pay for that, {}!", 4.5),
 )
 
 
 def get_speech_bubble(
     game_presenter: "DailyChallengeGamePresenter",
 ) -> SpeechBubbleData | None:
-    if game_presenter.game_state.see_solution:
+    if game_presenter.game_state.solution_index is not None:
         return None
 
     # Uncommenting the following line and playing with different squares

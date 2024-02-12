@@ -86,7 +86,7 @@ class DailyChallengeExportResource(resources.ModelResource):
             "bot_first_move",
             "starting_advantage",
             "solution",
-            "solution_moves_count",
+            "solution_turns_count",
         )
         export_order = fields
 
@@ -122,7 +122,7 @@ class DailyChallengeAdmin(ImportExportModelAdmin):
         "lookup_key",
         "source",
         "status_display",
-        "solution_moves_count",
+        "solution_turns_count",
         "starting_advantage",
     )
     ordering = ("-lookup_key",)
@@ -132,6 +132,7 @@ class DailyChallengeAdmin(ImportExportModelAdmin):
     readonly_fields = (
         "game_update",
         "game_preview",
+        "solution_turns_count",
         "fen_before_bot_first_move",
         "teams",
     )
@@ -390,6 +391,7 @@ def _get_game_presenter(
         teams=game_teams,
         piece_role_by_square=piece_role_by_square,
     )
+    setattr(challenge_preview, "max_turns_count", 40)  # we need this to return a value
 
     game_state = PlayerGameState(
         attempts_counter=0,

@@ -59,6 +59,11 @@ urlpatterns = [
         views.htmx_see_daily_challenge_solution_do,
         name="htmx_see_daily_challenge_solution_do",
     ),
+    path(
+        "htmx/daily-challenge/see-solution/play/",
+        views.htmx_see_daily_challenge_solution_play,
+        name="htmx_see_daily_challenge_solution_play",
+    ),
     # Bot-related views
     path(
         "htmx/bot/pieces/<square:from_>/move/<square:to>/",

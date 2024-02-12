@@ -155,7 +155,7 @@ def htmx_game_move_piece(
 
     if ctx.game_state.game_over != PlayerGameOverState.PLAYING:
         raise ChessInvalidActionException("Game is over, cannot move pieces")
-    if ctx.game_state.see_solution:
+    if ctx.game_state.solution_index is not None:
         raise ChessInvalidActionException(
             "'See solution' mode is active, cannot move pieces"
         )
@@ -176,7 +176,10 @@ def htmx_game_move_piece(
     if just_won:
         # The player won! GGWP 🏆
         manage_daily_challenge_victory_logic(
-            game_state=new_game_state, stats=ctx.stats, is_preview=ctx.is_preview
+            challenge=ctx.challenge,
+            game_state=new_game_state,
+            stats=ctx.stats,
+            is_preview=ctx.is_preview,
         )
     elif just_lost:
         # Sorry - hopefully victory will be yours next time! 🤞
@@ -215,7 +218,7 @@ def htmx_game_move_piece(
 def htmx_daily_challenge_stats_modal(
     request: "HttpRequest", *, ctx: "GameContext"
 ) -> HttpResponse:
-    modal_content = stats_modal(ctx.stats)
+    modal_content = stats_modal(challenge=ctx.challenge, stats=ctx.stats)
 
     return HttpResponse(str(modal_content))
 
@@ -332,11 +335,59 @@ def htmx_see_daily_challenge_solution_do(
         player_stats=ctx.stats,
     )
 
+    forced_bot_move = uci_move_squares(ctx.challenge.solution[:4])
+
+    game_presenter = DailyChallengeGamePresenter(
+        challenge=ctx.challenge,
+        game_state=new_game_state,
+        forced_bot_move=forced_bot_move,
+        is_htmx_request=True,
+        refresh_last_move=False,
+    )
+
+    return _daily_challenge_moving_parts_fragment_response(
+        game_presenter=game_presenter, request=request, board_id=ctx.board_id
+    )
+
+
+@require_POST
+@with_game_context
+@redirect_if_game_not_started
+def htmx_see_daily_challenge_solution_play(
+    request: "HttpRequest", *, ctx: "GameContext"
+) -> HttpResponse:
+    if (solution_index := ctx.game_state.solution_index) is None:
+        # This is a fishy request 😅
+        return htmx_aware_redirect(request, "daily_challenge:daily_game_view")
+
+    try:
+        target_move = uci_move_squares(
+            ctx.challenge.solution.split(",")[solution_index]
+        )
+    except IndexError:
+        # Hum, that shouldn't happen 🤔
+        return htmx_aware_redirect(request, "daily_challenge:daily_game_view")
+
+    new_game_state, captured_piece_role = move_daily_challenge_piece(
+        game_state=ctx.game_state,
+        from_=target_move[0],
+        to=target_move[1],
+        is_my_side=False,
+    )
+    assert new_game_state.solution_index is not None
+    new_game_state.solution_index += 1
+
+    save_daily_challenge_state_in_session(
+        request=request,
+        game_state=new_game_state,
+        player_stats=ctx.stats,
+    )
+
     game_presenter = DailyChallengeGamePresenter(
         challenge=ctx.challenge,
         game_state=new_game_state,
         is_htmx_request=True,
-        refresh_last_move=False,
+        refresh_last_move=True,
     )
 
     return _daily_challenge_moving_parts_fragment_response(
@@ -358,9 +409,8 @@ def htmx_game_bot_move(
 
     active_player_side = get_active_player_side_from_fen(ctx.game_state.fen)
     is_bot_turn = active_player_side == ctx.challenge.bot_side
-    if not ctx.game_state.see_solution and not is_bot_turn:
-        # We're not in "see solution" mode, and this is not bot's turn
-        # --> something fishy is going on 😅
+    if not is_bot_turn:
+        # It is not the bot's turn... something fishy is going on 😅
         return htmx_aware_redirect(request, "daily_challenge:daily_game_view")
 
     return _play_bot_move(
@@ -451,18 +501,11 @@ def _play_bot_move(
     just_lost = (
         not game_over_already and new_game_state.game_over == PlayerGameOverState.LOST
     )
-
     if just_lost:
         # Sorry - hopefully victory will be yours next time! 🤞
         manage_daily_challenge_defeat_logic(
             game_state=new_game_state, is_preview=ctx.is_preview
         )
-
-    if ctx.game_state.see_solution and game_presenter.is_bot_turn:
-        # The player is watching the solution, and now the bot moved a piece on their
-        # behalf. Let's increment the turns counter.
-        new_game_state.turns_counter += 1
-        new_game_state.current_attempt_turns_counter += 1
 
     save_daily_challenge_state_in_session(
         request=request,

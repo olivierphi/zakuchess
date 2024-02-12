@@ -162,7 +162,7 @@ class GamePresenter(ABC):
 
     @property
     @abstractmethod
-    def is_see_solution_mode(self) -> bool: ...
+    def solution_index(self) -> int | None: ...
 
     @property
     @abstractmethod
@@ -245,6 +245,9 @@ class GamePresenterUrls(ABC):
         raise NotImplementedError
 
     def htmx_game_play_bot_move_url(self, *, board_id: str) -> str:
+        raise NotImplementedError
+
+    def htmx_game_play_solution_move_url(self, *, board_id: str) -> str:
         raise NotImplementedError
 
 

@@ -30,11 +30,11 @@ def test_solution_turns_counter_computation(
     context: "AbstractContextManager",
     expected_moves_count: int | None,
 ):
-    assert challenge_minimalist.solution_moves_count == 1
+    assert challenge_minimalist.solution_turns_count == 1
 
     challenge_minimalist.solution = solution
     challenge_minimalist.status = DailyChallengeStatus.PUBLISHED  # type: ignore
     with context:
         challenge_minimalist.clean()
     if expected_moves_count:
-        assert challenge_minimalist.solution_moves_count == expected_moves_count
+        assert challenge_minimalist.solution_turns_count == expected_moves_count
