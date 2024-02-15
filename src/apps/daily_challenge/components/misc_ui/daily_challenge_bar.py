@@ -1,10 +1,10 @@
 import math
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 from urllib.parse import urlencode
 
 from django.contrib.humanize.templatetags.humanize import ordinal
 from django.urls import reverse
-from dominate.tags import b, button, div, p, span
+from dominate.tags import b, button, div, p
 from dominate.util import raw
 
 from .common_styles import BUTTON_CLASSES
@@ -14,15 +14,6 @@ if TYPE_CHECKING:
     from dominate.tags import dom_tag
 
     from ...presenters import DailyChallengeGamePresenter
-
-BlockColor = Literal["grey", "green", "yellow", "red"]
-PROGRESS_BAR_BLOCKS: dict[BlockColor, str] = {
-    "grey": "⬜",
-    "green": "🟩",
-    "yellow": "🟨",
-    "red": "🟥",
-}
-PROGRESS_BAR_BLOCKS_COUNT = 10
 
 
 def daily_challenge_bar(
@@ -48,7 +39,7 @@ def daily_challenge_bar(
     )
 
 
-def restart_confirmation_display(*, board_id: str) -> "dom_tag":
+def retry_confirmation_display(*, board_id: str) -> "dom_tag":
     htmx_attributes_confirm = {
         "data_hx_post": "".join(
             (
@@ -146,36 +137,16 @@ def _current_state_display(
             game_presenter=game_presenter, board_id=board_id
         )
 
-    (
-        attempts_counter,
-        current_attempt_turns,
-        turns_total,
-        turns_left,
-        percentage_left,
-        time_s_up,
-    ) = game_presenter.challenge_turns_state
-
-    blocks, danger = _challenge_turns_left_display_with_blocks(percentage_left)
-
-    restart_button: dom_tag = span("")
-    if not time_s_up:
-        restart_button = _restart_button(board_id)
-
-    see_solution_button: dom_tag = span("")
-    if not time_s_up and turns_total > 5:
-        see_solution_button = _see_solution_button(board_id)
-
-    turns_left_display = (
-        f"""<b class="text-rose-600">{turns_left}</b>""" if danger else turns_left
-    )
+    retry_button = _retry_button(board_id)
+    see_solution_button = _see_solution_button(board_id)
 
     return div(
         div(
             raw(
                 " - ".join(
                     (
-                        f"<b>{ordinal(attempts_counter+1)}</b> attempt",
-                        f"turn <b>#{current_attempt_turns+1}</b>",
+                        f"<b>{ordinal(game_presenter.challenge_attempts_counter+1)}</b> attempt",
+                        f"turn <b>#{game_presenter.challenge_current_attempt_turns_counter+1}</b>",
                     )
                 )
             ),
@@ -183,12 +154,7 @@ def _current_state_display(
         ),
         div(
             div(
-                raw(f"Today's turns left: {turns_left_display}/{turns_total}"),
-                cls="text-center",
-            ),
-            div(
-                blocks,
-                restart_button,
+                retry_button,
                 see_solution_button,
                 cls="flex justify-center items-center",
             ),
@@ -197,29 +163,7 @@ def _current_state_display(
     )
 
 
-def _challenge_turns_left_display_with_blocks(
-    percentage_left: int,
-) -> "tuple[dom_tag, bool]":
-    blocks_color: BlockColor = (
-        "green"
-        if percentage_left >= 60
-        else ("yellow" if percentage_left >= 30 else "red")
-    )
-    blocks: list[str] = []
-    current_block_color: BlockColor = blocks_color
-    for i in range(PROGRESS_BAR_BLOCKS_COUNT):
-        percentage = (i + 1) * 100 / PROGRESS_BAR_BLOCKS_COUNT
-        if percentage > percentage_left:
-            current_block_color = "grey"
-        blocks.append(PROGRESS_BAR_BLOCKS[current_block_color])
-
-    return (
-        span("".join(blocks)),
-        blocks_color == "red",
-    )
-
-
-def _restart_button(board_id: str) -> "dom_tag":
+def _retry_button(board_id: str) -> "dom_tag":
     htmx_attributes = {
         "data_hx_post": "".join(
             (
@@ -235,35 +179,41 @@ def _restart_button(board_id: str) -> "dom_tag":
     }
 
     return button(
-        "restart",
+        "retry",
         ICON_SVG_RESTART,
         cls=BUTTON_CLASSES,
-        title="Try this daily challenge again, from the start",
+        title="Try this daily challenge again, from the beginning",
         id=f"chess-board-restart-daily-challenge-{board_id}",
         **htmx_attributes,
     )
 
 
-def _see_solution_button(
-    board_id: str, *, skip_confirmation: bool = False
-) -> "dom_tag":
+def _see_solution_button(board_id: str, *, see_it_again: bool = False) -> "dom_tag":
+    target_route = (
+        "daily_challenge:htmx_see_daily_challenge_solution_do"
+        if see_it_again
+        else "daily_challenge:htmx_see_daily_challenge_solution_ask_confirmation"
+    )
+    target_selector = (
+        f"#chess-board-pieces-{board_id}"
+        if see_it_again
+        else f"#chess-board-daily-challenge-bar-{board_id}"
+    )
+    title = (
+        "See this solution again"
+        if see_it_again
+        else "Give up for today, and see a solution"
+    )
+
     htmx_attributes = {
         "data_hx_post": "".join(
             (
-                reverse(
-                    "daily_challenge:htmx_see_daily_challenge_solution_do"
-                    if skip_confirmation
-                    else "daily_challenge:htmx_see_daily_challenge_solution_ask_confirmation"
-                ),
+                reverse(target_route),
                 "?",
                 urlencode({"board_id": board_id}),
             )
         ),
-        "data_hx_target": (
-            f"#chess-board-pieces-{board_id}"
-            if skip_confirmation
-            else f"#chess-board-daily-challenge-bar-{board_id}"
-        ),
+        "data_hx_target": target_selector,
         "data_hx_swap": "innerHTML",
     }
 
@@ -271,7 +221,7 @@ def _see_solution_button(
         "see solution",
         ICON_SVG_LIGHT_BULB,
         cls=BUTTON_CLASSES,
-        title="Give up for today, and see the solution",
+        title=title,
         id=f"chess-board-restart-daily-challenge-{board_id}",
         **htmx_attributes,
     )
@@ -301,7 +251,7 @@ def _see_solution_mode_display(
         ),
         (
             p(
-                "You can check a solution again:",
+                "You can see that solution again:",
                 cls="w-full text-center",
             )
             if is_game_over
@@ -309,7 +259,7 @@ def _see_solution_mode_display(
         ),
         p(
             (
-                _see_solution_button(board_id=board_id, skip_confirmation=True)
+                _see_solution_button(board_id=board_id, see_it_again=True)
                 if is_game_over
                 else ""
             ),

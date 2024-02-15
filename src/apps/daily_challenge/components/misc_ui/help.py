@@ -50,7 +50,6 @@ _CHARACTER_TYPE_ROLE_MAPPING: dict["PieceType", "TeamMemberRole"] = {
 def help_content(
     *,
     challenge_solution_turns_count: int,
-    challenge_total_turns: int,
     factions_tuple: "tuple[tuple[PlayerSide, Faction], ...]",
 ) -> "dom_tag":
     # N.B. We use a tuple here for the factions, so they're hashable
@@ -68,14 +67,8 @@ def help_content(
             div(
                 p(
                     raw(
-                        "Today's challenge <b>can be solved in "
-                        f"{challenge_solution_turns_count}</b> turns."
-                    )
-                ),
-                p(
-                    raw(
-                        f"and you have <b>{challenge_total_turns} turns "
-                        "across all your attempts</b> to find the solution."
+                        "Today's challenge "
+                        f"<b>can be solved in {challenge_solution_turns_count} turns</b>."
                     )
                 ),
                 cls=f"{spacing}",
@@ -94,7 +87,7 @@ def help_content(
                 "You can restart from the beginning at any time, ",
                 "by clicking the ",
                 span(
-                    "restart",
+                    "retry",
                     ICON_SVG_RESTART,
                     cls=f"{BUTTON_CLASSES} !inline-block !mx-0",
                 ),

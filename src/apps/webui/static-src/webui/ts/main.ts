@@ -1,4 +1,4 @@
-import * as htmx from "htmx.org"
+import * as htmx from "htmx.org/dist/htmx.js"
 
 // @ts-ignore
 window.htmx = htmx

@@ -1,6 +1,5 @@
 import datetime as dt
 import enum
-import functools
 import math
 from typing import TYPE_CHECKING, ClassVar, Literal, NamedTuple, Self, TypeAlias
 
@@ -20,12 +19,7 @@ from apps.chess.types import (  # we need real imports on these because they're 
 )
 from lib.django_helpers import literal_to_django_choices
 
-from .consts import (
-    BOT_SIDE,
-    FACTIONS,
-    MAXIMUM_TURNS_PER_CHALLENGE_SOLUTION_MULTIPLIER,
-    PLAYER_SIDE,
-)
+from .consts import BOT_SIDE, FACTIONS, PLAYER_SIDE
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -34,6 +28,9 @@ if TYPE_CHECKING:
 
 
 GameID: TypeAlias = str
+
+WinsDistributionSlice = Literal[1, 2, 3, 4, 5]
+WinsDistribution = dict[Literal[1, 2, 3, 4, 5], int]
 
 _PLAYER_SIDE_CHOICES = literal_to_django_choices(PlayerSide)  # type: ignore
 _FEN_MAX_LEN = (
@@ -133,16 +130,6 @@ class DailyChallenge(models.Model):
     def factions(self) -> "Factions":
         return FACTIONS
 
-    @functools.cached_property
-    def max_turns_count(self) -> int:
-        if not self.solution_turns_count:
-            raise ValueError(
-                f"The `solution_turns_count` field is not set yet on challenge '{self.lookup_key}'"
-            )
-        return (
-            self.solution_turns_count * MAXIMUM_TURNS_PER_CHALLENGE_SOLUTION_MULTIPLIER
-        )
-
     def clean(self) -> None:
         # FEN normalisation:
         chess_board = chess.Board(self.fen)
@@ -235,6 +222,12 @@ class DailyChallengeStatsManager(models.Manager):
         self._create_for_today_if_needed()
         self.filter(day=self._today()).update(wins_count=F("wins_count") + 1)
 
+    def increment_today_see_solution_count(self) -> None:
+        self._create_for_today_if_needed()
+        self.filter(day=self._today()).update(
+            see_solution_count=F("see_solution_count") + 1
+        )
+
     def _create_for_today_if_needed(self) -> None:
         today = self._today()
         cache_key = _STATS_FOR_TODAY_EXISTS_CACHE["KEY_PATTERN"].format(today=today)  # type: ignore[attr-defined]
@@ -275,6 +268,7 @@ class DailyChallengeStats(models.Model):
     )
     restarts_count = models.IntegerField(default=0)
     wins_count = models.IntegerField(default=0)
+    see_solution_count = models.IntegerField(default=0)
 
     objects = DailyChallengeStatsManager()
 
@@ -368,13 +362,13 @@ class PlayerStats(
     max_streak: int = 0
     last_played: dt.date | None = None
     last_won: dt.date | None = None
-    wins_distribution: dict[Literal[1, 2, 3, 4, 5], int] = msgspec.field(
+    wins_distribution: WinsDistribution = msgspec.field(
         default_factory=lambda: {
-            1: 0,  # challenges won in less than a 5th of the turns allowance
-            2: 0,  # challenges won in less than 2/5th of the turns allowance
-            3: 0,  # ditto for 3/5th
-            4: 0,  # ditto for 4/5th
-            5: 0,  # won in the last few turns
+            1: 0,  # challenges won on the 1st attempt
+            2: 0,  # challenges won in the 2nd attempt
+            3: 0,  # ditto for 3rd attempt
+            4: 0,  # ditto for 4th attempt
+            5: 0,  # won in 5 attempts or more
         }
     )
 

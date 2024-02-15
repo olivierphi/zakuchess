@@ -1,3 +1,4 @@
+import functools
 import logging
 from typing import TYPE_CHECKING
 
@@ -218,7 +219,7 @@ def htmx_game_move_piece(
 def htmx_daily_challenge_stats_modal(
     request: "HttpRequest", *, ctx: "GameContext"
 ) -> HttpResponse:
-    modal_content = stats_modal(challenge=ctx.challenge, stats=ctx.stats)
+    modal_content = stats_modal(stats=ctx.stats)
 
     return HttpResponse(str(modal_content))
 
@@ -248,10 +249,10 @@ def htmx_restart_daily_challenge_ask_confirmation(
 ) -> HttpResponse:
     from .components.misc_ui.daily_challenge_bar import (
         daily_challenge_bar,
-        restart_confirmation_display,
+        retry_confirmation_display,
     )
 
-    daily_challenge_bar_inner_content = restart_confirmation_display(
+    daily_challenge_bar_inner_content = retry_confirmation_display(
         board_id=ctx.board_id
     )
 
@@ -326,7 +327,7 @@ def htmx_see_daily_challenge_solution_do(
     request: "HttpRequest", *, ctx: "GameContext"
 ) -> HttpResponse:
     new_game_state = see_daily_challenge_solution(
-        challenge=ctx.challenge, game_state=ctx.game_state
+        challenge=ctx.challenge, game_state=ctx.game_state, is_preview=ctx.is_preview
     )
 
     save_daily_challenge_state_in_session(
@@ -361,8 +362,8 @@ def htmx_see_daily_challenge_solution_play(
         return htmx_aware_redirect(request, "daily_challenge:daily_game_view")
 
     try:
-        target_move = uci_move_squares(
-            ctx.challenge.solution.split(",")[solution_index]
+        target_move = _daily_challenge_move_for_solution_index(
+            ctx.challenge.solution, solution_index
         )
     except IndexError:
         # Hum, that shouldn't happen 🤔
@@ -529,3 +530,10 @@ def _daily_challenge_moving_parts_fragment_response(
             game_presenter=game_presenter, request=request, board_id=board_id
         ),
     )
+
+
+@functools.lru_cache(maxsize=20)
+def _daily_challenge_move_for_solution_index(
+    challenge_solution: str, solution_index: int
+) -> tuple["Square", "Square"]:
+    return uci_move_squares(challenge_solution.split(",")[solution_index])

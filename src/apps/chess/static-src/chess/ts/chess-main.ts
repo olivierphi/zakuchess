@@ -126,13 +126,17 @@ function computeScore(fen: string, botAssetsDataHolderElementId: string): Promis
     })
 }
 
-function closeSpeechBubble() {
-    const speechBubble = getSpeechBubble()
-    if (speechBubble && speechBubble.parentNode) {
+function closeSpeechBubble(speechBubbleUniqueId?: string): void {
+    const speechBubble = getSpeechBubble(speechBubbleUniqueId)
+    if (speechBubble?.parentNode) {
         speechBubble.remove()
     }
 }
 
-function getSpeechBubble(): Element | null {
-    return document.querySelector("[data-speech-bubble]")
+function getSpeechBubble(speechBubbleUniqueId?: string): Element | null {
+    const speechBubble = document.querySelector("[data-speech-bubble]")
+    if (speechBubbleUniqueId && speechBubble?.dataset.speechBubbleUniqueId !== speechBubbleUniqueId) {
+        return null // avoid closing a speech bubble that doesn't match the provided unique ID
+    }
+    return speechBubble
 }

@@ -50,7 +50,7 @@ def challenge_minimalist() -> DailyChallenge:
         starting_advantage=9_000,  # it could even be over this...
         intro_turn_speech_text="",
         solution="f7f8",
-        solution_moves_count=1,
+        solution_turns_count=1,
         piece_role_by_square=_MINIMALIST_GAME["piece_role_by_square"],
         teams={
             "w": [

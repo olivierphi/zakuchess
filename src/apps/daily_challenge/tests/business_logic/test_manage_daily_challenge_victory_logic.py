@@ -43,22 +43,25 @@ def test_manage_daily_challenge_victory_wins_count(
     # Alright, let's check the results:
     assert stats.win_count == 1
 
+    # If we win again on the same day (because we're just re-trying things), the win
+    # should not be counted again:
+    manage_daily_challenge_victory_logic(
+        challenge=dummy_daily_challenge, game_state=game_state, stats=stats
+    )
+    assert stats.win_count == 1
+
 
 @pytest.mark.parametrize(
-    ("turns_counter", "expected_wins_distribution"),
+    ("attempts_counter", "expected_wins_distribution"),
     (
-        # We have 5 tiers of performance, and 40 turns to win a game,
-        # so each tier is 8 turns long.
-        (40, [0, 0, 0, 0, 1]),  # let's start with the maximum number of turns to win
-        (5, [1, 0, 0, 0, 0]),  # very quick victory: --> first tier!
-        (8, [1, 0, 0, 0, 0]),  # victory at the upper bound of the 1st tier
-        (9, [0, 1, 0, 0, 0]),  # 2nd tier victory, lower bound
-        (16, [0, 1, 0, 0, 0]),  # ditto, upper bound
-        (17, [0, 0, 1, 0, 0]),  # 3rd tier victory, lower bound
-        (24, [0, 0, 1, 0, 0]),  # ditto, upper bound
-        (25, [0, 0, 0, 1, 0]),  # 3rd tier victory, lower bound
-        (32, [0, 0, 0, 1, 0]),  # ditto, upper bound
-        (33, [0, 0, 0, 0, 1]),  # 4th tier victory, lower bound
+        (0, [1, 0, 0, 0, 0]),  # very quick victory: --> first tier!
+        (1, [0, 1, 0, 0, 0]),  # 2nd tier victory
+        (2, [0, 0, 1, 0, 0]),  # 3rd tier victory
+        (3, [0, 0, 0, 1, 0]),  # 4th tier victory
+        (4, [0, 0, 0, 0, 1]),  # 5th tier victory
+        (5, [0, 0, 0, 0, 1]),  # capped at 5 tiers
+        (6, [0, 0, 0, 0, 1]),  # yes, still capped at 5
+        (250, [0, 0, 0, 0, 1]),  # REALLY
     ),
 )
 @mock.patch("apps.daily_challenge.models.DailyChallengeStats.objects", mock.MagicMock())
@@ -67,11 +70,11 @@ def test_manage_daily_challenge_victory_logic_wins_distribution(
     dummy_daily_challenge,
     player_game_state_minimalist: PlayerGameState,
     # Test parameters
-    turns_counter: int,
+    attempts_counter: int,
     expected_wins_distribution: list[int],
 ):
     game_state = player_game_state_minimalist
-    game_state.turns_counter = turns_counter
+    game_state.attempts_counter = attempts_counter
     game_state.game_over = PlayerGameOverState.WON
     stats = PlayerStats()
 

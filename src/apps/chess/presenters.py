@@ -19,6 +19,8 @@ from .helpers import (
 from .types import ChessInvalidStateException
 
 if TYPE_CHECKING:
+    from dominate.util import text
+
     from .types import (
         FEN,
         Factions,
@@ -359,7 +361,7 @@ class SelectedPiecePresenter(SelectedSquarePresenter):
 
 
 class SpeechBubbleData(NamedTuple):
-    text: str
+    text: "str | text"
     square: "Square"
     time_out: float | None = None  # if it's None, should be expressed in seconds
     character_display: "PieceRole | None" = None

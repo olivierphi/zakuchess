@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Literal, cast
 
 from chess import FILE_NAMES, RANK_NAMES
 from django.templatetags.static import static
-from dominate.tags import div, dom_tag, section, span
+from dominate.tags import button, div, dom_tag, section, span
 from dominate.util import raw as unescaped_html
 
 from ..helpers import (
@@ -70,6 +70,7 @@ _PLAY_BOT_JS_TEMPLATE = Template(
     })()</script>"""
 )
 
+_PLAY_SOLUTION_MOVE_DELAY = 900
 _PLAY_SOLUTION_JS_TEMPLATE = Template(
     """
 <script>
@@ -282,6 +283,7 @@ def chess_piece(
         "transform-gpu",
     ]
 
+    additional_attributes: dict = {}
     htmx_attributes: dict[str, str] = {}
     if not is_game_over and game_presenter.can_select_pieces:
         htmx_attributes = {
@@ -297,14 +299,17 @@ def chess_piece(
             ),
             "data_hx_target": f"#chess-board-pieces-{board_id}",
         }
+    else:
+        additional_attributes["disabled"] = True
 
-    return div(
+    return button(
         ground_marker,
         unit_display,
         unit_chess_symbol_display,
         cls=" ".join(classes),
         id=f"board-{ board_id }-side-{ player_side }-piece-{ piece_role }",
         **htmx_attributes,
+        **additional_attributes,
         # These 2 are mostly for debugging purposes:
         data_square=square,
         data_piece_role=piece_role,
@@ -714,7 +719,7 @@ def _solution_turn_html_elements(
         _PLAY_SOLUTION_JS_TEMPLATE.safe_substitute(
             {
                 "PLAY_MOVE_HTMX_ELEMENT_SELECTOR": f"#{play_move_htmx_element_id}",
-                "MOVE_DELAY": _BOT_MOVE_DELAY,
+                "MOVE_DELAY": _PLAY_SOLUTION_MOVE_DELAY,
             }
         )
     )

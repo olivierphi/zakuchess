@@ -1,6 +1,8 @@
 import copy
 from typing import TYPE_CHECKING
 
+from ..models import DailyChallengeStats
+
 if TYPE_CHECKING:
     from ..models import DailyChallenge, PlayerGameState
 
@@ -9,6 +11,7 @@ def see_daily_challenge_solution(
     *,
     challenge: "DailyChallenge",
     game_state: "PlayerGameState",
+    is_preview: bool = False,
 ) -> "PlayerGameState":
     # This field is always set on a published challenge - let's make the
     # type checker happy:
@@ -22,8 +25,7 @@ def see_daily_challenge_solution(
     new_game_state.moves = ""
 
     # Server stats
-    # TODO: server stats for seeing the solution
-    # if not is_preview:
-    #     DailyChallengeStats.objects.increment_today_restarts_count()
+    if not is_preview:
+        DailyChallengeStats.objects.increment_today_see_solution_count()
 
     return new_game_state

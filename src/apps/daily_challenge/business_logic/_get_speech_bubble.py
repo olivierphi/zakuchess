@@ -1,6 +1,8 @@
 import random
 from typing import TYPE_CHECKING
 
+from dominate.util import raw
+
 from apps.chess.helpers import (
     player_side_to_chess_lib_color,
     square_from_int,
@@ -69,6 +71,12 @@ def get_speech_bubble(
             game_presenter.challenge.intro_turn_speech_text
             or "Come on folks, we can win this one!"
         )
+        text = raw(
+            text + "<br><br>"
+            "I heard that we could win today's battle in "
+            f"<b>{game_presenter.challenge.solution_turns_count} turns</b>."
+        )
+
         return SpeechBubbleData(
             text=text,
             square=game_presenter.challenge.intro_turn_speech_square,

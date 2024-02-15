@@ -330,6 +330,7 @@ class DailyChallengeStatsAdmin(admin.ModelAdmin):
         "day",
         "played_count",
         "restarts_count",
+        "see_solution_count",
         "wins_count",
         "wins_percentage",
         "turns_count",
@@ -345,7 +346,7 @@ class DailyChallengeStatsAdmin(admin.ModelAdmin):
     def challenge_link(self, obj: DailyChallengeStats) -> str:
         return mark_safe(
             f"""<a href="{reverse("admin:daily_challenge_dailychallenge_change", args=(obj.challenge_id,))}">"""
-            f"{obj.challenge.lookup_key} 🔗"
+            f"{obj.challenge.lookup_key}"
             "</a>"
         )
 

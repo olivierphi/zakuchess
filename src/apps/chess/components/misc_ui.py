@@ -1,3 +1,4 @@
+import random
 from typing import TYPE_CHECKING, Literal
 
 from dominate.tags import a, button, div, h3, i, script, span
@@ -7,6 +8,8 @@ from .chess_helpers import square_to_square_center_tailwind_classes
 from .svg_icons import ICON_SVG_CLOSE
 
 if TYPE_CHECKING:
+    from dominate.util import text as dominate_text
+
     from ..presenters import GamePresenter
     from ..types import PieceRole, Square
 
@@ -94,7 +97,7 @@ def speech_bubble_container(
 def speech_bubble(
     *,
     game_presenter: "GamePresenter",
-    text: str,
+    text: "str | dominate_text",
     square: "Square",
     time_out: float | None,
     character_display: "PieceRole | None" = None,
@@ -134,7 +137,7 @@ def speech_bubble(
 
     bubble = div(
         div(
-            raw(text),
+            text,
             cls="text-center",
         ),
         character_display_tag,
@@ -191,8 +194,16 @@ def speech_bubble(
         *square_to_square_center_tailwind_classes(square),
     ]
 
+    # Yawp, it's weak randomness, but it should be enough to differentiate between
+    # 2 consecutive speech bubbles :-)
+    speech_bubble_unique_id = str(random.randint(10_000, 99_999))
+
     hide_script = (
-        script(f"""setTimeout(closeSpeechBubble, {int(time_out * 1000)})""")
+        script(
+            raw(
+                f"""setTimeout(closeSpeechBubble.bind(null, "{speech_bubble_unique_id}"), {int(time_out * 1000)})"""
+            )
+        )
         if time_out
         else ""
     )
@@ -202,6 +213,7 @@ def speech_bubble(
         hide_script,
         id=f"speech-container-{board_id}",
         cls=" ".join(outer_classes),
+        data_speech_bubble_id=speech_bubble_unique_id,
         data_speech_bubble=True,
         **extra_attrs,
     )
