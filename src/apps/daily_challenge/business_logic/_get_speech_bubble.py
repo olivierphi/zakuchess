@@ -73,7 +73,7 @@ def get_speech_bubble(
         )
         text = raw(
             text + "<br><br>"
-            "I heard that we could win today's battle in "
+            "According to the scouts we could win today's battle in "
             f"<b>{game_presenter.challenge.solution_turns_count} turns</b>."
         )
 
@@ -140,9 +140,11 @@ def get_speech_bubble(
         die_result = random.random()  # 🎲
         if die_result > probability:
             return SpeechBubbleData(
-                text="We're in a tough situation, folks 😬<br>"
-                "Maybe trying again from the beginning, "
-                "by using the 'restart' button, could be a good idea?",
+                text=raw(
+                    "We're in a tough situation, folks 😬<br>"
+                    "Maybe trying again from the beginning, "
+                    "by using the 'restart' button, could be a good idea?"
+                ),
                 square=_my_king_square(game_presenter),
             )
 

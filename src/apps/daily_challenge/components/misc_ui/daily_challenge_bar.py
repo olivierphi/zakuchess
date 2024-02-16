@@ -7,7 +7,7 @@ from django.urls import reverse
 from dominate.tags import b, button, div, p
 from dominate.util import raw
 
-from .common_styles import BUTTON_CLASSES
+from .common_styles import BUTTON_CANCEL_CLASSES, BUTTON_CLASSES, BUTTON_CONFIRM_CLASSES
 from .svg_icons import ICON_SVG_LIGHT_BULB, ICON_SVG_RESTART
 
 if TYPE_CHECKING:
@@ -116,12 +116,12 @@ def _confirmation_dialog(
         div(
             button(
                 "Confirm",
-                cls="inline-block pl-3 pr-3 font-bold text-yellow-400 hover:text-yellow-200",
+                cls=BUTTON_CONFIRM_CLASSES,
                 **htmx_attributes_confirm,
             ),
             button(
                 "Cancel",
-                cls="inline-block pl-3 pr-3 font-bold text-lime-400 hover:text-lime-200",
+                cls=BUTTON_CANCEL_CLASSES,
                 **htmx_attributes_cancel,
             ),
             cls="text-center",
@@ -143,12 +143,8 @@ def _current_state_display(
     return div(
         div(
             raw(
-                " - ".join(
-                    (
-                        f"<b>{ordinal(game_presenter.challenge_attempts_counter+1)}</b> attempt",
-                        f"turn <b>#{game_presenter.challenge_current_attempt_turns_counter+1}</b>",
-                    )
-                )
+                f"<b>{ordinal(game_presenter.challenge_attempts_counter+1)}</b> attempt: "
+                f"turn <b>#{game_presenter.challenge_current_attempt_turns_counter+1}</b>"
             ),
             cls="text-center",
         ),

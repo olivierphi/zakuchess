@@ -1,4 +1,4 @@
-import { playFromFEN, getScoreFromFEN } from "./chess-bot"
+import { playFromFEN, getStockfishWorker, getScoreFromFEN } from "./chess-bot"
 
 // @ts-ignore
 window.cursorIsNotOnChessBoardInteractiveElement = cursorIsNotOnChessBoardInteractiveElement
@@ -10,6 +10,8 @@ window.computeScore = computeScore
 window.closeSpeechBubble = closeSpeechBubble
 // @ts-ignore
 window.__admin__playFromFEN = playFromFEN
+// @ts-ignore
+window.__admin__getStockfishWorker = getStockfishWorker
 
 function cursorIsNotOnChessBoardInteractiveElement(boardId: string): boolean {
     // Must return `true` only if the user hasn't clicked on one of the game clickable elements.

@@ -6,6 +6,7 @@ from django.conf import settings
 from dominate.tags import div, h4, p, span
 from dominate.util import raw
 
+from apps.chess.components.chess_board import SQUARE_COLOR_TAILWIND_CLASSES
 from apps.chess.components.chess_helpers import chess_unit_symbol_class
 from apps.chess.consts import PIECE_TYPE_TO_NAME
 
@@ -96,7 +97,7 @@ def help_content(
             ),
             div(
                 "After a few turns, if you can't solve the challenge "
-                "you'll be given the opportunity to see a solution, by clicking the ",
+                "you can decide to see a solution, by clicking the ",
                 span(
                     "see solution",
                     ICON_SVG_LIGHT_BULB,
@@ -112,12 +113,12 @@ def help_content(
                         factions=factions,
                         piece_type=piece_type,
                         additional_classes="h-20",
+                        row_counter=i,
                     )
-                    for piece_type in _CHARACTER_TYPE_TIP_KEYS
+                    for i, piece_type in enumerate(_CHARACTER_TYPE_TIP_KEYS)
                 ],
                 cls="mt-2",
             ),
-            # script(raw(_FIRST_TURN_INTRO_SCRIPT.substitute({"board_id": board_id}))),
             cls="w-full text-center",
         ).render(pretty=settings.DEBUG)
     )
@@ -128,6 +129,7 @@ def chess_status_bar_tip(
     factions: "Factions",
     piece_type: "PieceType | None" = None,
     additional_classes: str = "",
+    row_counter: int | None = None,
 ) -> "dom_tag":
     if piece_type is None:
         piece_type = random.choice(_CHARACTER_TYPE_TIP_KEYS)
@@ -137,10 +139,10 @@ def chess_status_bar_tip(
     )
     unit_right_side_role = _CHARACTER_TYPE_ROLE_MAPPING[piece_type]
     unit_display_left = unit_display_container(
-        piece_role=unit_left_side_role, factions=factions
+        piece_role=unit_left_side_role, factions=factions, row_counter=row_counter
     )
     unit_display_right = unit_display_container(
-        piece_role=unit_right_side_role, factions=factions
+        piece_role=unit_right_side_role, factions=factions, row_counter=row_counter
     )
 
     return div(
@@ -156,7 +158,7 @@ def chess_status_bar_tip(
 
 
 def unit_display_container(
-    *, piece_role: "PieceRole", factions: "Factions"
+    *, piece_role: "PieceRole", factions: "Factions", row_counter: int | None = None
 ) -> "dom_tag":
     from apps.chess.components.chess_board import chess_unit_display_with_ground_marker
 
@@ -165,9 +167,15 @@ def unit_display_container(
         factions=factions,
     )
 
+    additional_classes = (
+        f"{SQUARE_COLOR_TAILWIND_CLASSES[row_counter%2]} rounded-lg"
+        if row_counter is not None
+        else ""
+    )
+
     return div(
         unit_display,
-        cls="h-16 aspect-square",
+        cls=f"h-16 aspect-square {additional_classes}",
     )
 
 
