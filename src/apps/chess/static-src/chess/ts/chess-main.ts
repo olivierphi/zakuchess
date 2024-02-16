@@ -1,4 +1,4 @@
-import { playFromFEN, getScoreFromFEN } from "./chess-bot"
+import { playFromFEN, getStockfishWorker, getScoreFromFEN } from "./chess-bot"
 
 // @ts-ignore
 window.cursorIsNotOnChessBoardInteractiveElement = cursorIsNotOnChessBoardInteractiveElement
@@ -8,6 +8,10 @@ window.playBotMove = playBotMove
 window.computeScore = computeScore
 // @ts-ignore
 window.closeSpeechBubble = closeSpeechBubble
+// @ts-ignore
+window.__admin__playFromFEN = playFromFEN
+// @ts-ignore
+window.__admin__getStockfishWorker = getStockfishWorker
 
 function cursorIsNotOnChessBoardInteractiveElement(boardId: string): boolean {
     // Must return `true` only if the user hasn't clicked on one of the game clickable elements.
@@ -78,21 +82,27 @@ function cursorIsNotOnChessBoardInteractiveElement(boardId: string): boolean {
     return true
 }
 
-function playBotMove(
-    fen: string,
-    htmxElementId: string,
-    botAssetsDataHolderElementId: string,
-    forcedMove: [string, string] | null,
-): void {
+type BotMoveDescription = {
+    fen: string
+    htmxElementId: string
+    botAssetsDataHolderElementId: string
+    forcedMove: [string, string] | null
+    depth: number
+}
+
+function playBotMove({
+    fen,
+    htmxElementId,
+    botAssetsDataHolderElementId,
+    forcedMove,
+    depth,
+}: BotMoveDescription): void {
     const htmxElement = document.getElementById(htmxElementId)
     if (!htmxElement) {
         throw `no #${botAssetsDataHolderElementId} element found to play bot's move!`
     }
 
     const doPlayBotMove = (from: string, to: string) => {
-        // By convention we use "a1" and "a2" as placeholders on the server side for the "from" and "to" squares.
-        // As the from and to can contain "a1" and "a2" themselves, we cannot use String.replace() directly.
-        // --> hence this somewhat convoluted approach to replace them:
         const targeUrlPattern = htmxElement.dataset.hxPost!
         const targeUrl = targeUrlPattern.replace("<from>", from).replace("<to>", to)
         htmxElement.dataset.hxPost = targeUrl
@@ -105,26 +115,30 @@ function playBotMove(
         return
     }
 
-    playFromFEN(fen, 1, botAssetsDataHolderElementId).then((move) => {
+    playFromFEN(fen, depth, botAssetsDataHolderElementId).then((move) => {
         console.log(`bot wants to move from ${move[0]} to ${move[1]}`)
         doPlayBotMove(move[0], move[1])
     })
 }
 
 function computeScore(fen: string, botAssetsDataHolderElementId: string): Promise<number> {
-    return getScoreFromFEN(fen, 1, botAssetsDataHolderElementId).then((score) => {
+    return getScoreFromFEN(fen, 2, botAssetsDataHolderElementId).then((score) => {
         console.log(`Stockfish says score is ${score}`)
         return score
     })
 }
 
-function closeSpeechBubble() {
-    const speechBubble = getSpeechBubble()
-    if (speechBubble && speechBubble.parentNode) {
+function closeSpeechBubble(speechBubbleUniqueId?: string): void {
+    const speechBubble = getSpeechBubble(speechBubbleUniqueId)
+    if (speechBubble?.parentNode) {
         speechBubble.remove()
     }
 }
 
-function getSpeechBubble(): Element | null {
-    return document.querySelector("[data-speech-bubble]")
+function getSpeechBubble(speechBubbleUniqueId?: string): Element | null {
+    const speechBubble = document.querySelector("[data-speech-bubble]")
+    if (speechBubbleUniqueId && speechBubble?.dataset.speechBubbleUniqueId !== speechBubbleUniqueId) {
+        return null // avoid closing a speech bubble that doesn't match the provided unique ID
+    }
+    return speechBubble
 }

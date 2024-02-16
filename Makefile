@@ -129,7 +129,7 @@ frontend/js/compile_app_files: esbuild_compile_opts ?=
 frontend/js/compile_app_files:
 	@./node_modules/.bin/esbuild ${esbuild_compile_opts} \
 		${src} \
-		--bundle --sourcemap --target=chrome58,firefox57,safari11,edge16 \
+		--bundle --sourcemap --target=chrome87,firefox78,safari14,edge88 \
 		--outdir="${dest}"
 
 # Here starts the "misc util targets" stuff

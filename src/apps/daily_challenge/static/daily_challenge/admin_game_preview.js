@@ -4,9 +4,13 @@
         /^[a-h][1-8]:rm!\s*$/i, // "remove" command
         /^[a-h][1-8]:mv:[a-h][1-8]!\s*$/i, // "move" command
         /^mirror!\s*$/i, // "mirror" command
+        /^solve!\s*$/i, // "solve" command
     ]
 
     const gameUpdateCommandResetPattern = /^.*!\s*$/i
+
+    window.startSolution = startSolution
+    setTimeout(init, 100)
 
     function init() {
         const adminPreviewUrl = document.getElementById("admin-preview-url-holder").innerText
@@ -34,6 +38,9 @@
         }
 
         function onChessBoardFieldKeyUp(event) {
+            if (document.getElementById("id_bot_first_move")?.value.length !== 4) {
+                return
+            }
             updatePreview(null)
         }
 
@@ -64,5 +71,90 @@
         setTimeout(updatePreview, 100)
     }
 
-    setTimeout(init, 100)
+    const SOLUTION_CHESS_JS_PACKAGE_URL = "https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.min.js"
+    const SOLUTION_BOT_ASSETS_DATA_HOLDER_ELEMENT_ID = "chess-bot-data-admin"
+    const SOLUTION_PLAYER_TURN_DEPTH = 10
+    const SOLUTION_BOT_TURN_DEPTH = 1 // that's the level it really plays at against players :-)
+    const SOLUTION_TURNS_COUNT_MAX = 15 // we want the daily challenges to be short enough
+
+    function startSolution() {
+        const previewIFrame = document.getElementById("preview-iframe")
+        const solutionInputHelpText = document.getElementById("id_solution_helptext")
+        solutionInputHelpText.innerText = "Loading chess.js and spawning our own Stockfish worker..."
+        setTimeout(function initSolutionRequirements() {
+            // We have to spawn our own Stockfish worker for the human player, because it turns out that
+            // Stockfish is not completely stateless, and the moves we ask it to make with depth 1 for the bot
+            // are influcnced by the calculations it made for the human player - leading to the bot making different
+            // moves than what it would make if it was only calculating for itself.
+            const chessBotDataHolder = previewIFrame.contentWindow.document.getElementById(
+                SOLUTION_BOT_ASSETS_DATA_HOLDER_ELEMENT_ID,
+            )
+            if (!chessBotDataHolder) {
+                window.alert(
+                    `The chess bot data holder is missing in the preview iframe (ID: ${SOLUTION_BOT_ASSETS_DATA_HOLDER_ELEMENT_ID}).`,
+                )
+                return
+            }
+
+            const stockfishWorkerForHumanPlayerInitPromise =
+                previewIFrame.contentWindow.__admin__getStockfishWorker(chessBotDataHolder)
+            const chessJsInitPromise = import(SOLUTION_CHESS_JS_PACKAGE_URL)
+            Promise.all([stockfishWorkerForHumanPlayerInitPromise, chessJsInitPromise]).then(
+                ([stockfishWorkerForHumanPlayer, chessjs]) => {
+                    const fen = document.getElementById("id_fen").value
+                    const chessBoard = chessjs.Chess(fen)
+                    const solutionState = {
+                        solutionInput: document.getElementById("id_solution"),
+                        previewIFrame,
+                        stockfishWorkerForHumanPlayer,
+                        solutionInputHelpText,
+                        fen,
+                        chessBoard,
+                        turnsCount: 0,
+                    }
+                    solutionState.solutionInput.value = ""
+                    solutionInputHelpText.innerText = "Starting solution in a bit..."
+                    setTimeout(solutionNextMove.bind(null, solutionState), 100)
+                },
+            )
+        }, 1000)
+    }
+
+    function solutionNextMove(solutionState) {
+        const { fen, chessBoard, previewIFrame, solutionInput, solutionInputHelpText } = solutionState
+        const isHumanPlayerTurn = chessBoard.turn() === "w"
+        const depth = isHumanPlayerTurn ? SOLUTION_PLAYER_TURN_DEPTH : SOLUTION_BOT_TURN_DEPTH
+        const stockfishWorkerToUse = isHumanPlayerTurn ? solutionState.stockfishWorkerForHumanPlayer : null
+        previewIFrame.contentWindow.__admin__playFromFEN(fen, depth, "", stockfishWorkerToUse).then((move) => {
+            const moveStr = `${move[0]}${move[1]}`
+            solutionInput.value += `${moveStr},`
+            // @link https://github.com/jhlywa/chess.js/tree/v0.13.4?tab=readme-ov-file#movemove--options-
+            const moveResult = chessBoard.move(moveStr, { sloppy: true })
+            if (!moveResult) {
+                window.alert(`Invalid move: ${moveStr}`)
+                return
+            }
+            if (isHumanPlayerTurn) {
+                solutionState.turnsCount++
+                solutionInputHelpText.innerText = `Turns: ${solutionState.turnsCount}`
+            }
+            if (solutionState.turnsCount > SOLUTION_TURNS_COUNT_MAX) {
+                window.alert("Game won't work: too many turns.")
+                return
+            }
+            if (chessBoard.in_checkmate()) {
+                window.alert(`'${chessBoard.turn()}' player is checkmate in ${solutionState.turnsCount} turns.`)
+                // Remove the last comma:
+                solutionInput.value = solutionInput.value.replace(/,$/, "")
+                return
+            }
+            if (chessBoard.in_draw() || chessBoard.in_stalemate()) {
+                window.alert("Game finished: draw.")
+                return
+            }
+            solutionState.fen = chessBoard.fen()
+
+            setTimeout(solutionNextMove.bind(null, solutionState), 100)
+        })
+    }
 })()

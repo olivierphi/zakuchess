@@ -7,8 +7,7 @@ from django.urls import reverse
 from apps.chess.presenters import GamePresenter, GamePresenterUrls, SpeechBubbleData
 
 from ..chess.helpers import uci_move_squares
-from .business_logic import get_daily_challenge_turns_state, get_speech_bubble
-from .consts import MAXIMUM_TURNS_PER_CHALLENGE
+from .business_logic import get_speech_bubble
 from .models import DailyChallenge
 
 if TYPE_CHECKING:
@@ -16,7 +15,7 @@ if TYPE_CHECKING:
 
     from apps.chess.types import Factions, GamePhase, PieceRole, PlayerSide, Square
 
-    from .models import ChallengeTurnsState, PlayerGameState
+    from .models import PlayerGameState
 
 # Presenters are the objects we pass to our templates.
 
@@ -34,12 +33,12 @@ class DailyChallengeGamePresenter(GamePresenter):
         selected_square: "Square | None" = None,
         selected_piece_square: "Square | None" = None,
         target_to_confirm: "Square | None" = None,
-        restart_daily_challenge_ask_confirmation: bool = False,
         is_bot_move: bool = False,
         force_square_info: bool = False,
         captured_team_member_role: "PieceRole | None" = None,
         just_won: bool = False,
         is_preview: bool = False,
+        is_see_solution_mode: bool = False,
         is_very_first_game: bool = False,
     ):
         # A published challenge always has a `teams` non-null field:
@@ -62,9 +61,6 @@ class DailyChallengeGamePresenter(GamePresenter):
         )
         self._challenge = challenge
         self.game_state = game_state
-        self.restart_daily_challenge_ask_confirmation = (
-            restart_daily_challenge_ask_confirmation
-        )
         self.is_bot_move = is_bot_move
         self.just_won = just_won
         self.is_very_first_game = is_very_first_game
@@ -79,24 +75,20 @@ class DailyChallengeGamePresenter(GamePresenter):
         return self._challenge.my_side == self.active_player
 
     @cached_property
-    def challenge_turns_state(self) -> "ChallengeTurnsState":
-        return get_daily_challenge_turns_state(self.game_state)
+    def challenge_current_attempt_turns_counter(self) -> int:
+        return self.game_state.current_attempt_turns_counter
 
-    @property
-    def challenge_turns_counter(self) -> int:
+    @cached_property
+    def challenge_total_turns_counter(self) -> int:
         return self.game_state.turns_counter
 
-    @property
-    def challenge_total_turns(self) -> int:
-        return MAXIMUM_TURNS_PER_CHALLENGE
+    @cached_property
+    def challenge_solution_turns_count(self) -> int:
+        return self._challenge.solution_turns_count
 
-    @property
-    def challenge_turns_left(self) -> int:
-        return self.challenge_turns_state.turns_left
-
-    @property
+    @cached_property
     def challenge_attempts_counter(self) -> int:
-        return self.challenge_turns_state.attempts_counter
+        return self.game_state.attempts_counter
 
     @cached_property
     def game_phase(self) -> "GamePhase":
@@ -106,8 +98,6 @@ class DailyChallengeGamePresenter(GamePresenter):
                 if winner == self._challenge.my_side
                 else "game_over:lost"
             )
-        if self.challenge_turns_state.time_s_up:
-            return "game_over:lost"
         if self.is_my_turn:
             if self.selected_piece is None:
                 return "waiting_for_player_selection"
@@ -118,12 +108,6 @@ class DailyChallengeGamePresenter(GamePresenter):
             return "waiting_for_bot_turn"
 
         return "waiting_for_opponent_turn"
-
-    @cached_property
-    def is_game_over(self) -> bool:
-        if self.challenge_turns_state.time_s_up:
-            return True
-        return super().is_game_over
 
     @property
     def can_select_pieces(self) -> bool:
@@ -140,6 +124,10 @@ class DailyChallengeGamePresenter(GamePresenter):
         return self.active_player_side == self._challenge.bot_side
 
     @cached_property
+    def solution_index(self) -> int | None:
+        return self.game_state.solution_index
+
+    @cached_property
     def game_id(self) -> str:
         return str(self._challenge.id)
 
@@ -149,7 +137,15 @@ class DailyChallengeGamePresenter(GamePresenter):
 
     @cached_property
     def is_intro_turn(self) -> bool:
-        return self.is_bot_move and self.challenge_turns_counter == 0
+        return (
+            self.is_bot_move
+            and self.challenge_attempts_counter == 0
+            and self.challenge_current_attempt_turns_counter == 0
+        )
+
+    @cached_property
+    def is_player_move(self) -> bool:
+        return not self.is_bot_move
 
     @cached_property
     def player_side_to_highlight_all_pieces_for(self) -> "PlayerSide | None":
@@ -237,6 +233,17 @@ class DailyChallengeGamePresenterUrls(GamePresenterUrls):
                 )
                 .replace("a1", "<from>")
                 .replace("a2", "<to>"),
+                "?",
+                urlencode({"board_id": board_id}),
+            )
+        )
+
+    def htmx_game_play_solution_move_url(self, *, board_id: str) -> str:
+        return "".join(
+            (
+                reverse(
+                    "daily_challenge:htmx_see_daily_challenge_solution_play",
+                ),
                 "?",
                 urlencode({"board_id": board_id}),
             )

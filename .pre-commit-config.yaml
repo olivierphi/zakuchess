@@ -15,6 +15,7 @@ repos:
     rev: v0.1.14
     hooks:
       - id: ruff
+        args: ["--fix"] 
         exclude: "^src/project/settings/.*\\.py$"
   - repo: https://github.com/pycqa/isort
     rev: 5.13.2

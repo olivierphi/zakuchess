@@ -1,22 +1,22 @@
-from math import ceil, floor
+from math import ceil
 from typing import TYPE_CHECKING
 
+from django.contrib.humanize.templatetags.humanize import ordinal
 from dominate.tags import div, h3
 
 from apps.chess.components.misc_ui import modal_container
 
-from ...consts import MAXIMUM_TURNS_PER_CHALLENGE
 from .svg_icons import ICON_SVG_STATS
 
 if TYPE_CHECKING:
     from dominate.tags import dom_tag
 
-    from ...models import PlayerStats
+    from ...models import PlayerStats, WinsDistributionSlice
 
 # TODO: manage i18n
 
 
-def stats_modal(stats: "PlayerStats") -> "dom_tag":
+def stats_modal(*, stats: "PlayerStats") -> "dom_tag":
     return modal_container(
         header=h3(
             "Statistics ",
@@ -56,16 +56,18 @@ def _wins_distribution(stats: "PlayerStats") -> "dom_tag":
             cls="text-center",
         )
     else:
-        slices_size = MAXIMUM_TURNS_PER_CHALLENGE / stats.WINS_DISTRIBUTION_SLICE_COUNT
         min_width_percentage = 8
 
-        def row(distribution_slice: int, count: int) -> "dom_tag":
-            slice_lower_bound = floor(slices_size * (distribution_slice - 1)) + 1
-            slice_upper_bound = floor(slice_lower_bound + slices_size) - 1
+        def row(distribution_slice: "WinsDistributionSlice", count: int) -> "dom_tag":
+            slice_label = (
+                f"{ordinal(distribution_slice)} attempt"
+                if distribution_slice < stats.WINS_DISTRIBUTION_SLICE_COUNT
+                else f"{stats.WINS_DISTRIBUTION_SLICE_COUNT} attempts or more"
+            )
 
             return div(
                 div(
-                    f"{slice_lower_bound} - {slice_upper_bound} turns",
+                    slice_label,
                     cls="font-bold",
                 ),
                 div(

@@ -1,6 +1,8 @@
 import random
 from typing import TYPE_CHECKING
 
+from dominate.util import raw
+
 from apps.chess.helpers import (
     player_side_to_chess_lib_color,
     square_from_int,
@@ -25,18 +27,19 @@ _UNIT_LOST_REACTIONS: tuple[tuple[str, float], ...] = (
     ("They got {}!", 2.5),
     ("We lost {}!", 2.5),
     ("We'll avenge you, {}!", 3.5),
-    ("Let's avenge {}, comrades!", 4.5),
-    ("You were such a good companion, {}!", 5),
-    ("Won't be the same without you, {}!", 5),
-    ("Say hi to the healers for us, {}!", 5),
-    ("The undeads will pay for what they did to you, {}!", 6),
+    ("Let's avenge {}, comrades!", 3.5),
+    ("You've been a good companion, {}!", 4.5),
+    ("Won't be the same without you, {}!", 4.5),
+    ("Say hi to the healers for us, {}!", 4.5),
+    ("The undeads will pay for that, {}!", 4.5),
 )
 
 
 def get_speech_bubble(
     game_presenter: "DailyChallengeGamePresenter",
 ) -> SpeechBubbleData | None:
-    # A published challenge always has a `intro_turn_speech_square`,
+    if game_presenter.game_state.solution_index is not None:
+        return None
 
     # Uncommenting the following line and playing with different squares
     # is handy when working on this feature :-)
@@ -68,6 +71,12 @@ def get_speech_bubble(
             game_presenter.challenge.intro_turn_speech_text
             or "Come on folks, we can win this one!"
         )
+        text = raw(
+            text + "<br><br>"
+            "According to the scouts we could win today's battle in "
+            f"<b>{game_presenter.challenge.solution_turns_count} turns</b>."
+        )
+
         return SpeechBubbleData(
             text=text,
             square=game_presenter.challenge.intro_turn_speech_square,
@@ -124,7 +133,6 @@ def get_speech_bubble(
     if (
         game_presenter.is_player_turn
         and game_presenter.is_htmx_request
-        and not game_presenter.restart_daily_challenge_ask_confirmation
         and not game_presenter.selected_piece
         and game_presenter.naive_score < -3
     ):
@@ -132,9 +140,11 @@ def get_speech_bubble(
         die_result = random.random()  # 🎲
         if die_result > probability:
             return SpeechBubbleData(
-                text="We're in a tough situation, folks 😬<br>"
-                "Maybe trying again from the beginning, "
-                "by using the 'restart' button, could be a good idea?",
+                text=raw(
+                    "We're in a tough situation, folks 😬<br>"
+                    "Maybe trying again from the beginning, "
+                    "by using the 'restart' button, could be a good idea?"
+                ),
                 square=_my_king_square(game_presenter),
             )
 

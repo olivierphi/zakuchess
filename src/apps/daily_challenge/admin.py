@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from apps.chess.types import FEN, PieceSymbol, Square
 
 GameUpdateCommandParams: TypeAlias = dict[str, Any]
-GameUpdateCommandType = Literal["add", "move", "remove", "mirror"]
+GameUpdateCommandType = Literal["add", "move", "remove", "mirror", "solve"]
 GameUpdateCommand: TypeAlias = tuple[GameUpdateCommandType, GameUpdateCommandParams]
 
 _GAME_UPDATE_COMMAND_PATTERNS: dict[GameUpdateCommandType, re.Pattern] = {
@@ -40,6 +40,7 @@ _GAME_UPDATE_COMMAND_PATTERNS: dict[GameUpdateCommandType, re.Pattern] = {
     "move": re.compile(r"(?P<from_>[a-hA-H][1-8]):mv:(?P<to>[a-hA-H][1-8])!"),
     "remove": re.compile(r"(?P<target>[a-hA-H][1-8]):rm!"),
     "mirror": re.compile(r"mirror!"),
+    "solve": re.compile(r"solve!"),
 }
 
 _FUTURE_DAILY_CHALLENGE_COOKIE_DURATION = timedelta(minutes=20)
@@ -58,6 +59,7 @@ class DailyChallengeAdminForm(forms.ModelForm):
             "bot_first_move",
             "intro_turn_speech_square",
             "starting_advantage",
+            "solution",
         )
         widgets = {
             "status": forms.RadioSelect(),
@@ -83,6 +85,8 @@ class DailyChallengeExportResource(resources.ModelResource):
             "fen",
             "bot_first_move",
             "starting_advantage",
+            "solution",
+            "solution_turns_count",
         )
         export_order = fields
 
@@ -118,19 +122,17 @@ class DailyChallengeAdmin(ImportExportModelAdmin):
         "lookup_key",
         "source",
         "status_display",
-        "created_at",
-        "updated_at",
-        "fen",
+        "solution_turns_count",
         "starting_advantage",
-        "bot_first_move",
     )
-    ordering = ("-created_at",)
+    ordering = ("-lookup_key",)
     list_display_links = ("lookup_key", "source")
     list_filter = ["status", SourceTypeListFilter]
 
     readonly_fields = (
         "game_update",
         "game_preview",
+        "solution_turns_count",
         "fen_before_bot_first_move",
         "teams",
     )
@@ -243,17 +245,34 @@ class DailyChallengeAdmin(ImportExportModelAdmin):
                 raw(
                     f"""
                     <script>
-                        window.parent.document.getElementById("id_fen").value = "{game_presenter.fen}";
+                        {{
+                        const djangoFormWindow = window.parent;
+                        const djangoFormDoc = djangoFormWindow.document;
+                        djangoFormDoc.getElementById("id_fen").value = "{game_presenter.fen}";
                         
                         setTimeout(function () {{
                             computeScore("{game_presenter.fen}", "chess-bot-data-{board_id}")
                                 .then((score) => {{
                                     document.getElementById("stockfish-score").innerText = score;
-                                    window.parent.document.getElementById("id_starting_advantage").value = score;
+                                    djangoFormDoc.getElementById("id_starting_advantage").value = score;
                                 }})
                                 .catch((err) => console.error(err));
                         }}, 100)
+                        }}
                     </script>"""
+                ),
+                (
+                    raw(
+                        """
+                    <script>
+                    {{
+                        const djangoFormWindow = window.parent;
+                        djangoFormWindow.startSolution();
+                    }}
+                    </script>"""
+                    )
+                    if game_update_cmd and game_update_cmd[0] == "solve"
+                    else ""
                 ),
                 # Last but certainly not least, display the chess board:
                 chess_arena(
@@ -275,6 +294,7 @@ class DailyChallengeAdmin(ImportExportModelAdmin):
                     <li><code>[square]:add:[piece]!</code>: adds a piece to a square - e.g. `e4:add:p!`, `f6:add:N!`</li>
                     <li><code>[square_from]:mv:[square_to]!</code>: moves a piece- e.g. `e4:mv:e5!`, `f6:mv:f8!`</li>
                     <li><code>mirror!</code>: mirrors the 2 player sides</li>
+                    <li><code>solve!</code>: solve the challenge</li>
                 </ul>
                 Any other string will be removed as soon as an exclamation mark is typed.
             </div>
@@ -310,6 +330,7 @@ class DailyChallengeStatsAdmin(admin.ModelAdmin):
         "day",
         "played_count",
         "restarts_count",
+        "see_solution_count",
         "wins_count",
         "wins_percentage",
         "turns_count",
@@ -325,7 +346,7 @@ class DailyChallengeStatsAdmin(admin.ModelAdmin):
     def challenge_link(self, obj: DailyChallengeStats) -> str:
         return mark_safe(
             f"""<a href="{reverse("admin:daily_challenge_dailychallenge_change", args=(obj.challenge_id,))}">"""
-            f"{obj.challenge.lookup_key} 🔗"
+            f"{obj.challenge.lookup_key}"
             "</a>"
         )
 
@@ -371,6 +392,7 @@ def _get_game_presenter(
         teams=game_teams,
         piece_role_by_square=piece_role_by_square,
     )
+    setattr(challenge_preview, "max_turns_count", 40)  # we need this to return a value
 
     game_state = PlayerGameState(
         attempts_counter=0,
@@ -389,7 +411,7 @@ def _get_game_presenter(
         forced_speech_bubble=(
             (intro_turn_speech_square, "!") if intro_turn_speech_square else None
         ),
-        force_square_info=True,  # easier will all the square names :-)
+        force_square_info=True,  # easier with all the square names :-)
     )
 
 
@@ -430,11 +452,18 @@ def _mirror_board(*, fen: "FEN") -> str:
     return cast("FEN", chess_board.fen())
 
 
+def _solve_problem(*, fen: "FEN") -> str:
+    # This is a no-op on the server, as we solve problems on the frontend side
+    chess_board = chess.Board(fen)
+    return cast("FEN", chess_board.fen())
+
+
 _GAME_UPDATE_MAPPING: dict[GameUpdateCommandType, Callable] = {
     "add": _add_piece_to_square,
     "move": _move_piece_to_square,
     "remove": _remove_piece_from_square,
     "mirror": _mirror_board,
+    "solve": _solve_problem,
 }
 
 
@@ -505,4 +534,5 @@ class DailyChallengePreviewForm(forms.Form):
             intro_turn_speech_square: "Square | None"
             game_update: GameUpdateCommand
 
-        cleaned_data: CleanedData
+        @property
+        def cleaned_data(self) -> CleanedData: ...

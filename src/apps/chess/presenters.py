@@ -19,6 +19,8 @@ from .helpers import (
 from .types import ChessInvalidStateException
 
 if TYPE_CHECKING:
+    from dominate.util import text
+
     from .types import (
         FEN,
         Factions,
@@ -162,6 +164,10 @@ class GamePresenter(ABC):
 
     @property
     @abstractmethod
+    def solution_index(self) -> int | None: ...
+
+    @property
+    @abstractmethod
     def game_id(self) -> str: ...
 
     @property
@@ -241,6 +247,9 @@ class GamePresenterUrls(ABC):
         raise NotImplementedError
 
     def htmx_game_play_bot_move_url(self, *, board_id: str) -> str:
+        raise NotImplementedError
+
+    def htmx_game_play_solution_move_url(self, *, board_id: str) -> str:
         raise NotImplementedError
 
 
@@ -352,7 +361,7 @@ class SelectedPiecePresenter(SelectedSquarePresenter):
 
 
 class SpeechBubbleData(NamedTuple):
-    text: str
+    text: "str | text"
     square: "Square"
     time_out: float | None = None  # if it's None, should be expressed in seconds
     character_display: "PieceRole | None" = None

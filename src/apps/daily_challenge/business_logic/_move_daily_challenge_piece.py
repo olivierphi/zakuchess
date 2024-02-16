@@ -58,12 +58,7 @@ def move_daily_challenge_piece(
         game_over_state = PlayerGameOverState.PLAYING
 
     # Right, let's return the new game state!
-    new_game_state = PlayerGameState(
-        # We keep these as-is...
-        turns_counter=game_state.turns_counter,  # may be updated below
-        current_attempt_turns_counter=game_state.current_attempt_turns_counter,  # ditto
-        attempts_counter=game_state.attempts_counter,
-        # ...but update those:
+    new_game_state = game_state.replace(
         fen=move_result["fen"],
         piece_role_by_square=piece_role_by_square,
         moves=f"{game_state.moves}{from_}{to}",

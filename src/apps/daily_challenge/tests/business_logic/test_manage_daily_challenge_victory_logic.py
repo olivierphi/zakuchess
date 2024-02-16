@@ -11,13 +11,21 @@ from ...business_logic import (
 from ...models import PlayerGameOverState, PlayerGameState, PlayerStats
 
 # N.B. We mock `DailyChallengeStats.objects` in these tests, because the stats logic
-# is not relevant to the tests we're writing here - also, let's not sumon the database
+# is not relevant to the tests we're writing here - also, let's not summon the database
 # when we can avoid it, right? :-)
+
+
+@pytest.fixture
+def dummy_daily_challenge():
+    # All the `manage_daily_challenge_victory_logic` needs from a DailyChallenge is its
+    # `max_turns_count` attribute, so let's mock only this:
+    return mock.Mock(max_turns_count=40)
 
 
 @mock.patch("apps.daily_challenge.models.DailyChallengeStats.objects", mock.MagicMock())
 def test_manage_daily_challenge_victory_wins_count(
     # Test dependencies
+    dummy_daily_challenge,
     player_game_state_minimalist: PlayerGameState,
 ):
     game_state = player_game_state_minimalist
@@ -28,44 +36,52 @@ def test_manage_daily_challenge_victory_wins_count(
     assert stats.win_count == 0
 
     # Go!
-    manage_daily_challenge_victory_logic(game_state=game_state, stats=stats)
+    manage_daily_challenge_victory_logic(
+        challenge=dummy_daily_challenge, game_state=game_state, stats=stats
+    )
 
     # Alright, let's check the results:
     assert stats.win_count == 1
 
+    # If we win again on the same day (because we're just re-trying things), the win
+    # should not be counted again:
+    manage_daily_challenge_victory_logic(
+        challenge=dummy_daily_challenge, game_state=game_state, stats=stats
+    )
+    assert stats.win_count == 1
+
 
 @pytest.mark.parametrize(
-    ("turns_counter", "expected_wins_distribution"),
+    ("attempts_counter", "expected_wins_distribution"),
     (
-        # We have 5 tiers of performance, and 40 turns to win a game,
-        # so each tier is 8 turns long.
-        (40, [0, 0, 0, 0, 1]),  # let's start with the maximum number of turns to win
-        (5, [1, 0, 0, 0, 0]),  # very quick victory: --> first tier!
-        (8, [1, 0, 0, 0, 0]),  # victory at the upper bound of the 1st tier
-        (9, [0, 1, 0, 0, 0]),  # 2nd tier victory, lower bound
-        (16, [0, 1, 0, 0, 0]),  # ditto, upper bound
-        (17, [0, 0, 1, 0, 0]),  # 3rd tier victory, lower bound
-        (24, [0, 0, 1, 0, 0]),  # ditto, upper bound
-        (25, [0, 0, 0, 1, 0]),  # 3rd tier victory, lower bound
-        (32, [0, 0, 0, 1, 0]),  # ditto, upper bound
-        (33, [0, 0, 0, 0, 1]),  # 4th tier victory, lower bound
+        (0, [1, 0, 0, 0, 0]),  # very quick victory: --> first tier!
+        (1, [0, 1, 0, 0, 0]),  # 2nd tier victory
+        (2, [0, 0, 1, 0, 0]),  # 3rd tier victory
+        (3, [0, 0, 0, 1, 0]),  # 4th tier victory
+        (4, [0, 0, 0, 0, 1]),  # 5th tier victory
+        (5, [0, 0, 0, 0, 1]),  # capped at 5 tiers
+        (6, [0, 0, 0, 0, 1]),  # yes, still capped at 5
+        (250, [0, 0, 0, 0, 1]),  # REALLY
     ),
 )
 @mock.patch("apps.daily_challenge.models.DailyChallengeStats.objects", mock.MagicMock())
 def test_manage_daily_challenge_victory_logic_wins_distribution(
     # Test dependencies
+    dummy_daily_challenge,
     player_game_state_minimalist: PlayerGameState,
     # Test parameters
-    turns_counter: int,
+    attempts_counter: int,
     expected_wins_distribution: list[int],
 ):
     game_state = player_game_state_minimalist
-    game_state.turns_counter = turns_counter
+    game_state.attempts_counter = attempts_counter
     game_state.game_over = PlayerGameOverState.WON
     stats = PlayerStats()
 
     # Go!
-    manage_daily_challenge_victory_logic(game_state=game_state, stats=stats)
+    manage_daily_challenge_victory_logic(
+        challenge=dummy_daily_challenge, game_state=game_state, stats=stats
+    )
 
     # Alright, let's check the results:
     assert list(stats.wins_distribution.values()) == expected_wins_distribution
@@ -94,6 +110,7 @@ def test_manage_daily_challenge_victory_logic_wins_distribution(
 @mock.patch("apps.daily_challenge.models.DailyChallengeStats.objects", mock.MagicMock())
 def test_manage_daily_challenge_victory_logic_streak_management(
     # Test dependencies
+    dummy_daily_challenge,
     player_game_state_minimalist: PlayerGameState,
     # Test parameters
     current_streak: int,
@@ -118,7 +135,9 @@ def test_manage_daily_challenge_victory_logic_streak_management(
         manage_new_daily_challenge_stats_logic(stats=stats)
         # ...and win it, straight away! ✌
         manage_daily_challenge_victory_logic(
-            game_state=player_game_state_minimalist, stats=stats
+            challenge=dummy_daily_challenge,
+            game_state=player_game_state_minimalist,
+            stats=stats,
         )
 
     # Alright, let's check the results:

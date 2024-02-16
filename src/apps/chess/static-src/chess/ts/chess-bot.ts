@@ -7,22 +7,27 @@ const wasmSupported =
     typeof WebAssembly === "object" &&
     WebAssembly.validate(Uint8Array.of(0x0, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00))
 
-let botInitializationDone = false
-let stockfish: Worker | null = null
+let botStockfishWorker: Worker | null = null
 
 type WorkerEvent = Event & { data: string }
-
-// TODO: decouple this from HTMX
 
 export async function playFromFEN(
     fen: string,
     depth: number,
     botAssetsDataHolderElementId: string,
+    stockfishWorker: Worker | null = null,
 ): Promise<[Square, Square]> {
-    await initBot(botAssetsDataHolderElementId)
+    if (!stockfishWorker) {
+        if (!botStockfishWorker) {
+            const chessBotDataHolder = getBotAssetsDataHolderElementFromId(botAssetsDataHolderElementId)
+            botStockfishWorker = await getStockfishWorker(chessBotDataHolder)
+        }
+        stockfishWorker = botStockfishWorker
+    }
 
     console.log("onBotInitialized ; initialize with fen: ", fen)
-    stockfish!.postMessage("position fen " + fen)
+    stockfishWorker.postMessage("position fen " + fen)
+    stockfishWorker.postMessage("go depth " + depth)
 
     return new Promise((resolve, reject) => {
         function onStockFishMessage(e: WorkerEvent) {
@@ -31,13 +36,12 @@ export async function playFromFEN(
             if (!bestMoveAnswerMatch) {
                 return
             }
-            stockfish!.removeEventListener("message", onStockFishMessage)
+            stockfishWorker!.removeEventListener("message", onStockFishMessage)
             console.log("bestMoveAnswerMatch: ", [bestMoveAnswerMatch[1], bestMoveAnswerMatch[2]])
             resolve([bestMoveAnswerMatch[1] as Square, bestMoveAnswerMatch[2] as Square])
         }
 
-        stockfish!.addEventListener("message", onStockFishMessage)
-        stockfish!.postMessage("go depth " + depth)
+        stockfishWorker!.addEventListener("message", onStockFishMessage)
     })
 }
 
@@ -45,11 +49,18 @@ export async function getScoreFromFEN(
     fen: string,
     depth: number,
     botAssetsDataHolderElementId: string,
+    stockfishWorker: Worker | null = null,
 ): Promise<number> {
-    await initBot(botAssetsDataHolderElementId)
+    if (!stockfishWorker) {
+        if (!botStockfishWorker) {
+            const chessBotDataHolder = getBotAssetsDataHolderElementFromId(botAssetsDataHolderElementId)
+            botStockfishWorker = await getStockfishWorker(chessBotDataHolder)
+        }
+        stockfishWorker = botStockfishWorker
+    }
 
     console.log("onBotInitialized ; initialize with fen: ", fen)
-    stockfish!.postMessage("position fen " + fen)
+    stockfishWorker.postMessage("position fen " + fen)
 
     return new Promise((resolve, reject) => {
         function onStockFishMessage(e: WorkerEvent) {
@@ -58,27 +69,19 @@ export async function getScoreFromFEN(
             if (!scoreAnswerMatch) {
                 return
             }
-            stockfish!.removeEventListener("message", onStockFishMessage)
+            botStockfishWorker!.removeEventListener("message", onStockFishMessage)
             console.log("scoreAnswerMatch: ", scoreAnswerMatch[1])
             resolve(parseInt(scoreAnswerMatch[1], 10))
         }
 
-        stockfish!.addEventListener("message", onStockFishMessage)
-        stockfish!.postMessage("go depth " + depth)
+        botStockfishWorker!.addEventListener("message", onStockFishMessage)
+        botStockfishWorker!.postMessage("go depth " + depth)
     })
 }
 
-async function initBot(botAssetsDataHolderElementId: string): Promise<void> {
-    if (botInitializationDone) {
-        return Promise.resolve()
-    }
-
-    const chessBotDataHolder = document.getElementById(botAssetsDataHolderElementId)
-    if (!chessBotDataHolder) {
-        throw `no #${botAssetsDataHolderElementId} element found to read bot assets data!`
-    }
-    const chessBotData = JSON.parse(chessBotDataHolder.dataset.stockfishUrls!)
-    stockfish = new Worker(wasmSupported ? chessBotData["wasm"] : chessBotData["js"])
+export async function getStockfishWorker(botAssetsDataHolderElement: HTMLElement): Promise<Worker> {
+    const chessBotData = JSON.parse(botAssetsDataHolderElement.dataset.stockfishUrls!)
+    const stockfish = new Worker(wasmSupported ? chessBotData["wasm"] : chessBotData["js"])
 
     return new Promise((resolve, reject) => {
         function onStockFishMessage(e: WorkerEvent) {
@@ -86,12 +89,19 @@ async function initBot(botAssetsDataHolderElementId: string): Promise<void> {
             if (e.data !== "uciok") {
                 return
             }
-            botInitializationDone = true
-            console.debug("resolve initBot()")
+            console.debug("resolve getStockfishWorker()")
             stockfish!.removeEventListener("message", onStockFishMessage)
-            resolve()
+            resolve(stockfish!)
         }
-        stockfish!.addEventListener("message", onStockFishMessage)
-        stockfish!.postMessage("uci")
+        stockfish.addEventListener("message", onStockFishMessage)
+        stockfish.postMessage("uci")
     })
+}
+
+function getBotAssetsDataHolderElementFromId(botAssetsDataHolderElementId: string): HTMLElement {
+    const chessBotDataHolder = document.getElementById(botAssetsDataHolderElementId)
+    if (!chessBotDataHolder) {
+        throw `no #${botAssetsDataHolderElementId} element found to read bot assets data!`
+    }
+    return chessBotDataHolder
 }

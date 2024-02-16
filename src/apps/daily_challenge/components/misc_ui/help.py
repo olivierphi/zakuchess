@@ -3,14 +3,15 @@ from functools import cache
 from typing import TYPE_CHECKING, cast
 
 from django.conf import settings
-from dominate.tags import br, div, h4, span
+from dominate.tags import div, h4, p, span
 from dominate.util import raw
 
+from apps.chess.components.chess_board import SQUARE_COLOR_TAILWIND_CLASSES
 from apps.chess.components.chess_helpers import chess_unit_symbol_class
 from apps.chess.consts import PIECE_TYPE_TO_NAME
 
 from .common_styles import BUTTON_CLASSES
-from .svg_icons import ICON_SVG_RESTART
+from .svg_icons import ICON_SVG_LIGHT_BULB, ICON_SVG_RESTART
 
 if TYPE_CHECKING:
     from dominate.tags import dom_tag
@@ -49,7 +50,7 @@ _CHARACTER_TYPE_ROLE_MAPPING: dict["PieceType", "TeamMemberRole"] = {
 @cache
 def help_content(
     *,
-    challenge_total_turns: int,
+    challenge_solution_turns_count: int,
     factions_tuple: "tuple[tuple[PlayerSide, Faction], ...]",
 ) -> "dom_tag":
     # N.B. We use a tuple here for the factions, so they're hashable
@@ -65,7 +66,16 @@ def help_content(
                 cls=f"{spacing} text-yellow-400 font-bold ",
             ),
             div(
-                "Your pieces are the ones with a green circle, like these one:",
+                p(
+                    raw(
+                        "Today's challenge "
+                        f"<b>can be solved in {challenge_solution_turns_count} turns</b>."
+                    )
+                ),
+                cls=f"{spacing}",
+            ),
+            div(
+                "Your pieces are the ones with a green circle, like these:",
                 div(
                     unit_display_container(piece_role="N1", factions=factions),
                     unit_display_container(piece_role="Q", factions=factions),
@@ -75,19 +85,22 @@ def help_content(
                 cls=f"{spacing}",
             ),
             div(
-                raw(
-                    f"You have <b>{challenge_total_turns}</b> "
-                    "turns to win this challenge."
+                "You can restart from the beginning at any time, ",
+                "by clicking the ",
+                span(
+                    "retry",
+                    ICON_SVG_RESTART,
+                    cls=f"{BUTTON_CLASSES} !inline-block !mx-0",
                 ),
+                " button.",
                 cls=f"{spacing}",
             ),
             div(
-                "You can restart from the beginning at any time,",
-                br(),
-                "by clicking the ",
+                "After a few turns, if you can't solve the challenge "
+                "you can decide to see a solution, by clicking the ",
                 span(
-                    "restart",
-                    ICON_SVG_RESTART,
+                    "see solution",
+                    ICON_SVG_LIGHT_BULB,
                     cls=f"{BUTTON_CLASSES} !inline-block !mx-0",
                 ),
                 " button.",
@@ -100,12 +113,12 @@ def help_content(
                         factions=factions,
                         piece_type=piece_type,
                         additional_classes="h-20",
+                        row_counter=i,
                     )
-                    for piece_type in _CHARACTER_TYPE_TIP_KEYS
+                    for i, piece_type in enumerate(_CHARACTER_TYPE_TIP_KEYS)
                 ],
                 cls="mt-2",
             ),
-            # script(raw(_FIRST_TURN_INTRO_SCRIPT.substitute({"board_id": board_id}))),
             cls="w-full text-center",
         ).render(pretty=settings.DEBUG)
     )
@@ -116,6 +129,7 @@ def chess_status_bar_tip(
     factions: "Factions",
     piece_type: "PieceType | None" = None,
     additional_classes: str = "",
+    row_counter: int | None = None,
 ) -> "dom_tag":
     if piece_type is None:
         piece_type = random.choice(_CHARACTER_TYPE_TIP_KEYS)
@@ -125,10 +139,10 @@ def chess_status_bar_tip(
     )
     unit_right_side_role = _CHARACTER_TYPE_ROLE_MAPPING[piece_type]
     unit_display_left = unit_display_container(
-        piece_role=unit_left_side_role, factions=factions
+        piece_role=unit_left_side_role, factions=factions, row_counter=row_counter
     )
     unit_display_right = unit_display_container(
-        piece_role=unit_right_side_role, factions=factions
+        piece_role=unit_right_side_role, factions=factions, row_counter=row_counter
     )
 
     return div(
@@ -144,7 +158,7 @@ def chess_status_bar_tip(
 
 
 def unit_display_container(
-    *, piece_role: "PieceRole", factions: "Factions"
+    *, piece_role: "PieceRole", factions: "Factions", row_counter: int | None = None
 ) -> "dom_tag":
     from apps.chess.components.chess_board import chess_unit_display_with_ground_marker
 
@@ -153,9 +167,15 @@ def unit_display_container(
         factions=factions,
     )
 
+    additional_classes = (
+        f"{SQUARE_COLOR_TAILWIND_CLASSES[row_counter%2]} rounded-lg"
+        if row_counter is not None
+        else ""
+    )
+
     return div(
         unit_display,
-        cls="h-16 aspect-square",
+        cls=f"h-16 aspect-square {additional_classes}",
     )
 
 

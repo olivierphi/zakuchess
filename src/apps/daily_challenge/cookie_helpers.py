@@ -45,6 +45,7 @@ def get_or_create_daily_challenge_state_for_player(
             fen=challenge.fen,
             piece_role_by_square=challenge.piece_role_by_square,
             moves="",
+            solution_index=None,
         )
         save_daily_challenge_state_in_session(
             request=request,

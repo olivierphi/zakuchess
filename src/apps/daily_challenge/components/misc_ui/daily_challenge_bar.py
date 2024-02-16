@@ -1,35 +1,32 @@
-from typing import TYPE_CHECKING, Literal
+import math
+from typing import TYPE_CHECKING
 from urllib.parse import urlencode
 
 from django.contrib.humanize.templatetags.humanize import ordinal
 from django.urls import reverse
-from dominate.tags import button, div, dom_tag, span
+from dominate.tags import b, button, div, p
 from dominate.util import raw
 
-from .common_styles import BUTTON_CLASSES
-from .svg_icons import ICON_SVG_RESTART
+from .common_styles import BUTTON_CANCEL_CLASSES, BUTTON_CLASSES, BUTTON_CONFIRM_CLASSES
+from .svg_icons import ICON_SVG_LIGHT_BULB, ICON_SVG_RESTART
 
 if TYPE_CHECKING:
-    from ...presenters import DailyChallengeGamePresenter
+    from dominate.tags import dom_tag
 
-BlockColor = Literal["grey", "green", "yellow", "red"]
-PROGRESS_BAR_BLOCKS: dict[BlockColor, str] = {
-    "grey": "⬜",
-    "green": "🟩",
-    "yellow": "🟨",
-    "red": "🟥",
-}
-PROGRESS_BAR_BLOCKS_COUNT = 10
+    from ...presenters import DailyChallengeGamePresenter
 
 
 def daily_challenge_bar(
-    *, game_presenter: "DailyChallengeGamePresenter", board_id: str, **extra_attrs: str
-) -> dom_tag:
+    *,
+    game_presenter: "DailyChallengeGamePresenter | None",
+    board_id: str,
+    inner_content: "dom_tag | None" = None,
+    **extra_attrs: str,
+) -> "dom_tag":
     from apps.chess.components.chess_board import INFO_BARS_COMMON_CLASSES
 
-    if game_presenter.restart_daily_challenge_ask_confirmation:
-        inner_content = _restart_confirmation_display(board_id=board_id)
-    else:
+    if not inner_content:
+        assert game_presenter is not None
         inner_content = _current_state_display(
             game_presenter=game_presenter, board_id=board_id
         )
@@ -42,7 +39,7 @@ def daily_challenge_bar(
     )
 
 
-def _restart_confirmation_display(*, board_id: str) -> dom_tag:
+def retry_confirmation_display(*, board_id: str) -> "dom_tag":
     htmx_attributes_confirm = {
         "data_hx_post": "".join(
             (
@@ -66,20 +63,65 @@ def _restart_confirmation_display(*, board_id: str) -> dom_tag:
         "data_hx_swap": "outerHTML",
     }
 
-    return div(
-        div(
-            "Retry today's challenge from the start?",
+    return _confirmation_dialog(
+        question=div("Retry today's challenge from the start?", cls="text-center"),
+        htmx_attributes_confirm=htmx_attributes_confirm,
+        htmx_attributes_cancel=htmx_attributes_cancel,
+    )
+
+
+def see_solution_confirmation_display(*, board_id: str) -> "dom_tag":
+    htmx_attributes_confirm = {
+        "data_hx_post": "".join(
+            (
+                reverse("daily_challenge:htmx_see_daily_challenge_solution_do"),
+                "?",
+                urlencode({"board_id": board_id}),
+            )
+        ),
+        "data_hx_target": f"#chess-board-pieces-{board_id}",
+        "data_hx_swap": "outerHTML",
+    }
+    htmx_attributes_cancel = {
+        "data_hx_get": "".join(
+            (
+                reverse("daily_challenge:htmx_game_no_selection"),
+                "?",
+                urlencode({"board_id": board_id}),
+            )
+        ),
+        "data_hx_target": f"#chess-board-pieces-{board_id}",
+        "data_hx_swap": "outerHTML",
+    }
+
+    return _confirmation_dialog(
+        question=div(
+            p("Give up for today, and see a solution?"),
+            b("⚠️ You will not be able to try today's challenge again."),
             cls="text-center",
         ),
+        htmx_attributes_confirm=htmx_attributes_confirm,
+        htmx_attributes_cancel=htmx_attributes_cancel,
+    )
+
+
+def _confirmation_dialog(
+    *,
+    question: "dom_tag",
+    htmx_attributes_confirm: dict[str, str],
+    htmx_attributes_cancel: dict[str, str],
+) -> "dom_tag":
+    return div(
+        question,
         div(
             button(
                 "Confirm",
-                cls="inline-block pl-3 pr-3 font-bold text-yellow-400 hover:text-yellow-200",
+                cls=BUTTON_CONFIRM_CLASSES,
                 **htmx_attributes_confirm,
             ),
             button(
                 "Cancel",
-                cls="inline-block pl-3 pr-3 font-bold text-lime-400 hover:text-lime-200",
+                cls=BUTTON_CANCEL_CLASSES,
                 **htmx_attributes_cancel,
             ),
             cls="text-center",
@@ -89,47 +131,27 @@ def _restart_confirmation_display(*, board_id: str) -> dom_tag:
 
 def _current_state_display(
     *, game_presenter: "DailyChallengeGamePresenter", board_id: str
-) -> dom_tag:
+) -> "dom_tag":
+    if game_presenter.solution_index is not None:
+        return _see_solution_mode_display(
+            game_presenter=game_presenter, board_id=board_id
+        )
 
-    (
-        attempts_counter,
-        current_attempt_turns,
-        turns_total,
-        turns_left,
-        percentage_left,
-        time_s_up,
-    ) = game_presenter.challenge_turns_state
-
-    blocks, danger = _challenge_turns_left_display_with_blocks(percentage_left)
-
-    restart_button: dom_tag = span("")
-    if not time_s_up:
-        restart_button = _restart_button(board_id)
-
-    turns_left_display = (
-        f"""<b class="text-rose-600">{turns_left}</b>""" if danger else turns_left
-    )
+    retry_button = _retry_button(board_id)
+    see_solution_button = _see_solution_button(board_id)
 
     return div(
         div(
             raw(
-                " - ".join(
-                    (
-                        f"<b>{ordinal(attempts_counter+1)}</b> attempt",
-                        f"turn <b>#{current_attempt_turns+1}</b>",
-                    )
-                )
+                f"<b>{ordinal(game_presenter.challenge_attempts_counter+1)}</b> attempt: "
+                f"turn <b>#{game_presenter.challenge_current_attempt_turns_counter+1}</b>"
             ),
             cls="text-center",
         ),
         div(
             div(
-                raw(f"Today's turns left: {turns_left_display}/{turns_total}"),
-                cls="text-center",
-            ),
-            div(
-                blocks,
-                restart_button,
+                retry_button,
+                see_solution_button,
                 cls="flex justify-center items-center",
             ),
         ),
@@ -137,29 +159,7 @@ def _current_state_display(
     )
 
 
-def _challenge_turns_left_display_with_blocks(
-    percentage_left: int,
-) -> tuple[dom_tag, bool]:
-    blocks_color: BlockColor = (
-        "green"
-        if percentage_left >= 60
-        else ("yellow" if percentage_left >= 30 else "red")
-    )
-    blocks: list[str] = []
-    current_block_color: BlockColor = blocks_color
-    for i in range(PROGRESS_BAR_BLOCKS_COUNT):
-        percentage = (i + 1) * 100 / PROGRESS_BAR_BLOCKS_COUNT
-        if percentage > percentage_left:
-            current_block_color = "grey"
-        blocks.append(PROGRESS_BAR_BLOCKS[current_block_color])
-
-    return (
-        span("".join(blocks)),
-        blocks_color == "red",
-    )
-
-
-def _restart_button(board_id: str) -> dom_tag:
+def _retry_button(board_id: str) -> "dom_tag":
     htmx_attributes = {
         "data_hx_post": "".join(
             (
@@ -170,15 +170,96 @@ def _restart_button(board_id: str) -> dom_tag:
                 urlencode({"board_id": board_id}),
             )
         ),
-        "data_hx_target": f"#chess-board-pieces-{board_id}",
-        "data_hx_swap": "outerHTML",
+        "data_hx_target": f"#chess-board-daily-challenge-bar-{board_id}",
+        "data_hx_swap": "innerHTML",
     }
 
     return button(
-        "restart ",
+        "retry",
         ICON_SVG_RESTART,
         cls=BUTTON_CLASSES,
-        title="Try this daily challenge again, from the start",
+        title="Try this daily challenge again, from the beginning",
         id=f"chess-board-restart-daily-challenge-{board_id}",
         **htmx_attributes,
+    )
+
+
+def _see_solution_button(board_id: str, *, see_it_again: bool = False) -> "dom_tag":
+    target_route = (
+        "daily_challenge:htmx_see_daily_challenge_solution_do"
+        if see_it_again
+        else "daily_challenge:htmx_see_daily_challenge_solution_ask_confirmation"
+    )
+    target_selector = (
+        f"#chess-board-pieces-{board_id}"
+        if see_it_again
+        else f"#chess-board-daily-challenge-bar-{board_id}"
+    )
+    title = (
+        "See this solution again"
+        if see_it_again
+        else "Give up for today, and see a solution"
+    )
+
+    htmx_attributes = {
+        "data_hx_post": "".join(
+            (
+                reverse(target_route),
+                "?",
+                urlencode({"board_id": board_id}),
+            )
+        ),
+        "data_hx_target": target_selector,
+        "data_hx_swap": "innerHTML",
+    }
+
+    return button(
+        "see solution",
+        ICON_SVG_LIGHT_BULB,
+        cls=BUTTON_CLASSES,
+        title=title,
+        id=f"chess-board-restart-daily-challenge-{board_id}",
+        **htmx_attributes,
+    )
+
+
+def _see_solution_mode_display(
+    *, game_presenter: "DailyChallengeGamePresenter", board_id: str
+) -> "dom_tag":
+    assert game_presenter.game_state.solution_index is not None
+
+    is_game_over = game_presenter.is_game_over
+    turns_display = math.floor(game_presenter.game_state.solution_index / 2) + 1
+
+    return div(
+        (
+            p("You are currently seeing a solution, " " and can't make any more moves.")
+            if not is_game_over
+            else ""
+        ),
+        p(
+            (
+                raw("This solution ended the game in " f"<b>{turns_display} turns</b>.")
+                if is_game_over
+                else raw(f"Turn <b>{turns_display}</b>.")
+            ),
+            cls="text-center",
+        ),
+        (
+            p(
+                "You can see that solution again:",
+                cls="w-full text-center",
+            )
+            if is_game_over
+            else ""
+        ),
+        p(
+            (
+                _see_solution_button(board_id=board_id, see_it_again=True)
+                if is_game_over
+                else ""
+            ),
+            cls="w-full text-center",
+        ),
+        cls="w-full text-center",
     )

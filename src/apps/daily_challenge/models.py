@@ -7,6 +7,7 @@ import chess
 import msgspec
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 from django.db import IntegrityError, models
 from django.db.models import F
 from django.utils.timezone import now
@@ -27,6 +28,9 @@ if TYPE_CHECKING:
 
 
 GameID: TypeAlias = str
+
+WinsDistributionSlice = Literal[1, 2, 3, 4, 5]
+WinsDistribution = dict[Literal[1, 2, 3, 4, 5], int]
 
 _PLAYER_SIDE_CHOICES = literal_to_django_choices(PlayerSide)  # type: ignore
 _FEN_MAX_LEN = (
@@ -87,6 +91,14 @@ class DailyChallenge(models.Model):
         help_text="positive number means the human player has an advantage, "
         "negative number means the bot has an advantage",
     )
+    solution: str = models.CharField(
+        max_length=150,
+        blank=True,
+        help_text="A comma-separated list of UCI moves",
+        validators=[
+            RegexValidator(r"^(?:[a-h][1-8][a-h][1-8],){1,}[a-h][1-8][a-h][1-8]$")
+        ],
+    )
     # ---
     # Fields that are inferred from the above fields:
     # We want the bot to play first, in a deterministic way,
@@ -99,6 +111,9 @@ class DailyChallenge(models.Model):
     )
     teams: "GameTeams|None" = models.JSONField(null=True, editable=False)
     intro_turn_speech_text: str = models.CharField(max_length=100, blank=True)
+    solution_turns_count: int = models.PositiveSmallIntegerField(
+        null=True, editable=False
+    )
 
     def __str__(self) -> str:
         return f"{self.id}: {self.fen}"
@@ -136,6 +151,13 @@ class DailyChallenge(models.Model):
             errors["intro_turn_speech_square"] = err_msg
         if not self.starting_advantage:
             errors["starting_advantage"] = err_msg
+        if (
+            not self.solution
+            or len(self.solution) < 8
+            # It should always end with a move from the player:
+            or self.solution.count(",") % 2 != 0
+        ):
+            errors["solution"] = err_msg
         if errors:
             raise ValidationError(errors)
 
@@ -174,6 +196,9 @@ class DailyChallenge(models.Model):
                 }
             )
 
+        # Compute `solution_moves_count` from `solution`
+        self.solution_turns_count = math.ceil(self.solution.count(",") / 2) + 1
+
 
 class DailyChallengeStatsManager(models.Manager):
 
@@ -196,6 +221,12 @@ class DailyChallengeStatsManager(models.Manager):
     def increment_today_wins_count(self) -> None:
         self._create_for_today_if_needed()
         self.filter(day=self._today()).update(wins_count=F("wins_count") + 1)
+
+    def increment_today_see_solution_count(self) -> None:
+        self._create_for_today_if_needed()
+        self.filter(day=self._today()).update(
+            see_solution_count=F("see_solution_count") + 1
+        )
 
     def _create_for_today_if_needed(self) -> None:
         today = self._today()
@@ -237,6 +268,7 @@ class DailyChallengeStats(models.Model):
     )
     restarts_count = models.IntegerField(default=0)
     wins_count = models.IntegerField(default=0)
+    see_solution_count = models.IntegerField(default=0)
 
     objects = DailyChallengeStatsManager()
 
@@ -265,7 +297,6 @@ class PlayerGameOverState(enum.IntEnum):
 class PlayerGameState(
     msgspec.Struct,
     kw_only=True,  # type: ignore[call-arg]
-    forbid_unknown_fields=True,
     rename={
         # Let's make the cookie content a bit shorter, with shorter field names
         "attempts_counter": "ac",
@@ -275,6 +306,7 @@ class PlayerGameState(
         "piece_role_by_square": "prbs",
         "moves": "m",
         "game_over": "go",
+        "solution_index": "sol",
     },
 ):
     """
@@ -284,21 +316,28 @@ class PlayerGameState(
     Counters are zero-based.
     """
 
-    attempts_counter: int  # the number of attempts for today's challenge - 0-based
-    turns_counter: int  # the sum of number of turns for all today's attempts
-    current_attempt_turns_counter: int  # the number of turns for the current attempt
+    # the number of attempts for today's challenge - 0-based:
+    attempts_counter: int
+    # the sum of number of turns for all today's attempts:
+    turns_counter: int
+    # the number of turns for the current attempt:
+    current_attempt_turns_counter: int
     fen: FEN
     piece_role_by_square: PieceRoleBySquare
     # Each move is 4 more chars added there (UCI notation).
     # These are the moves *of the current attempt* only.
     moves: str
     game_over: "PlayerGameOverState" = PlayerGameOverState.PLAYING
+    # is a half-move index when the player gave up to see the solution:
+    solution_index: int | None = None
+
+    def replace(self, **kwargs) -> Self:
+        return msgspec.structs.replace(self, **kwargs)
 
 
 class PlayerStats(
     msgspec.Struct,
     kw_only=True,  # type: ignore[call-arg]
-    forbid_unknown_fields=True,
     rename={
         # ditto
         "games_count": "gc",
@@ -323,13 +362,13 @@ class PlayerStats(
     max_streak: int = 0
     last_played: dt.date | None = None
     last_won: dt.date | None = None
-    wins_distribution: dict[Literal[1, 2, 3, 4, 5], int] = msgspec.field(
+    wins_distribution: WinsDistribution = msgspec.field(
         default_factory=lambda: {
-            1: 0,  # challenges won in less than a 5th of the turns allowance
-            2: 0,  # challenges won in less than 2/5th of the turns allowance
-            3: 0,  # ditto for 3/5th
-            4: 0,  # ditto for 4/5th
-            5: 0,  # won in the last few turns
+            1: 0,  # challenges won on the 1st attempt
+            2: 0,  # challenges won in the 2nd attempt
+            3: 0,  # ditto for 3rd attempt
+            4: 0,  # ditto for 4th attempt
+            5: 0,  # won in 5 attempts or more
         }
     )
 
@@ -347,7 +386,6 @@ class PlayerStats(
 class PlayerSessionContent(
     msgspec.Struct,
     kw_only=True,  # type: ignore[call-arg]
-    forbid_unknown_fields=True,
     rename={
         # ditto
         "encoding_version": "ev",
