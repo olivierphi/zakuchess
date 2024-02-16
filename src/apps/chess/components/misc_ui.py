@@ -41,7 +41,7 @@ def modal_container(*, header: h3, body: div) -> "dom_tag":
     )
 
     modal_footer = div(
-        i("One Zakuchess a day keeps the doctor away."),
+        i("A Zakuchess a day keeps the doctor away."),
         cls="text-sm text-center p-6 space-x-2 border-t border-gray-200 rounded-b",
     )
 
