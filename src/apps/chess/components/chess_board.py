@@ -135,7 +135,7 @@ def chess_arena(
         ),
         id=f"chess-arena-{board_id}",
         cls="w-full mx-auto bg-slate-900 "
-        f"md:max-w-3xl xl:max-w-7xl xl:flex {arena_additional_classes}",
+        f"md:max-w-3xl xl:max-w-7xl xl:flex xl:border xl:rounded-md xl:border-neutral-800 {arena_additional_classes}",
         # When the user clicks on anything that is not an interactive element
         # of the chess board, and the state of this chess board is not
         # "waiting_for_player_selection", then the chess board is reset to this state.

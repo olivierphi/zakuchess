@@ -186,7 +186,7 @@ def footer() -> "text":
                 "Made with ❤️ in 🏴󠁧󠁢󠁳󠁣󠁴󠁿",
                 cls="text-center",
             ),
-            div("© 2023 ZakuChess", cls="text-center mb-3"),
+            div("© 2023-2024 ZakuChess", cls="text-center mb-3"),
             div(
                 "This web game is open source. ",
                 a(
