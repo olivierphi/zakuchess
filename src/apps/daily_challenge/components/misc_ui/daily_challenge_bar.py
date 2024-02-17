@@ -7,6 +7,8 @@ from django.urls import reverse
 from dominate.tags import b, button, div, p
 from dominate.util import raw
 
+from apps.chess.components.svg_icons import ICON_SVG_CANCEL, ICON_SVG_CONFIRM
+
 from .common_styles import BUTTON_CANCEL_CLASSES, BUTTON_CLASSES, BUTTON_CONFIRM_CLASSES
 from .svg_icons import ICON_SVG_LIGHT_BULB, ICON_SVG_RESTART
 
@@ -34,7 +36,8 @@ def daily_challenge_bar(
     return div(
         inner_content,
         id=f"chess-board-daily-challenge-bar-{board_id}",
-        cls=f"min-h-[4rem] flex items-center justify-center {INFO_BARS_COMMON_CLASSES} border-t-0",
+        cls=f"min-h-[4rem] flex items-center justify-center {INFO_BARS_COMMON_CLASSES} "
+        "border-t-0 xl:border-2 xl:rounded-t-md",
         **extra_attrs,
     )
 
@@ -116,11 +119,15 @@ def _confirmation_dialog(
         div(
             button(
                 "Confirm",
+                " ",
+                ICON_SVG_CONFIRM,
                 cls=BUTTON_CONFIRM_CLASSES,
                 **htmx_attributes_confirm,
             ),
             button(
                 "Cancel",
+                " ",
+                ICON_SVG_CANCEL,
                 cls=BUTTON_CANCEL_CLASSES,
                 **htmx_attributes_cancel,
             ),
@@ -176,6 +183,7 @@ def _retry_button(board_id: str) -> "dom_tag":
 
     return button(
         "retry",
+        " ",
         ICON_SVG_RESTART,
         cls=BUTTON_CLASSES,
         title="Try this daily challenge again, from the beginning",
@@ -215,6 +223,7 @@ def _see_solution_button(board_id: str, *, see_it_again: bool = False) -> "dom_t
 
     return button(
         "see solution",
+        " ",
         ICON_SVG_LIGHT_BULB,
         cls=BUTTON_CLASSES,
         title=title,

@@ -31,9 +31,10 @@ module.exports = {
             colors: {
                 "debug1": "red",
                 "debug2": "lime",
-                "chess-square-light": "#e4b55d", // "#fed7aa", // "#e4b55d", // "#fed7aa", // Tailwind's "Orange 200"
-                "chess-square-dark": "#a57713", // "#881337", // Amber 700 // "#a57713", // "#9f1239", // Tailwind's "Rose 800"
+                "chess-square-light": "#e4b55d", // "#fed7aa", // "#e4b55d", // "#fed7aa",
+                "chess-square-dark": "#a57713", // "#881337", // Amber 700 // "#a57713", // "#9f1239",
                 "chess-square-square-info": "#58400b",
+                "body-background": "#120222", // @link https://www.tints.dev/purple/A855F7
                 "active-chess-available-target-marker": ACTIVE_PLAYER_SELECTION_COLOR,
                 "opponent-chess-available-target-marker": OPPONENT_PLAYER_SELECTION_COLOR,
             },
