@@ -128,16 +128,16 @@ function computeScore(fen: string, botAssetsDataHolderElementId: string): Promis
     })
 }
 
-function closeSpeechBubble(speechBubbleUniqueId?: string): void {
-    const speechBubble = getSpeechBubble(speechBubbleUniqueId)
+function closeSpeechBubble(speechBubbleId?: string): void {
+    const speechBubble = getSpeechBubble(speechBubbleId)
     if (speechBubble?.parentNode) {
         speechBubble.remove()
     }
 }
 
-function getSpeechBubble(speechBubbleUniqueId?: string): Element | null {
+function getSpeechBubble(speechBubbleId?: string): Element | null {
     const speechBubble = document.querySelector("[data-speech-bubble]")
-    if (speechBubbleUniqueId && speechBubble?.dataset.speechBubbleUniqueId !== speechBubbleUniqueId) {
+    if (speechBubbleId && speechBubble?.dataset.speechBubbleId !== speechBubbleId) {
         return null // avoid closing a speech bubble that doesn't match the provided unique ID
     }
     return speechBubble

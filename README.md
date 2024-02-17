@@ -12,13 +12,14 @@ A free and open-source "daily chess challenge" game, where you play against a co
 with pixel art units.
 
 No tracking, no ads - it was built purely for fun, and to check how far I could go with 
-a reactive User Interface powered by htmx 🙂
+a reactive User Interface powered by [htmx](https://htmx.org/) 🙂
 
 ![The starting screen of a new ZakuChess daily challenge](./src/apps/daily_challenge/static/daily_challenge/img/og-image-1200x630.png)
 
 ### The stack
 
-The amazing following projects are the main ones powering Zakuchess:
+Zakuchess was built with many open source tools and libraries.   
+Too many to list them all here, but the following list presents the most foundational ones:
 
  - Programming language: [Python](https://www.python.org/)
  - Web framework: [Django](https://www.djangoproject.com/)
@@ -29,7 +30,7 @@ The amazing following projects are the main ones powering Zakuchess:
  - TypeScript compilation: [esbuild](https://esbuild.github.io/)
  - Units art: [The Battle for Wesnoth](https://www.wesnoth.org/) :shield:
  - Chess logic on the server: [python-chess](https://python-chess.readthedocs.io/en/latest/)
- - Chess logic in the browser: [Stockfish](https://stockfishchess.org/) (compiled in WebAssembly by the folks at [Lichess](https://github.com/lichess-org))
+ - Chess logic in the browser: [Stockfish](https://stockfishchess.org/) (compiled in WebAssembly by the wonderful folks at [Lichess](https://github.com/lichess-org) 💙)
  - Tests suite: [pytest](https://docs.pytest.org/en/latest/)
  - Hosting: [Fly.io](https://fly.io/)
 

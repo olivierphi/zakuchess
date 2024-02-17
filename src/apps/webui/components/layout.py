@@ -33,7 +33,7 @@ if TYPE_CHECKING:
     from dominate.util import text
 
 # We'll do something cleaner later
-# TODO: compress these fonts in woff2, and put them in "webui/static/webui/fonts".
+# TODO: subset the OpenSans font, once we have extracted text in i18n files.
 _FONTS_CSS = """
 @font-face {
   font-family: 'OpenSans';
@@ -51,6 +51,7 @@ _META_DESCRIPTION = (
     """Play chess with character(s) - """
     """a chess game with pixel art units, with a new challenge each day."""
 )
+_DOCUMENT_BG_COLOR = "bg-body-background"
 
 
 def page(
@@ -88,7 +89,7 @@ def document(
             *children,
             footer(),
             modals_container(),
-            cls="bg-gray-900",
+            cls=_DOCUMENT_BG_COLOR,
             data_hx_headers=json.dumps(
                 {"X-CSRFToken": get_token(request) if request else "[no request]"}
             ),
@@ -185,7 +186,7 @@ def footer() -> "text":
                 "Made with ❤️ in 🏴󠁧󠁢󠁳󠁣󠁴󠁿",
                 cls="text-center",
             ),
-            div("© 2023 ZakuChess", cls="text-center mb-3"),
+            div("© 2023-2024 ZakuChess", cls="text-center mb-3"),
             div(
                 "This web game is open source. ",
                 a(
@@ -206,7 +207,7 @@ def footer() -> "text":
                     **common_links_attributes,
                 ),
             ),
-            cls="w-full text-slate-100 text-sm text-center mb-10 md:max-w-xl mx-auto",
+            cls="w-full text-slate-100 text-sm text-center mt-1 mb-10 md:max-w-xl mx-auto",
         ).render(pretty=settings.DEBUG)
     )
 

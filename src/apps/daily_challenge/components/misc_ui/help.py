@@ -10,7 +10,7 @@ from apps.chess.components.chess_board import SQUARE_COLOR_TAILWIND_CLASSES
 from apps.chess.components.chess_helpers import chess_unit_symbol_class
 from apps.chess.consts import PIECE_TYPE_TO_NAME
 
-from .common_styles import BUTTON_CLASSES
+from .common_styles import BUTTON_BASE_HOVER_TEXT_COLOR, BUTTON_CLASSES
 from .svg_icons import ICON_SVG_LIGHT_BULB, ICON_SVG_RESTART
 
 if TYPE_CHECKING:
@@ -90,7 +90,7 @@ def help_content(
                 span(
                     "retry",
                     ICON_SVG_RESTART,
-                    cls=f"{BUTTON_CLASSES} !inline-block !mx-0",
+                    cls=f"{BUTTON_CLASSES.replace(BUTTON_BASE_HOVER_TEXT_COLOR, '')} !mx-0",
                 ),
                 " button.",
                 cls=f"{spacing}",
@@ -168,7 +168,9 @@ def unit_display_container(
     )
 
     additional_classes = (
-        f"{SQUARE_COLOR_TAILWIND_CLASSES[row_counter%2]} rounded-lg"
+        # actually always use the first color for the square, so `row_counter` is not
+        # so useful as an int now 😅 - but I might switch back to cycled of colors later
+        f"{SQUARE_COLOR_TAILWIND_CLASSES[0]} rounded-lg"
         if row_counter is not None
         else ""
     )

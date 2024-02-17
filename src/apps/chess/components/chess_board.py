@@ -4,6 +4,7 @@ from string import Template
 from typing import TYPE_CHECKING, Literal, cast
 
 from chess import FILE_NAMES, RANK_NAMES
+from django.conf import settings
 from django.templatetags.static import static
 from dominate.tags import button, div, dom_tag, section, span
 from dominate.util import raw as unescaped_html
@@ -86,6 +87,12 @@ _PLAY_SOLUTION_JS_TEMPLATE = Template(
 def chess_arena(
     *, game_presenter: "GamePresenter", status_bars: list[dom_tag], board_id: str
 ) -> dom_tag:
+    arena_additional_classes = (
+        "border-3 border-solid md:border-lime-400 xl:border-red-400"
+        if settings.DEBUG_LAYOUT
+        else ""
+    )
+
     return section(
         div(
             div(
@@ -118,12 +125,17 @@ def chess_arena(
                 id=f"chess-speech-container-{board_id}",
             ),
             id=f"chess-board-components-{board_id}",
-            cls="aspect-square relative",
+            cls="aspect-square relative xl:w-2/3",
         ),
         chess_bot_data(board_id),
-        *status_bars,
+        div(
+            *status_bars,
+            id=f"chess-status-bars-{board_id}",
+            cls="xl:px-2 xl:w-1/3 xl:bg-slate-950",
+        ),
         id=f"chess-arena-{board_id}",
-        cls="w-full mx-auto bg-slate-900 md:max-w-lg",
+        cls="w-full mx-auto bg-slate-900 "
+        f"md:max-w-3xl xl:max-w-7xl xl:flex xl:border xl:rounded-md xl:border-neutral-800 {arena_additional_classes}",
         # When the user clicks on anything that is not an interactive element
         # of the chess board, and the state of this chess board is not
         # "waiting_for_player_selection", then the chess board is reset to this state.
@@ -370,12 +382,16 @@ def chess_available_target(
         "absolute",
         "aspect-square",
         "w-1/8",
+        "block",
         *square_to_piece_tailwind_classes(square),
     ]
+    additional_attributes = {}
+
     if can_move:
         classes += ["cursor-pointer", "pointer-events-auto"]
     else:
         classes += ["pointer-events-none"]
+        additional_attributes["disabled"] = True
 
     if can_move:
         htmx_attributes = {
@@ -388,10 +404,11 @@ def chess_available_target(
     else:
         htmx_attributes = {}
 
-    return div(
+    return button(
         target_marker_container,
         cls=" ".join(classes),
         **htmx_attributes,
+        **additional_attributes,
         # Mostly for debugging purposes:
         data_square=square,
     )
