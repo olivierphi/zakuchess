@@ -1,4 +1,4 @@
-import { playFromFEN, getStockfishWorker, getScoreFromFEN } from "./chess-bot"
+import { playFromFEN, getChessEngineWorker, getScoreFromFEN } from "./chess-bot"
 
 // @ts-ignore
 window.cursorIsNotOnChessBoardInteractiveElement = cursorIsNotOnChessBoardInteractiveElement
@@ -11,7 +11,7 @@ window.closeSpeechBubble = closeSpeechBubble
 // @ts-ignore
 window.__admin__playFromFEN = playFromFEN
 // @ts-ignore
-window.__admin__getStockfishWorker = getStockfishWorker
+window.__admin__getChessEngineWorker = getChessEngineWorker
 
 function cursorIsNotOnChessBoardInteractiveElement(boardId: string): boolean {
     // Must return `true` only if the user hasn't clicked on one of the game clickable elements.
@@ -121,10 +121,10 @@ function playBotMove({
     })
 }
 
-function computeScore(fen: string, botAssetsDataHolderElementId: string): Promise<number> {
-    return getScoreFromFEN(fen, 2, botAssetsDataHolderElementId).then((score) => {
-        console.log(`Stockfish says score is ${score}`)
-        return score
+function computeScore(fen: string, botAssetsDataHolderElementId: string): Promise<["cp" | "mate", number]> {
+    return getScoreFromFEN(fen, 2, botAssetsDataHolderElementId).then(([type, score]) => {
+        console.log(`Chess engine says score is ${score} (type: ${type})`)
+        return [type, score]
     })
 }
 

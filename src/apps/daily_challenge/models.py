@@ -136,6 +136,10 @@ class DailyChallenge(models.Model):
         chess_board.turn = chess.WHITE  # always starts with the "w" player
         self.fen = chess_board.fen()
 
+        if self.solution:
+            # Compute `solution_moves_count` from `solution`
+            self.solution_turns_count = math.ceil(self.solution.count(",") / 2) + 1
+
         if self.status == DailyChallengeStatus.PUBLISHED:
             self._check_mandatory_fields_for_published_daily_challenge()
             self._set_inferred_fields_for_published_daily_challenge(chess_board)
@@ -195,9 +199,6 @@ class DailyChallenge(models.Model):
                     "intro_turn_speech_square": f"'{self.intro_turn_speech_square}' is not a valid 'w' square"
                 }
             )
-
-        # Compute `solution_moves_count` from `solution`
-        self.solution_turns_count = math.ceil(self.solution.count(",") / 2) + 1
 
 
 class DailyChallengeStatsManager(models.Manager):

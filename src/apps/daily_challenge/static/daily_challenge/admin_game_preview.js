@@ -4,7 +4,7 @@
         /^[a-h][1-8]:rm!\s*$/i, // "remove" command
         /^[a-h][1-8]:mv:[a-h][1-8]!\s*$/i, // "move" command
         /^mirror!\s*$/i, // "mirror" command
-        /^solve!\s*$/i, // "solve" command
+        /^s(?:olve)?!\s*$/i, // "solve" command
     ]
 
     const gameUpdateCommandResetPattern = /^.*!\s*$/i
@@ -73,18 +73,24 @@
 
     const SOLUTION_CHESS_JS_PACKAGE_URL = "https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.min.js"
     const SOLUTION_BOT_ASSETS_DATA_HOLDER_ELEMENT_ID = "chess-bot-data-admin"
-    const SOLUTION_PLAYER_TURN_DEPTH = 10
-    const SOLUTION_BOT_TURN_DEPTH = 1 // that's the level it really plays at against players :-)
     const SOLUTION_TURNS_COUNT_MAX = 15 // we want the daily challenges to be short enough
+
+    // The following value is the depth we want the bot to calculate its moves with when we
+    // simulate the human player's turn:
+    const SOLUTION_PLAYER_TURN_DEPTH = 10
+    // For such solutions to work, the value of `SOLUTION_BOT_TURN_DEPTH` *must* be the same
+    // as the `_BOT_DEPTH` const defined in the Python code - if it's not, the bot will make
+    // different moves than what the solution expects, making the solution irrelevant.
+    const SOLUTION_BOT_TURN_DEPTH = 3
 
     function startSolution() {
         const previewIFrame = document.getElementById("preview-iframe")
         const solutionInputHelpText = document.getElementById("id_solution_helptext")
-        solutionInputHelpText.innerText = "Loading chess.js and spawning our own Stockfish worker..."
+        solutionInputHelpText.innerText = "Loading chess.js and spawning our own chess engine worker..."
         setTimeout(function initSolutionRequirements() {
-            // We have to spawn our own Stockfish worker for the human player, because it turns out that
-            // Stockfish is not completely stateless, and the moves we ask it to make with depth 1 for the bot
-            // are influcnced by the calculations it made for the human player - leading to the bot making different
+            // We have to spawn our own chess engine worker for the human player, because it turns out that
+            // some engines are not completely stateless, and the moves we ask it to make with depth 1 for the bot
+            // can be influenced by the calculations it made for the human player - leading to the bot making different
             // moves than what it would make if it was only calculating for itself.
             const chessBotDataHolder = previewIFrame.contentWindow.document.getElementById(
                 SOLUTION_BOT_ASSETS_DATA_HOLDER_ELEMENT_ID,
@@ -96,17 +102,17 @@
                 return
             }
 
-            const stockfishWorkerForHumanPlayerInitPromise =
-                previewIFrame.contentWindow.__admin__getStockfishWorker(chessBotDataHolder)
+            const chessEngineWorkerForHumanPlayerInitPromise =
+                previewIFrame.contentWindow.__admin__getChessEngineWorker(chessBotDataHolder)
             const chessJsInitPromise = import(SOLUTION_CHESS_JS_PACKAGE_URL)
-            Promise.all([stockfishWorkerForHumanPlayerInitPromise, chessJsInitPromise]).then(
-                ([stockfishWorkerForHumanPlayer, chessjs]) => {
+            Promise.all([chessEngineWorkerForHumanPlayerInitPromise, chessJsInitPromise]).then(
+                ([chessEngineWorkerForHumanPlayer, chessjs]) => {
                     const fen = document.getElementById("id_fen").value
                     const chessBoard = chessjs.Chess(fen)
                     const solutionState = {
                         solutionInput: document.getElementById("id_solution"),
                         previewIFrame,
-                        stockfishWorkerForHumanPlayer,
+                        chessEngineWorkerForHumanPlayer,
                         solutionInputHelpText,
                         fen,
                         chessBoard,
@@ -124,8 +130,8 @@
         const { fen, chessBoard, previewIFrame, solutionInput, solutionInputHelpText } = solutionState
         const isHumanPlayerTurn = chessBoard.turn() === "w"
         const depth = isHumanPlayerTurn ? SOLUTION_PLAYER_TURN_DEPTH : SOLUTION_BOT_TURN_DEPTH
-        const stockfishWorkerToUse = isHumanPlayerTurn ? solutionState.stockfishWorkerForHumanPlayer : null
-        previewIFrame.contentWindow.__admin__playFromFEN(fen, depth, "", stockfishWorkerToUse).then((move) => {
+        const chessEngineWorkerToUse = isHumanPlayerTurn ? solutionState.chessEngineWorkerForHumanPlayer : null
+        previewIFrame.contentWindow.__admin__playFromFEN(fen, depth, "", chessEngineWorkerToUse).then((move) => {
             const moveStr = `${move[0]}${move[1]}`
             solutionInput.value += `${moveStr},`
             // @link https://github.com/jhlywa/chess.js/tree/v0.13.4?tab=readme-ov-file#movemove--options-
