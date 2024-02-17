@@ -235,7 +235,7 @@ class DailyChallengeAdmin(ImportExportModelAdmin):
                     raw(
                         """<div style="background-color: #0f172a; color: #f1f5f9; text-align: center;">"""
                         f"Naive score advantage: <b>{game_presenter.naive_score}</b><br>"
-                        """Engine score advantage: <b id="chess-engine-score">⏳</b>"""
+                        """Engine score: <b id="chess-engine-score">⏳</b>"""
                         "</div>"
                     )
                     if not errors

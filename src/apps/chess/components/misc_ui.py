@@ -218,3 +218,7 @@ def speech_bubble(
         data_speech_bubble=True,
         **extra_attrs,
     )
+
+
+def reset_chess_engine_worker() -> "dom_tag":
+    return script(raw("""window.resetChessEngineWorker()"""))

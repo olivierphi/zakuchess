@@ -148,16 +148,16 @@ def chess_arena(
 def chess_bot_data(board_id: str) -> dom_tag:
     # This is used in "chess-bot.ts"
     match settings.JS_CHESS_ENGINE.lower():
-        case "stockfish":
+        case "lozza":
+            chess_engine_urls = {
+                "id": "lozza",
+                "js": static("chess/js/bot/lozza.js"),
+            }
+        case "stockfish" | _:
             chess_engine_urls = {
                 "id": "stockfish",
                 "wasm": static("chess/js/bot/stockfish.wasm.js"),
                 "js": static("chess/js/bot/stockfish.js"),
-            }
-        case "lozza" | _:
-            chess_engine_urls = {
-                "id": "lozza",
-                "js": static("chess/js/bot/lozza.js"),
             }
 
     return div(
