@@ -176,7 +176,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Our custom settings:
 ZAKUCHESS_VERSION = env.get("ZAKUCHESS_VERSION", "dev")
-STOCKFISH_PATH = env.get("STOCKFISH_PATH", "stockfish")
-STOCKFISH_TIME_LIMIT = float(env.get("STOCKFISH_TIME_LIMIT", "0.1"))
+JS_CHESS_ENGINE = env.get("JS_CHESS_ENGINE", "lozza")
 MASTODON_PAGE = env.get("MASTODON_PAGE")
 DEBUG_LAYOUT = env.get("DEBUG_LAYOUT", "") == "1"

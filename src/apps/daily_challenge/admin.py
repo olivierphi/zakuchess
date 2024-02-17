@@ -40,7 +40,7 @@ _GAME_UPDATE_COMMAND_PATTERNS: dict[GameUpdateCommandType, re.Pattern] = {
     "move": re.compile(r"(?P<from_>[a-hA-H][1-8]):mv:(?P<to>[a-hA-H][1-8])!"),
     "remove": re.compile(r"(?P<target>[a-hA-H][1-8]):rm!"),
     "mirror": re.compile(r"mirror!"),
-    "solve": re.compile(r"solve!"),
+    "solve": re.compile(r"s(?:olve)?!"),
 }
 
 _FUTURE_DAILY_CHALLENGE_COOKIE_DURATION = timedelta(minutes=20)
@@ -235,7 +235,7 @@ class DailyChallengeAdmin(ImportExportModelAdmin):
                     raw(
                         """<div style="background-color: #0f172a; color: #f1f5f9; text-align: center;">"""
                         f"Naive score advantage: <b>{game_presenter.naive_score}</b><br>"
-                        """Stockfish score advantage: <b id="stockfish-score">⏳</b>"""
+                        """Engine score advantage: <b id="chess-engine-score">⏳</b>"""
                         "</div>"
                     )
                     if not errors
@@ -252,9 +252,11 @@ class DailyChallengeAdmin(ImportExportModelAdmin):
                         
                         setTimeout(function () {{
                             computeScore("{game_presenter.fen}", "chess-bot-data-{board_id}")
-                                .then((score) => {{
-                                    document.getElementById("stockfish-score").innerText = score;
-                                    djangoFormDoc.getElementById("id_starting_advantage").value = score;
+                                .then(([type, score]) => {{
+                                    document.getElementById("chess-engine-score").innerText = `${{type}}: ${{score}}`;
+                                    if (type === "cp") {{
+                                        djangoFormDoc.getElementById("id_starting_advantage").value = score;
+                                    }}
                                 }})
                                 .catch((err) => console.error(err));
                         }}, 100)
@@ -471,7 +473,7 @@ class DailyChallengePreviewForm(forms.Form):
     fen = forms.CharField(min_length=20, max_length=90)
     bot_first_move = forms.CharField(max_length=4, required=False)
     intro_turn_speech_square = forms.CharField(max_length=2, required=False)
-    game_update = forms.CharField(min_length=4, max_length=10, required=False)
+    game_update = forms.CharField(min_length=2, max_length=10, required=False)
 
     def clean_fen(self) -> str:
         try:

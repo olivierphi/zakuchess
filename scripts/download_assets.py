@@ -23,6 +23,7 @@ CHESS_STATIC = BASE_DIR / "src" / "apps" / "chess" / "static" / "chess"
 ASSETS_PATTERNS: dict[str, str] = {
     "GOOGLE_FONTS": "https://fonts.gstatic.com/s/{font_name}/{v}/{file_id}.woff2",
     "STOCKFISH_CDN": "https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/{file}",
+    "LOZZA_GITHUB": "https://raw.githubusercontent.com/op12no2/lozza/{rev}/lozza.js",
     "WESNOTH_UNITS_GITHUB": "https://raw.githubusercontent.com/wesnoth/wesnoth/master/data/core/images/units/{path}",
     "WESNOTH_CAMPAIGN_UNITS_GITHUB": "https://raw.githubusercontent.com/wesnoth/wesnoth/master/data/campaigns/{campaign}/images/units/{path}",
     # @link https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces
@@ -48,6 +49,8 @@ ASSETS_MAP: dict[URL, Path] = {
     ASSETS_PATTERNS["STOCKFISH_CDN"].format(file="stockfish.min.js"): CHESS_STATIC / "js" / "bot" / "stockfish.js",
     ASSETS_PATTERNS["STOCKFISH_CDN"].format(file="stockfish.wasm"): CHESS_STATIC / "js" / "bot" / "stockfish.wasm",
     ASSETS_PATTERNS["STOCKFISH_CDN"].format(file="stockfish.wasm.min.js"): CHESS_STATIC / "js" / "bot" / "stockfish.wasm.js",
+    # Lozza:
+    ASSETS_PATTERNS["LOZZA_GITHUB"].format(rev="bef9e4e"): CHESS_STATIC / "js" / "bot" / "lozza.js",
     # Wesnoth assets:
     # "The good folks" units:
     ASSETS_PATTERNS["WESNOTH_UNITS_GITHUB"].format(path="human-loyalists/fencer.png"): CHESS_STATIC / "units" / "humans" / "pawn.png",

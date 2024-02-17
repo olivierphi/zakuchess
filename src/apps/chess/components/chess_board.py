@@ -54,7 +54,7 @@ _CHESS_PIECE_Z_INDEXES: dict[str, str] = {
 
 # We'll wait that amount of milliseconds before starting the bot move's calculation:
 _BOT_MOVE_DELAY = 700
-_BOT_DEPTH = 1
+_BOT_DEPTH = 3
 _PLAY_BOT_JS_TEMPLATE = Template(
     """
 <script>
@@ -146,14 +146,24 @@ def chess_arena(
 
 
 def chess_bot_data(board_id: str) -> dom_tag:
-    stockfish_urls = {
-        "wasm": static("chess/js/bot/stockfish.wasm.js"),
-        "js": static("chess/js/bot/stockfish.js"),
-    }
+    # This is used in "chess-bot.ts"
+    match settings.JS_CHESS_ENGINE.lower():
+        case "stockfish":
+            chess_engine_urls = {
+                "id": "stockfish",
+                "wasm": static("chess/js/bot/stockfish.wasm.js"),
+                "js": static("chess/js/bot/stockfish.js"),
+            }
+        case "lozza" | _:
+            chess_engine_urls = {
+                "id": "lozza",
+                "js": static("chess/js/bot/lozza.js"),
+            }
+
     return div(
         id=f"chess-bot-data-{board_id}",
         aria_hidden="true",
-        data_stockfish_urls=json.dumps(stockfish_urls),
+        data_chess_engine_urls=json.dumps(chess_engine_urls),
     )
 
 
