@@ -69,7 +69,7 @@ def get_speech_bubble(
             return None
         text = (
             game_presenter.challenge.intro_turn_speech_text
-            or "Come on folks, we can win this one!"
+            or "Come on folks, we can do this!"
         )
         text = raw(
             text + "<br><br>"
@@ -80,7 +80,6 @@ def get_speech_bubble(
         return SpeechBubbleData(
             text=text,
             square=game_presenter.challenge.intro_turn_speech_square,
-            time_out=15,
         )
 
     if game_presenter.is_bot_move and game_presenter.captured_piece_role:

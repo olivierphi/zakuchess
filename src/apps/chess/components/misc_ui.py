@@ -114,7 +114,7 @@ def speech_bubble(
         "-top-10",
         "left-10" if relative_position == "right" else "right-10",
         # Size:
-        "w-40",
+        "max-w-[40%]",
         "p-2 ",
         # Cosmetics:
         _SPEECH_BUBBLE_BACKGROUND_COLOR[0],
@@ -189,6 +189,7 @@ def speech_bubble(
 
     outer_classes = [
         "absolute",
+        "w-full",  # so the inner content can be sized with a relative width
         "drop-shadow-lg",
         "opacity-90",
         *square_to_square_center_tailwind_classes(square),
