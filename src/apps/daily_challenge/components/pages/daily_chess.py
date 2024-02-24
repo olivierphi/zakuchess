@@ -107,12 +107,12 @@ def daily_challenge_moving_parts_fragment(
                     id=f"chess-speech-container-{board_id}",
                     data_hx_swap_oob="innerHTML",
                 ),
-                (
-                    reset_chess_engine_worker()
+                *(
+                    [reset_chess_engine_worker()]
                     if game_presenter.challenge_current_attempt_turns_counter == 0
-                    else div("")
+                    else []
                 ),
-                _open_stats_modal() if game_presenter.just_won else div(""),
+                *([_open_stats_modal()] if game_presenter.just_won else []),
             )
         )
     )

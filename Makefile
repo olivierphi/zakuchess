@@ -97,7 +97,7 @@ frontend/watch: ## Compile the CSS & JS assets of our various Django apps, in 'w
 .PHONY: frontend/css/watch
 frontend/css/watch: ## Compile the CSS assets of our various Django apps, in 'watch' mode
 	@${SUB_MAKE} frontend/css/compile \
-		tailwind_compile_opts='--watch' sass_compile_opts='--watch'
+		tailwind_compile_opts='--watch'
 
 .PHONY: frontend/css/compile
 frontend/css/compile:
@@ -105,10 +105,10 @@ frontend/css/compile:
 		"${SUB_MAKE} frontend/css/compile/tailwind"
 
 frontend/css/compile/tailwind: tailwind_compile_opts ?=
-frontend/css/compile/tailwind: ## Compile the Tailwind CSS assets of our various Django apps
+frontend/css/compile/tailwind: ## Compile the Tailwind-based stylesheet
 	@./node_modules/.bin/tailwind ${tailwind_compile_opts} \
-		-i ./src/apps/webui/static-src/webui/css/tailwind.css \
-		-o ./src/apps/webui/static/webui/css/tailwind.css
+		-i ./src/apps/webui/static-src/webui/css/zakuchess.css \
+		-o ./src/apps/webui/static/webui/css/zakuchess.css
 
 .PHONY: frontend/js/watch
 frontend/js/watch: ## Compile the JS assets of our various Django apps, in 'watch' mode

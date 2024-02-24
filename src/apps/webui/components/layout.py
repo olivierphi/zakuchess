@@ -121,7 +121,7 @@ def head(*children: "dom_tag", title: str) -> "dom_tag":
             href=static("webui/img/favicon-32x32.png"),
         ),
         style(_FONTS_CSS),
-        link(rel="stylesheet", href=static("webui/css/tailwind.css")),
+        link(rel="stylesheet", href=static("webui/css/zakuchess.css")),
         script(src=static("webui/js/main.js")),
         script(src=static("chess/js/chess-main.js")),
         # @link https://ogp.me/
