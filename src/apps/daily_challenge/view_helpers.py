@@ -2,10 +2,15 @@ import dataclasses
 from typing import TYPE_CHECKING, cast
 
 from .business_logic import manage_new_daily_challenge_stats_logic
-from .cookie_helpers import get_or_create_daily_challenge_state_for_player
+from .cookie_helpers import (
+    get_or_create_daily_challenge_state_for_player,
+    get_user_prefs_from_request,
+)
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
+
+    from apps.chess.models import UserPrefs
 
     from .models import DailyChallenge, PlayerGameState, PlayerStats
 
@@ -23,6 +28,7 @@ class GameContext:
     """`is_preview` is True if we're in admin preview mode"""
     game_state: "PlayerGameState"
     stats: "PlayerStats"
+    user_prefs: "UserPrefs"
     created: bool
     """if the game state was created on the fly as we were initialising that object"""
     board_id: str = "main"
@@ -33,7 +39,8 @@ class GameContext:
         game_state, stats, created = get_or_create_daily_challenge_state_for_player(
             request=request, challenge=challenge
         )
-        # TODO: validate the "board_id" data
+        user_prefs = get_user_prefs_from_request(request)
+        # TODO: validate the "board_id" data?
         board_id = cast(str, request.GET.get("board_id", "main"))
 
         if created:
@@ -44,6 +51,7 @@ class GameContext:
             is_preview=is_preview,
             game_state=game_state,
             stats=stats,
+            user_prefs=user_prefs,
             created=created,
             board_id=board_id,
         )

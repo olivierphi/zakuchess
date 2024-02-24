@@ -8,15 +8,15 @@ from apps.chess.helpers import (
     player_side_from_piece_role,
     type_from_piece_role,
 )
-
-from .common_styles import BUTTON_CLASSES
-from .help import (
+from apps.daily_challenge.components.misc_ui.help import (
     character_type_tip,
     chess_status_bar_tip,
     chess_unit_symbol_display,
     help_content,
     unit_display_container,
 )
+
+from .common_styles import BUTTON_CLASSES
 
 if TYPE_CHECKING:
     from apps.daily_challenge.presenters import DailyChallengeGamePresenter

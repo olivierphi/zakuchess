@@ -4,15 +4,16 @@ from urllib.parse import urlencode
 
 from django.urls import reverse
 
+from apps.chess.helpers import uci_move_squares
 from apps.chess.presenters import GamePresenter, GamePresenterUrls, SpeechBubbleData
 
-from ..chess.helpers import uci_move_squares
 from .business_logic import get_speech_bubble
 from .models import DailyChallenge
 
 if TYPE_CHECKING:
     import chess
 
+    from apps.chess.models import UserPrefs
     from apps.chess.types import Factions, GamePhase, PieceRole, PlayerSide, Square
 
     from .models import PlayerGameState
@@ -38,8 +39,8 @@ class DailyChallengeGamePresenter(GamePresenter):
         captured_team_member_role: "PieceRole | None" = None,
         just_won: bool = False,
         is_preview: bool = False,
-        is_see_solution_mode: bool = False,
         is_very_first_game: bool = False,
+        user_prefs: "UserPrefs | None" = None,
     ):
         # A published challenge always has a `teams` non-null field:
         assert challenge.teams
@@ -58,6 +59,7 @@ class DailyChallengeGamePresenter(GamePresenter):
             force_square_info=force_square_info,
             captured_piece_role=captured_team_member_role,
             is_preview=is_preview,
+            user_prefs=user_prefs,
         )
         self._challenge = challenge
         self.game_state = game_state

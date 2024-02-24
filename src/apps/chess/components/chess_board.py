@@ -15,6 +15,7 @@ from ..helpers import (
     player_side_from_piece_role,
     type_from_piece_role,
 )
+from ..models import UserPrefsGameSpeed
 from .chess_helpers import (
     chess_unit_symbol_class,
     piece_character_classes,
@@ -294,6 +295,11 @@ def chess_piece(
     )
     is_game_over = game_presenter.is_game_over
 
+    animation_speed = (
+        "duration-300"
+        if game_presenter.user_prefs.game_speed == UserPrefsGameSpeed.NORMAL
+        else "duration-75"  # almost instant
+    )
     classes = [
         "absolute",
         "aspect-square",
@@ -303,7 +309,7 @@ def chess_piece(
         "pointer-events-auto" if not is_game_over else "pointer-events-none",
         # Transition-related classes:
         "transition-coordinates",
-        "duration-300",
+        animation_speed,
         "ease-in",
         "transform-gpu",
     ]

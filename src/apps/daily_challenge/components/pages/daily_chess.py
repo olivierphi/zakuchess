@@ -22,7 +22,7 @@ from apps.webui.components.layout import page
 
 from ..misc_ui.daily_challenge_bar import daily_challenge_bar
 from ..misc_ui.status_bar import status_bar
-from ..misc_ui.svg_icons import ICON_SVG_HELP, ICON_SVG_STATS
+from ..misc_ui.svg_icons import ICON_SVG_COG, ICON_SVG_HELP, ICON_SVG_STATS
 
 if TYPE_CHECKING:
     from typing import Literal
@@ -55,8 +55,8 @@ def daily_challenge_page(
         ),
         _open_help_modal() if game_presenter.is_very_first_game else div(""),
         request=request,
-        stats_button=_stats_button(),
-        help_button=_help_button(),
+        left_side_buttons=[_stats_button()],
+        right_side_buttons=[_user_prefs_button(), _help_button()],
         head_children=_open_graph_meta_tags(),
     )
 
@@ -125,12 +125,26 @@ def _stats_button() -> "dom_tag":
         "data_hx_swap": "outerHTML",
     }
 
-    return button(
-        ICON_SVG_STATS,
-        cls="block px-2 py-1 text-sm text-slate-50 hover:text-slate-400",
+    return _header_button(
+        icon=ICON_SVG_STATS,
         title="Visualise your stats for daily challenges",
-        id="stats-button",
-        **htmx_attributes,
+        id_="stats-button",
+        htmx_attributes=htmx_attributes,
+    )
+
+
+def _user_prefs_button() -> "dom_tag":
+    htmx_attributes = {
+        "data_hx_get": reverse("daily_challenge:htmx_daily_challenge_modal_user_prefs"),
+        "data_hx_target": "#modals-container",
+        "data_hx_swap": "outerHTML",
+    }
+
+    return _header_button(
+        icon=ICON_SVG_COG,
+        title="Edit preferences",
+        id_="user-prefs-button",
+        htmx_attributes=htmx_attributes,
     )
 
 
@@ -141,11 +155,22 @@ def _help_button() -> "dom_tag":
         "data_hx_swap": "outerHTML",
     }
 
-    return button(
-        ICON_SVG_HELP,
-        cls="block px-2 py-1 text-sm text-slate-50 hover:text-slate-400",
+    return _header_button(
+        icon=ICON_SVG_HELP,
         title="How to play",
-        id="help-button",
+        id_="help-button",
+        htmx_attributes=htmx_attributes,
+    )
+
+
+def _header_button(
+    *, icon: str, title: str, id_: str, htmx_attributes: dict[str, str]
+) -> "dom_tag":
+    return button(
+        icon,
+        cls="block px-1 py-1 text-sm text-slate-50 hover:text-slate-400",
+        title=title,
+        id=id_,
         **htmx_attributes,
     )
 
