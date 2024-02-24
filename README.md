@@ -27,7 +27,11 @@ a reactive User Interface powered by [htmx](https://htmx.org/) 🙂
  - TypeScript compilation: [esbuild](https://esbuild.github.io/)
  - Units art: [The Battle for Wesnoth](https://www.wesnoth.org/) :shield:
  - Chess logic on the server: [python-chess](https://python-chess.readthedocs.io/en/latest/)
- - Chess logic in the browser: [Lozza](https://github.com/op12no2/lozza)
+ - Chess logic in the browser: [Stockfish](https://stockfishchess.org/) 
+(compiled in WebAssembly by the wonderful folks at [Lichess](https://github.com/lichess-org) 💙)
+ - Talking of Lichess... Most of the daily challenges are adaptations of games from 
+    [their open source database of chess games and puzzles](https://database.lichess.org/),
+    so let's double that heart: 💙💙
  - Tests suite: [pytest](https://docs.pytest.org/en/latest/)
  - Hosting: [Fly.io](https://fly.io/)
 
@@ -66,26 +70,6 @@ Improvements and bugfixes are welcome, but also new "daily challenges"!
 When playing chess online with other people, if you find yourself in a position that you think 
 could be interesting for others to try to solve ♞, please feel free to open an issue to discuss its
 addition to the daily challenges database. 🙂
-
-### About the chess engine used in the browser for the solution and the bot's moves
-
-As a first iteration we were using [Stockfish](https://stockfishchess.org/) 
-(compiled in WebAssembly by the wonderful folks at [Lichess](https://github.com/lichess-org) 💙)
-for the chess logic in the browser.  
-It plays well, it's fast, it's great.
-
-However, for some reason we couldn't make it deterministic enough for the daily challenges:
-during the games we were simulating in the Django Admin in order to determine the solution of a daily challenge,
-the bot was playing different moves than what it would play plater against a real human player, 
-which defeats the whole purpose of such a solution 😔  
-Various solutions were tried (including using 2 distinct Workers for the simulated human
-player and the bot one, so that the deeper analysis of the former doesn't impact the output of the
-latter), but in the end Stockfish kept playing slightly different moves than what it would
-player later on in real conditions against a real human player. 🤷
-
-We switched to [Lozza](https://github.com/op12no2/lozza) for now, which is sadly more resource-intensive for the player's device.  
-We may give another go at Stockfish later on, the code that uses it is still in place. 🤞
-
 
 ### License
 

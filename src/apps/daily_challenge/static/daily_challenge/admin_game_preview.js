@@ -13,7 +13,11 @@
     setTimeout(init, 100)
 
     function init() {
-        const adminPreviewUrl = document.getElementById("admin-preview-url-holder").innerText
+        const adminPreviewUrlHolder = document.getElementById("admin-preview-url-holder")
+        if (!adminPreviewUrlHolder) {
+            return
+        }
+        const adminPreviewUrl = adminPreviewUrlHolder.innerText
 
         const previewIFrame = document.getElementById("preview-iframe")
 
@@ -85,13 +89,17 @@
 
     function startSolution() {
         const previewIFrame = document.getElementById("preview-iframe")
+        const solutionInput = document.getElementById("id_solution")
         const solutionInputHelpText = document.getElementById("id_solution_helptext")
+
+        solutionInput.value = ""
         solutionInputHelpText.innerText = "Loading chess.js and spawning our own chess engine worker..."
+
         setTimeout(function initSolutionRequirements() {
             // We have to spawn our own chess engine worker for the human player, because it turns out that
-            // some engines are not completely stateless, and the moves we ask it to make with depth 1 for the bot
-            // can be influenced by the calculations it made for the human player - leading to the bot making different
-            // moves than what it would make if it was only calculating for itself.
+            // some engines are not completely stateless, and the moves we ask it to make with a lower depth for the bot
+            // can be influenced by the calculations it made to simulate the human player, with a higher depth.
+            // Which leads to the bot making different moves than what it would make if it was only calculating for itself.
             const chessBotDataHolder = previewIFrame.contentWindow.document.getElementById(
                 SOLUTION_BOT_ASSETS_DATA_HOLDER_ELEMENT_ID,
             )
@@ -110,7 +118,7 @@
                     const fen = document.getElementById("id_fen").value
                     const chessBoard = chessjs.Chess(fen)
                     const solutionState = {
-                        solutionInput: document.getElementById("id_solution"),
+                        solutionInput,
                         previewIFrame,
                         chessEngineWorkerForHumanPlayer,
                         solutionInputHelpText,
@@ -118,7 +126,6 @@
                         chessBoard,
                         turnsCount: 0,
                     }
-                    solutionState.solutionInput.value = ""
                     solutionInputHelpText.innerText = "Starting solution in a bit..."
                     setTimeout(solutionNextMove.bind(null, solutionState), 100)
                 },

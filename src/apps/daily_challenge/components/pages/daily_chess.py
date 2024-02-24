@@ -14,7 +14,10 @@ from apps.chess.components.chess_board import (
     chess_last_move,
     chess_pieces,
 )
-from apps.chess.components.misc_ui import speech_bubble_container
+from apps.chess.components.misc_ui import (
+    reset_chess_engine_worker,
+    speech_bubble_container,
+)
 from apps.webui.components.layout import page
 
 from ..misc_ui.daily_challenge_bar import daily_challenge_bar
@@ -103,6 +106,11 @@ def daily_challenge_moving_parts_fragment(
                     ),
                     id=f"chess-speech-container-{board_id}",
                     data_hx_swap_oob="innerHTML",
+                ),
+                (
+                    reset_chess_engine_worker()
+                    if game_presenter.challenge_current_attempt_turns_counter == 0
+                    else div("")
                 ),
                 _open_stats_modal() if game_presenter.just_won else div(""),
             )

@@ -1,4 +1,4 @@
-import { playFromFEN, getChessEngineWorker, getScoreFromFEN } from "./chess-bot"
+import { playFromFEN, getChessEngineWorker, getScoreFromFEN, resetChessEngineWorker } from "./chess-bot"
 
 // @ts-ignore
 window.cursorIsNotOnChessBoardInteractiveElement = cursorIsNotOnChessBoardInteractiveElement
@@ -6,6 +6,8 @@ window.cursorIsNotOnChessBoardInteractiveElement = cursorIsNotOnChessBoardIntera
 window.playBotMove = playBotMove
 // @ts-ignore
 window.computeScore = computeScore
+// @ts-ignore
+window.resetChessEngineWorker = resetChessEngineWorker
 // @ts-ignore
 window.closeSpeechBubble = closeSpeechBubble
 // @ts-ignore
