@@ -190,6 +190,7 @@ def speech_bubble(
     outer_classes = [
         "absolute",
         "w-full",  # so the inner content can be sized with a relative width
+        "" if relative_position == "right" else "ml-[-100%]",
         "drop-shadow-lg",
         "opacity-90",
         *square_to_square_center_tailwind_classes(square),
