@@ -96,36 +96,39 @@ def chess_arena(
     return section(
         div(
             div(
-                chess_board(game_presenter=game_presenter, board_id=board_id),
-                cls="absolute inset-0 pointer-events-none z-0",
-                id=f"chess-board-container-{board_id}",
-            ),
-            div(
-                chess_last_move(game_presenter=game_presenter, board_id=board_id),
-                cls="absolute inset-0 pointer-events-none z-10",
-                id=f"chess-last-move-container-{board_id}",
-            ),
-            div(
-                chess_pieces(game_presenter=game_presenter, board_id=board_id),
-                cls="absolute inset-0 pointer-events-none z-20",
-                id=f"chess-pieces-container-{board_id}",
-            ),
-            div(
-                chess_available_targets(
-                    game_presenter=game_presenter, board_id=board_id
+                div(
+                    chess_board(game_presenter=game_presenter, board_id=board_id),
+                    cls="absolute inset-0 pointer-events-none z-0",
+                    id=f"chess-board-container-{board_id}",
                 ),
-                cls="absolute inset-0 pointer-events-none z-30",
-                id=f"chess-available-targets-container-{board_id}",
-            ),
-            div(
-                speech_bubble_container(
-                    game_presenter=game_presenter, board_id=board_id
+                div(
+                    chess_last_move(game_presenter=game_presenter, board_id=board_id),
+                    cls="absolute inset-0 pointer-events-none z-10",
+                    id=f"chess-last-move-container-{board_id}",
                 ),
-                cls="absolute inset-0 pointer-events-none z-40",
-                id=f"chess-speech-container-{board_id}",
+                div(
+                    chess_pieces(game_presenter=game_presenter, board_id=board_id),
+                    cls="absolute inset-0 pointer-events-none z-20",
+                    id=f"chess-pieces-container-{board_id}",
+                ),
+                div(
+                    chess_available_targets(
+                        game_presenter=game_presenter, board_id=board_id
+                    ),
+                    cls="absolute inset-0 pointer-events-none z-30",
+                    id=f"chess-available-targets-container-{board_id}",
+                ),
+                div(
+                    speech_bubble_container(
+                        game_presenter=game_presenter, board_id=board_id
+                    ),
+                    cls="absolute inset-0 pointer-events-none z-40",
+                    id=f"chess-speech-container-{board_id}",
+                ),
+                cls="aspect-square relative mx-auto max-w-[calc(100dvh-80px)]",
             ),
             id=f"chess-board-components-{board_id}",
-            cls="aspect-square relative xl:w-2/3",
+            cls="xl:w-2/3 bg-slate-800",
         ),
         chess_bot_data(board_id),
         div(
