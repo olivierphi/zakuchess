@@ -58,16 +58,16 @@ def page(
     *children: "dom_tag",
     request: "HttpRequest",
     title: str = _META_TITLE,
-    stats_button: "dom_tag | None" = None,
-    help_button: "dom_tag | None" = None,
+    left_side_buttons: "list[dom_tag] | None" = None,
+    right_side_buttons: "list[dom_tag] | None" = None,
     head_children: "Sequence[dom_tag] | None" = None,
 ) -> str:
     return "<!DOCTYPE html>" + str(
         document(
             *children,
             request=request,
-            stats_button=stats_button,
-            help_button=help_button,
+            left_side_buttons=left_side_buttons,
+            right_side_buttons=right_side_buttons,
             head_children=head_children,
             title=title,
         )
@@ -78,14 +78,17 @@ def document(
     *children: "dom_tag",
     request: "HttpRequest",
     title: str,
-    stats_button: "dom_tag | None",
-    help_button: "dom_tag | None" = None,
+    left_side_buttons: "list[dom_tag] | None",
+    right_side_buttons: "list[dom_tag] | None" = None,
     head_children: "Sequence[dom_tag] | None" = None,
 ) -> "dom_tag":
     return html(
         head(*(head_children or []), title=title),
         body(
-            header(stats_button=stats_button, help_button=help_button),
+            header(
+                left_side_buttons=left_side_buttons,
+                right_side_buttons=right_side_buttons,
+            ),
             *children,
             footer(),
             modals_container(),
@@ -139,7 +142,9 @@ def head(*children: "dom_tag", title: str) -> "dom_tag":
 
 
 def header(
-    *, stats_button: "dom_tag | None", help_button: "dom_tag | None" = None
+    *,
+    left_side_buttons: "list[dom_tag] | None",
+    right_side_buttons: "list[dom_tag] | None" = None,
 ) -> "dom_tag":
     def side_wrapper(*children: "dom_tag", align: str) -> "dom_tag":
         return div(
@@ -149,7 +154,7 @@ def header(
 
     return base_header(
         div(
-            side_wrapper(stats_button or div(""), align="justify-start"),
+            side_wrapper(*(left_side_buttons or []), align="justify-start"),
             div(
                 h1(
                     "ZakuChess",
@@ -161,8 +166,8 @@ def header(
                 ),
                 cls="grow text-center md:mx-auto md:max-w-2xl",
             ),
-            side_wrapper(help_button or div(" "), align="justify-end"),
-            cls="flex items-center p-2 w-full mx-auto md:max-w-lg",
+            side_wrapper(*(right_side_buttons or []), align="justify-end"),
+            cls="flex items-center p-2 w-full mx-auto md:max-w-3xl xl:max-w-7xl",
         ),
         cls="bg-gray-950",
     )

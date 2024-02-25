@@ -33,6 +33,11 @@ urlpatterns = [
         name="htmx_daily_challenge_modal_stats",
     ),
     path(
+        "htmx/daily-challenge/modals/user-prefs/",
+        views.htmx_daily_challenge_user_prefs_modal,
+        name="htmx_daily_challenge_modal_user_prefs",
+    ),
+    path(
         "htmx/daily-challenge/modals/help/",
         views.htmx_daily_challenge_help_modal,
         name="htmx_daily_challenge_modal_help",
@@ -47,6 +52,12 @@ urlpatterns = [
         "htmx/daily-challenge/restart/do/",
         views.htmx_restart_daily_challenge_do,
         name="htmx_restart_daily_challenge_do",
+    ),
+    # User prefs views
+    path(
+        "htmx/daily-challenge/user-prefs/",
+        views.htmx_daily_challenge_user_prefs_save,
+        name="htmx_daily_challenge_user_prefs_save",
     ),
     # "See the solution" views
     path(

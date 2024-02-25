@@ -26,6 +26,7 @@ from .business_logic import (
 )
 from .components.misc_ui.help_modal import help_modal
 from .components.misc_ui.stats_modal import stats_modal
+from .components.misc_ui.user_prefs_modal import user_prefs_modal
 from .components.pages.daily_chess import (
     daily_challenge_moving_parts_fragment,
     daily_challenge_page,
@@ -34,7 +35,9 @@ from .cookie_helpers import (
     clear_daily_challenge_game_state_in_session,
     get_or_create_daily_challenge_state_for_player,
     save_daily_challenge_state_in_session,
+    save_user_prefs,
 )
+from .forms import UserPrefsForm
 from .models import PlayerGameOverState
 from .presenters import DailyChallengeGamePresenter
 from .view_helpers import get_current_daily_challenge_or_admin_preview
@@ -90,6 +93,7 @@ def game_view(request: "HttpRequest", *, ctx: "GameContext") -> HttpResponse:
     game_presenter = DailyChallengeGamePresenter(
         challenge=ctx.challenge,
         game_state=ctx.game_state,
+        user_prefs=ctx.user_prefs,
         forced_bot_move=forced_bot_move,
         is_htmx_request=False,
         refresh_last_move=True,
@@ -113,6 +117,7 @@ def htmx_game_no_selection(
     game_presenter = DailyChallengeGamePresenter(
         challenge=ctx.challenge,
         game_state=ctx.game_state,
+        user_prefs=ctx.user_prefs,
         is_htmx_request=True,
         refresh_last_move=False,
     )
@@ -132,6 +137,7 @@ def htmx_game_select_piece(
     game_presenter = DailyChallengeGamePresenter(
         challenge=ctx.challenge,
         game_state=ctx.game_state,
+        user_prefs=ctx.user_prefs,
         selected_piece_square=location,
         is_htmx_request=True,
         refresh_last_move=False,
@@ -196,6 +202,7 @@ def htmx_game_move_piece(
     game_presenter = DailyChallengeGamePresenter(
         challenge=ctx.challenge,
         game_state=new_game_state,
+        user_prefs=ctx.user_prefs,
         is_htmx_request=True,
         refresh_last_move=True,
         captured_team_member_role=captured_piece_role,
@@ -232,11 +239,23 @@ def htmx_daily_challenge_help_modal(
     game_presenter = DailyChallengeGamePresenter(
         challenge=ctx.challenge,
         game_state=ctx.game_state,
+        user_prefs=ctx.user_prefs,
         is_htmx_request=True,
         refresh_last_move=False,
     )
 
     modal_content = help_modal(game_presenter=game_presenter)
+
+    return HttpResponse(str(modal_content))
+
+
+@require_safe
+@with_game_context
+def htmx_daily_challenge_user_prefs_modal(
+    request: "HttpRequest", *, ctx: "GameContext"
+) -> HttpResponse:
+
+    modal_content = user_prefs_modal(user_prefs=ctx.user_prefs)
 
     return HttpResponse(str(modal_content))
 
@@ -286,6 +305,7 @@ def htmx_restart_daily_challenge_do(
     game_presenter = DailyChallengeGamePresenter(
         challenge=ctx.challenge,
         game_state=new_game_state,
+        user_prefs=ctx.user_prefs,
         forced_bot_move=forced_bot_move,
         is_htmx_request=True,
         refresh_last_move=True,
@@ -294,6 +314,17 @@ def htmx_restart_daily_challenge_do(
     return _daily_challenge_moving_parts_fragment_response(
         game_presenter=game_presenter, request=request, board_id=ctx.board_id
     )
+
+
+@require_POST
+def htmx_daily_challenge_user_prefs_save(request: "HttpRequest") -> HttpResponse:
+    response = HttpResponse("""<script>closeModal()</script>""")
+
+    form = UserPrefsForm(request.POST)
+    if user_prefs := form.to_user_prefs():
+        save_user_prefs(user_prefs=user_prefs, response=response)
+
+    return response
 
 
 @require_POST
@@ -341,6 +372,7 @@ def htmx_see_daily_challenge_solution_do(
     game_presenter = DailyChallengeGamePresenter(
         challenge=ctx.challenge,
         game_state=new_game_state,
+        user_prefs=ctx.user_prefs,
         forced_bot_move=forced_bot_move,
         is_htmx_request=True,
         refresh_last_move=False,
@@ -387,6 +419,7 @@ def htmx_see_daily_challenge_solution_play(
     game_presenter = DailyChallengeGamePresenter(
         challenge=ctx.challenge,
         game_state=new_game_state,
+        user_prefs=ctx.user_prefs,
         is_htmx_request=True,
         refresh_last_move=True,
     )
@@ -449,9 +482,9 @@ def debug_reset_stats(request: "HttpRequest", *, ctx: "GameContext") -> HttpResp
 def debug_view_cookie(request: "HttpRequest") -> HttpResponse:
     import msgspec
 
-    from .cookie_helpers import get_player_session_content
+    from .cookie_helpers import get_player_session_content_from_request
 
-    player_cookie_content = get_player_session_content(request)
+    player_cookie_content = get_player_session_content_from_request(request)
     challenge, is_preview = get_current_daily_challenge_or_admin_preview(request)
     game_state, stats, created = get_or_create_daily_challenge_state_for_player(
         request=request, challenge=challenge
@@ -493,6 +526,7 @@ def _play_bot_move(
     game_presenter = DailyChallengeGamePresenter(
         challenge=ctx.challenge,
         game_state=new_game_state,
+        user_prefs=ctx.user_prefs,
         is_bot_move=True,
         is_htmx_request=True,
         refresh_last_move=True,

@@ -16,6 +16,7 @@ from .helpers import (
     symbol_from_piece_role,
     team_member_role_from_piece_role,
 )
+from .models import UserPrefs
 from .types import ChessInvalidStateException
 
 if TYPE_CHECKING:
@@ -72,6 +73,7 @@ class GamePresenter(ABC):
         last_move: tuple["Square", "Square"] | None = None,
         captured_piece_role: "PieceRole | None" = None,
         is_preview: bool = False,
+        user_prefs: UserPrefs | None = None,
     ):
         self._fen = fen
         self._chess_board = chess.Board(fen=fen)
@@ -85,6 +87,7 @@ class GamePresenter(ABC):
         self.last_move = last_move
         self.captured_piece_role = captured_piece_role
         self.is_preview = is_preview
+        self.user_prefs = user_prefs or UserPrefs()
 
         if selected_square is not None:
             self.selected_square = SelectedSquarePresenter(

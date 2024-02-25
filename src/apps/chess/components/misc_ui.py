@@ -129,7 +129,7 @@ def speech_bubble(
             chess_character_display(
                 game_presenter=game_presenter, piece_role=character_display
             ),
-            cls="w-1/2 mx-auto",
+            cls="w-20 mx-auto",
         )
         if character_display
         else raw("")

@@ -1,7 +1,7 @@
 import datetime as dt
 import enum
 import math
-from typing import TYPE_CHECKING, ClassVar, Literal, NamedTuple, Self, TypeAlias
+from typing import TYPE_CHECKING, ClassVar, Literal, Self, TypeAlias
 
 import chess
 import msgspec
@@ -408,14 +408,3 @@ class PlayerSessionContent(
     @classmethod
     def from_cookie_content(cls, cookie_content: str) -> Self:
         return msgspec.json.decode(cookie_content.encode(), type=cls)
-
-
-class ChallengeTurnsState(NamedTuple):
-    # the number of attempts the player has made for today's challenge:
-    attempts_counter: int
-    # The number of turns in the current attempt:
-    current_attempt_turns: int
-    turns_total: int
-    turns_left: int
-    percentage_left: int
-    time_s_up: bool  # `True` when there are no more turns left for today's challenge.

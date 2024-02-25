@@ -15,6 +15,7 @@ from ..helpers import (
     player_side_from_piece_role,
     type_from_piece_role,
 )
+from ..models import UserPrefsGameSpeed
 from .chess_helpers import (
     chess_unit_symbol_class,
     piece_character_classes,
@@ -54,6 +55,8 @@ _CHESS_PIECE_Z_INDEXES: dict[str, str] = {
 
 # We'll wait that amount of milliseconds before starting the bot move's calculation:
 _BOT_MOVE_DELAY = 700
+_BOT_MOVE_DELAY_FIRST_TURN_OF_THE_DAY = 1_400
+_BOT_MOVE_DELAY_FAST_MODE = 100
 _BOT_DEPTH = 3
 _PLAY_BOT_JS_TEMPLATE = Template(
     """
@@ -294,6 +297,11 @@ def chess_piece(
     )
     is_game_over = game_presenter.is_game_over
 
+    animation_speed = (
+        "duration-300"
+        if game_presenter.user_prefs.game_speed == UserPrefsGameSpeed.NORMAL
+        else "duration-75"  # almost instant
+    )
     classes = [
         "absolute",
         "aspect-square",
@@ -303,7 +311,7 @@ def chess_piece(
         "pointer-events-auto" if not is_game_over else "pointer-events-none",
         # Transition-related classes:
         "transition-coordinates",
-        "duration-300",
+        animation_speed,
         "ease-in",
         "transform-gpu",
     ]
@@ -696,9 +704,13 @@ def _bot_turn_html_elements(
 
     play_move_htmx_element_id = f"chess-bot-play-move-{ board_id }"
     forced_bot_move = json.dumps(game_presenter.forced_bot_move or None)
-    move_delay = (
-        _BOT_MOVE_DELAY * 2 if game_presenter.forced_bot_move else _BOT_MOVE_DELAY
-    )
+
+    if game_presenter.forced_bot_move:
+        move_delay = _BOT_MOVE_DELAY_FIRST_TURN_OF_THE_DAY
+    elif game_presenter.user_prefs.game_speed == UserPrefsGameSpeed.FAST:
+        move_delay = _BOT_MOVE_DELAY_FAST_MODE
+    else:
+        move_delay = _BOT_MOVE_DELAY
 
     htmx_attributes = {
         "data_hx_post": game_presenter.urls.htmx_game_play_bot_move_url(
