@@ -196,7 +196,7 @@ def chess_board(*, game_presenter: "GamePresenter", board_id: str) -> dom_tag:
     # That's where we manage the optional texture we apply to the chess board:
     match game_presenter.user_prefs.board_texture:
         case UserPrefsBoardTexture.ABSTRACT:
-            squares_container_classes.append("opacity-85 md:opacity-80")
+            squares_container_classes.append("opacity-85")
             chess_board_additional_attributes["style"] = (
                 f"background: url('{ static('chess/img/board/texture.jpg') }') repeat"
             )
@@ -249,8 +249,6 @@ def chess_pieces(
         id=f"chess-board-pieces-{board_id}",
         cls="relative aspect-square",
         **extra_attrs,
-        # Mostly for debugging purposes:
-        data_naive_score=game_presenter.naive_score,
     )
 
 
@@ -356,7 +354,7 @@ def chess_piece(
                 # Re-selecting an already selected piece de-selects it:
                 else game_presenter.urls.htmx_game_no_selection_url(board_id=board_id)
             ),
-            "data_hx_target": f"#chess-board-pieces-{board_id}",
+            "data_hx_target": f"#chess-pieces-container-{board_id}",
         }
     else:
         additional_attributes["disabled"] = True
@@ -445,8 +443,7 @@ def chess_available_target(
             "data_hx_post": game_presenter.urls.htmx_game_move_piece_url(
                 square=square, board_id=board_id
             ),
-            "data_hx_target": f"#chess-board-pieces-{ board_id }",
-            "data_hx_swap": "outerHTML",
+            "data_hx_target": f"#chess-pieces-container-{board_id}",
         }
     else:
         htmx_attributes = {}
@@ -742,7 +739,7 @@ def _bot_turn_html_elements(
         "data_hx_post": game_presenter.urls.htmx_game_play_bot_move_url(
             board_id=board_id
         ),
-        "data_hx_target": f"#chess-board-pieces-{board_id}",
+        "data_hx_target": f"#chess-pieces-container-{board_id}",
         "data_hx_trigger": "playMove",
     }
     bot_move_script_tag = unescaped_html(
@@ -779,7 +776,7 @@ def _solution_turn_html_elements(
         "data_hx_post": game_presenter.urls.htmx_game_play_solution_move_url(
             board_id=board_id
         ),
-        "data_hx_target": f"#chess-board-pieces-{board_id}",
+        "data_hx_target": f"#chess-pieces-container-{board_id}",
         "data_hx_trigger": "playSolutionNextMove",
     }
 
