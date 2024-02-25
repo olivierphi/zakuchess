@@ -4,9 +4,11 @@ from typing import TYPE_CHECKING, cast
 import chess
 
 from .consts import (
+    FILES,
     PIECE_INT_TO_PIECE_TYPE,
     PIECE_TYPE_TO_NAME,
     PIECE_TYPE_TO_UNICODE,
+    RANKS,
     SQUARES,
 )
 
@@ -26,12 +28,12 @@ if TYPE_CHECKING:
 
 
 @cache
-def square_from_int(chess_lib_square: int) -> "Square":
+def chess_lib_square_to_square(chess_lib_square: int) -> "Square":
     return cast("Square", chess.square_name(chess_lib_square))
 
 
 @cache
-def piece_from_int(chess_lib_piece: int) -> "PieceType":
+def chess_lib_piece_to_piece_type(chess_lib_piece: int) -> "PieceType":
     # a bit hacky but that will do the job for now ^^
     return PIECE_INT_TO_PIECE_TYPE[chess_lib_piece]
 
@@ -87,7 +89,20 @@ def piece_role_from_team_member_role_and_player_side(
 
 @cache
 def file_and_rank_from_square(square: "Square") -> tuple["File", "Rank"]:
-    return cast("File", square[0]), cast("Rank", square[1])
+    file, rank = square[0], square[1]
+    # As the result is cached, we can allow ourselves some sanity checks
+    # when Python's "optimization mode" is requested:
+    assert file in FILES and rank in RANKS, f"square '{square}' is not valid"
+    return cast("File", file), cast("Rank", rank)
+
+
+@cache
+def square_from_file_and_rank(file: "File", rank: "Rank") -> "Square":
+    """Inverse of the function above"""
+    # ditto
+    assert file in FILES, f"file '{file}' is not valid"
+    assert rank in RANKS, f"rank '{rank}' is not valid"
+    return cast("Square", f"{file}{rank}")
 
 
 @cache

@@ -6,8 +6,8 @@ import chess
 from apps.chess.data.team_member_names import FIRST_NAMES, LAST_NAMES
 from apps.chess.helpers import (
     chess_lib_color_to_player_side,
+    chess_lib_square_to_square,
     player_side_other,
-    square_from_int,
 )
 
 if TYPE_CHECKING:
@@ -95,7 +95,7 @@ def set_daily_challenge_teams_and_pieces_roles(
                 "in a game for type '{piece_type}'"
             )
 
-        square = square_from_int(chess_square)
+        square = chess_lib_square_to_square(chess_square)
         piece_role_by_square[square] = team_member_role
 
         team_member: "TeamMember" = {

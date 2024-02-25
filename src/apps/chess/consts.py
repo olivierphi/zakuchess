@@ -3,7 +3,15 @@ from typing import TYPE_CHECKING, Final
 import chess
 
 if TYPE_CHECKING:
-    from apps.chess.types import PieceName, PieceSymbol, PieceType, PlayerSide, Square
+    from apps.chess.types import (
+        File,
+        PieceName,
+        PieceSymbol,
+        PieceType,
+        PlayerSide,
+        Rank,
+        Square,
+    )
 
 PLAYER_SIDES: Final[tuple["PlayerSide", "PlayerSide"]] = ("w", "b")
 
@@ -28,6 +36,9 @@ SQUARES: Final[tuple["Square", ...]] = (
     "h1", "h2", "h3", "h4", "h5", "h6", "h7", "h8",
     # fmt: on
 )
+FILES: Final[tuple["File", ...]] = ("a", "b", "c", "d", "e", "f", "g", "h")
+RANKS: Final[tuple["Rank", ...]] = ("1", "2", "3", "4", "5", "6", "7", "8")
+
 
 MOVES = frozenset(f"{sq1}{sq2}" for sq1 in SQUARES for sq2 in SQUARES if sq1 != sq2)
 

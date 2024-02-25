@@ -37,16 +37,14 @@ def move_daily_challenge_piece(
         piece_role_by_square[from_] += piece_promotion  # type: ignore
 
     captured_piece: "PieceRole | None" = None
-    if move_result["is_capture"]:
-        captured_piece = game_state.piece_role_by_square[to]
-
     for move_from, move_to in move_result["changes"].items():
         if move_to is None:
-            # We can just ignore captures there, as the capturing piece
-            # just replaces it in the mapping :-)
-            continue
-        piece_role_by_square[move_to] = piece_role_by_square[move_from]
-        del piece_role_by_square[move_from]  # this square is now empty
+            assert move_result["is_capture"]
+            captured_piece = piece_role_by_square[move_from]
+            del piece_role_by_square[move_from]  # this square is now empty
+        else:
+            piece_role_by_square[move_to] = piece_role_by_square[move_from]
+            del piece_role_by_square[move_from]  # ditto
 
     if game_over := move_result["game_over"]:
         game_over_state = (

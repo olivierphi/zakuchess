@@ -316,8 +316,8 @@ class DailyChallengeAdmin(ImportExportModelAdmin):
             </iframe>
             
             <div style="margin: 1rem 0;">
-                Can always help: <a href="https://www.dailychess.com/chess/chess-fen-viewer.php" 
-                    rel="noreferrer noopener" >www.dailychess.com/chess/chess-fen-viewer.php</a>
+                Can always help: <a href="https://lichess.org/editor/" 
+                    rel="noreferrer noopener" >lichess.org/editor/</a>
             </div>
             
             """.replace(
