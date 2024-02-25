@@ -51,7 +51,7 @@ from .views_decorators import (
 if TYPE_CHECKING:
     from django.http import HttpRequest
 
-    from apps.chess.types import Move
+    from apps.chess.types import MoveTuple
 
     from .view_helpers import GameContext
 
@@ -456,7 +456,7 @@ def htmx_game_bot_move(
     return _play_bot_move(
         request=request,
         ctx=ctx,
-        move=f"{from_}{to}",
+        move=(from_, to),
         board_id=ctx.board_id,
     )
 
@@ -516,16 +516,15 @@ def _play_bot_move(
     *,
     request: "HttpRequest",
     ctx: "GameContext",
-    move: "Move",
+    move: "MoveTuple",
     board_id: str,
 ) -> HttpResponse:
     game_over_already = ctx.game_state.game_over != PlayerGameOverState.PLAYING
 
-    bot_next_move = uci_move_squares(move)
     new_game_state, captured_piece_role = move_daily_challenge_piece(
         game_state=ctx.game_state,
-        from_=bot_next_move[0],
-        to=bot_next_move[1],
+        from_=move[0],
+        to=move[1],
         is_my_side=False,
     )
 

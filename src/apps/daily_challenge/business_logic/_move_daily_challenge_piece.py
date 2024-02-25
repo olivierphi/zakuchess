@@ -37,14 +37,14 @@ def move_daily_challenge_piece(
         piece_role_by_square[from_] += piece_promotion  # type: ignore
 
     captured_piece: "PieceRole | None" = None
-    for move_from, move_to in move_result["changes"].items():
-        if move_to is None:
-            assert move_result["is_capture"]
-            captured_piece = piece_role_by_square[move_from]
-            del piece_role_by_square[move_from]  # this square is now empty
-        else:
-            piece_role_by_square[move_to] = piece_role_by_square[move_from]
-            del piece_role_by_square[move_from]  # ditto
+    if captured := move_result["captured"]:
+        assert move_result["is_capture"]
+        captured_piece = piece_role_by_square[captured]
+        del piece_role_by_square[captured]  # this square is now empty
+
+    for move_from, move_to in move_result["moves"]:
+        piece_role_by_square[move_to] = piece_role_by_square[move_from]
+        del piece_role_by_square[move_from]  # this square is now empty
 
     if game_over := move_result["game_over"]:
         game_over_state = (
