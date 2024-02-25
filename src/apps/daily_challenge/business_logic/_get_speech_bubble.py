@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING
 from dominate.util import raw
 
 from apps.chess.helpers import (
+    chess_lib_square_to_square,
     player_side_to_chess_lib_color,
-    square_from_int,
     team_member_role_from_piece_role,
 )
 from apps.chess.presenters import SpeechBubbleData
@@ -159,7 +159,7 @@ def _bot_leftmost_piece_square(
     for square_int, piece in chess_board.piece_map().items():
         if piece.color != bot_color:
             continue
-        square = square_from_int(square_int)
+        square = chess_lib_square_to_square(square_int)
         rank = int(square[1])
         if rank < leftmost_rank:
             leftmost_rank = rank
@@ -172,6 +172,6 @@ def _my_king_square(game_presenter: "DailyChallengeGamePresenter") -> "Square":
 
 
 def _king_square(chess_board: "chess.Board", player_side: "PlayerSide") -> "Square":
-    return square_from_int(
+    return chess_lib_square_to_square(
         chess_board.king(player_side_to_chess_lib_color(player_side))
     )

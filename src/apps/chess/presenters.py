@@ -9,10 +9,10 @@ from apps.chess.business_logic import calculate_piece_available_targets
 from .consts import PLAYER_SIDES
 from .helpers import (
     chess_lib_color_to_player_side,
+    chess_lib_square_to_square,
     get_active_player_side_from_chess_board,
     player_side_from_piece_role,
     player_side_from_piece_symbol,
-    square_from_int,
     symbol_from_piece_role,
     team_member_role_from_piece_role,
 )
@@ -145,7 +145,8 @@ class GamePresenter(ABC):
     @cached_property
     def squares_with_pieces_that_can_move(self) -> set["Square"]:
         return set(
-            square_from_int(move.from_square) for move in self._chess_board.legal_moves
+            chess_lib_square_to_square(move.from_square)
+            for move in self._chess_board.legal_moves
         )
 
     # Properties derived from the Game model:

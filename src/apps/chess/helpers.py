@@ -26,12 +26,12 @@ if TYPE_CHECKING:
 
 
 @cache
-def square_from_int(chess_lib_square: int) -> "Square":
+def chess_lib_square_to_square(chess_lib_square: int) -> "Square":
     return cast("Square", chess.square_name(chess_lib_square))
 
 
 @cache
-def piece_from_int(chess_lib_piece: int) -> "PieceType":
+def chess_lib_piece_to_piece_type(chess_lib_piece: int) -> "PieceType":
     # a bit hacky but that will do the job for now ^^
     return PIECE_INT_TO_PIECE_TYPE[chess_lib_piece]
 
@@ -88,6 +88,12 @@ def piece_role_from_team_member_role_and_player_side(
 @cache
 def file_and_rank_from_square(square: "Square") -> tuple["File", "Rank"]:
     return cast("File", square[0]), cast("Rank", square[1])
+
+
+@cache
+def square_from_file_and_rank(file: "File", rank: "Rank") -> "Square":
+    """Inverse of the function above"""
+    return cast("Square", f"{file}{rank}")
 
 
 @cache

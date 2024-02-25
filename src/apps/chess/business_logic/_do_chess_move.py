@@ -4,7 +4,11 @@ from typing import TYPE_CHECKING, Literal, cast
 
 import chess
 
-from apps.chess.helpers import piece_from_int
+from apps.chess.helpers import (
+    chess_lib_piece_to_piece_type,
+    file_and_rank_from_square,
+    square_from_file_and_rank,
+)
 from apps.chess.types import (
     ChessInvalidMoveException,
     ChessMoveResult,
@@ -17,6 +21,7 @@ if TYPE_CHECKING:
         ChessMoveChanges,
         GameEndReason,
         PlayerSide,
+        Rank,
         Square,
     )
 
@@ -56,8 +61,16 @@ _CASTLING_ROOK_MOVE: Mapping[_CastlingPossibleTo, tuple["Square", "Square"]] = {
     "c8": ("a8", "d8"),
 }
 
+_EN_PASSANT_CAPTURED_PIECES_RANK_CONVERSION: dict["Rank", "Rank"] = {
+    # if a pawn was captured by en passant targeting a6, its position on the board
+    # before at the moment it's been captured was a5:
+    "6": "5",
+    # same for the other side of the board:
+    "3": "4",
+}
 
-@lru_cache
+
+@lru_cache(maxsize=512)
 def do_chess_move(*, fen: "FEN", from_: "Square", to: "Square") -> ChessMoveResult:
     changes: "ChessMoveChanges" = {}
 
@@ -85,7 +98,10 @@ def do_chess_move(*, fen: "FEN", from_: "Square", to: "Square") -> ChessMoveResu
         )
 
     targeted_piece = chess_board.piece_at(chess_to)
-    is_capture = targeted_piece is not None
+    is_en_passant = chess_board.has_legal_en_passant() and chess_board.is_en_passant(
+        chess_move
+    )
+    is_capture = targeted_piece is not None or is_en_passant
 
     previous_castling_rights = chess_board.castling_rights
     chess_board.push(chess_move)
@@ -95,12 +111,24 @@ def do_chess_move(*, fen: "FEN", from_: "Square", to: "Square") -> ChessMoveResu
 
     # Record the capture, if any:
     if is_capture:
-        changes[to] = None
+        if is_en_passant:
+            # Jeez, "en passant" is more complicated to handle than it looks 😅
+            to_square_file, to_square_rank = file_and_rank_from_square(to)
+            en_passant_captured_pawn_square = square_from_file_and_rank(
+                to_square_file,
+                _EN_PASSANT_CAPTURED_PIECES_RANK_CONVERSION[to_square_rank],
+            )
+            # Ok, we determined the position of the pawn captured by the "en passant"
+            # so now we can record that capture:
+            changes[en_passant_captured_pawn_square] = None
+        else:
+            changes[to] = None  # the piece at the target square was simply captured
 
     # Specific cases:
     is_castling = False
     if (
-        current_piece.piece_type == chess.KING
+        not is_capture
+        and current_piece.piece_type == chess.KING
         and chess_board.castling_rights != previous_castling_rights
     ):
         king_movement = (from_, to)
@@ -128,7 +156,9 @@ def do_chess_move(*, fen: "FEN", from_: "Square", to: "Square") -> ChessMoveResu
 
     new_fen = chess_board.fen()
 
-    domain_promotion = None if promotion is None else piece_from_int(promotion)
+    domain_promotion = (
+        None if promotion is None else chess_lib_piece_to_piece_type(promotion)
+    )
     game_over = (
         GameOverDescription(winner=winner, reason=win_reason) if win_reason else None
     )
