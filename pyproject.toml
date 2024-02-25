@@ -95,6 +95,18 @@ python_files = ["test_*.py"]
 addopts = "--reuse-db"
 DJANGO_SETTINGS_MODULE = "project.settings.test"
 
+[tool.coverage.run]
+# @link https://coverage.readthedocs.io/en/latest/excluding.html
+# @link https://coverage.readthedocs.io/en/latest/source.html
+omit = [
+    # omit tests themselves from the coverage measure:
+    "src/apps/*/tests/**/*.py",
+    "src/project/tests/**/*.py",
+    # also exclude Django settings:
+    "src/project/settings/*.py",
+]
+
+
 
 [build-system]
 requires = ["poetry-core>=1.2.0"]
