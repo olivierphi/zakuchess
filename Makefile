@@ -143,6 +143,7 @@ frontend/js/compile_app_files:
 frontend/img/copy_assets: img_chess_src ?= src/apps/chess/static-src/chess/img
 frontend/img/copy_assets: img_chess_dest ?= src/apps/chess/static/chess
 frontend/img/copy_assets:
+	@mkdir -p '${img_chess_dest}'
 	@cp -r -p '${img_chess_src}' '${img_chess_dest}'
 	@echo "Copied image assets from Django apps' 'static-src' to 'static' folders."
 
