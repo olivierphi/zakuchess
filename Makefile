@@ -18,6 +18,7 @@ install: .venv ./node_modules ## Install the Python and frontend dependencies
 .PHONY: dev
 dev: .env.local db.sqlite3
 dev: ## Start Django in "development" mode, as well as our frontend assets compilers in "watch" mode
+	@${SUB_MAKE} frontend/img
 	@./node_modules/.bin/concurrently --names "django,css,js" --prefix-colors "blue,yellow,green" \
 		"${SUB_MAKE} backend/watch" \
 		"${SUB_MAKE} frontend/css/watch" \
@@ -90,9 +91,15 @@ code-quality/mypy: ## Python's equivalent of TypeScript
 
 .PHONY: frontend/watch
 frontend/watch: ## Compile the CSS & JS assets of our various Django apps, in 'watch' mode
-	@./node_modules/.bin/concurrently --names "css,js" --prefix-colors "yellow,green" \
+	@./node_modules/.bin/concurrently --names "img,css,js" --prefix-colors "yellow,green" \
+		"${SUB_MAKE} frontend/img" \
 		"${SUB_MAKE} frontend/css/watch" \
 		"${SUB_MAKE} frontend/js/watch"
+
+.PHONY: frontend/img
+frontend/img: ## Copy some assets from the apps' "static-src" folders to their "static" ones
+## No 'watch' mode on this at the moment... 
+	@${SUB_MAKE} frontend/img/copy_assets
 
 .PHONY: frontend/css/watch
 frontend/css/watch: ## Compile the CSS assets of our various Django apps, in 'watch' mode
@@ -131,6 +138,13 @@ frontend/js/compile_app_files:
 		${src} \
 		--bundle --sourcemap --target=chrome87,firefox78,safari14,edge88 \
 		--outdir="${dest}"
+
+.PHONY: frontend/img/copy_assets
+frontend/img/copy_assets: img_chess_src ?= src/apps/chess/static-src/chess/img
+frontend/img/copy_assets: img_chess_dest ?= src/apps/chess/static/chess
+frontend/img/copy_assets:
+	@cp -r -p '${img_chess_src}' '${img_chess_dest}'
+	@echo "Copied image assets from Django apps' 'static-src' to 'static' folders."
 
 # Here starts the "misc util targets" stuff
 

@@ -4,8 +4,9 @@ from typing import TYPE_CHECKING
 
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse
-from django.shortcuts import redirect
+from django.shortcuts import redirect, resolve_url
 from django.views.decorators.http import require_POST, require_safe
+from django_htmx.http import HttpResponseClientRedirect
 
 from apps.chess.helpers import get_active_player_side_from_fen, uci_move_squares
 from apps.chess.types import (
@@ -318,7 +319,12 @@ def htmx_restart_daily_challenge_do(
 
 @require_POST
 def htmx_daily_challenge_user_prefs_save(request: "HttpRequest") -> HttpResponse:
-    response = HttpResponse("""<script>closeModal()</script>""")
+    # As user preferences updates can have an impact on any part of the UI
+    # (changing the way the chess board is displayed, for example), we'd better
+    # reload the whole page after having saved preferences.
+    response = HttpResponseClientRedirect(
+        resolve_url("daily_challenge:daily_game_view")
+    )
 
     form = UserPrefsForm(request.POST)
     if user_prefs := form.to_user_prefs():
