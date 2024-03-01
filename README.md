@@ -1,4 +1,4 @@
-# Zakuchess
+# [Zakuchess](https://zakuchess.com)
 
 ![Powered by Django](https://img.shields.io/badge/Powered_By-Django-green)
 ![Formatting: Black](https://img.shields.io/badge/Formatting-Black-blue)
@@ -11,8 +11,10 @@
 A free and open-source "daily chess challenge" game, where you play against a computer opponent
 with pixel art units.
 
-No tracking, no ads - it was built purely for fun, and to check how far I could go with 
+No analytics, no tracking, no ads - it was built purely for fun, and to check how far I could go with 
 a reactive User Interface powered by [htmx](https://htmx.org/) 🙂
+
+The game lives at [zakuchess.com](https://zakuchess.com).
 
 ![The starting screen of a new ZakuChess daily challenge](./src/apps/daily_challenge/static/daily_challenge/img/og-image-1200x630.png)
 
