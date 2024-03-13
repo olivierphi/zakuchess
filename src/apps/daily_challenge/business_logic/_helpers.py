@@ -9,3 +9,8 @@ if TYPE_CHECKING:
 def player_won_yesterday(stats: "PlayerStats") -> bool:
     today = now().date()
     return bool((last_won := stats.last_won) and (today - last_won).days == 1)
+
+
+def player_won_today(stats: "PlayerStats") -> bool:
+    today = now().date()
+    return bool((last_won := stats.last_won) and today == last_won)

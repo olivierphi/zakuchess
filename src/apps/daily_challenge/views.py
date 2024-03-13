@@ -188,6 +188,7 @@ def htmx_game_move_piece(
             game_state=new_game_state,
             stats=ctx.stats,
             is_preview=ctx.is_preview,
+            is_staff_user=ctx.is_staff_user,
         )
     elif just_lost:
         # Sorry - hopefully victory will be yours next time! 🤞
@@ -197,7 +198,10 @@ def htmx_game_move_piece(
     else:
         # Keep playing. Good luck!
         manage_daily_challenge_moved_piece_logic(
-            game_state=new_game_state, stats=ctx.stats, is_preview=ctx.is_preview
+            game_state=new_game_state,
+            stats=ctx.stats,
+            is_preview=ctx.is_preview,
+            is_staff_user=ctx.is_staff_user,
         )
 
     game_presenter = DailyChallengeGamePresenter(
@@ -292,7 +296,9 @@ def htmx_restart_daily_challenge_do(
     request: "HttpRequest", *, ctx: "GameContext"
 ) -> HttpResponse:
     new_game_state = restart_daily_challenge(
-        challenge=ctx.challenge, game_state=ctx.game_state, is_preview=ctx.is_preview
+        challenge=ctx.challenge,
+        game_state=ctx.game_state,
+        is_staff_user=ctx.is_staff_user,
     )
 
     save_daily_challenge_state_in_session(
@@ -364,7 +370,10 @@ def htmx_see_daily_challenge_solution_do(
     request: "HttpRequest", *, ctx: "GameContext"
 ) -> HttpResponse:
     new_game_state = see_daily_challenge_solution(
-        challenge=ctx.challenge, game_state=ctx.game_state, is_preview=ctx.is_preview
+        challenge=ctx.challenge,
+        stats=ctx.stats,
+        game_state=ctx.game_state,
+        is_staff_user=ctx.is_staff_user,
     )
 
     save_daily_challenge_state_in_session(

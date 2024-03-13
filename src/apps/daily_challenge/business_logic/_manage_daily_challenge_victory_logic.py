@@ -14,6 +14,7 @@ def manage_daily_challenge_victory_logic(
     game_state: "PlayerGameState",
     stats: PlayerStats,
     is_preview: bool = False,
+    is_staff_user: bool = False,
 ) -> None:
     """
     When a player wins a new daily challenge, we need to update part of their stats
@@ -56,4 +57,5 @@ def manage_daily_challenge_victory_logic(
     stats.wins_distribution[distribution_slice] += 1
 
     # Server stats
-    DailyChallengeStats.objects.increment_today_wins_count()
+    if not is_staff_user:
+        DailyChallengeStats.objects.increment_today_wins_count()

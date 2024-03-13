@@ -9,7 +9,11 @@ if TYPE_CHECKING:
 
 
 def manage_daily_challenge_moved_piece_logic(
-    *, game_state: "PlayerGameState", stats: "PlayerStats", is_preview: bool = False
+    *,
+    game_state: "PlayerGameState",
+    stats: "PlayerStats",
+    is_preview: bool = False,
+    is_staff_user: bool = False,
 ) -> None:
     """
     When a player moves a piece during new daily challenge,
@@ -30,4 +34,5 @@ def manage_daily_challenge_moved_piece_logic(
         DailyChallengeStats.objects.increment_today_played_count()
 
     # Server stats
-    DailyChallengeStats.objects.increment_today_turns_count()
+    if not is_staff_user:
+        DailyChallengeStats.objects.increment_today_turns_count()
