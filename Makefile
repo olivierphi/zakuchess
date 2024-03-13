@@ -8,7 +8,7 @@ SUB_MAKE = ${MAKE} --no-print-directory
 
 help:
 # @link https://github.com/marmelab/javascript-boilerplate/blob/master/makefile
-	@grep -P '^[a-zA-Z/_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+	@grep -P '^[.a-zA-Z/_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: install
 install: .venv ./node_modules ## Install the Python and frontend dependencies
