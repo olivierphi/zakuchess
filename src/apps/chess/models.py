@@ -19,12 +19,29 @@ class UserPrefsGameSpeedChoices(models.IntegerChoices):
     FAST = UserPrefsGameSpeed.FAST, "Fast"
 
 
+class UserPrefsBoardTexture(enum.IntEnum):
+    NO_TEXTURE = 0
+    ABSTRACT = 1
+
+
+class UserPrefsBoardTextureChoices(models.IntegerChoices):
+    NO_TEXTURE = (
+        UserPrefsBoardTexture.NO_TEXTURE,
+        "No texture: the chess squares are only made of 2 colours",
+    )
+    ABSTRACT = (
+        UserPrefsBoardTexture.ABSTRACT,
+        "Abstract texture: an abstract texture is applied to the chess board",
+    )
+
+
 class UserPrefs(
     msgspec.Struct,
     kw_only=True,  # type: ignore[call-arg]
     rename={
         # ditto
         "game_speed": "gs",
+        "board_texture": "bt",
     },
 ):
     """
@@ -34,6 +51,7 @@ class UserPrefs(
     """
 
     game_speed: UserPrefsGameSpeed = UserPrefsGameSpeed.NORMAL
+    board_texture: UserPrefsBoardTexture = UserPrefsBoardTexture.ABSTRACT
 
     def to_cookie_content(self) -> str:
         return msgspec.json.encode(self).decode()

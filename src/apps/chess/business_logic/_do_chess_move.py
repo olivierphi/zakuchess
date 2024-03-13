@@ -16,14 +16,7 @@ from apps.chess.types import (
 )
 
 if TYPE_CHECKING:
-    from apps.chess.types import (
-        FEN,
-        ChessMoveChanges,
-        GameEndReason,
-        PlayerSide,
-        Rank,
-        Square,
-    )
+    from apps.chess.types import FEN, GameEndReason, MoveTuple, PlayerSide, Rank, Square
 
 _CHESS_COLOR_TO_PLAYER_SIDE_MAPPING: Mapping[chess.Color, "PlayerSide"] = {
     True: "w",
@@ -72,7 +65,8 @@ _EN_PASSANT_CAPTURED_PIECES_RANK_CONVERSION: dict["Rank", "Rank"] = {
 
 @lru_cache(maxsize=512)
 def do_chess_move(*, fen: "FEN", from_: "Square", to: "Square") -> ChessMoveResult:
-    changes: "ChessMoveChanges" = {}
+    moves: list["MoveTuple"] = []
+    captured: "Square | None" = None
 
     chess_board = chess.Board(fen)
     chess_from = chess.parse_square(from_)
@@ -107,7 +101,7 @@ def do_chess_move(*, fen: "FEN", from_: "Square", to: "Square") -> ChessMoveResu
     chess_board.push(chess_move)
 
     # Record that piece's move:
-    changes[from_] = to
+    moves.append((from_, to))
 
     # Record the capture, if any:
     if is_capture:
@@ -120,9 +114,9 @@ def do_chess_move(*, fen: "FEN", from_: "Square", to: "Square") -> ChessMoveResu
             )
             # Ok, we determined the position of the pawn captured by the "en passant"
             # so now we can record that capture:
-            changes[en_passant_captured_pawn_square] = None
+            captured = en_passant_captured_pawn_square
         else:
-            changes[to] = None  # the piece at the target square was simply captured
+            captured = to  # the piece at the target square was simply captured
 
     # Specific cases:
     is_castling = False
@@ -139,7 +133,7 @@ def do_chess_move(*, fen: "FEN", from_: "Square", to: "Square") -> ChessMoveResu
             rook_previous_square, rook_new_square = _CASTLING_ROOK_MOVE[
                 cast(_CastlingPossibleTo, to)
             ]
-            changes[rook_previous_square] = rook_new_square
+            moves.append((rook_previous_square, rook_new_square))
 
     # Check the game's outcome:
     outcome = chess_board.outcome()
@@ -165,8 +159,9 @@ def do_chess_move(*, fen: "FEN", from_: "Square", to: "Square") -> ChessMoveResu
 
     return ChessMoveResult(
         fen=new_fen,
-        changes=changes,
+        moves=moves,
         is_capture=is_capture,
+        captured=captured,
         is_castling=is_castling,
         promotion=domain_promotion,
         game_over=game_over,

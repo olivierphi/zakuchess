@@ -5,7 +5,7 @@ from dominate.tags import button, div, fieldset, form, h3, h4, input_, label, le
 
 from apps.chess.components.misc_ui import modal_container
 from apps.chess.components.svg_icons import ICON_SVG_CONFIRM
-from apps.chess.models import UserPrefsGameSpeedChoices
+from apps.chess.models import UserPrefsBoardTextureChoices, UserPrefsGameSpeedChoices
 
 from .common_styles import BUTTON_CONFIRM_CLASSES
 from .svg_icons import ICON_SVG_COG
@@ -57,6 +57,13 @@ def _user_prefs_form(user_prefs: "UserPrefs") -> "dom_tag":
         current_value=user_prefs.game_speed,
     )
 
+    board_texture = _form_fieldset(
+        fieldset_legend="Chess board texture",
+        input_name="board_texture",
+        choices=UserPrefsBoardTextureChoices,
+        current_value=user_prefs.board_texture,
+    )
+
     submit_button = (
         button(
             "Save preferences",
@@ -68,6 +75,7 @@ def _user_prefs_form(user_prefs: "UserPrefs") -> "dom_tag":
 
     return form(
         game_speed,
+        board_texture,
         div(submit_button, cls="mt-8 mb-4 text-center"),
         **form_htmx_attributes,
     )
@@ -93,7 +101,7 @@ def _form_fieldset(
                     #     cls="mr-2 inline-flex p-px items-center bg-yellow-400 text-slate-900 rounded-full",
                     # ),
                     input_(
-                        value=choice.value,
+                        value=str(choice.value),
                         type="radio",
                         name=input_name,
                         id=f"{input_name}_input_{choice.name}",

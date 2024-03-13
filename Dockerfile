@@ -47,7 +47,7 @@ COPY Makefile ./
 COPY tailwind.config.js ./
 
 # Right, let's build our app's assets!
-RUN make frontend/js/compile frontend/css/compile \
+RUN make frontend/img frontend/js/compile frontend/css/compile \
     esbuild_compile_opts='--minify' \
     tailwind_compile_opts='--minify'
 

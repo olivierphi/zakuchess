@@ -14,6 +14,7 @@ from apps.daily_challenge.components.misc_ui.common_styles import (
     BUTTON_CLASSES,
 )
 from apps.daily_challenge.components.misc_ui.svg_icons import (
+    ICON_SVG_COG,
     ICON_SVG_LIGHT_BULB,
     ICON_SVG_RESTART,
 )
@@ -90,7 +91,7 @@ def help_content(
                 cls=f"{spacing}",
             ),
             div(
-                "You can restart from the beginning at any time, ",
+                raw("You can <b>restart from the beginning</b> at any time, "),
                 "by clicking the ",
                 span(
                     "retry",
@@ -101,8 +102,8 @@ def help_content(
                 cls=f"{spacing}",
             ),
             div(
-                "After a few turns, if you can't solve the challenge "
-                "you can decide to see a solution, by clicking the ",
+                "If you can't solve today's challenge ",
+                raw("you can decide to <b>see a solution</b>, by clicking the "),
                 span(
                     "see solution",
                     ICON_SVG_LIGHT_BULB,
@@ -111,7 +112,14 @@ def help_content(
                 " button.",
                 cls=f"{spacing}",
             ),
-            div("Good luck! 🙂", cls=f"{spacing}"),
+            div(
+                raw("You can <b>customise some game settings</b>"),
+                " - such as the speed of the game or the appearance of the board - via the ",
+                span(ICON_SVG_COG, cls="inline block px-1 py-1 text-sm text-slate-50"),
+                " button in the top bar.",
+                cls=f"{spacing}",
+            ),
+            div("Good luck! 🙂", cls=f"p-3 {spacing} font-bold"),
             div(
                 [
                     chess_status_bar_tip(

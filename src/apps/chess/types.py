@@ -72,7 +72,7 @@ Square = Literal[
     # fmt: on
 ]
 
-Move = str  # >4k possible moves, so... let's just use a string to represent them ^_^
+MoveTuple = tuple[Square, Square]
 
 SquareColor = Literal["light", "dark"]
 
@@ -102,9 +102,6 @@ GameEndReason = Literal[
     "fifty_moves",
 ]
 
-ChessMoveChanges: TypeAlias = (
-    "dict[Square, Square | None]"  # None is used when the piece on that Square was captured
-)
 
 Faction = Literal[
     "humans",
@@ -121,8 +118,9 @@ class GameOverDescription(TypedDict):
 
 class ChessMoveResult(TypedDict):
     fen: "FEN"
-    changes: "ChessMoveChanges"
+    moves: list[MoveTuple]
     is_capture: bool
+    captured: Square | None
     is_castling: bool
     promotion: "PieceType | None"
     game_over: GameOverDescription | None

@@ -15,7 +15,7 @@ from ..helpers import (
     player_side_from_piece_role,
     type_from_piece_role,
 )
-from ..models import UserPrefsGameSpeed
+from ..models import UserPrefsBoardTexture, UserPrefsGameSpeed
 from .chess_helpers import (
     chess_unit_symbol_class,
     piece_character_classes,
@@ -174,8 +174,10 @@ def chess_bot_data(board_id: str) -> dom_tag:
 
 
 def chess_board(*, game_presenter: "GamePresenter", board_id: str) -> dom_tag:
+    force_square_info: bool = (
+        game_presenter.force_square_info or game_presenter.is_preview
+    )
     squares: list[dom_tag] = []
-    force_square_info = game_presenter.force_square_info or game_presenter.is_preview
     for file in FILE_NAMES:
         for rank in RANK_NAMES:
             squares.append(
@@ -184,10 +186,34 @@ def chess_board(*, game_presenter: "GamePresenter", board_id: str) -> dom_tag:
                     force_square_info=force_square_info,
                 )
             )
-    return div(
+
+    squares_container_classes: list[str] = [
+        "relative",
+        "aspect-square",
+    ]
+    chess_board_additional_attributes: dict[str, str] = {}
+
+    # That's where we manage the optional texture we apply to the chess board:
+    match game_presenter.user_prefs.board_texture:
+        case UserPrefsBoardTexture.ABSTRACT:
+            squares_container_classes.append("opacity-85")
+            chess_board_additional_attributes["style"] = (
+                f"background: url('{ static('chess/img/board/texture.jpg') }') repeat"
+            )
+        case _:
+            pass
+
+    squares_container = div(
         *squares,
+        id=f"chess-board-squares-{board_id}",
+        cls=" ".join(squares_container_classes),
+    )
+
+    return div(
+        squares_container,
         id=f"chess-board-{board_id}",
-        cls="relative aspect-square pointer-events-none",
+        cls="pointer-events-none",
+        **chess_board_additional_attributes,
     )
 
 
@@ -223,8 +249,6 @@ def chess_pieces(
         id=f"chess-board-pieces-{board_id}",
         cls="relative aspect-square",
         **extra_attrs,
-        # Mostly for debugging purposes:
-        data_naive_score=game_presenter.naive_score,
     )
 
 
@@ -330,7 +354,7 @@ def chess_piece(
                 # Re-selecting an already selected piece de-selects it:
                 else game_presenter.urls.htmx_game_no_selection_url(board_id=board_id)
             ),
-            "data_hx_target": f"#chess-board-pieces-{board_id}",
+            "data_hx_target": f"#chess-pieces-container-{board_id}",
         }
     else:
         additional_attributes["disabled"] = True
@@ -419,8 +443,7 @@ def chess_available_target(
             "data_hx_post": game_presenter.urls.htmx_game_move_piece_url(
                 square=square, board_id=board_id
             ),
-            "data_hx_target": f"#chess-board-pieces-{ board_id }",
-            "data_hx_swap": "outerHTML",
+            "data_hx_target": f"#chess-pieces-container-{board_id}",
         }
     else:
         htmx_attributes = {}
@@ -716,7 +739,7 @@ def _bot_turn_html_elements(
         "data_hx_post": game_presenter.urls.htmx_game_play_bot_move_url(
             board_id=board_id
         ),
-        "data_hx_target": f"#chess-board-pieces-{board_id}",
+        "data_hx_target": f"#chess-pieces-container-{board_id}",
         "data_hx_trigger": "playMove",
     }
     bot_move_script_tag = unescaped_html(
@@ -753,7 +776,7 @@ def _solution_turn_html_elements(
         "data_hx_post": game_presenter.urls.htmx_game_play_solution_move_url(
             board_id=board_id
         ),
-        "data_hx_target": f"#chess-board-pieces-{board_id}",
+        "data_hx_target": f"#chess-pieces-container-{board_id}",
         "data_hx_trigger": "playSolutionNextMove",
     }
 

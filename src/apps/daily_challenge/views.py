@@ -4,8 +4,9 @@ from typing import TYPE_CHECKING
 
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse
-from django.shortcuts import redirect
+from django.shortcuts import redirect, resolve_url
 from django.views.decorators.http import require_POST, require_safe
+from django_htmx.http import HttpResponseClientRedirect
 
 from apps.chess.helpers import get_active_player_side_from_fen, uci_move_squares
 from apps.chess.types import (
@@ -50,7 +51,7 @@ from .views_decorators import (
 if TYPE_CHECKING:
     from django.http import HttpRequest
 
-    from apps.chess.types import Move
+    from apps.chess.types import MoveTuple
 
     from .view_helpers import GameContext
 
@@ -318,7 +319,12 @@ def htmx_restart_daily_challenge_do(
 
 @require_POST
 def htmx_daily_challenge_user_prefs_save(request: "HttpRequest") -> HttpResponse:
-    response = HttpResponse("""<script>closeModal()</script>""")
+    # As user preferences updates can have an impact on any part of the UI
+    # (changing the way the chess board is displayed, for example), we'd better
+    # reload the whole page after having saved preferences.
+    response = HttpResponseClientRedirect(
+        resolve_url("daily_challenge:daily_game_view")
+    )
 
     form = UserPrefsForm(request.POST)
     if user_prefs := form.to_user_prefs():
@@ -450,7 +456,7 @@ def htmx_game_bot_move(
     return _play_bot_move(
         request=request,
         ctx=ctx,
-        move=f"{from_}{to}",
+        move=(from_, to),
         board_id=ctx.board_id,
     )
 
@@ -510,16 +516,15 @@ def _play_bot_move(
     *,
     request: "HttpRequest",
     ctx: "GameContext",
-    move: "Move",
+    move: "MoveTuple",
     board_id: str,
 ) -> HttpResponse:
     game_over_already = ctx.game_state.game_over != PlayerGameOverState.PLAYING
 
-    bot_next_move = uci_move_squares(move)
     new_game_state, captured_piece_role = move_daily_challenge_piece(
         game_state=ctx.game_state,
-        from_=bot_next_move[0],
-        to=bot_next_move[1],
+        from_=move[0],
+        to=move[1],
         is_my_side=False,
     )
 
