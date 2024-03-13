@@ -57,7 +57,6 @@ _CHESS_PIECE_Z_INDEXES: dict[str, str] = {
 _BOT_MOVE_DELAY = 700
 _BOT_MOVE_DELAY_FIRST_TURN_OF_THE_DAY = 1_400
 _BOT_MOVE_DELAY_FAST_MODE = 100
-_BOT_DEPTH = 3
 _PLAY_BOT_JS_TEMPLATE = Template(
     """
 <script>
@@ -749,7 +748,7 @@ def _bot_turn_html_elements(
                 "PLAY_MOVE_HTMX_ELEMENT_ID": play_move_htmx_element_id,
                 "BOT_ASSETS_DATA_HOLDER_ELEMENT_ID": f"chess-bot-data-{ board_id }",
                 "FORCED_MOVE": forced_bot_move,
-                "DEPTH": _BOT_DEPTH,
+                "DEPTH": game_presenter.bot_depth,
                 "MOVE_DELAY": move_delay,
             }
         )

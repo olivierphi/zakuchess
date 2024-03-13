@@ -85,6 +85,16 @@ class DailyChallenge(models.Model):
     bot_first_move: str | None = models.CharField(
         null=True, max_length=5, help_text="uses UCI notation, e.g. 'e2e4'"
     )
+    bot_depth: int = models.PositiveSmallIntegerField(
+        default=1,
+        help_text="The depth of the bot's search. 1 is a good value for an 'easy enough' daily challenge.",
+    )
+    # The following value is the depth we want the bot to calculate its moves with
+    # when we simulate the human player's turn:
+    player_simulated_depth: int = models.PositiveSmallIntegerField(
+        default=3,
+        help_text="The depth of the player's simulated search. 3 is a good value for an 'easy enough' daily challenge.",
+    )
     intro_turn_speech_square: "Square|None" = models.CharField(null=True, max_length=2)
     starting_advantage: int | None = models.IntegerField(
         null=True,

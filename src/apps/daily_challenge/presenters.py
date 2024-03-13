@@ -59,6 +59,7 @@ class DailyChallengeGamePresenter(GamePresenter):
             force_square_info=force_square_info,
             captured_piece_role=captured_team_member_role,
             is_preview=is_preview,
+            bot_depth=challenge.bot_depth,
             user_prefs=user_prefs,
         )
         self._challenge = challenge
