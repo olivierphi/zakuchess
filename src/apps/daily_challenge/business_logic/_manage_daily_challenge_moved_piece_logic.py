@@ -25,8 +25,11 @@ def manage_daily_challenge_moved_piece_logic(
     if is_preview:
         return None
 
-    is_1st_turn_of_an_attempt = game_state.current_attempt_turns_counter == 1
-    if is_1st_turn_of_an_attempt:
+    is_1st_turn_of_1st_attempt = (
+        game_state.attempts_counter == 0
+        and game_state.current_attempt_turns_counter == 1
+    )
+    if is_1st_turn_of_1st_attempt:
         # One more game played for this player!
         stats.games_count += 1
         # Last played date:
@@ -34,7 +37,7 @@ def manage_daily_challenge_moved_piece_logic(
 
     # Server stats
     if not is_staff_user:
-        if is_1st_turn_of_an_attempt:
+        if is_1st_turn_of_1st_attempt:
             DailyChallengeStats.objects.increment_today_played_count()
         is_2nd_turn_of_1st_attempt = (
             game_state.attempts_counter == 0

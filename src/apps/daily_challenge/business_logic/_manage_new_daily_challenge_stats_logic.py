@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from ..models import DailyChallengeStats
-from ._helpers import player_won_yesterday
+from ._has_player_won_yesterday import has_player_won_yesterday
 
 if TYPE_CHECKING:
     from ..models import PlayerStats
@@ -19,7 +19,7 @@ def manage_new_daily_challenge_stats_logic(
         return None
 
     # Do we restart the current streak from the beginning?
-    if not player_won_yesterday(stats):
+    if not has_player_won_yesterday(stats):
         stats.current_streak = 0  # back to a brand-new streak flow
 
     # Server stats

@@ -2,21 +2,23 @@ from math import ceil
 from typing import TYPE_CHECKING
 
 from django.contrib.humanize.templatetags.humanize import ordinal
-from dominate.tags import div, h3
+from dominate.tags import div, h3, p
+from dominate.util import raw
 
 from apps.chess.components.misc_ui import modal_container
 
+from ...business_logic import has_player_won_today
 from .svg_icons import ICON_SVG_STATS
 
 if TYPE_CHECKING:
     from dominate.tags import dom_tag
 
-    from ...models import PlayerStats, WinsDistributionSlice
+    from ...models import PlayerGameState, PlayerStats, WinsDistributionSlice
 
 # TODO: manage i18n
 
 
-def stats_modal(*, stats: "PlayerStats") -> "dom_tag":
+def stats_modal(*, stats: "PlayerStats", game_state: "PlayerGameState") -> "dom_tag":
     return modal_container(
         header=h3(
             "Statistics ",
@@ -25,6 +27,7 @@ def stats_modal(*, stats: "PlayerStats") -> "dom_tag":
         ),
         body=div(
             _main_stats(stats),
+            _today_s_results(stats, game_state),
             _wins_distribution(stats),
             cls="p-6 space-y-6",
         ),
@@ -44,6 +47,40 @@ def _main_stats(stats: "PlayerStats") -> "dom_tag":
         stat("Current streak", stats.current_streak),
         stat("Max streak", stats.max_streak),
         cls="flex justify-between",
+    )
+
+
+def _today_s_results(stats: "PlayerStats", game_state: "PlayerGameState") -> "dom_tag":
+    if not has_player_won_today(stats):
+        return div()  # empty <div>
+
+    # TODO: write a test for this
+    # We repeat the logic we have in "status_bar.py". If we have to copy it once more
+    # we'll factorise it.
+    total_turns_counter = game_state.turns_counter + 1
+    turns_counter = game_state.current_attempt_turns_counter + 1
+    attempts_counter = game_state.attempts_counter + 1
+
+    return div(
+        p(
+            raw(
+                f"Today you won in <b>{attempts_counter} "
+                f"attempt{'s' if attempts_counter > 1 else ''}</b>. 🎉"
+            ),
+        ),
+        p(
+            raw(f"The battled lasted for <b>{turns_counter} turns</b>."),
+        ),
+        (
+            p(
+                raw(
+                    f"Across all your attempts you played <b>{total_turns_counter} turns today</b>."
+                )
+            )
+            if attempts_counter > 1
+            else ""
+        ),
+        cls="text-sm text-center",
     )
 
 

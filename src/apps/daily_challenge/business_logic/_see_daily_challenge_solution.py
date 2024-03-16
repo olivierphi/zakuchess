@@ -2,7 +2,7 @@ import copy
 from typing import TYPE_CHECKING
 
 from ..models import DailyChallengeStats
-from ._helpers import player_won_today
+from ._has_player_won_today import has_player_won_today
 
 if TYPE_CHECKING:
     from ..models import DailyChallenge, PlayerGameState, PlayerStats
@@ -29,7 +29,7 @@ def see_daily_challenge_solution(
     # If we're seeing the solution without having won today first,
     # that's the end of our current streak 😔
     # TODO: write a test for this! It's a bit late right now so I'm rushing it 😓
-    if not player_won_today(stats):
+    if not has_player_won_today(stats):
         stats.current_streak = 0
 
     # Server stats

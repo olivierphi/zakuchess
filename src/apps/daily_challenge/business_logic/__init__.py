@@ -2,6 +2,8 @@
 from ._compute_fields_before_bot_first_move import compute_fields_before_bot_first_move
 from ._get_current_daily_challenge import get_current_daily_challenge
 from ._get_speech_bubble import get_speech_bubble
+from ._has_player_won_today import has_player_won_today
+from ._has_player_won_yesterday import has_player_won_yesterday
 from ._manage_daily_challenge_defeat_logic import manage_daily_challenge_defeat_logic
 from ._manage_daily_challenge_moved_piece_logic import (
     manage_daily_challenge_moved_piece_logic,
