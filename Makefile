@@ -277,6 +277,15 @@ fly.io/db/local_backup: ## Fly.io: backup the SQLite database locally
 	@flyctl ssh sftp get /zakuchess_sqlite_dbs/zakuchess.dev.sqlite3
 	@mv zakuchess.dev.sqlite3 "zakuchess.prod.backup.${backup_name}.sqlite3"
 	@echo "Saved to 'zakuchess.prod.backup.${backup_name}.sqlite3'"
+		
+.PHONY: fly.io/db/replace_local_with_production
+fly.io/db/replace_local_with_production: local_db ?= ./db.sqlite3
+fly.io/db/replace_local_with_production: backup_name ?= ./db.local.backup.$$(date --iso-8601=seconds | cut -d + -f 1).sqlite3
+fly.io/db/replace_local_with_production: ## Fly.io: replace our local SQLite database with the one from the prod environment
+	@mv "${local_db}" "${backup_name}"
+	@flyctl ssh sftp get /zakuchess_sqlite_dbs/zakuchess.dev.sqlite3
+	@mv zakuchess.dev.sqlite3 "${local_db}"
+	@echo "Replaced local DB with a copy from the production DB. The previous local DB has been saved as '${backup_name}'."
 
 .PHONY: fly.io/ssh
 fly.io/ssh: ## Fly.io: start a SSH session within our app
