@@ -92,8 +92,8 @@ class DailyChallenge(models.Model):
     # The following value is the depth we want the bot to calculate its moves with
     # when we simulate the human player's turn:
     player_simulated_depth: int = models.PositiveSmallIntegerField(
-        default=3,
-        help_text="The depth of the player's simulated search. 3 is a good value for an 'easy enough' daily challenge.",
+        default=5,
+        help_text="The depth of the player's simulated search. 5 is a good value for modeling a 'casual' chess player (like myself ^_^).",
     )
     intro_turn_speech_square: "Square|None" = models.CharField(null=True, max_length=2)
     starting_advantage: int | None = models.IntegerField(

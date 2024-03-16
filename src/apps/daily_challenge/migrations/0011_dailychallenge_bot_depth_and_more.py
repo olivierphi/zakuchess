@@ -51,8 +51,8 @@ class Migration(migrations.Migration):
             model_name="dailychallenge",
             name="player_simulated_depth",
             field=models.PositiveSmallIntegerField(
-                default=3,
-                help_text="The depth of the player's simulated search. 3 is a good value for an 'easy enough' daily challenge.",
+                default=5,
+                help_text="The depth of the player's simulated search. 5 is a good value for modeling a 'casual' chess player (like myself ^_^).",
             ),
         ),
         migrations.RunPython(
