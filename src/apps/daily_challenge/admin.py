@@ -351,6 +351,7 @@ class DailyChallengeAdmin(ImportExportModelAdmin):
 class DailyChallengeStatsAdmin(admin.ModelAdmin):
     list_display = (
         "day",
+        "played_challenges_count",
         "played_count",
         "restarts_count",
         "see_solution_count",

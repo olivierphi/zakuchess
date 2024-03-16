@@ -39,7 +39,7 @@ _FEN_MAX_LEN = (
 
 _STATS_FOR_TODAY_EXISTS_CACHE = {
     "KEY_PATTERN": "stats_for_today_exists:{today}",
-    "DURATION": 3_600 * 10,  # 10 hours
+    "DURATION": 3_600 * 24,  # once it's created for today, we're good for the day
 }
 
 
@@ -221,6 +221,12 @@ class DailyChallengeStatsManager(models.Manager):
         self._create_for_today_if_needed()
         self.filter(day=self._today()).update(played_count=F("played_count") + 1)
 
+    def increment_played_challenges_count(self) -> None:
+        self._create_for_today_if_needed()
+        self.filter(day=self._today()).update(
+            played_challenges_count=F("played_challenges_count") + 1
+        )
+
     def increment_today_turns_count(self) -> None:
         self._create_for_today_if_needed()
         self.filter(day=self._today()).update(turns_count=F("turns_count") + 1)
@@ -271,6 +277,10 @@ class DailyChallengeStats(models.Model):
     day = models.DateField(unique=True)
     challenge = models.ForeignKey(DailyChallenge, on_delete=models.CASCADE)
     created_count = models.IntegerField(default=0, help_text="Number of games created")
+    played_challenges_count = models.IntegerField(
+        default=0,
+        help_text="Number of times where the player played at least 2 moves on their 1st attempt of the day",
+    )
     played_count = models.IntegerField(
         default=0, help_text="Number of games where the player played at least 1 move"
     )
