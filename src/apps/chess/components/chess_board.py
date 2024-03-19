@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Literal, cast
 from chess import FILE_NAMES, RANK_NAMES
 from django.conf import settings
 from django.templatetags.static import static
-from dominate.tags import button, div, dom_tag, section, span
+from dominate.tags import button, div, section, span
 from dominate.util import raw as unescaped_html
 
 from ..helpers import (
@@ -25,6 +25,8 @@ from .misc_ui import speech_bubble_container
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+
+    from dominate.tags import dom_tag
 
     from ..presenters import GamePresenter
     from ..types import Factions, PieceRole, PieceType, PlayerSide, Square
@@ -87,8 +89,8 @@ _PLAY_SOLUTION_JS_TEMPLATE = Template(
 
 
 def chess_arena(
-    *, game_presenter: "GamePresenter", status_bars: list[dom_tag], board_id: str
-) -> dom_tag:
+    *, game_presenter: "GamePresenter", status_bars: "list[dom_tag]", board_id: str
+) -> "dom_tag":
     arena_additional_classes = (
         "border-3 border-solid md:border-lime-400 xl:border-red-400"
         if settings.DEBUG_LAYOUT
@@ -150,7 +152,7 @@ def chess_arena(
     )
 
 
-def chess_bot_data(board_id: str) -> dom_tag:
+def chess_bot_data(board_id: str) -> "dom_tag":
     # This is used in "chess-bot.ts"
     match settings.JS_CHESS_ENGINE.lower():
         case "lozza":
@@ -172,7 +174,7 @@ def chess_bot_data(board_id: str) -> dom_tag:
     )
 
 
-def chess_board(*, game_presenter: "GamePresenter", board_id: str) -> dom_tag:
+def chess_board(*, game_presenter: "GamePresenter", board_id: str) -> "dom_tag":
     force_square_info: bool = (
         game_presenter.force_square_info or game_presenter.is_preview
     )
@@ -218,8 +220,8 @@ def chess_board(*, game_presenter: "GamePresenter", board_id: str) -> dom_tag:
 
 def chess_pieces(
     *, game_presenter: "GamePresenter", board_id: str, **extra_attrs: str
-) -> dom_tag:
-    pieces: list[dom_tag] = []
+) -> "dom_tag":
+    pieces: "list[dom_tag]" = []
     for square, piece_role in game_presenter.piece_role_by_square.items():
         pieces.append(
             chess_piece(
@@ -252,7 +254,9 @@ def chess_pieces(
 
 
 @cache
-def chess_board_square(square: "Square", *, force_square_info: bool = False) -> dom_tag:
+def chess_board_square(
+    square: "Square", *, force_square_info: bool = False
+) -> "dom_tag":
     file, rank = file_and_rank_from_square(square)
     square_index = FILE_NAMES.index(file) + RANK_NAMES.index(rank)
     square_color_cls = SQUARE_COLOR_TAILWIND_CLASSES[square_index % 2]
@@ -296,7 +300,7 @@ def chess_piece(
     square: "Square",
     piece_role: "PieceRole",
     board_id: str,
-) -> dom_tag:
+) -> "dom_tag":
     player_side = player_side_from_piece_role(piece_role)
 
     piece_can_be_moved_by_player = (
@@ -374,7 +378,7 @@ def chess_piece(
 
 def chess_available_targets(
     *, game_presenter: "GamePresenter", board_id: str, **extra_attrs: str
-) -> dom_tag:
+) -> "dom_tag":
     children: list[dom_tag] = []
 
     if game_presenter.selected_piece and not game_presenter.is_game_over:
@@ -403,7 +407,7 @@ def chess_available_target(
     piece_player_side: "PlayerSide",
     square: "Square",
     board_id: str,
-) -> dom_tag:
+) -> "dom_tag":
     assert game_presenter.selected_piece is not None
     can_move = (
         not game_presenter.is_game_over
@@ -464,7 +468,7 @@ def chess_character_display(
     square: "Square | None" = None,
     additional_classes: "Sequence[str]|None" = None,
     factions: "Factions | None" = None,
-) -> dom_tag:
+) -> "dom_tag":
     assert (
         game_presenter or factions
     ), "You must provide either a GamePresenter or a Factions kwarg."
@@ -559,7 +563,7 @@ def chess_character_display(
 
 def chess_unit_ground_marker(
     *, player_side: "PlayerSide", can_move: bool = False
-) -> dom_tag:
+) -> "dom_tag":
     classes = [
         "absolute",
         "w-11/12",
@@ -581,7 +585,7 @@ def chess_unit_display_with_ground_marker(
     piece_role: "PieceRole",
     game_presenter: "GamePresenter | None" = None,
     factions: "Factions | None" = None,
-) -> dom_tag:
+) -> "dom_tag":
     assert (
         game_presenter or factions
     ), "You must provide either a GamePresenter or a Factions kwarg."
@@ -600,7 +604,9 @@ def chess_unit_display_with_ground_marker(
     )
 
 
-def chess_unit_symbol_display(*, piece_role: "PieceRole", square: "Square") -> dom_tag:
+def chess_unit_symbol_display(
+    *, piece_role: "PieceRole", square: "Square"
+) -> "dom_tag":
     player_side = player_side_from_piece_role(piece_role)
     piece_type = type_from_piece_role(piece_role)
     piece_name = piece_name_from_piece_role(piece_role)
@@ -643,7 +649,7 @@ def chess_unit_symbol_display(*, piece_role: "PieceRole", square: "Square") -> d
 
 def chess_last_move(
     *, game_presenter: "GamePresenter", board_id: str, **extra_attrs: str
-) -> dom_tag:
+) -> "dom_tag":
     children: list[dom_tag] = []
     if last_move := game_presenter.last_move:
         children.extend(
@@ -665,7 +671,7 @@ def chess_last_move(
 
 def chess_last_move_marker(
     *, square: "Square", move_part: Literal["from", "to"]
-) -> dom_tag:
+) -> "dom_tag":
 
     match move_part:
         case "from":
@@ -716,7 +722,7 @@ def chess_last_move_marker(
 
 def _bot_turn_html_elements(
     *, game_presenter: "GamePresenter", board_id: str
-) -> list[dom_tag]:
+) -> "list[dom_tag]":
     if (
         game_presenter.solution_index is not None
         or not game_presenter.is_bot_turn
@@ -765,7 +771,7 @@ def _bot_turn_html_elements(
 
 def _solution_turn_html_elements(
     *, game_presenter: "GamePresenter", board_id: str
-) -> list[dom_tag]:
+) -> "list[dom_tag]":
     if game_presenter.solution_index is None or game_presenter.is_game_over:
         return []
 
