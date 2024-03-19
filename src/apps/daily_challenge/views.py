@@ -231,7 +231,9 @@ def htmx_game_move_piece(
 def htmx_daily_challenge_stats_modal(
     request: "HttpRequest", *, ctx: "GameContext"
 ) -> HttpResponse:
-    modal_content = stats_modal(stats=ctx.stats, game_state=ctx.game_state)
+    modal_content = stats_modal(
+        stats=ctx.stats, game_state=ctx.game_state, challenge=ctx.challenge
+    )
 
     return HttpResponse(str(modal_content))
 

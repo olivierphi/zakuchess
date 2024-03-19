@@ -13,12 +13,19 @@ from .svg_icons import ICON_SVG_STATS
 if TYPE_CHECKING:
     from dominate.tags import dom_tag
 
-    from ...models import PlayerGameState, PlayerStats, WinsDistributionSlice
+    from ...models import (
+        DailyChallenge,
+        PlayerGameState,
+        PlayerStats,
+        WinsDistributionSlice,
+    )
 
 # TODO: manage i18n
 
 
-def stats_modal(*, stats: "PlayerStats", game_state: "PlayerGameState") -> "dom_tag":
+def stats_modal(
+    *, stats: "PlayerStats", game_state: "PlayerGameState", challenge: "DailyChallenge"
+) -> "dom_tag":
     return modal_container(
         header=h3(
             "Statistics ",
@@ -27,7 +34,7 @@ def stats_modal(*, stats: "PlayerStats", game_state: "PlayerGameState") -> "dom_
         ),
         body=div(
             _main_stats(stats),
-            _today_s_results(stats, game_state),
+            _today_s_results(stats=stats, game_state=game_state, challenge=challenge),
             _wins_distribution(stats),
             cls="p-6 space-y-6",
         ),
@@ -50,7 +57,9 @@ def _main_stats(stats: "PlayerStats") -> "dom_tag":
     )
 
 
-def _today_s_results(stats: "PlayerStats", game_state: "PlayerGameState") -> "dom_tag":
+def _today_s_results(
+    *, stats: "PlayerStats", game_state: "PlayerGameState", challenge: "DailyChallenge"
+) -> "dom_tag":
     if not has_player_won_today(stats):
         return div()  # empty <div>
 
@@ -60,6 +69,7 @@ def _today_s_results(stats: "PlayerStats", game_state: "PlayerGameState") -> "do
     total_turns_counter = game_state.turns_counter + 1
     turns_counter = game_state.current_attempt_turns_counter + 1
     attempts_counter = game_state.attempts_counter + 1
+    our_solution_turns_count = challenge.solution_turns_count
 
     return div(
         p(
@@ -70,6 +80,11 @@ def _today_s_results(stats: "PlayerStats", game_state: "PlayerGameState") -> "do
         ),
         p(
             raw(f"The battled lasted for <b>{turns_counter} turns</b>."),
+        ),
+        p(
+            raw(
+                f"(our own solution needed {our_solution_turns_count} turns)",
+            ),
         ),
         (
             p(
