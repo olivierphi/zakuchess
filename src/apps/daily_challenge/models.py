@@ -217,9 +217,9 @@ class DailyChallengeStatsManager(models.Manager):
         self._create_for_today_if_needed()
         self.filter(day=self._today()).update(created_count=F("created_count") + 1)
 
-    def increment_today_played_count(self) -> None:
+    def increment_today_attempts_count(self) -> None:
         self._create_for_today_if_needed()
-        self.filter(day=self._today()).update(played_count=F("played_count") + 1)
+        self.filter(day=self._today()).update(attempts_count=F("attempts_count") + 1)
 
     def increment_played_challenges_count(self) -> None:
         self._create_for_today_if_needed()
@@ -281,8 +281,9 @@ class DailyChallengeStats(models.Model):
         default=0,
         help_text="Number of times where the player played at least 2 moves on their 1st attempt of the day",
     )
-    played_count = models.IntegerField(
-        default=0, help_text="Number of games where the player played at least 1 move"
+    attempts_count = models.IntegerField(
+        default=0,
+        help_text="Number of attempts where the player played at least 1 move",
     )
     turns_count = models.IntegerField(
         default=0, help_text="Number of turns played by players"

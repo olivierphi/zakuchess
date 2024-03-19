@@ -278,10 +278,10 @@ fly.io/db/local_backup: ## Fly.io: backup the SQLite database locally
 	@mv zakuchess.dev.sqlite3 "zakuchess.prod.backup.${backup_name}.sqlite3"
 	@echo "Saved to 'zakuchess.prod.backup.${backup_name}.sqlite3'"
 		
-.PHONY: fly.io/db/replace_local_with_production
-fly.io/db/replace_local_with_production: local_db ?= ./db.sqlite3
-fly.io/db/replace_local_with_production: backup_name ?= ./db.local.backup.$$(date --iso-8601=seconds | cut -d + -f 1).sqlite3
-fly.io/db/replace_local_with_production: ## Fly.io: replace our local SQLite database with the one from the prod environment
+.PHONY: fly.io/db/prod_to_local
+fly.io/db/prod_to_local: local_db ?= ./db.sqlite3
+fly.io/db/prod_to_local: backup_name ?= ./db.local.backup.$$(date --iso-8601=seconds | cut -d + -f 1).sqlite3
+fly.io/db/prod_to_local: ## Fly.io: replace our local SQLite database with the one from the prod environment
 	@mv "${local_db}" "${backup_name}"
 	@flyctl ssh sftp get /zakuchess_sqlite_dbs/zakuchess.dev.sqlite3
 	@mv zakuchess.dev.sqlite3 "${local_db}"

@@ -352,7 +352,7 @@ class DailyChallengeStatsAdmin(admin.ModelAdmin):
     list_display = (
         "day",
         "played_challenges_count",
-        "played_count",
+        "attempts_count",
         "restarts_count",
         "see_solution_count",
         "wins_count",
@@ -367,6 +367,9 @@ class DailyChallengeStatsAdmin(admin.ModelAdmin):
     list_display_links = None
     view_on_site = False
 
+    def get_queryset(self, request: "HttpRequest") -> "QuerySet[DailyChallengeStats]":
+        return super().get_queryset(request).select_related("challenge")
+
     def challenge_link(self, obj: DailyChallengeStats) -> str:
         return mark_safe(
             f"""<a href="{reverse("admin:daily_challenge_dailychallenge_change", args=(obj.challenge_id,))}">"""
@@ -378,7 +381,9 @@ class DailyChallengeStatsAdmin(admin.ModelAdmin):
         return obj.challenge.starting_advantage
 
     def wins_percentage(self, obj: DailyChallengeStats) -> str:
-        return f"{obj.wins_count/obj.played_count:.1%}" if obj.played_count else "-"
+        # old challenges didn't have the `played_challenges_count` field
+        total = obj.played_challenges_count or obj.attempts_count
+        return f"{obj.wins_count/total:.1%}" if total else "-"
 
     # Stats are read-only:
     def has_add_permission(self, request: "HttpRequest") -> bool:
