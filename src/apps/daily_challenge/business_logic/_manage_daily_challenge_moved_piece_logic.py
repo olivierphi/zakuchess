@@ -9,7 +9,11 @@ if TYPE_CHECKING:
 
 
 def manage_daily_challenge_moved_piece_logic(
-    *, game_state: "PlayerGameState", stats: "PlayerStats", is_preview: bool = False
+    *,
+    game_state: "PlayerGameState",
+    stats: "PlayerStats",
+    is_preview: bool = False,
+    is_staff_user: bool = False,
 ) -> None:
     """
     When a player moves a piece during new daily challenge,
@@ -21,13 +25,26 @@ def manage_daily_challenge_moved_piece_logic(
     if is_preview:
         return None
 
-    if game_state.current_attempt_turns_counter == 1:
+    is_1st_attempt = game_state.attempts_counter == 0
+    is_1st_turn = game_state.current_attempt_turns_counter == 1
+    is_1st_turn_of_1st_attempt = is_1st_attempt and is_1st_turn
+    if is_1st_turn_of_1st_attempt:
         # One more game played for this player!
         stats.games_count += 1
         # Last played date:
         stats.last_played = now().date()
-        # Server stats
-        DailyChallengeStats.objects.increment_today_played_count()
 
     # Server stats
-    DailyChallengeStats.objects.increment_today_turns_count()
+    if not is_staff_user:
+        DailyChallengeStats.objects.increment_today_turns_count()
+
+        if is_1st_turn:
+            # Here we count all 1st turns, whatever attempt:
+            DailyChallengeStats.objects.increment_today_attempts_count()
+
+        is_2nd_turn_of_1st_attempt = (
+            is_1st_attempt and game_state.current_attempt_turns_counter == 2
+        )
+        if is_2nd_turn_of_1st_attempt:
+            # ...whereas here we count only 2nd turns of 1st attempts:
+            DailyChallengeStats.objects.increment_played_challenges_count()

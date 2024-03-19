@@ -1,3 +1,4 @@
+import json
 import re
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any, Callable, Literal, TypeAlias, TypedDict, cast
@@ -31,6 +32,12 @@ if TYPE_CHECKING:
 
     from apps.chess.types import FEN, PieceSymbol, Square
 
+# This module is a mess, but it's only used in the admin interface and
+# this is a side project after all, so it's not a big deal.
+# It works with the `admin_game_preview.js` from the same Django app (loaded because
+# it's part of the DailyChallengeAdmin's Media class).
+# HERE BE DRAGONS! 😅
+
 GameUpdateCommandParams: TypeAlias = dict[str, Any]
 GameUpdateCommandType = Literal["add", "move", "remove", "mirror", "solve"]
 GameUpdateCommand: TypeAlias = tuple[GameUpdateCommandType, GameUpdateCommandParams]
@@ -57,6 +64,8 @@ class DailyChallengeAdminForm(forms.ModelForm):
             "status",
             "fen",
             "bot_first_move",
+            "bot_depth",
+            "player_simulated_depth",
             "intro_turn_speech_square",
             "starting_advantage",
             "solution",
@@ -84,6 +93,8 @@ class DailyChallengeExportResource(resources.ModelResource):
             "status",
             "fen",
             "bot_first_move",
+            "bot_depth",
+            "player_simulated_depth",
             "starting_advantage",
             "solution",
             "solution_turns_count",
@@ -123,6 +134,7 @@ class DailyChallengeAdmin(ImportExportModelAdmin):
         "source",
         "status_display",
         "solution_turns_count",
+        "bot_depth",
         "starting_advantage",
     )
     ordering = ("-lookup_key",)
@@ -214,6 +226,15 @@ class DailyChallengeAdmin(ImportExportModelAdmin):
         )
 
         board_id = "admin"
+        is_solve_cmd = game_update_cmd and game_update_cmd[0] == "solve"
+        show_solution_params = (
+            {
+                "botTurnDepth": form.cleaned_data.get("bot_depth"),
+                "playerTurnDepth": form.cleaned_data.get("player_simulated_depth"),
+            }
+            if is_solve_cmd
+            else {}
+        )
 
         return HttpResponse(
             page(
@@ -258,22 +279,22 @@ class DailyChallengeAdmin(ImportExportModelAdmin):
                                         djangoFormDoc.getElementById("id_starting_advantage").value = score;
                                     }}
                                 }})
-                                .catch((err) => console.error(err));
+                                .catch((err) => console.error("Error while computing the score:", err));
                         }}, 100)
                         }}
                     </script>"""
                 ),
                 (
                     raw(
-                        """
+                        f"""
                     <script>
                     {{
                         const djangoFormWindow = window.parent;
-                        djangoFormWindow.startSolution();
+                        djangoFormWindow.startSolution({json.dumps(show_solution_params)});
                     }}
                     </script>"""
                     )
-                    if game_update_cmd and game_update_cmd[0] == "solve"
+                    if is_solve_cmd
                     else ""
                 ),
                 # Last but certainly not least, display the chess board:
@@ -330,7 +351,8 @@ class DailyChallengeAdmin(ImportExportModelAdmin):
 class DailyChallengeStatsAdmin(admin.ModelAdmin):
     list_display = (
         "day",
-        "played_count",
+        "played_challenges_count",
+        "attempts_count",
         "restarts_count",
         "see_solution_count",
         "wins_count",
@@ -345,6 +367,9 @@ class DailyChallengeStatsAdmin(admin.ModelAdmin):
     list_display_links = None
     view_on_site = False
 
+    def get_queryset(self, request: "HttpRequest") -> "QuerySet[DailyChallengeStats]":
+        return super().get_queryset(request).select_related("challenge")
+
     def challenge_link(self, obj: DailyChallengeStats) -> str:
         return mark_safe(
             f"""<a href="{reverse("admin:daily_challenge_dailychallenge_change", args=(obj.challenge_id,))}">"""
@@ -356,7 +381,9 @@ class DailyChallengeStatsAdmin(admin.ModelAdmin):
         return obj.challenge.starting_advantage
 
     def wins_percentage(self, obj: DailyChallengeStats) -> str:
-        return f"{obj.wins_count/obj.played_count:.1%}" if obj.played_count else "-"
+        # old challenges didn't have the `played_challenges_count` field
+        total = obj.played_challenges_count or obj.attempts_count
+        return f"{obj.wins_count/total:.1%}" if total else "-"
 
     # Stats are read-only:
     def has_add_permission(self, request: "HttpRequest") -> bool:
@@ -472,6 +499,8 @@ _GAME_UPDATE_MAPPING: dict[GameUpdateCommandType, Callable] = {
 class DailyChallengePreviewForm(forms.Form):
     fen = forms.CharField(min_length=20, max_length=90)
     bot_first_move = forms.CharField(max_length=4, required=False)
+    bot_depth = forms.IntegerField(min_value=1)
+    player_simulated_depth = forms.IntegerField(min_value=1)
     intro_turn_speech_square = forms.CharField(max_length=2, required=False)
     game_update = forms.CharField(min_length=2, max_length=10, required=False)
 
@@ -533,6 +562,8 @@ class DailyChallengePreviewForm(forms.Form):
         class CleanedData(TypedDict):
             fen: "FEN"
             bot_first_move: str | None
+            bot_depth: int
+            player_simulated_depth: int
             intro_turn_speech_square: "Square | None"
             game_update: GameUpdateCommand
 

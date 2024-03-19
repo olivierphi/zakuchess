@@ -11,7 +11,7 @@ def restart_daily_challenge(
     *,
     challenge: "DailyChallenge",
     game_state: "PlayerGameState",
-    is_preview: bool = False,
+    is_staff_user: bool = False,
 ) -> "PlayerGameState":
     # These fields are always set on a published challenge - let's make the
     # type checker happy:
@@ -33,7 +33,7 @@ def restart_daily_challenge(
     new_game_state.moves = ""
 
     # Server stats
-    if not is_preview:
+    if not is_staff_user:
         DailyChallengeStats.objects.increment_today_restarts_count()
 
     return new_game_state

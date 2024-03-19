@@ -25,6 +25,7 @@ class GameContext:
     challenge: "DailyChallenge"
 
     is_preview: bool
+    is_staff_user: bool
     """`is_preview` is True if we're in admin preview mode"""
     game_state: "PlayerGameState"
     stats: "PlayerStats"
@@ -35,6 +36,7 @@ class GameContext:
 
     @classmethod
     def create_from_request(cls, request: "HttpRequest") -> "GameContext":
+        is_staff_user: bool = request.user.is_staff
         challenge, is_preview = get_current_daily_challenge_or_admin_preview(request)
         game_state, stats, created = get_or_create_daily_challenge_state_for_player(
             request=request, challenge=challenge
@@ -44,11 +46,14 @@ class GameContext:
         board_id = cast(str, request.GET.get("board_id", "main"))
 
         if created:
-            manage_new_daily_challenge_stats_logic(stats, is_preview=is_preview)
+            manage_new_daily_challenge_stats_logic(
+                stats, is_preview=is_preview, is_staff_user=is_preview
+            )
 
         return cls(
             challenge=challenge,
             is_preview=is_preview,
+            is_staff_user=is_staff_user,
             game_state=game_state,
             stats=stats,
             user_prefs=user_prefs,

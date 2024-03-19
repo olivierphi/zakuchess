@@ -178,4 +178,5 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 ZAKUCHESS_VERSION = env.get("ZAKUCHESS_VERSION", "dev")
 JS_CHESS_ENGINE = env.get("JS_CHESS_ENGINE", "stockfish")
 MASTODON_PAGE = env.get("MASTODON_PAGE")
+CANONICAL_URL = env.get("CANONICAL_URL", "https://zakuchess.com/")
 DEBUG_LAYOUT = env.get("DEBUG_LAYOUT", "") == "1"

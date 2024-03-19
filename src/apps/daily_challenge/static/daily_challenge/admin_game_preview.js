@@ -1,4 +1,13 @@
 ;(function () {
+    /**
+     * This file is pretty messy, but it's only used in the admin interface and
+     * this is a side project after all, so it's not a big deal.
+     * It works with the `admin.py` from the same Django app.
+     * Contrary to the rest of the JS code of this project, this one is not written in
+     * TypeScript because it's just much easier to use it as in with the Django Admin.
+     * HERE BE DRAGONS! 😅
+     */
+
     const gameUpdateCommandPatterns = [
         /^[a-h][1-8]:add:[pnbrqkx]!\s*$/i, // "add" command
         /^[a-h][1-8]:rm!\s*$/i, // "remove" command
@@ -24,6 +33,8 @@
         const fenInput = document.getElementById("id_fen")
         const botFirstMoveInput = document.getElementById("id_bot_first_move")
         const introTurnSpeechSquareInput = document.getElementById("id_intro_turn_speech_square")
+        const botDepthInput = document.getElementById("id_bot_depth")
+        const playerSimulatedDepthInput = document.getElementById("id_player_simulated_depth")
 
         const gameUpdateInput = document.getElementById("id_update_game")
 
@@ -36,6 +47,8 @@
                 fen,
                 bot_first_move: botFirstMoveInput.value,
                 intro_turn_speech_square: introTurnSpeechSquareInput.value,
+                bot_depth: botDepthInput.value,
+                player_simulated_depth: playerSimulatedDepthInput.value,
                 game_update: gameUpdate || "",
             }).toString()
             previewIFrame.src = adminPreviewUrl + "?" + queryString
@@ -79,15 +92,7 @@
     const SOLUTION_BOT_ASSETS_DATA_HOLDER_ELEMENT_ID = "chess-bot-data-admin"
     const SOLUTION_TURNS_COUNT_MAX = 15 // we want the daily challenges to be short enough
 
-    // The following value is the depth we want the bot to calculate its moves with when we
-    // simulate the human player's turn:
-    const SOLUTION_PLAYER_TURN_DEPTH = 10
-    // For such solutions to work, the value of `SOLUTION_BOT_TURN_DEPTH` *must* be the same
-    // as the `_BOT_DEPTH` const defined in the Python code - if it's not, the bot will make
-    // different moves than what the solution expects, making the solution irrelevant.
-    const SOLUTION_BOT_TURN_DEPTH = 3
-
-    function startSolution() {
+    function startSolution({ botTurnDepth, playerTurnDepth }) {
         const previewIFrame = document.getElementById("preview-iframe")
         const solutionInput = document.getElementById("id_solution")
         const solutionInputHelpText = document.getElementById("id_solution_helptext")
@@ -124,6 +129,8 @@
                         solutionInputHelpText,
                         fen,
                         chessBoard,
+                        botTurnDepth,
+                        playerTurnDepth,
                         turnsCount: 0,
                     }
                     solutionInputHelpText.innerText = "Starting solution in a bit..."
@@ -136,7 +143,7 @@
     function solutionNextMove(solutionState) {
         const { fen, chessBoard, previewIFrame, solutionInput, solutionInputHelpText } = solutionState
         const isHumanPlayerTurn = chessBoard.turn() === "w"
-        const depth = isHumanPlayerTurn ? SOLUTION_PLAYER_TURN_DEPTH : SOLUTION_BOT_TURN_DEPTH
+        const depth = isHumanPlayerTurn ? solutionState.playerTurnDepth : solutionState.botTurnDepth
         const chessEngineWorkerToUse = isHumanPlayerTurn ? solutionState.chessEngineWorkerForHumanPlayer : null
         previewIFrame.contentWindow.__admin__playFromFEN(fen, depth, "", chessEngineWorkerToUse).then((move) => {
             const moveStr = `${move[0]}${move[1]}`

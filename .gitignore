@@ -3,7 +3,8 @@
 
 /.env.local
 
-/db.sqlite3*
+/*.sqlite3
+/*.sqlite3-*
 /zakuchess.prod.backup*
 
 /.venv/

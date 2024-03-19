@@ -111,6 +111,7 @@ def head(*children: "dom_tag", title: str) -> "dom_tag":
         meta(name="viewport", content="width=device-width, initial-scale=1"),
         meta(name="description", content=_META_DESCRIPTION),
         meta(name="keywords", content="chess pixel-art roleplay"),
+        link(rel="canonical", href=settings.CANONICAL_URL),
         link(
             rel="icon",
             type="image/png",
