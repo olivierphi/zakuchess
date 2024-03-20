@@ -214,30 +214,25 @@ class DailyChallenge(models.Model):
 class DailyChallengeStatsManager(models.Manager):
 
     def increment_today_created_count(self) -> None:
-        self._create_for_today_if_needed()
-        self.filter(day=self._today()).update(created_count=F("created_count") + 1)
+        self._increment_counter("turns_count")
 
     def increment_today_attempts_count(self) -> None:
-        self._create_for_today_if_needed()
-        self.filter(day=self._today()).update(attempts_count=F("attempts_count") + 1)
+        self._increment_counter("attempts_count")
 
     def increment_played_challenges_count(self) -> None:
-        self._create_for_today_if_needed()
-        self.filter(day=self._today()).update(
-            played_challenges_count=F("played_challenges_count") + 1
-        )
+        self._increment_counter("played_challenges_count")
 
     def increment_today_turns_count(self) -> None:
-        self._create_for_today_if_needed()
-        self.filter(day=self._today()).update(turns_count=F("turns_count") + 1)
+        self._increment_counter("turns_count")
+
+    def increment_today_undos_count(self) -> None:
+        self._increment_counter("undos_count")
 
     def increment_today_restarts_count(self) -> None:
-        self._create_for_today_if_needed()
-        self.filter(day=self._today()).update(restarts_count=F("restarts_count") + 1)
+        self._increment_counter("restarts_count")
 
     def increment_today_wins_count(self) -> None:
-        self._create_for_today_if_needed()
-        self.filter(day=self._today()).update(wins_count=F("wins_count") + 1)
+        self._increment_counter("wins_count")
 
     def increment_today_see_solution_count(self) -> None:
         self._create_for_today_if_needed()
@@ -264,6 +259,10 @@ class DailyChallengeStatsManager(models.Manager):
         # We won't check if today's game stats were created again:
         cache.set(cache_key, True, _STATS_FOR_TODAY_EXISTS_CACHE["DURATION"])
 
+    def _increment_counter(self, field_name: str) -> None:
+        self._create_for_today_if_needed()
+        self.filter(day=self._today()).update(**{field_name: F(field_name) + 1})
+
     @staticmethod
     def _today() -> dt.date:
         return now().date()
@@ -289,6 +288,7 @@ class DailyChallengeStats(models.Model):
         default=0, help_text="Number of turns played by players"
     )
     restarts_count = models.IntegerField(default=0)
+    undos_count = models.IntegerField(default=0)
     wins_count = models.IntegerField(default=0)
     see_solution_count = models.IntegerField(default=0)
 
@@ -327,6 +327,7 @@ class PlayerGameState(
         "fen": "f",
         "piece_role_by_square": "prbs",
         "moves": "m",
+        "undo_used": "un",
         "game_over": "go",
         "solution_index": "sol",
     },
@@ -349,6 +350,7 @@ class PlayerGameState(
     # Each move is 4 more chars added there (UCI notation).
     # These are the moves *of the current attempt* only.
     moves: str
+    undo_used: bool = False
     game_over: "PlayerGameOverState" = PlayerGameOverState.PLAYING
     # is a half-move index when the player gave up to see the solution:
     solution_index: int | None = None

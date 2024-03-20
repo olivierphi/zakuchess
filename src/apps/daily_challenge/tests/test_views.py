@@ -41,7 +41,7 @@ def test_game_smoke_test(
     assert response.status_code == HTTPStatus.OK
     assert "csrftoken" in response.cookies
     session_cookie_value = response.cookies["sessionid"].value
-    assert 290 < len(session_cookie_value) < 315
+    assert 290 < len(session_cookie_value) < 320
     assert session_cookie_value.startswith(
         # This part of the signed+compressed session data is deterministic:
         ".eJx"

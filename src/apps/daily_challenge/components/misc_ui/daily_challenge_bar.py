@@ -9,12 +9,14 @@ from dominate.util import raw
 
 from apps.chess.components.svg_icons import ICON_SVG_CANCEL, ICON_SVG_CONFIRM
 
+from ...models import PlayerGameOverState
 from .common_styles import BUTTON_CANCEL_CLASSES, BUTTON_CLASSES, BUTTON_CONFIRM_CLASSES
-from .svg_icons import ICON_SVG_LIGHT_BULB, ICON_SVG_RESTART
+from .svg_icons import ICON_SVG_LIGHT_BULB, ICON_SVG_RESTART, ICON_SVG_UNDO
 
 if TYPE_CHECKING:
     from dominate.tags import dom_tag
 
+    from ...models import PlayerGameState
     from ...presenters import DailyChallengeGamePresenter
 
 
@@ -68,6 +70,41 @@ def retry_confirmation_display(*, board_id: str) -> "dom_tag":
 
     return _confirmation_dialog(
         question=div("Retry today's challenge from the start?", cls="text-center"),
+        htmx_attributes_confirm=htmx_attributes_confirm,
+        htmx_attributes_cancel=htmx_attributes_cancel,
+    )
+
+
+def undo_confirmation_display(*, board_id: str) -> "dom_tag":
+    htmx_attributes_confirm = {
+        "data_hx_post": "".join(
+            (
+                reverse("daily_challenge:htmx_undo_last_move_do"),
+                "?",
+                urlencode({"board_id": board_id}),
+            )
+        ),
+        "data_hx_target": f"#chess-board-pieces-{board_id}",
+        "data_hx_swap": "outerHTML",
+    }
+    htmx_attributes_cancel = {
+        "data_hx_get": "".join(
+            (
+                reverse("daily_challenge:htmx_game_no_selection"),
+                "?",
+                urlencode({"board_id": board_id}),
+            )
+        ),
+        "data_hx_target": f"#chess-board-pieces-{board_id}",
+        "data_hx_swap": "outerHTML",
+    }
+
+    return _confirmation_dialog(
+        question=div(
+            p("Undo your last move?"),
+            b("⚠️ You will not be able to undo a move for today's challenge again."),
+            cls="text-center",
+        ),
         htmx_attributes_confirm=htmx_attributes_confirm,
         htmx_attributes_cancel=htmx_attributes_cancel,
     )
@@ -144,6 +181,7 @@ def _current_state_display(
             game_presenter=game_presenter, board_id=board_id
         )
 
+    undo_button = _undo_button(game_state=game_presenter.game_state, board_id=board_id)
     retry_button = _retry_button(board_id)
     see_solution_button = _see_solution_button(board_id)
 
@@ -157,12 +195,45 @@ def _current_state_display(
         ),
         div(
             div(
+                undo_button,
                 retry_button,
                 see_solution_button,
                 cls="flex justify-center items-center",
             ),
         ),
         cls="w-full",
+    )
+
+
+def _undo_button(*, game_state: "PlayerGameState", board_id: str) -> "dom_tag":
+    if (
+        game_state.current_attempt_turns_counter < 1
+        or game_state.undo_used
+        or game_state.game_over == PlayerGameOverState.WON
+    ):
+        # No "Undo" button displayed:
+        return div()
+
+    htmx_attributes = {
+        "data_hx_post": "".join(
+            (
+                reverse("daily_challenge:htmx_undo_last_move_ask_confirmation"),
+                "?",
+                urlencode({"board_id": board_id}),
+            )
+        ),
+        "data_hx_target": f"#chess-board-daily-challenge-bar-{board_id}",
+        "data_hx_swap": "innerHTML",
+    }
+
+    return button(
+        "undo",
+        " ",
+        ICON_SVG_UNDO,
+        cls=BUTTON_CLASSES,
+        title="Undo your last move",
+        id=f"chess-board-undo-daily-challenge-{board_id}",
+        **htmx_attributes,
     )
 
 
