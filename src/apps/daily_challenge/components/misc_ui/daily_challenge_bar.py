@@ -207,7 +207,7 @@ def _current_state_display(
         ),
         div(
             div(
-                *(div(bt, cls="px-3 md:px-5 xl:px-3") for bt in buttons),
+                *(div(bt, cls="px-3 py-1 md:px-5 xl:px-3") for bt in buttons),
                 cls="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-2",
             ),
         ),
