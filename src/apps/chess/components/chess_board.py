@@ -75,7 +75,7 @@ _PLAY_BOT_JS_TEMPLATE = Template(
     })()</script>"""
 )
 
-_PLAY_SOLUTION_MOVE_DELAY = 900
+_PLAY_SOLUTION_MOVE_DELAY = 1200
 _PLAY_SOLUTION_JS_TEMPLATE = Template(
     """
 <script>

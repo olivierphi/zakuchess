@@ -58,7 +58,7 @@ def get_speech_bubble(
             )
         if game_presenter.game_phase == "game_over:lost":
             return SpeechBubbleData(
-                text="We win today, humans!",
+                text="Victory for the undeads! 💀",
                 square=_bot_leftmost_piece_square(
                     game_presenter.chess_board, game_presenter.challenge.bot_side
                 ),
