@@ -94,7 +94,7 @@ def help_content(
                 raw("You can <b>restart from the beginning</b> at any time, "),
                 "by clicking the ",
                 span(
-                    "retry",
+                    "Retry",
                     ICON_SVG_RESTART,
                     cls=f"{BUTTON_CLASSES.replace(BUTTON_BASE_HOVER_TEXT_COLOR, '')} !mx-0",
                 ),
@@ -105,7 +105,7 @@ def help_content(
                 "If you can't solve today's challenge ",
                 raw("you can decide to <b>see a solution</b>, by clicking the "),
                 span(
-                    "see solution",
+                    "See solution",
                     ICON_SVG_LIGHT_BULB,
                     cls=f"{BUTTON_CLASSES} !inline-block !mx-0",
                 ),
@@ -115,13 +115,23 @@ def help_content(
             div(
                 raw("You can <b>customise some game settings</b>"),
                 " - such as the speed of the game or the appearance of the board - via the ",
-                span(ICON_SVG_COG, cls="inline block px-1 py-1 text-sm text-slate-50"),
-                " button in the top bar.",
+                span(
+                    "Options",
+                    ICON_SVG_COG,
+                    cls=f"{BUTTON_CLASSES} !inline-block !mx-0",
+                ),
+                " button.",
                 cls=f"{spacing}",
             ),
             div("Good luck! 🙂", cls=f"p-3 {spacing} font-bold"),
             div(
-                [
+                div(
+                    span("🛡 Your troops", cls="text-yellow-400 font-bold"),
+                    span(""),
+                    span("The undeads 💀", cls="text-yellow-400 font-bold"),
+                    cls="flex w-full justify-between items-center",
+                ),
+                *(
                     chess_status_bar_tip(
                         factions=factions,
                         piece_type=piece_type,
@@ -129,7 +139,7 @@ def help_content(
                         row_counter=i,
                     )
                     for i, piece_type in enumerate(_CHARACTER_TYPE_TIP_KEYS)
-                ],
+                ),
                 cls="mt-2",
             ),
             cls="w-full text-center",
@@ -181,9 +191,7 @@ def unit_display_container(
     )
 
     additional_classes = (
-        # actually always use the first color for the square, so `row_counter` is not
-        # so useful as an int now 😅 - but I might switch back to cycled of colors later
-        f"{SQUARE_COLOR_TAILWIND_CLASSES[0]} rounded-lg"
+        f"{SQUARE_COLOR_TAILWIND_CLASSES[row_counter%2]} rounded-lg"
         if row_counter is not None
         else ""
     )
