@@ -118,7 +118,7 @@ def _chess_status_bar_selected_piece(
     )
 
     unit_about = div(
-        div("> ", b(name_display, cls="text-yellow-400"), " <"),
+        div("> ", b(name_display, cls="text-yellow-400"), " <") if name_display else "",
         div(
             character_type_tip(type_from_piece_role(piece_role)),
             chess_unit_symbol_display(player_side=player_side, piece_name=piece_name),
