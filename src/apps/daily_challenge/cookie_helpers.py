@@ -23,6 +23,7 @@ class DailyChallengeStateForPlayer(NamedTuple):
     game_state: PlayerGameState
     stats: PlayerStats
     created: bool
+    is_returning_player: bool
 
 
 def get_or_create_daily_challenge_state_for_player(
@@ -40,6 +41,7 @@ def get_or_create_daily_challenge_state_for_player(
 
     challenge_id = today_daily_challenge_id(request)
     game_state: PlayerGameState | None = player_cookie_content.games.get(challenge_id)
+    is_returning_player = bool(game_state is None and player_cookie_content.games)
 
     if game_state is None:
         game_state = PlayerGameState(
@@ -61,7 +63,10 @@ def get_or_create_daily_challenge_state_for_player(
         created = False
 
     return DailyChallengeStateForPlayer(
-        game_state, player_cookie_content.stats, created
+        game_state=game_state,
+        stats=player_cookie_content.stats,
+        created=created,
+        is_returning_player=is_returning_player,
     )
 
 

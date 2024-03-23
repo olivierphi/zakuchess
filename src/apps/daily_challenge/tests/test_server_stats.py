@@ -22,6 +22,7 @@ def test_server_stats_played_challenges_count(
     # Test dependencies
     challenge_minimalist: "DailyChallenge",
     client: "DjangoClient",
+    cleared_django_default_cache,
 ):
     get_current_challenge_mock.return_value = challenge_minimalist
 
@@ -105,3 +106,39 @@ def test_server_stats_played_challenges_count(
     # "daily challenge stats" are indeed "daily":
     with time_machine.travel("2023-03-17"):
         play_day_session()
+
+
+@pytest.mark.parametrize(
+    ("previous_game_date", "expected_returning_players_count"),
+    (
+        (None, 0),
+        ("2023-03-16", 1),
+    ),
+)
+@mock.patch("apps.daily_challenge.business_logic.get_current_daily_challenge")
+@pytest.mark.django_db
+def test_server_stats_returning_players_count(
+    # Mocks
+    get_current_challenge_mock: mock.MagicMock,
+    # Test dependencies
+    challenge_minimalist: "DailyChallenge",
+    client: "DjangoClient",
+    cleared_django_default_cache,
+    # Test parameters
+    previous_game_date: str | None,
+    expected_returning_players_count: int,
+):
+    get_current_challenge_mock.return_value = challenge_minimalist
+
+    if previous_game_date:
+        with time_machine.travel(previous_game_date):
+            client.get("/")
+
+    with time_machine.travel("2023-03-17"):
+        client.get("/")
+
+        assert (
+            get_today_server_stats().returning_players_count
+            == expected_returning_players_count
+        )
+    ...

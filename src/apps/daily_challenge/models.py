@@ -219,6 +219,9 @@ class DailyChallengeStatsManager(models.Manager):
     def increment_today_attempts_count(self) -> None:
         self._increment_counter("attempts_count")
 
+    def increment_today_returning_players_count(self) -> None:
+        self._increment_counter("returning_players_count")
+
     def increment_played_challenges_count(self) -> None:
         self._increment_counter("played_challenges_count")
 
@@ -235,12 +238,16 @@ class DailyChallengeStatsManager(models.Manager):
         self._increment_counter("wins_count")
 
     def increment_today_see_solution_count(self) -> None:
-        self._create_for_today_if_needed()
+        self.touch_today()
         self.filter(day=self._today()).update(
             see_solution_count=F("see_solution_count") + 1
         )
 
-    def _create_for_today_if_needed(self) -> None:
+    def touch_today(self) -> None:
+        """
+        Similarly to the `touch` command in Unix, this will make sure that
+        we have a DailyChallengeStats for today.
+        """
         today = self._today()
         cache_key = _STATS_FOR_TODAY_EXISTS_CACHE["KEY_PATTERN"].format(today=today)  # type: ignore[attr-defined]
         if cache.get(cache_key):
@@ -260,7 +267,7 @@ class DailyChallengeStatsManager(models.Manager):
         cache.set(cache_key, True, _STATS_FOR_TODAY_EXISTS_CACHE["DURATION"])
 
     def _increment_counter(self, field_name: str) -> None:
-        self._create_for_today_if_needed()
+        self.touch_today()
         self.filter(day=self._today()).update(**{field_name: F(field_name) + 1})
 
     @staticmethod
@@ -283,6 +290,9 @@ class DailyChallengeStats(models.Model):
     attempts_count = models.IntegerField(
         default=0,
         help_text="Number of attempts where the player played at least 1 move",
+    )
+    returning_players_count = models.IntegerField(
+        default=0, help_text="Number of players who played on any previous day"
     )
     turns_count = models.IntegerField(
         default=0, help_text="Number of turns played by players"
