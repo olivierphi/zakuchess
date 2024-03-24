@@ -53,6 +53,17 @@ urlpatterns = [
         views.htmx_restart_daily_challenge_do,
         name="htmx_restart_daily_challenge_do",
     ),
+    # Undo views
+    path(
+        "htmx/daily-challenge/undo/ask-confirmation/",
+        views.htmx_undo_last_move_ask_confirmation,
+        name="htmx_undo_last_move_ask_confirmation",
+    ),
+    path(
+        "htmx/daily-challenge/undo/do/",
+        views.htmx_undo_last_move_do,
+        name="htmx_undo_last_move_do",
+    ),
     # User prefs views
     path(
         "htmx/daily-challenge/user-prefs/",

@@ -25,6 +25,7 @@ from .business_logic import (
     restart_daily_challenge,
     see_daily_challenge_solution,
 )
+from .business_logic._undo_last_move import undo_last_move
 from .components.misc_ui.help_modal import help_modal
 from .components.misc_ui.stats_modal import stats_modal
 from .components.misc_ui.user_prefs_modal import user_prefs_modal
@@ -316,6 +317,59 @@ def htmx_restart_daily_challenge_do(
         game_state=new_game_state,
         user_prefs=ctx.user_prefs,
         forced_bot_move=forced_bot_move,
+        is_htmx_request=True,
+        refresh_last_move=True,
+    )
+
+    return _daily_challenge_moving_parts_fragment_response(
+        game_presenter=game_presenter, request=request, board_id=ctx.board_id
+    )
+
+
+@require_POST
+@with_game_context
+@redirect_if_game_not_started
+def htmx_undo_last_move_ask_confirmation(
+    request: "HttpRequest", *, ctx: "GameContext"
+) -> HttpResponse:
+    from .components.misc_ui.daily_challenge_bar import (
+        daily_challenge_bar,
+        undo_confirmation_display,
+    )
+
+    daily_challenge_bar_inner_content = undo_confirmation_display(board_id=ctx.board_id)
+
+    return HttpResponse(
+        daily_challenge_bar(
+            game_presenter=None,
+            inner_content=daily_challenge_bar_inner_content,
+            board_id=ctx.board_id,
+        )
+    )
+
+
+@require_POST
+@with_game_context
+@redirect_if_game_not_started
+def htmx_undo_last_move_do(
+    request: "HttpRequest", *, ctx: "GameContext"
+) -> HttpResponse:
+    new_game_state = undo_last_move(
+        challenge=ctx.challenge,
+        game_state=ctx.game_state,
+        is_staff_user=ctx.is_staff_user,
+    )
+
+    save_daily_challenge_state_in_session(
+        request=request,
+        game_state=new_game_state,
+        player_stats=ctx.stats,
+    )
+
+    game_presenter = DailyChallengeGamePresenter(
+        challenge=ctx.challenge,
+        game_state=new_game_state,
+        user_prefs=ctx.user_prefs,
         is_htmx_request=True,
         refresh_last_move=True,
     )

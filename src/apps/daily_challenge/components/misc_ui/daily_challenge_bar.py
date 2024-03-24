@@ -1,3 +1,4 @@
+import functools
 import math
 from typing import TYPE_CHECKING
 from urllib.parse import urlencode
@@ -9,8 +10,14 @@ from dominate.util import raw
 
 from apps.chess.components.svg_icons import ICON_SVG_CANCEL, ICON_SVG_CONFIRM
 
+from ...models import PlayerGameOverState
 from .common_styles import BUTTON_CANCEL_CLASSES, BUTTON_CLASSES, BUTTON_CONFIRM_CLASSES
-from .svg_icons import ICON_SVG_LIGHT_BULB, ICON_SVG_RESTART
+from .svg_icons import (
+    ICON_SVG_COG,
+    ICON_SVG_LIGHT_BULB,
+    ICON_SVG_RESTART,
+    ICON_SVG_UNDO,
+)
 
 if TYPE_CHECKING:
     from dominate.tags import dom_tag
@@ -68,6 +75,41 @@ def retry_confirmation_display(*, board_id: str) -> "dom_tag":
 
     return _confirmation_dialog(
         question=div("Retry today's challenge from the start?", cls="text-center"),
+        htmx_attributes_confirm=htmx_attributes_confirm,
+        htmx_attributes_cancel=htmx_attributes_cancel,
+    )
+
+
+def undo_confirmation_display(*, board_id: str) -> "dom_tag":
+    htmx_attributes_confirm = {
+        "data_hx_post": "".join(
+            (
+                reverse("daily_challenge:htmx_undo_last_move_do"),
+                "?",
+                urlencode({"board_id": board_id}),
+            )
+        ),
+        "data_hx_target": f"#chess-board-pieces-{board_id}",
+        "data_hx_swap": "outerHTML",
+    }
+    htmx_attributes_cancel = {
+        "data_hx_get": "".join(
+            (
+                reverse("daily_challenge:htmx_game_no_selection"),
+                "?",
+                urlencode({"board_id": board_id}),
+            )
+        ),
+        "data_hx_target": f"#chess-board-pieces-{board_id}",
+        "data_hx_swap": "outerHTML",
+    }
+
+    return _confirmation_dialog(
+        question=div(
+            p("Undo your last move?"),
+            b("⚠️ You will not be able to undo a move for today's challenge again."),
+            cls="text-center",
+        ),
         htmx_attributes_confirm=htmx_attributes_confirm,
         htmx_attributes_cancel=htmx_attributes_cancel,
     )
@@ -144,8 +186,16 @@ def _current_state_display(
             game_presenter=game_presenter, board_id=board_id
         )
 
-    retry_button = _retry_button(board_id)
-    see_solution_button = _see_solution_button(board_id)
+    undo_button = _undo_button(game_presenter=game_presenter, board_id=board_id)
+    retry_button = _retry_button(game_presenter=game_presenter, board_id=board_id)
+    see_solution_button = _see_solution_button(board_id, full_width=True)
+    user_prefs_button = _user_prefs_button(board_id)
+    buttons = (
+        undo_button,
+        retry_button,
+        see_solution_button,
+        user_prefs_button,
+    )
 
     return div(
         div(
@@ -157,42 +207,96 @@ def _current_state_display(
         ),
         div(
             div(
-                retry_button,
-                see_solution_button,
-                cls="flex justify-center items-center",
+                *(div(bt, cls="px-3 py-1 md:px-5 xl:px-3") for bt in buttons),
+                cls="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-2",
             ),
         ),
         cls="w-full",
     )
 
 
-def _retry_button(board_id: str) -> "dom_tag":
-    htmx_attributes = {
-        "data_hx_post": "".join(
-            (
-                reverse(
-                    "daily_challenge:htmx_restart_daily_challenge_ask_confirmation"
-                ),
-                "?",
-                urlencode({"board_id": board_id}),
-            )
-        ),
-        "data_hx_target": f"#chess-board-daily-challenge-bar-{board_id}",
-        "data_hx_swap": "innerHTML",
-    }
+def _undo_button(
+    *, game_presenter: "DailyChallengeGamePresenter", board_id: str
+) -> "dom_tag":
+    game_state = game_presenter.game_state
+    can_undo: bool = game_presenter.is_preview or (
+        game_state.current_attempt_turns_counter > 0
+        and not game_state.undo_used
+        and game_state.game_over != PlayerGameOverState.WON
+    )
+
+    htmx_attributes = (
+        {
+            "data_hx_post": "".join(
+                (
+                    reverse("daily_challenge:htmx_undo_last_move_ask_confirmation"),
+                    "?",
+                    urlencode({"board_id": board_id}),
+                )
+            ),
+            "data_hx_target": f"#chess-board-daily-challenge-bar-{board_id}",
+            "data_hx_swap": "innerHTML",
+        }
+        if can_undo
+        else {}
+    )
+
+    additional_attributes = {"disabled": True} if not can_undo else {}
+    classes = _button_classes(disabled=not can_undo)
 
     return button(
-        "retry",
+        "Undo",
         " ",
-        ICON_SVG_RESTART,
-        cls=BUTTON_CLASSES,
-        title="Try this daily challenge again, from the beginning",
-        id=f"chess-board-restart-daily-challenge-{board_id}",
+        ICON_SVG_UNDO,
+        cls=classes,
+        title="Undo your last move",
+        id=f"chess-board-undo-daily-challenge-{board_id}",
+        **additional_attributes,
         **htmx_attributes,
     )
 
 
-def _see_solution_button(board_id: str, *, see_it_again: bool = False) -> "dom_tag":
+def _retry_button(
+    *, game_presenter: "DailyChallengeGamePresenter", board_id: str
+) -> "dom_tag":
+    can_retry: bool = game_presenter.game_state.current_attempt_turns_counter > 0
+
+    htmx_attributes = (
+        {
+            "data_hx_post": "".join(
+                (
+                    reverse(
+                        "daily_challenge:htmx_restart_daily_challenge_ask_confirmation"
+                    ),
+                    "?",
+                    urlencode({"board_id": board_id}),
+                )
+            ),
+            "data_hx_target": f"#chess-board-daily-challenge-bar-{board_id}",
+            "data_hx_swap": "innerHTML",
+        }
+        if can_retry
+        else {}
+    )
+
+    additional_attributes = {"disabled": True} if not can_retry else {}
+    classes = _button_classes(disabled=not can_retry)
+
+    return button(
+        "Retry",
+        " ",
+        ICON_SVG_RESTART,
+        cls=classes,
+        title="Try this daily challenge again, from the beginning",
+        id=f"chess-board-restart-daily-challenge-{board_id}",
+        **additional_attributes,
+        **htmx_attributes,
+    )
+
+
+def _see_solution_button(
+    board_id: str, *, full_width: bool, see_it_again: bool = False
+) -> "dom_tag":
     target_route = (
         "daily_challenge:htmx_see_daily_challenge_solution_do"
         if see_it_again
@@ -221,14 +325,47 @@ def _see_solution_button(board_id: str, *, see_it_again: bool = False) -> "dom_t
         "data_hx_swap": "innerHTML",
     }
 
+    classes = _button_classes(full_width=full_width)
+
     return button(
-        "see solution",
+        "See solution",
         " ",
         ICON_SVG_LIGHT_BULB,
-        cls=BUTTON_CLASSES,
+        cls=classes,
         title=title,
         id=f"chess-board-restart-daily-challenge-{board_id}",
         **htmx_attributes,
+    )
+
+
+def _user_prefs_button(board_id: str) -> "dom_tag":
+    htmx_attributes = {
+        "data_hx_get": reverse("daily_challenge:htmx_daily_challenge_modal_user_prefs"),
+        "data_hx_target": "#modals-container",
+        "data_hx_swap": "outerHTML",
+    }
+
+    classes = _button_classes()
+
+    return button(
+        "Preferences",
+        " ",
+        ICON_SVG_COG,
+        cls=classes,
+        title="Edit preferences",
+        id=f"chess-board-preferences-daily-challenge-{board_id}",
+        **htmx_attributes,
+    )
+
+
+@functools.cache
+def _button_classes(*, full_width: bool = True, disabled: bool = False) -> str:
+    return " ".join(
+        (
+            BUTTON_CLASSES,
+            ("w-full" if full_width else ""),
+            (" opacity-50 cursor-not-allowed" if disabled else ""),
+        )
     )
 
 
@@ -264,7 +401,9 @@ def _see_solution_mode_display(
         ),
         p(
             (
-                _see_solution_button(board_id=board_id, see_it_again=True)
+                _see_solution_button(
+                    board_id=board_id, full_width=False, see_it_again=True
+                )
                 if is_game_over
                 else ""
             ),

@@ -1,7 +1,7 @@
 BUTTON_BASE_BG_COLOR, BUTTON_BASE_TEXT_COLOR = "bg-rose-600", "text-slate-200"
 BUTTON_BASE_HOVER_TEXT_COLOR = "hover:text-stone-100"
 BUTTON_CLASSES = (
-    "inline-block mx-2 my-1 py-1 px-3 rounded-md font-bold whitespace-nowrap "
+    "inline-block py-1 px-3 rounded-md font-bold whitespace-nowrap "
     f"{BUTTON_BASE_TEXT_COLOR} {BUTTON_BASE_BG_COLOR} {BUTTON_BASE_HOVER_TEXT_COLOR}"
 )
 BUTTON_CONFIRM_CLASSES = BUTTON_CLASSES.replace(BUTTON_BASE_BG_COLOR, "bg-lime-700")

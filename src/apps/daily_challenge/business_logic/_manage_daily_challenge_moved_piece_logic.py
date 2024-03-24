@@ -34,17 +34,24 @@ def manage_daily_challenge_moved_piece_logic(
         # Last played date:
         stats.last_played = now().date()
 
-    # Server stats
-    if not is_staff_user:
-        DailyChallengeStats.objects.increment_today_turns_count()
+    if is_staff_user:
+        # Server stats are only updated for non-staff users
+        return
 
-        if is_1st_turn:
-            # Here we count all 1st turns, whatever attempt:
-            DailyChallengeStats.objects.increment_today_attempts_count()
+    DailyChallengeStats.objects.increment_today_turns_count()
 
-        is_2nd_turn_of_1st_attempt = (
-            is_1st_attempt and game_state.current_attempt_turns_counter == 2
-        )
-        if is_2nd_turn_of_1st_attempt:
-            # ...whereas here we count only 2nd turns of 1st attempts:
-            DailyChallengeStats.objects.increment_played_challenges_count()
+    if is_1st_turn:
+        # Here we count all 1st turns, whatever attempt:
+        DailyChallengeStats.objects.increment_today_attempts_count()
+
+    is_2nd_turn_of_1st_attempt = (
+        is_1st_attempt and game_state.current_attempt_turns_counter == 2
+    )
+    if is_2nd_turn_of_1st_attempt:
+        # ...whereas here we count only 2nd turns of 1st attempts:
+        DailyChallengeStats.objects.increment_played_challenges_count()
+
+        if game_state.is_returning_player:
+            # The player (not staff) has played a previous challenge, but not today.
+            # Let's take note of this while we're there :-)
+            DailyChallengeStats.objects.increment_today_returning_players_count()

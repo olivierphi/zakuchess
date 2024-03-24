@@ -23,8 +23,6 @@ def restart_daily_challenge(
     new_game_state = copy.copy(game_state)  # msgspec Structs implement `__copy__`
     new_game_state.attempts_counter += 1
     new_game_state.current_attempt_turns_counter = 0
-    # Restarting the daily challenge costs one move:
-    new_game_state.turns_counter += 1
     # Back to the initial state:
     new_game_state.fen = challenge.fen_before_bot_first_move
     new_game_state.piece_role_by_square = (

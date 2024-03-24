@@ -83,7 +83,7 @@ def _today_s_results(
         ),
         p(
             raw(
-                f"(our own solution needed {our_solution_turns_count} turns)",
+                f"(our scouts' solution needed {our_solution_turns_count} turns)",
             ),
         ),
         (
