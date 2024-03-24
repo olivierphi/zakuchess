@@ -128,7 +128,7 @@ def help_content(
                 div(
                     span("🛡 Your troops", cls="text-yellow-400 font-bold"),
                     span(""),
-                    span("The undeads 💀", cls="text-yellow-400 font-bold"),
+                    span("The undead 💀", cls="text-yellow-400 font-bold"),
                     cls="flex w-full justify-between items-center",
                 ),
                 *(

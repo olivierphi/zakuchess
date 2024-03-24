@@ -214,7 +214,7 @@ class DailyChallenge(models.Model):
 class DailyChallengeStatsManager(models.Manager):
 
     def increment_today_created_count(self) -> None:
-        self._increment_counter("turns_count")
+        self._increment_counter("created_count")
 
     def increment_today_attempts_count(self) -> None:
         self._increment_counter("attempts_count")
@@ -336,6 +336,7 @@ class PlayerGameState(
         "current_attempt_turns_counter": "catc",
         "fen": "f",
         "piece_role_by_square": "prbs",
+        "is_returning_player": "rp",
         "moves": "m",
         "undo_used": "un",
         "game_over": "go",
@@ -357,6 +358,7 @@ class PlayerGameState(
     current_attempt_turns_counter: int
     fen: FEN
     piece_role_by_square: PieceRoleBySquare
+    is_returning_player: bool = False
     # Each move is 4 more chars added there (UCI notation).
     # These are the moves *of the current attempt* only.
     moves: str

@@ -557,7 +557,7 @@ def debug_view_cookie(request: "HttpRequest") -> HttpResponse:
 
     player_cookie_content = get_player_session_content_from_request(request)
     challenge, is_preview = get_current_daily_challenge_or_admin_preview(request)
-    game_state, stats, created, _ = get_or_create_daily_challenge_state_for_player(
+    game_state, stats, created = get_or_create_daily_challenge_state_for_player(
         request=request, challenge=challenge
     )
 
