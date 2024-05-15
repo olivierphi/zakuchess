@@ -4,7 +4,12 @@ from unittest import mock
 import pytest
 import time_machine
 
-from ._helpers import get_today_server_stats, play_bot_move, start_new_attempt
+from ._helpers import (
+    get_today_server_stats,
+    play_bot_move,
+    play_player_move,
+    start_new_attempt,
+)
 
 if TYPE_CHECKING:
     from django.test import Client as DjangoClient
@@ -36,7 +41,7 @@ def test_server_stats_played_challenges_count(
 
         # player 1st move:
         player_move_1: "MoveTuple" = ("a1", "b1")
-        client.post(f"/htmx/pieces/{player_move_1[0]}/move/{player_move_1[1]}/")
+        play_player_move(client, player_move_1)
         assert sut() == expected_played_challenges_count
 
         bot_move: "MoveTuple" = ("a7", "a6")
@@ -45,7 +50,7 @@ def test_server_stats_played_challenges_count(
 
         # player 2nd move:
         player_move_2: "MoveTuple" = ("b1", "a1")
-        client.post(f"/htmx/pieces/{player_move_2[0]}/move/{player_move_2[1]}/")
+        play_player_move(client, player_move_2)
 
     def play_day_session():
         """We'll play 2 sessions on the same day, with 2 attempts on each session."""
@@ -137,7 +142,7 @@ def test_server_stats_returning_players_count(
 
         # player 1st move:
         player_move_1: "MoveTuple" = ("a1", "b1")
-        client.post(f"/htmx/pieces/{player_move_1[0]}/move/{player_move_1[1]}/")
+        play_player_move(client, player_move_1)
         assert sut() == 0
 
         bot_move: "MoveTuple" = ("a7", "a6")
@@ -147,5 +152,5 @@ def test_server_stats_returning_players_count(
         # player 2nd move:
         # --> that's where we keep a record of whether it's a returning player or not
         player_move_2: "MoveTuple" = ("b1", "a1")
-        client.post(f"/htmx/pieces/{player_move_2[0]}/move/{player_move_2[1]}/")
+        play_player_move(client, player_move_2)
         assert sut() == expected_returning_players_count

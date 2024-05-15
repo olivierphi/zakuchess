@@ -74,7 +74,7 @@ def do_chess_move(*, fen: "FEN", from_: "Square", to: "Square") -> ChessMoveResu
 
     current_piece = chess_board.piece_at(chess_from)
     if not current_piece:
-        raise ValueError(f"No pieces on the selected square '{from_}'")
+        raise ValueError(f"No pieces on the selected square '{from_}'; fen='{fen}'")
 
     is_promotion = current_piece.piece_type == chess.PAWN and to[1] in ("1", "8")
     promotion = chess.QUEEN if is_promotion else None

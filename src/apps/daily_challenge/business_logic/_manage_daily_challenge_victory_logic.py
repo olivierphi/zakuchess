@@ -31,6 +31,9 @@ def manage_daily_challenge_victory_logic(
     if stats.last_won == today:
         return  # already won today, the player is just re-trying things :-)
 
+    # Let's keep a record of the number of turns it took to win this challenge
+    game_state.victory_turns_count = game_state.current_attempt_turns_counter
+
     # One more game won for this player! Happy stats :-)
     stats.win_count += 1
 

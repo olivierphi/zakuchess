@@ -15,12 +15,15 @@ from ._helpers import (
     assert_response_waiting_for_bot_move,
     get_session_content,
     play_bot_move,
+    play_moves,
+    play_player_move,
+    start_new_attempt,
 )
 
 if TYPE_CHECKING:
     from django.test import Client as DjangoClient
 
-    from apps.chess.types import Square
+    from apps.chess.types import MoveTuple, Square
 
     from ..models import DailyChallenge
 
@@ -41,7 +44,7 @@ def test_game_smoke_test(
     assert response.status_code == HTTPStatus.OK
     assert "csrftoken" in response.cookies
     session_cookie_value = response.cookies["sessionid"].value
-    assert 300 < len(session_cookie_value) < 325
+    assert 300 < len(session_cookie_value) < 330
     assert session_cookie_value.startswith(
         # This part of the signed+compressed session data is deterministic:
         ".eJx"
@@ -185,7 +188,7 @@ def test_htmx_game_move_piece_input_validation(
     client: "DjangoClient",
     # Test parameters
     input_: dict,
-    expected_status_code: int,
+    expected_status_code: HTTPStatus,
 ):
     get_current_challenge_mock.return_value = challenge_minimalist
 
@@ -196,8 +199,11 @@ def test_htmx_game_move_piece_input_validation(
     session_content_before_player_1st_move = get_session_content(client)
     assert session_content_before_player_1st_move.stats.games_count == 0
 
-    response = client.post(f"/htmx/pieces/{input_['from_']}/move/{input_['to']}/")
-    assert response.status_code == expected_status_code
+    play_player_move(
+        client,
+        (input_["from_"], input_["to"]),
+        expected_status_code=expected_status_code,
+    )
 
     if expected_status_code == HTTPStatus.OK:
         # Ok, let's assert some stuff regarding the session cookie content:
@@ -274,6 +280,53 @@ def test_stats_modal_smoke_test(
     assert response.status_code == HTTPStatus.OK
     response_content = response.content.decode()
     assert "Statistics" in response_content
+
+
+@mock.patch("apps.daily_challenge.business_logic.get_current_daily_challenge")
+@time_machine.travel("2024-01-01")
+@pytest.mark.django_db
+def test_stats_modal_can_display_todays_victory_metrics_test(
+    # Mocks
+    get_current_challenge_mock: mock.MagicMock,
+    # Test dependencies
+    challenge_minimalist: "DailyChallenge",
+    client: "DjangoClient",
+    cleared_django_cache,
+):
+    get_current_challenge_mock.return_value = challenge_minimalist
+
+    assert challenge_minimalist.bot_first_move == "b8a8"
+
+    def _open_stats_modal() -> str:
+        response = client.get("/htmx/daily-challenge/modals/stats/")
+        assert response.status_code == HTTPStatus.OK
+        return response.content.decode()
+
+    # Start the game:
+    response = client.get("/")
+    assert response.status_code == HTTPStatus.OK
+
+    stats_modal_initial_content = _open_stats_modal()
+    assert "Today you won" not in stats_modal_initial_content
+
+    # Now let's win the game in 2 attempts, and re-open that modal:
+    # 1st attempt:
+    attempt_1_moves: "list[MoveTuple]" = [("b8", "a8"), ("h2", "g1"), ("a8", "b8")]
+    play_moves(client, attempt_1_moves, starting_side="bot")
+    start_new_attempt(client)
+    # 2nd attempt, ends with a mate:
+    # fmt:off
+    attempt_2_moves:"list[MoveTuple]" = [("b8", "a8"), ("h2", "g1"), ("a8", "b8"), ("g1", "h2"), ("b8", "a8"), ("f7", "f8")]
+    # fmt:on
+    play_moves(client, attempt_2_moves, starting_side="bot")
+
+    stats_modal_after_victory_content = _open_stats_modal()
+    assert "Today you won in <b>2 attempts</b>" in stats_modal_after_victory_content
+    assert "The battled lasted for <b>3 turns</b>" in stats_modal_after_victory_content
+    assert (
+        "Across all your attempts you played <b>5 turns today</b>"
+        in stats_modal_after_victory_content
+    )
 
 
 @mock.patch("apps.daily_challenge.business_logic.get_current_daily_challenge")

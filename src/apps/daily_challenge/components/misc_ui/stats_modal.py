@@ -63,11 +63,10 @@ def _today_s_results(
     if not has_player_won_today(stats):
         return div()  # empty <div>
 
-    # TODO: write a test for this
     # We repeat the logic we have in "status_bar.py". If we have to copy it once more
     # we'll factorise it.
     total_turns_counter = game_state.turns_counter + 1
-    turns_counter = game_state.current_attempt_turns_counter + 1
+    turns_counter = game_state.victory_turns_count
     attempts_counter = game_state.attempts_counter + 1
     our_solution_turns_count = challenge.solution_turns_count
 

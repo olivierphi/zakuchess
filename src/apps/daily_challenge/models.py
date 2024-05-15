@@ -238,10 +238,7 @@ class DailyChallengeStatsManager(models.Manager):
         self._increment_counter("wins_count")
 
     def increment_today_see_solution_count(self) -> None:
-        self.touch_today()
-        self.filter(day=self._today()).update(
-            see_solution_count=F("see_solution_count") + 1
-        )
+        self._increment_counter("see_solution_count")
 
     def touch_today(self) -> None:
         """
@@ -340,6 +337,7 @@ class PlayerGameState(
         "moves": "m",
         "undo_used": "un",
         "game_over": "go",
+        "victory_turns_count": "vtc",
         "solution_index": "sol",
     },
 ):
@@ -364,6 +362,7 @@ class PlayerGameState(
     moves: str
     undo_used: bool = False
     game_over: "PlayerGameOverState" = PlayerGameOverState.PLAYING
+    victory_turns_count: int | None = None
     # is a half-move index when the player gave up to see the solution:
     solution_index: int | None = None
 
