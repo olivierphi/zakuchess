@@ -352,6 +352,7 @@ class DailyChallengeStatsAdmin(admin.ModelAdmin):
     list_display = (
         "day",
         "played_challenges_count",
+        "returning_players_count",
         "attempts_count",
         "restarts_count",
         "see_solution_count",

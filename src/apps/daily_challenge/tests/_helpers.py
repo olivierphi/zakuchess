@@ -1,6 +1,6 @@
 import re
 from http import HTTPStatus
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from django.utils.timezone import now
 
@@ -34,13 +34,38 @@ def assert_response_does_not_contain_pieces_selection(response_content: str) -> 
     assert _PIECE_SELECTION_PATTERN.search(response_content) is None
 
 
-def play_bot_move(client: "DjangoClient", move: "str | MoveTuple") -> None:
+def play_player_move(
+    client: "DjangoClient",
+    move: "str | MoveTuple",
+    *,
+    expected_status_code: HTTPStatus = HTTPStatus.OK,
+) -> "HttpResponse":
+    if isinstance(move, str):
+        move = uci_move_squares(move)
+    assert isinstance(move, tuple) and len(move) == 2
+    player_move_url = f"/htmx/pieces/{move[0]}/move/{move[1]}/"
+    response = client.post(player_move_url)
+    assert (
+        response.status_code == expected_status_code
+    ), f"play_player_move({move}): {response.status_code=} (expected: {expected_status_code})"
+    return response
+
+
+def play_bot_move(
+    client: "DjangoClient",
+    move: "str | MoveTuple",
+    *,
+    expected_status_code: HTTPStatus = HTTPStatus.OK,
+) -> "HttpResponse":
     if isinstance(move, str):
         move = uci_move_squares(move)
     assert isinstance(move, tuple) and len(move) == 2
     bot_move_url = f"/htmx/bot/pieces/{move[0]}/move/{move[1]}/"
     response = client.post(bot_move_url)
-    assert response.status_code == HTTPStatus.OK
+    assert (
+        response.status_code == expected_status_code
+    ), f"play_bot_move({move}): {response.status_code=} (expected: {expected_status_code})"
+    return response
 
 
 def start_new_attempt(client: "DjangoClient") -> None:
@@ -48,6 +73,18 @@ def start_new_attempt(client: "DjangoClient") -> None:
     response = client.post("/htmx/daily-challenge/restart/do/")
     assert response.status_code == HTTPStatus.OK
     assert get_today_server_stats().restarts_count == restarts_count + 1
+
+
+def play_moves(
+    client: "DjangoClient",
+    moves: list["MoveTuple"],
+    starting_side=Literal["bot", "player"],
+) -> None:
+    current_side = starting_side
+    for move in moves:
+        play_func = play_bot_move if current_side == "bot" else play_player_move
+        play_func(client, move)
+        current_side = "player" if current_side == "bot" else "bot"
 
 
 def get_today_server_stats() -> DailyChallengeStats:

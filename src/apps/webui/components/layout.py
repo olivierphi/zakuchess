@@ -49,7 +49,7 @@ _FONTS_CSS = """
 _META_TITLE = "ZakuChess ♞ - A daily chess challenge with pixel art units"
 _META_DESCRIPTION = (
     """Play chess with character(s) - """
-    """a chess game with pixel art units, with a new challenge each day."""
+    """a chess game with pixel art units, with a new challenge every day."""
 )
 _DOCUMENT_BG_COLOR = "bg-body-background"
 

@@ -22,6 +22,13 @@ _MINIMALIST_GAME = {
 
 
 @pytest.fixture
+def cleared_django_cache():
+    from django.core.cache import cache
+
+    cache.clear()
+
+
+@pytest.fixture
 def challenge_minimalist() -> DailyChallenge:
     """
     Returns a DailyChallenge object that has the following board:

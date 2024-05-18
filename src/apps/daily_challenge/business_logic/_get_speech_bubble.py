@@ -31,7 +31,7 @@ _UNIT_LOST_REACTIONS: tuple[tuple[str, float], ...] = (
     ("You've been a good companion, {}!", 4.5),
     ("Won't be the same without you, {}!", 4.5),
     ("Say hi to the healers for us, {}!", 4.5),
-    ("The undeads will pay for that, {}!", 4.5),
+    ("The undead will pay for that, {}!", 4.5),
 )
 
 
@@ -58,7 +58,7 @@ def get_speech_bubble(
             )
         if game_presenter.game_phase == "game_over:lost":
             return SpeechBubbleData(
-                text="We win today, humans!",
+                text="No luck for you today! Victory for the undead 💀",
                 square=_bot_leftmost_piece_square(
                     game_presenter.chess_board, game_presenter.challenge.bot_side
                 ),

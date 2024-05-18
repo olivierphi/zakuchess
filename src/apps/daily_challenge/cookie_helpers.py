@@ -40,6 +40,7 @@ def get_or_create_daily_challenge_state_for_player(
 
     challenge_id = today_daily_challenge_id(request)
     game_state: PlayerGameState | None = player_cookie_content.games.get(challenge_id)
+    is_returning_player = bool(game_state is None and player_cookie_content.games)
 
     if game_state is None:
         game_state = PlayerGameState(
@@ -48,6 +49,7 @@ def get_or_create_daily_challenge_state_for_player(
             current_attempt_turns_counter=0,
             fen=challenge.fen,
             piece_role_by_square=challenge.piece_role_by_square,
+            is_returning_player=is_returning_player,
             moves="",
             solution_index=None,
         )
@@ -61,7 +63,9 @@ def get_or_create_daily_challenge_state_for_player(
         created = False
 
     return DailyChallengeStateForPlayer(
-        game_state, player_cookie_content.stats, created
+        game_state=game_state,
+        stats=player_cookie_content.stats,
+        created=created,
     )
 
 
