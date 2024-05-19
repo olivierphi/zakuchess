@@ -14,7 +14,7 @@ packages = [
 [tool.poetry.dependencies]
 python = "^3.11"
 Django = "^5.0.3"
-gunicorn = "^21.2.0"
+gunicorn = "^22.0.0"
 django-alive = "^1.2.1"
 chess = "^1.9.3"
 django-htmx = "^1.13.0"
