@@ -43,8 +43,6 @@ jobs:
       - name: "Check that Django DB migrations are up to date"
         run: poetry run python src/manage.py makemigrations | grep "No changes detected"
       - name: "Run tests"
-        env:
-          PYTHONPATH: "src/"
         # TODO: progressively  increase minimum coverage to something closer to 80%
         run: poetry run pytest --cov=src --cov-report xml:coverage.xml
         # --cov-fail-under=60 --> we'll actually do that with the "Report coverage" step

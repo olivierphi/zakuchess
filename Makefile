@@ -1,6 +1,5 @@
 PYTHON_BINS ?= ./.venv/bin
 PYTHON ?= ${PYTHON_BINS}/python
-PYTHONPATH ?= ${PWD}/src
 DJANGO_SETTINGS_MODULE ?= project.settings.development
 SUB_MAKE = ${MAKE} --no-print-directory
 
@@ -57,8 +56,7 @@ backend/createsuperuser: ## Creates a Django superuser for the development envir
 test: dotenv_file ?= .env.local
 test: pytest_opts ?=
 test: ## Launch the pytest tests suite
-	@PYTHONPATH=${PYTHONPATH} \
-		${PYTHON_BINS}/dotenv -f '${dotenv_file}' run -- \
+	@${PYTHON_BINS}/dotenv -f '${dotenv_file}' run -- \
 		${PYTHON_BINS}/pytest ${pytest_opts}
 
 .PHONY: code-quality/all
@@ -74,13 +72,13 @@ code-quality/black: ## Automated 'a la Prettier' code formatting
 code-quality/ruff: ruff_opts ?= --fix
 code-quality/ruff: ## Fast linting
 # @link https://mypy.readthedocs.io/en/stable/
-	@PYTHONPATH=${PYTHONPATH} ${PYTHON_BINS}/ruff src/ ${ruff_opts}
+	@${PYTHON_BINS}/ruff src/ ${ruff_opts}
 
 .PHONY: code-quality/mypy
 code-quality/mypy: mypy_opts ?=
 code-quality/mypy: ## Python's equivalent of TypeScript
 # @link https://mypy.readthedocs.io/en/stable/
-	@PYTHONPATH=${PYTHONPATH} ${PYTHON_BINS}/mypy src/ ${mypy_opts}
+	@${PYTHON_BINS}/mypy src/ ${mypy_opts}
 
 # Here starts the frontend stuff
 
@@ -156,7 +154,7 @@ db.sqlite3: dotenv_file ?= .env.local
 db.sqlite3: ## Initialises the SQLite database
 	touch db.sqlite3
 	@${SUB_MAKE} django/manage cmd='migrate'
-	@PYTHONPATH=${PYTHONPATH} DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE} \
+	@DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE} \
 		${PYTHON_BINS}/dotenv -f '${dotenv_file}' run -- \
 		${PYTHON_BINS}/python scripts/optimise_db.py
 

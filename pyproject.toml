@@ -5,6 +5,11 @@ description = "A daily chess challenge, where pieces are heroic-fantasy characte
 license = "GPL-3.0-or-later"
 authors = ["Olivier Philippon <olivier@dunsap.com>"]
 homepage = "https://github.com/olivierphi/zakuchess"
+packages = [
+    { include = "apps", from = "src" },
+    { include = "lib", from = "src" },
+    { include = "project", from = "src" },
+]
 
 [tool.poetry.dependencies]
 python = "^3.11"
