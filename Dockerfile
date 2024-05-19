@@ -134,6 +134,9 @@ RUN python -V
 
 USER 1001:1001
 
+# Install the project's packages (defined in pyproject.toml) in editable mode:
+RUN pip install -e .
+
 RUN DJANGO_SETTINGS_MODULE=project.settings.docker_build \
     .venv/bin/python src/manage.py collectstatic --noinput
 
