@@ -1,4 +1,5 @@
 import datetime as dt
+from typing import TYPE_CHECKING
 from unittest import mock
 
 import pytest
@@ -8,7 +9,10 @@ from ...business_logic import (
     manage_daily_challenge_victory_logic,
     manage_new_daily_challenge_stats_logic,
 )
-from ...models import PlayerGameOverState, PlayerGameState, PlayerStats
+from ...models import PlayerGameOverState, PlayerStats
+
+if TYPE_CHECKING:
+    from ...models import PlayerGameState
 
 # N.B. We mock `DailyChallengeStats.objects` in these tests, because the stats logic
 # is not relevant to the tests we're writing here - also, let's not summon the database
@@ -26,7 +30,7 @@ def dummy_daily_challenge():
 def test_manage_daily_challenge_victory_wins_count(
     # Test dependencies
     dummy_daily_challenge,
-    player_game_state_minimalist: PlayerGameState,
+    player_game_state_minimalist: "PlayerGameState",
 ):
     game_state = player_game_state_minimalist
     game_state.turns_counter = 8
@@ -68,7 +72,7 @@ def test_manage_daily_challenge_victory_wins_count(
 def test_manage_daily_challenge_victory_logic_wins_distribution(
     # Test dependencies
     dummy_daily_challenge,
-    player_game_state_minimalist: PlayerGameState,
+    player_game_state_minimalist: "PlayerGameState",
     # Test parameters
     attempts_counter: int,
     expected_wins_distribution: list[int],
@@ -111,7 +115,7 @@ def test_manage_daily_challenge_victory_logic_wins_distribution(
 def test_manage_daily_challenge_victory_logic_streak_management(
     # Test dependencies
     dummy_daily_challenge,
-    player_game_state_minimalist: PlayerGameState,
+    player_game_state_minimalist: "PlayerGameState",
     # Test parameters
     current_streak: int,
     max_streak: int,

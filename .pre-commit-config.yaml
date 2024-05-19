@@ -17,10 +17,6 @@ repos:
       - id: ruff
         args: ["--fix"] 
         exclude: "^src/project/settings/.*\\.py$"
-  - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
-    hooks:
-      - id: isort
   - repo: https://github.com/abravalheri/validate-pyproject
     rev: v0.16
     hooks:

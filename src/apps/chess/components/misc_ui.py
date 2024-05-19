@@ -1,13 +1,14 @@
 import random
 from typing import TYPE_CHECKING, Literal
 
-from dominate.tags import a, button, div, h3, i, script, span
+from dominate.tags import a, button, div, i, script, span
 from dominate.util import raw
 
 from .chess_helpers import square_to_square_center_tailwind_classes
 from .svg_icons import ICON_SVG_CLOSE
 
 if TYPE_CHECKING:
+    from dominate.tags import h3
     from dominate.util import text as dominate_text
 
     from ..presenters import GamePresenter
@@ -26,7 +27,7 @@ if TYPE_CHECKING:
 # TODO: manage i18n
 
 
-def modal_container(*, header: h3, body: div) -> "dom_tag":
+def modal_container(*, header: "h3", body: div) -> "dom_tag":
     # Converted from https://flowbite.com/docs/components/modal/
 
     modal_header = div(

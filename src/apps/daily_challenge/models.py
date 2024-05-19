@@ -22,7 +22,6 @@ from lib.django_helpers import literal_to_django_choices
 from .consts import BOT_SIDE, FACTIONS, PLAYER_SIDE
 
 if TYPE_CHECKING:
-    from datetime import datetime
 
     from apps.chess.types import Factions, GameTeams, Square
 
@@ -71,8 +70,8 @@ class DailyChallenge(models.Model):
     status: DailyChallengeStatus = models.IntegerField(
         choices=DailyChallengeStatus.choices, default=DailyChallengeStatus.PENDING
     )
-    created_at: "datetime" = models.DateTimeField(auto_now_add=True)
-    updated_at: "datetime" = models.DateTimeField(auto_now=True)
+    created_at: "dt.datetime" = models.DateTimeField(auto_now_add=True)
+    updated_at: "dt.datetime" = models.DateTimeField(auto_now=True)
     # ---
     # The following 2 fields carry the state of the game we want
     # the daily challenge to start with...
@@ -113,10 +112,10 @@ class DailyChallenge(models.Model):
     # Fields that are inferred from the above fields:
     # We want the bot to play first, in a deterministic way,
     # so we also need to store the state of the game before that first move.
-    fen_before_bot_first_move: "FEN|None" = models.CharField(
+    fen_before_bot_first_move: "FEN | None" = models.CharField(
         max_length=_FEN_MAX_LEN, null=True, editable=False
     )
-    piece_role_by_square_before_bot_first_move: "PieceRoleBySquare|None" = (
+    piece_role_by_square_before_bot_first_move: "PieceRoleBySquare | None" = (
         models.JSONField(null=True, editable=False)
     )
     teams: "GameTeams|None" = models.JSONField(null=True, editable=False)
@@ -268,7 +267,7 @@ class DailyChallengeStatsManager(models.Manager):
         self.filter(day=self._today()).update(**{field_name: F(field_name) + 1})
 
     @staticmethod
-    def _today() -> dt.date:
+    def _today() -> "dt.date":
         return now().date()
 
 

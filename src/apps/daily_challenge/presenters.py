@@ -5,18 +5,18 @@ from urllib.parse import urlencode
 from django.urls import reverse
 
 from apps.chess.helpers import uci_move_squares
-from apps.chess.presenters import GamePresenter, GamePresenterUrls, SpeechBubbleData
+from apps.chess.presenters import GamePresenter, GamePresenterUrls
 
 from .business_logic import get_speech_bubble
-from .models import DailyChallenge
 
 if TYPE_CHECKING:
     import chess
 
     from apps.chess.models import UserPrefs
+    from apps.chess.presenters import SpeechBubbleData
     from apps.chess.types import Factions, GamePhase, PieceRole, PlayerSide, Square
 
-    from .models import PlayerGameState
+    from .models import DailyChallenge, PlayerGameState
 
 # Presenters are the objects we pass to our templates.
 
@@ -25,7 +25,7 @@ class DailyChallengeGamePresenter(GamePresenter):
     def __init__(
         self,
         *,
-        challenge: DailyChallenge,
+        challenge: "DailyChallenge",
         game_state: "PlayerGameState",
         refresh_last_move: bool,
         is_htmx_request: bool,
@@ -157,7 +157,7 @@ class DailyChallengeGamePresenter(GamePresenter):
         return None
 
     @cached_property
-    def speech_bubble(self) -> SpeechBubbleData | None:
+    def speech_bubble(self) -> "SpeechBubbleData | None":
         return get_speech_bubble(self)
 
     @property
@@ -165,7 +165,7 @@ class DailyChallengeGamePresenter(GamePresenter):
         return self._chess_board
 
     @property
-    def challenge(self) -> DailyChallenge:
+    def challenge(self) -> "DailyChallenge":
         return self._challenge
 
     @property

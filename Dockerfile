@@ -56,7 +56,7 @@ RUN make frontend/img frontend/js/compile frontend/css/compile \
 
 FROM python:3.11-slim-bookworm AS backend_build
 
-ENV POETRY_VERSION=1.6.0
+ENV POETRY_VERSION=1.8.3
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONDONTWRITEBYTECODE=0 PYTHONUNBUFFERED=1
@@ -87,7 +87,7 @@ FROM python:3.11-slim-bookworm AS assets_download
 # as long as the `download_assets.py` doesn't change.
 
 # should preferably be the same as in `poetry.lock`:
-ENV PYTHON_HTTPX_VERSION=0.25.0
+ENV PYTHON_HTTPX_VERSION=0.26.0
 
 RUN pip install -U pip httpx==${PYTHON_HTTPX_VERSION}
 

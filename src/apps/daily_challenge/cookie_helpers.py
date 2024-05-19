@@ -6,10 +6,12 @@ from msgspec import MsgspecError
 
 from apps.chess.models import UserPrefs
 
-from .models import DailyChallenge, PlayerGameState, PlayerSessionContent, PlayerStats
+from .models import PlayerGameState, PlayerSessionContent, PlayerStats
 
 if TYPE_CHECKING:
     from django.http import HttpRequest, HttpResponse
+
+    from .models import DailyChallenge
 
 
 _PLAYER_CONTENT_SESSION_KEY = "pc"
@@ -26,7 +28,7 @@ class DailyChallengeStateForPlayer(NamedTuple):
 
 
 def get_or_create_daily_challenge_state_for_player(
-    *, request: "HttpRequest", challenge: DailyChallenge
+    *, request: "HttpRequest", challenge: "DailyChallenge"
 ) -> DailyChallengeStateForPlayer:
     """
     Returns the game state for the given challenge, creating it if it doesn't exist yet.

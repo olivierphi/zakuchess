@@ -9,11 +9,7 @@ from django.views.decorators.http import require_POST, require_safe
 from django_htmx.http import HttpResponseClientRedirect
 
 from apps.chess.helpers import get_active_player_side_from_fen, uci_move_squares
-from apps.chess.types import (
-    ChessInvalidActionException,
-    ChessInvalidMoveException,
-    Square,
-)
+from apps.chess.types import ChessInvalidActionException, ChessInvalidMoveException
 from apps.utils.view_decorators import user_is_staff
 from apps.utils.views_helpers import htmx_aware_redirect
 
@@ -52,7 +48,7 @@ from .views_decorators import (
 if TYPE_CHECKING:
     from django.http import HttpRequest
 
-    from apps.chess.types import MoveTuple
+    from apps.chess.types import MoveTuple, Square
 
     from .view_helpers import GameContext
 
