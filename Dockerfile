@@ -134,8 +134,6 @@ RUN python -V
 
 USER 1001:1001
 
-ENV PYTHONPATH=/app/src
-
 RUN DJANGO_SETTINGS_MODULE=project.settings.docker_build \
     .venv/bin/python src/manage.py collectstatic --noinput
 
