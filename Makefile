@@ -62,18 +62,13 @@ test: ## Launch the pytest tests suite
 		${PYTHON_BINS}/pytest ${pytest_opts}
 
 .PHONY: code-quality/all
-code-quality/all: code-quality/black code-quality/isort code-quality/ruff code-quality/mypy  ## Run all our code quality tools
+code-quality/all: code-quality/black code-quality/ruff code-quality/mypy  ## Run all our code quality tools
 
 .PHONY: code-quality/black
 code-quality/black: black_opts ?=
 code-quality/black: ## Automated 'a la Prettier' code formatting
 # @link https://black.readthedocs.io/en/stable/
 	@${PYTHON_BINS}/black ${black_opts} src/
-
-.PHONY: code-quality/isort
-code-quality/isort: isort_opts ?=
-code-quality/isort: ## Automated Python imports formatting
-	@${PYTHON_BINS}/isort --settings-file=pyproject.toml ${isort_opts} src/
 
 .PHONY: code-quality/ruff
 code-quality/ruff: ruff_opts ?= --fix
@@ -149,7 +144,7 @@ frontend/img/copy_assets:
 
 # Here starts the "misc util targets" stuff
 
-.venv: poetry_version ?= 1.6.0
+.venv: poetry_version ?= 1.8.3
 .venv: ## Initialises the Python virtual environment in a ".venv" folder
 	python -m venv .venv
 	${PYTHON_BINS}/pip install -U pip poetry==${poetry_version}

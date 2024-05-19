@@ -4,10 +4,12 @@ from apps.chess.business_logic import do_chess_move
 from apps.chess.helpers import get_active_player_side_from_fen
 from apps.chess.types import ChessInvalidStateException
 
-from ..models import PlayerGameOverState, PlayerGameState
+from ..models import PlayerGameOverState
 
 if TYPE_CHECKING:
     from apps.chess.types import PieceRole, PieceSymbol, Square
+
+    from ..models import PlayerGameState
 
 
 def move_daily_challenge_piece(

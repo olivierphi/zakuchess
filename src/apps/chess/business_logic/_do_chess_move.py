@@ -1,4 +1,3 @@
-from collections.abc import Mapping
 from functools import lru_cache
 from typing import TYPE_CHECKING, Literal, cast
 
@@ -16,16 +15,18 @@ from apps.chess.types import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from apps.chess.types import FEN, GameEndReason, MoveTuple, PlayerSide, Rank, Square
 
-_CHESS_COLOR_TO_PLAYER_SIDE_MAPPING: Mapping[chess.Color, "PlayerSide"] = {
+_CHESS_COLOR_TO_PLAYER_SIDE_MAPPING: "Mapping[chess.Color, PlayerSide]" = {
     True: "w",
     False: "b",
 }
 
-_CHESS_OUTCOME_TO_GAME_END_REASON_MAPPING: Mapping[
-    chess.Termination, "GameEndReason"
-] = {
+_CHESS_OUTCOME_TO_GAME_END_REASON_MAPPING: (
+    "Mapping[chess.Termination, GameEndReason]"
+) = {
     chess.Termination.CHECKMATE: "checkmate",
     chess.Termination.STALEMATE: "stalemate",
     chess.Termination.INSUFFICIENT_MATERIAL: "insufficient_material",
@@ -46,7 +47,7 @@ _CASTLING_KING_MOVES: tuple[tuple[_CastlingPossibleFrom, _CastlingPossibleTo], .
     ("e8", "c8"),
 )
 
-_CASTLING_ROOK_MOVE: Mapping[_CastlingPossibleTo, tuple["Square", "Square"]] = {
+_CASTLING_ROOK_MOVE: "Mapping[_CastlingPossibleTo, tuple[Square, Square]]" = {
     # {king new square: (rook previous square, rook new square)} dict:
     "g1": ("h1", "f1"),
     "c1": ("a1", "d1"),

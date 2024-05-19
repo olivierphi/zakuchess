@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Any, Callable, Literal, TypeAlias, TypedDict, 
 import chess
 from django import forms
 from django.contrib import admin
-from django.contrib.admin import ModelAdmin
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse
 from django.shortcuts import redirect
@@ -107,7 +106,7 @@ class SourceTypeListFilter(admin.SimpleListFilter):
     title = _("source type")
     parameter_name = "source_type"
 
-    def lookups(self, request: "HttpRequest", model_admin: ModelAdmin):
+    def lookups(self, request: "HttpRequest", model_admin: admin.ModelAdmin):
         return [
             ("none", _("None")),
             ("lichess", _("Lichess")),
