@@ -20,7 +20,7 @@ chess = "^1.9.3"
 django-htmx = "^1.13.0"
 dominate = "^2.7.0"
 dj-database-url = "^2.1.0"
-requests = "^2.31.0"
+requests = "^2.32.2"
 django-axes = { extras = ["ipware"], version = "^6.1.1" }
 whitenoise = "^6.5.0"
 django-import-export = "^3.3.1"
