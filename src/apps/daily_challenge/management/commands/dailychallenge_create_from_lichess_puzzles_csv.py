@@ -2,10 +2,17 @@ import csv
 import re
 from pathlib import Path
 
+import chess
 from django.core.management import BaseCommand
 from django.db.models.functions import Substr
 
 from apps.daily_challenge.models import DailyChallenge
+
+THEMES_TO_IGNORE = {
+    "oneMove",
+    "mateIn1",
+    "mateIn2",
+}
 
 
 class Command(BaseCommand):
@@ -18,20 +25,20 @@ class Command(BaseCommand):
         parser.add_argument(
             "--batch-size",
             type=int,
-            default=1000,
+            default=10,  # low batch size to avoid OOM on low-end Fly.io plan
             help="DailyChallenges creation batch size.",
         )
         parser.add_argument(
             "--min-popularity",
             type=int,
-            default=85,
+            default=90,
             help="Only consider puzzles that have at least that Popularity.",
         )
         parser.add_argument(
             "--rating-range",
             type=rating_range,
             dest="rating_min_max",
-            default=(800, 1300),
+            default=(900, 1100),
             help="Only consider puzzles that have a Rating in this 'min-max' range.",
         )
         parser.add_argument(
@@ -63,6 +70,10 @@ class Command(BaseCommand):
         with csv_file_path.open(newline="") as csv_file:
             reader = csv.DictReader(csv_file)
             for row in reader:
+                themes: set[str] = set(row.get("Themes", "").split())
+                if themes & THEMES_TO_IGNORE:
+                    self.stdout.write("Skipping too short puzzle")
+                    continue
                 if (popularity := int(row["Popularity"])) < min_popularity:
                     self.stdout.write(f"Skipping puzzle with Popularity {popularity}")
                     continue
@@ -79,6 +90,10 @@ class Command(BaseCommand):
                 self.stdout.write(
                     f"Creating DailyChallenge for puzzle '{puzzle_id}' with Popularity {popularity}, rating {rating}, FEN '{fen}'"
                 )
+
+                if " b " in fen:  # quick and dirty way to detect if black is to move
+                    self.stdout.write("Mirroring puzzle with black to move")
+                    fen = chess.Board(fen).mirror().fen()
 
                 current_batch.append(
                     DailyChallenge(
