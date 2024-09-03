@@ -1,6 +1,7 @@
 import csv
 import re
 from pathlib import Path
+from typing import NamedTuple
 
 import chess
 from django.core.management import BaseCommand
@@ -55,6 +56,7 @@ class Command(BaseCommand):
         min_popularity: int,
         rating_min_max: tuple[int, int],
         stop_after: int | None,
+        verbosity: int,
         **options,
     ):
         rating_min, rating_max = rating_min_max
@@ -63,48 +65,56 @@ class Command(BaseCommand):
                 Substr("source", 9), flat=True
             )
         )
-        print(f"already_imported_ids: {already_imported_ids}")
+        if verbosity >= 2:
+            print(f"already_imported_ids: {already_imported_ids}")
 
         created_count = 0
         current_batch: list[DailyChallenge] = []
         with csv_file_path.open(newline="") as csv_file:
             reader = csv.DictReader(csv_file)
-            for row in reader:
+            for row in reader:  # type: dict[str,str]
                 themes: set[str] = set(row.get("Themes", "").split())
                 if themes & THEMES_TO_IGNORE:
-                    self.stdout.write("Skipping too short puzzle")
+                    if verbosity >= 2:
+                        self.stdout.write("Skipping puzzle with ignored theme")
                     continue
                 if (popularity := int(row["Popularity"])) < min_popularity:
-                    self.stdout.write(f"Skipping puzzle with Popularity {popularity}")
+                    if verbosity >= 2:
+                        self.stdout.write(
+                            f"Skipping puzzle with Popularity {popularity}"
+                        )
                     continue
                 if (rating := int(row["Rating"])) < rating_min or rating > rating_max:
-                    self.stdout.write(f"Skipping puzzle with Rating {rating}")
+                    if verbosity >= 2:
+                        self.stdout.write(f"Skipping puzzle with Rating {rating}")
                     continue
 
                 puzzle_id = row["PuzzleId"]
                 if puzzle_id in already_imported_ids:
-                    self.stdout.write(f"Skipping already imported puzzle '{puzzle_id}'")
+                    if verbosity >= 2:
+                        self.stdout.write(
+                            f"Skipping already imported puzzle '{puzzle_id}'"
+                        )
                     continue
-                fen = row["FEN"]
 
-                self.stdout.write(
-                    f"Creating DailyChallenge for puzzle '{puzzle_id}' with Popularity {popularity}, rating {rating}, FEN '{fen}'"
-                )
-
-                if " b " in fen:  # quick and dirty way to detect if black is to move
-                    self.stdout.write("Mirroring puzzle with black to move")
-                    fen = chess.Board(fen).mirror().fen()
+                bot_first_move, fen = get_bot_first_move_and_resulting_fen(row)
+                if verbosity >= 2:
+                    self.stdout.write(
+                        f"Creating DailyChallenge for puzzle '{puzzle_id}' with Popularity {popularity}, rating {rating}."
+                    )
 
                 current_batch.append(
                     DailyChallenge(
                         source=f"lichess-{puzzle_id}",
                         fen=fen,
+                        bot_first_move=bot_first_move,
                     )
                 )
 
                 if len(current_batch) == batch_size:
                     DailyChallenge.objects.bulk_create(current_batch)
-                    self.stdout.write(f"Created {batch_size} puzzles.")
+                    if verbosity >= 2:
+                        self.stdout.write(f"Created batch of {batch_size} puzzles.")
                     current_batch = []
 
                 created_count += 1
@@ -114,7 +124,55 @@ class Command(BaseCommand):
 
         if current_batch:
             DailyChallenge.objects.bulk_create(current_batch)
-            self.stdout.write(f"Created {len(current_batch)} puzzles.")
+            if verbosity >= 2:
+                self.stdout.write(f"Created batch of {batch_size} puzzles.")
+
+        self.stdout.write(
+            f"Imported {self.style.SUCCESS(created_count)} Lichess puzzles."
+        )
+
+
+def get_bot_first_move_and_resulting_fen(
+    csv_row: dict,
+) -> "BotFirstMoveAndResultingFen":
+    fen_before_bot_first_move = csv_row["FEN"]
+    bot_first_move_uci = csv_row["Moves"][0:4]
+
+    # The Lichess puzzles FEN is always the one *before* the bot's move,
+    # so we're going to have to adapt this to our own models.
+    board = chess.Board(fen_before_bot_first_move)
+
+    # Quick and dirty way to detect if white is to move from the FEN:
+    have_to_mirror_board = " w " in fen_before_bot_first_move
+
+    if have_to_mirror_board:
+        # If this is the white to play, we're playing black.
+        # (the FEN is always the one before the bot's move)
+        # As we always play white in the Zakuchess daily challenge, for simplicity,
+        # we have to mirror the board when that's the case.
+        board.apply_mirror()
+
+    # Ok, let's calculate the FEN after the bot's move:
+    if have_to_mirror_board:
+        # If we mirrored the board, we have to mirror the move too:
+        bot_first_move = chess.Move.from_uci(bot_first_move_uci)
+        bot_first_move_uci = "".join(
+            chess.square_name(chess.square_mirror(sq))
+            for sq in (bot_first_move.from_square, bot_first_move.to_square)
+        )
+
+    board.push(chess.Move.from_uci(bot_first_move_uci))
+    starting_fen_after_bot_first_move = board.fen()
+
+    return BotFirstMoveAndResultingFen(
+        first_move=bot_first_move_uci,
+        fen=starting_fen_after_bot_first_move,
+    )
+
+
+class BotFirstMoveAndResultingFen(NamedTuple):
+    first_move: str
+    fen: str
 
 
 def existing_path(value: str) -> Path:
