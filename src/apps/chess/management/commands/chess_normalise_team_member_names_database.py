@@ -45,8 +45,9 @@ class Command(BaseCommand):
         database = importlib.import_module(_MODULE_PATH)
 
         # We use sets to remove duplicates:
-        first_names_set, last_names_set = set(database.FIRST_NAMES), set(
-            database.LAST_NAMES
+        first_names_set, last_names_set = (
+            set(database.FIRST_NAMES),
+            set(database.LAST_NAMES),
         )
         # ...And we then turn them into sorted tuples:
         first_names = tuple(sorted(first_names_set))

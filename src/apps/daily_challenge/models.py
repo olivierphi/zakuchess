@@ -22,7 +22,6 @@ from lib.django_helpers import literal_to_django_choices
 from .consts import BOT_SIDE, FACTIONS, PLAYER_SIDE
 
 if TYPE_CHECKING:
-
     from apps.chess.types import Factions, GameTeams, Square
 
 
@@ -211,7 +210,6 @@ class DailyChallenge(models.Model):
 
 
 class DailyChallengeStatsManager(models.Manager):
-
     def increment_today_created_count(self) -> None:
         self._increment_counter("created_count")
 

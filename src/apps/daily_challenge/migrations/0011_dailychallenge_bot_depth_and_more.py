@@ -33,7 +33,6 @@ def _set_existing_challenges_with_solution_right_depths(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("daily_challenge", "0010_dailychallengestats_see_solution_count"),
     ]

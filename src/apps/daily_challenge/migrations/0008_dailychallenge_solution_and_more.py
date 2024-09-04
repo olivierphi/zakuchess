@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("daily_challenge", "0007_alter_dailychallengestats_options_and_more"),
     ]

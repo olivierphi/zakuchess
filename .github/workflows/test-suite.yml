@@ -29,9 +29,9 @@ jobs:
         run: uv python install
       - name: "Install dependencies via uv"
         run: uv sync --all-extras
-      - name: "Run linting checks: Black"
-        run: uv run black src/
-      - name: "Run linting checks: Ruff"
+      - name: "Run linting checks: Ruff checker"
+        run: uv run ruff format --check --quiet src/
+      - name: "Run linting checks: Ruff linter"
         run: uv run ruff check --quiet src/
       - name: "Run linting checks: Mypy"
         run: uv run mypy src/

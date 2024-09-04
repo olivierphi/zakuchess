@@ -31,16 +31,15 @@ dependencies= [
 [project.optional-dependencies]
 dev = [
     "python-dotenv==1.*",
-    "black==24.1.*",
     "ruff==0.6.*",
     "mypy==1.*",
     "pre-commit==3.*",
     "ipython==8.*",
     "types-requests==2.*",
     "django-extensions==3.*",
-    "httpx==0.26.*",   # only used in "scripts/download_assets.py" for parallel downloads
+    # (httpx is only used in "scripts/download_assets.py" for parallel downloads)
+    "httpx==0.26.*",
     "sqlite-utils==3.*",
-    
 ]
 test = [
     "pytest==7.*",
@@ -59,12 +58,8 @@ Repository = "https://github.com/olivierphi/zakuchess"
 
 
 [tool.uv]
-package = true
+package = true # symlinks the project's "src/" root folder to the venv
 
-
-[tool.black]
-# @link https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html
-target-version = ['py311']
 
 [tool.ruff]
 # @link https://docs.astral.sh/ruff/configuration/

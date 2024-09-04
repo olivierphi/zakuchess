@@ -13,6 +13,7 @@ help:
 install: bin/uv .venv ./node_modules ## Install the Python and frontend dependencies
 	bin/uv sync --all-extras
 	${PYTHON_BINS}/pre-commit install
+	${SUB_MAKE} .venv/bin/black
 
 .PHONY: dev
 dev: .env.local db.sqlite3
@@ -60,18 +61,18 @@ test: ## Launch the pytest tests suite
 		${PYTHON_BINS}/pytest ${pytest_opts}
 
 .PHONY: code-quality/all
-code-quality/all: code-quality/black code-quality/ruff code-quality/mypy  ## Run all our code quality tools
+code-quality/all: code-quality/ruff_check code-quality/ruff_lint code-quality/mypy  ## Run all our code quality tools
 
-.PHONY: code-quality/black
-code-quality/black: black_opts ?=
-code-quality/black: ## Automated 'a la Prettier' code formatting
-# @link https://black.readthedocs.io/en/stable/
-	@${PYTHON_BINS}/black ${black_opts} src/
+.PHONY: code-quality/ruff_check
+code-quality/ruff_check: ruff_opts ?=
+code-quality/ruff_check: ## Automated 'a la Prettier' code formatting
+# @link https://docs.astral.sh/ruff/formatter/
+	@${PYTHON_BINS}/ruff format ${ruff_opts} src/
 
-.PHONY: code-quality/ruff
-code-quality/ruff: ruff_opts ?= --fix
-code-quality/ruff: ## Fast linting
-# @link https://docs.astral.sh/ruff/
+.PHONY: code-quality/ruff_lint
+code-quality/ruff_lint: ruff_opts ?= --fix
+code-quality/ruff_lint: ## Fast linting
+# @link https://docs.astral.sh/ruff/linter/
 	@${PYTHON_BINS}/ruff check src/ ${ruff_opts}
 
 .PHONY: code-quality/mypy
@@ -153,6 +154,10 @@ bin/uv: # Install `uv` and `uvx` locally in the "bin/" folder
 
 .env.local:
 	cp .env.dist .env.local
+
+.venv/bin/black: .venv ## A simple and stupid shim to use the IDE's Black integration with Ruff
+	@echo '#!/usr/bin/env sh\n$$(dirname "$$0")/ruff format $$@' > ${PYTHON_BINS}/black
+	@chmod +x ${PYTHON_BINS}/black
 
 db.sqlite3: dotenv_file ?= .env.local
 db.sqlite3: ## Initialises the SQLite database

@@ -24,9 +24,7 @@ _CHESS_COLOR_TO_PLAYER_SIDE_MAPPING: "Mapping[chess.Color, PlayerSide]" = {
     False: "b",
 }
 
-_CHESS_OUTCOME_TO_GAME_END_REASON_MAPPING: (
-    "Mapping[chess.Termination, GameEndReason]"
-) = {
+_CHESS_OUTCOME_TO_GAME_END_REASON_MAPPING: "Mapping[chess.Termination, GameEndReason]" = {
     chess.Termination.CHECKMATE: "checkmate",
     chess.Termination.STALEMATE: "stalemate",
     chess.Termination.INSUFFICIENT_MATERIAL: "insufficient_material",

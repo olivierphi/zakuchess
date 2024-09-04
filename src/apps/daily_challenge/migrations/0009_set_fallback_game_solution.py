@@ -14,7 +14,6 @@ def _set_fallback_game_solution(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("daily_challenge", "0008_dailychallenge_solution_and_more"),
     ]

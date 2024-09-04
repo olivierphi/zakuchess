@@ -41,8 +41,8 @@ _USER_AGENT = " ".join(
     )
 )
 
+# fmt: off
 ASSETS_MAP: dict[URL, Path] = {
-    # fmt: off
     # Fonts:
     ASSETS_PATTERNS["GOOGLE_FONTS"].format(font_name="opensans", file_id="mem8YaGs126MiZpBA-UFVZ0b", v="v35"): WEBUI_STATIC / "fonts" / "OpenSans.woff2",
     # Stockfish:
@@ -81,8 +81,8 @@ ASSETS_MAP: dict[URL, Path] = {
     ASSETS_PATTERNS["WIKIMEDIA_CHESS_SVG_DARK"].format(folder="f/ff", piece="r"): CHESS_STATIC / "symbols" / "b-rook.svg",
     ASSETS_PATTERNS["WIKIMEDIA_CHESS_SVG_DARK"].format(folder="4/47", piece="q"): CHESS_STATIC / "symbols" / "b-queen.svg",
     ASSETS_PATTERNS["WIKIMEDIA_CHESS_SVG_DARK"].format(folder="f/f0", piece="k"): CHESS_STATIC / "symbols" / "b-king.svg",
-    # fmt: on
 }
+# fmt: on
 
 
 async def download_assets(*, even_if_exists: bool) -> None:

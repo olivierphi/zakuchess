@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("daily_challenge", "0009_set_fallback_game_solution"),
     ]

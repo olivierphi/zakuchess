@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("daily_challenge", "0011_dailychallenge_bot_depth_and_more"),
     ]

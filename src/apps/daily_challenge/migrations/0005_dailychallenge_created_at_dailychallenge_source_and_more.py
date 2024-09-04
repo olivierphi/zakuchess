@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("daily_challenge", "0004_dailychallenge_starting_advantage"),
     ]
