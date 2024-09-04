@@ -23,9 +23,9 @@ PIECES_VALUES: Final[dict["PieceType", int]] = {
     "q": 9,
 }
 
+# fmt: off
 SQUARES: Final[tuple["Square", ...]] = (
     # The order matters here, as we use that for the board visual representation.
-    # fmt: off
     "a1", "a2", "a3", "a4", "a5", "a6", "a7", "a8",
     "b1", "b2", "b3", "b4", "b5", "b6", "b7", "b8",
     "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8",
@@ -34,8 +34,8 @@ SQUARES: Final[tuple["Square", ...]] = (
     "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8",
     "g1", "g2", "g3", "g4", "g5", "g6", "g7", "g8",
     "h1", "h2", "h3", "h4", "h5", "h6", "h7", "h8",
-    # fmt: on
 )
+# fmt: on
 FILES: Final[tuple["File", ...]] = ("a", "b", "c", "d", "e", "f", "g", "h")
 RANKS: Final[tuple["Rank", ...]] = ("1", "2", "3", "4", "5", "6", "7", "8")
 

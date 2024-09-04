@@ -9,7 +9,6 @@ def _copy_id_to_lookup_key(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("daily_challenge", "0002_populate_fallback_game"),
     ]

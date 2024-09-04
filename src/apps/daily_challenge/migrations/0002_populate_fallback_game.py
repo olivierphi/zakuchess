@@ -71,7 +71,6 @@ def _revert(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("daily_challenge", "0001_initial"),
     ]

@@ -1,23 +1,22 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
-  - repo: https://github.com/psf/black
-    rev: 24.1.1
-    hooks:
-      - id: black
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.8.0
+    rev: v1.11.2
     hooks:
       - id: mypy
         additional_dependencies: [types-requests==2.31.0.2]
         exclude: "^scripts/load_testing/.*\\.py$"
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.1.14
+    rev: v0.6.3
     hooks:
+      # Run the formatter.
+      - id: ruff-format
+      # Run the linter.
       - id: ruff
         args: ["--fix"] 
         exclude: "^src/project/settings/.*\\.py$"
   - repo: https://github.com/abravalheri/validate-pyproject
-    rev: v0.16
+    rev: v0.19
     hooks:
       - id: validate-pyproject

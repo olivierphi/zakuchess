@@ -12,7 +12,7 @@ set -o errexit
 
 # TODO: remove this once we have a proper deployment pipeline
 echo "Running Django migrations."
-.venv/bin/python src/manage.py migrate --noinput
+.venv/bin/python manage.py migrate --noinput
 
 echo "Make sure the SQLite database is always optimised."
 .venv/bin/python scripts/optimise_db.py

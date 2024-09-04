@@ -40,12 +40,10 @@ INFO_BARS_COMMON_CLASSES = (
 )
 _PIECE_GROUND_MARKER_COLOR_TAILWIND_CLASSES: dict[tuple["PlayerSide", bool], str] = {
     # the boolean says if the piece can move
-    # fmt: off
     ("w", False): "bg-emerald-800/40 border-2 border-emerald-800",
     ("b", False): "bg-indigo-800/40 border-2 border-indigo-800",
     ("w", True): "bg-emerald-600/40 border-2 border-emerald-800",
     ("b", True): "bg-indigo-600/40 border-2 border-indigo-800",
-    # fmt: on
 }
 _CHESS_PIECE_Z_INDEXES: dict[str, str] = {
     # N.B. z-indexes must be multiples of 10 in Tailwind.
@@ -672,7 +670,6 @@ def chess_last_move(
 def chess_last_move_marker(
     *, square: "Square", move_part: Literal["from", "to"]
 ) -> "dom_tag":
-
     match move_part:
         case "from":
             start_class = "!w-full"

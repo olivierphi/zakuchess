@@ -258,7 +258,6 @@ def htmx_daily_challenge_help_modal(
 def htmx_daily_challenge_user_prefs_modal(
     request: "HttpRequest", *, ctx: "GameContext"
 ) -> HttpResponse:
-
     modal_content = user_prefs_modal(user_prefs=ctx.user_prefs)
 
     return HttpResponse(str(modal_content))

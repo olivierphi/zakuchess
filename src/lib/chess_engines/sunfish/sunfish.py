@@ -682,8 +682,9 @@ class Searcher:
             # First try not moving at all. We only do this if there is at least one major
             # piece left on the board, since otherwise zugzwangs are too dangerous.
             if depth > 0 and not root and any(c in pos.board for c in "RBNQ"):
-                yield None, -self.bound(
-                    pos.nullmove(), 1 - gamma, depth - 3, root=False
+                yield (
+                    None,
+                    -self.bound(pos.nullmove(), 1 - gamma, depth - 3, root=False),
                 )
             # For QSearch we have a different kind of null-move, namely we can just stop
             # and not capture anything else.
@@ -695,8 +696,9 @@ class Searcher:
             # will be non deterministic.
             killer = self.tp_move.get(pos)
             if killer and (depth > 0 or pos.value(killer) >= QS_LIMIT):
-                yield killer, -self.bound(
-                    pos.move(killer), 1 - gamma, depth - 1, root=False
+                yield (
+                    killer,
+                    -self.bound(pos.move(killer), 1 - gamma, depth - 1, root=False),
                 )
             # Then all the other moves
             for move in sorted(pos.gen_moves(), key=pos.value, reverse=True):
@@ -704,8 +706,9 @@ class Searcher:
                 # If depth == 0 we only try moves with high intrinsic score (captures and
                 # promotions). Otherwise we do all moves.
                 if depth > 0 or pos.value(move) >= QS_LIMIT:
-                    yield move, -self.bound(
-                        pos.move(move), 1 - gamma, depth - 1, root=False
+                    yield (
+                        move,
+                        -self.bound(pos.move(move), 1 - gamma, depth - 1, root=False),
                     )
 
         # Run through the moves, shortcutting when possible
@@ -778,9 +781,11 @@ class Searcher:
             self.bound(pos, lower, depth)
             # If the game hasn't finished we can retrieve our move from the
             # transposition table.
-            yield depth, self.tp_move.get(pos), self.tp_score.get(
-                (pos, depth, True)
-            ).lower
+            yield (
+                depth,
+                self.tp_move.get(pos),
+                self.tp_score.get((pos, depth, True)).lower,
+            )
 
 
 ###############################################################################

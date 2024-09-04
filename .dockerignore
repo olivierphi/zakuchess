@@ -1,5 +1,7 @@
 /.venv
 
+/bin
+
 /node_modules
 
 /frontend-out
@@ -7,13 +9,14 @@
 
 /db.sqlite3
 
-/src/apps/*/static/css
-/src/apps/*/static/js
-/src/apps/*/static/chess
+/src/apps/*/static/*/css
+/src/apps/*/static/*/js
 
 /.git
 /.idea
 /.docker
+
+*.local
 
 **/.*_cache
 **/__pycache__

@@ -15,36 +15,31 @@ env:
 
 jobs:
   tests:
-    name: "Python ${{ matrix.python-version }}"
+    name: "Code quality and tests checks"
     runs-on: "ubuntu-latest"
-
-    strategy:
-      matrix:
-        python-version: ["3.11"]
 
     steps:
       - uses: "actions/checkout@v4"
-      - name: "Install poetry"
-        env:
-          POETRY_VERSION: "1.8.3"
-        run: pipx install poetry==${POETRY_VERSION}        
-      - uses: "actions/setup-python@v5"
-        with:
-          python-version: "${{ matrix.python-version }}"
-          cache: 'poetry' 
-      - name: "Install dependencies via Poetry"
-        run: poetry install
-      - name: "Run linting checks: Black"
-        run: poetry run black src/
-      - name: "Run linting checks: Ruff"
-        run: poetry run ruff check --quiet src/
+      - name: Set up uv
+        # Install a specific uv version using the installer
+        run: "curl -LsSf https://astral.sh/uv/${UV_VERSION}/install.sh | sh"
+        env: 
+          UV_VERSION: "0.4.4"
+      - name: Set up Python
+        run: uv python install
+      - name: "Install dependencies via uv"
+        run: uv sync --all-extras
+      - name: "Run linting checks: Ruff checker"
+        run: uv run ruff format --check --quiet src/
+      - name: "Run linting checks: Ruff linter"
+        run: uv run ruff check --quiet src/
       - name: "Run linting checks: Mypy"
-        run: poetry run mypy src/
+        run: uv run mypy src/
       - name: "Check that Django DB migrations are up to date"
-        run: poetry run python src/manage.py makemigrations | grep "No changes detected"
+        run: uv run python manage.py makemigrations | grep "No changes detected"
       - name: "Run tests"
         # TODO: progressively  increase minimum coverage to something closer to 80%
-        run: poetry run pytest --cov=src --cov-report xml:coverage.xml
+        run: uv run pytest --cov=src --cov-report xml:coverage.xml
         # --cov-fail-under=60 --> we'll actually do that with the "Report coverage" step
       - name: "Report coverage"
         # @link https://github.com/orgoro/coverage

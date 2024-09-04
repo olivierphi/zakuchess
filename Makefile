@@ -10,9 +10,10 @@ help:
 	@grep -P '^[.a-zA-Z/_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: install
-install: .venv ./node_modules ## Install the Python and frontend dependencies
+install: bin/uv .venv ./node_modules ## Install the Python and frontend dependencies
+	bin/uv sync --all-extras
 	${PYTHON_BINS}/pre-commit install
-	${PYTHON_BINS}/poetry install
+	${SUB_MAKE} .venv/bin/black
 
 .PHONY: dev
 dev: .env.local db.sqlite3
@@ -60,19 +61,19 @@ test: ## Launch the pytest tests suite
 		${PYTHON_BINS}/pytest ${pytest_opts}
 
 .PHONY: code-quality/all
-code-quality/all: code-quality/black code-quality/ruff code-quality/mypy  ## Run all our code quality tools
+code-quality/all: code-quality/ruff_check code-quality/ruff_lint code-quality/mypy  ## Run all our code quality tools
 
-.PHONY: code-quality/black
-code-quality/black: black_opts ?=
-code-quality/black: ## Automated 'a la Prettier' code formatting
-# @link https://black.readthedocs.io/en/stable/
-	@${PYTHON_BINS}/black ${black_opts} src/
+.PHONY: code-quality/ruff_check
+code-quality/ruff_check: ruff_opts ?=
+code-quality/ruff_check: ## Automated 'a la Prettier' code formatting
+# @link https://docs.astral.sh/ruff/formatter/
+	@${PYTHON_BINS}/ruff format ${ruff_opts} src/
 
-.PHONY: code-quality/ruff
-code-quality/ruff: ruff_opts ?= --fix
-code-quality/ruff: ## Fast linting
-# @link https://mypy.readthedocs.io/en/stable/
-	@${PYTHON_BINS}/ruff src/ ${ruff_opts}
+.PHONY: code-quality/ruff_lint
+code-quality/ruff_lint: ruff_opts ?= --fix
+code-quality/ruff_lint: ## Fast linting
+# @link https://docs.astral.sh/ruff/linter/
+	@${PYTHON_BINS}/ruff check src/ ${ruff_opts}
 
 .PHONY: code-quality/mypy
 code-quality/mypy: mypy_opts ?=
@@ -142,13 +143,21 @@ frontend/img/copy_assets:
 
 # Here starts the "misc util targets" stuff
 
-.venv: poetry_version ?= 1.8.3
-.venv: ## Initialises the Python virtual environment in a ".venv" folder
-	python -m venv .venv
-	${PYTHON_BINS}/pip install -U pip poetry==${poetry_version}
+bin/uv: uv_version ?= 0.4.4
+bin/uv: # Install `uv` and `uvx` locally in the "bin/" folder
+	curl -LsSf "https://astral.sh/uv/${uv_version}/install.sh" | \
+		CARGO_DIST_FORCE_INSTALL_DIR="$$(pwd)" INSTALLER_NO_MODIFY_PATH=1 sh
+	@echo "We'll use 'bin/uv' to manage Python dependencies." 
+
+.venv: ## Initialises the Python virtual environment in a ".venv" folder, via uv
+	bin/uv venv
 
 .env.local:
 	cp .env.dist .env.local
+
+.venv/bin/black: .venv ## A simple and stupid shim to use the IDE's Black integration with Ruff
+	@echo '#!/usr/bin/env sh\n$$(dirname "$$0")/ruff format $$@' > ${PYTHON_BINS}/black
+	@chmod +x ${PYTHON_BINS}/black
 
 db.sqlite3: dotenv_file ?= .env.local
 db.sqlite3: ## Initialises the SQLite database
@@ -164,7 +173,7 @@ django/manage: cmd ?= --help
 django/manage: .venv .env.local ## Run a Django management command
 	@DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE} ${env_vars} \
 		${PYTHON_BINS}/dotenv -f '${dotenv_file}' run -- \
-		${PYTHON} src/manage.py ${cmd}
+		${PYTHON} manage.py ${cmd}
 
 ./.venv/bin/django: .venv install
 
@@ -247,13 +256,13 @@ docker/local/shell:
 		-u ${user_id} \
 		${docker_env} ${docker_args} \
 		-e DJANGO_SETTINGS_MODULE=project.settings.production \
-		${DOCKER_IMG_NAME}:${DOCKER_TAG} \
-		${cmd}
+		--entrypoint ${cmd} \
+		${DOCKER_IMG_NAME}:${DOCKER_TAG}
 
 .PHONY: docker/local/migrate
 docker/local/migrate:
 	${SUB_MAKE} docker/local/shell \
-		cmd='/app/.venv/bin/python src/manage.py migrate'
+		cmd='/app/.venv/bin/python manage.py migrate'
 
 # Here starts Fly.io-related stuff
 .PHONY: fly.io/deploy

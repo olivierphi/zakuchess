@@ -39,10 +39,11 @@ The game lives at [zakuchess.com](https://zakuchess.com).
 
 ### Running locally
 
-Make sure you have Python 3.11 installed, as well as Node.js v18.
-
-We recommend [pyenv](https://github.com/pyenv/pyenv-installer#readme) and [nvm](https://github.com/nvm-sh/nvm#readme) to handle specific versions of Python and Node.js,
-but you can of course use whatever you want :-)
+ - Python: Entirely managed by [uv](https://docs.astral.sh/uv/). The `make install` command will
+    make sure that the right version of `uv` is installed in the "bin/" folder - which is not ignored by git.
+ - Node.js: Make sure you have Node.js v18 installed.  
+     We recommend [nvm](https://github.com/nvm-sh/nvm#readme) to handle specific versions of Python and Node.js,
+     but you can of course use whatever you want :-)
 
 ```bash
 $ python -V
