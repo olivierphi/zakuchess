@@ -53,34 +53,63 @@ RUN make frontend/img frontend/js/compile frontend/css/compile \
 
 #########################################################################
 # Backend stuff
+# Large chunks copy-pasted from https://hynek.me/articles/docker-uv/ :-)
 
 FROM python:3.11-slim-bookworm AS backend_build
 
-ENV POETRY_VERSION=1.8.3
+# The following does not work in Podman unless you build in Docker
+# compatibility mode: <https://github.com/containers/podman/issues/8477>
+# You can manually prepend every RUN script with `set -ex` too.
+SHELL ["sh", "-exc"]
 
-ENV DEBIAN_FRONTEND=noninteractive
-ENV PYTHONDONTWRITEBYTECODE=0 PYTHONUNBUFFERED=1
+RUN <<EOT
+apt-get update -qy
+apt-get install -qyy \
+    -o APT::Install-Recommends=false \
+    -o APT::Install-Suggests=false \
+    build-essential \
+    ca-certificates \
+    curl
+EOT
 
-RUN apt-get update && apt-get install -y \
-    python3-pip \
-    python3-venv \
-    python3-dev \
-    python3-setuptools \
-    python3-wheel \
-    libpq-dev \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-RUN pip install --upgrade pip
-RUN pip install poetry==${POETRY_VERSION}
+# Install uv.
+# https://docs.astral.sh/uv/guides/integration/docker/
+COPY --from=ghcr.io/astral-sh/uv:0.4.4 /uv /usr/local/bin/uv
 
 RUN mkdir -p /app
 WORKDIR /app
 
-RUN python -m venv --symlinks .venv
+# - Silence uv complaining about not being able to use hard links,
+# - tell uv to byte-compile packages for faster application startups,
+# - prevent uv from accidentally downloading isolated Python builds,
+# - pick a Python,
+# - and finally declare `/app/.venv` as the target for `uv sync`.
+ENV UV_LINK_MODE=copy \
+    UV_COMPILE_BYTECODE=1 \
+    UV_PYTHON_DOWNLOADS=never \
+    UV_PYTHON=python3.11 \
+    UV_PROJECT_ENVIRONMENT=/app/.venv
+    
+# Prepare a virtual environment.
+# This is cached until the Python version changes above.
+RUN --mount=type=cache,target=/root/.cache \
+    uv venv $UV_PROJECT_ENVIRONMENT
 
-COPY pyproject.toml poetry.lock ./
-RUN poetry install --only=main --no-root --no-interaction --no-ansi
+# Synchronize DEPENDENCIES without the application itself.
+# This layer is cached until uv.lock or pyproject.toml change.
+# Since there's no point in shipping lock files, we move them
+# into a directory that is NOT copied into the runtime image.
+COPY pyproject.toml /_lock/
+COPY uv.lock /_lock/
+RUN --mount=type=cache,target=/root/.cache <<EOT
+cd /_lock
+uv sync \
+    --frozen \
+    --no-dev \
+    --no-install-project
+EOT
 
+    
 FROM python:3.11-slim-bookworm AS assets_download
 
 # By having a separate build stage for downloading assets, we can cache them
@@ -100,21 +129,29 @@ RUN python scripts/download_assets.py
 
 FROM python:3.11-slim-bookworm AS backend_run
 
-ENV DEBIAN_FRONTEND=noninteractive
-ENV PYTHONDONTWRITEBYTECODE=0 PYTHONUNBUFFERED=1
+SHELL ["sh", "-exc"]
 
-RUN apt-get update && apt-get install -y \
-    libpq5 \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+# Add the application virtualenv to search path.
+ENV PATH=/app/.venv/bin:$PATH
 
-RUN mkdir -p /app
+# Allow our "src/" folder to be seen as a package root:
+ENV PYTHONPATH=/app/src
+
+# Let's make sure that our Django app sees "/app" as its base dir, rather than
+# a resolved symlink in the venv. This is important for the collectstatic command.
+ENV DJANGO_BASE_DIR=/app
+
+# Don't run our app as root.
+RUN <<EOT
+groupadd --gid 1001 app
+useradd --uid 1001 -g app -N app -d /app
+EOT
+
+USER app
 WORKDIR /app
 
-RUN addgroup -gid 1001 webapp
-RUN useradd --gid 1001 --uid 1001 webapp
-RUN chown -R 1001:1001 /app
-
 COPY --chown=1001:1001 scripts scripts
+COPY --chown=1001:1001 Makefile pyproject.toml manage.py LICENSE ./
 COPY --chown=1001:1001 src src
 
 COPY --chown=1001:1001 --from=frontend_build /app/src/apps/webui/static src/apps/webui/static
@@ -127,24 +164,24 @@ COPY --chown=1001:1001 --from=assets_download /app/src/apps/chess/static/chess/j
 COPY --chown=1001:1001 --from=assets_download /app/src/apps/chess/static/chess/units src/apps/chess/static/chess/units
 COPY --chown=1001:1001 --from=assets_download /app/src/apps/chess/static/chess/symbols src/apps/chess/static/chess/symbols
 
-COPY --chown=1001:1001 Makefile pyproject.toml LICENSE ./
-
-ENV PATH="/app/.venv/bin:${PATH}"
 RUN python -V
-
-USER 1001:1001
-
-# Install the project's packages (defined in pyproject.toml) in editable mode:
-RUN pip install -e .
-
+RUN python -Im site
+# Smoke test:
 RUN DJANGO_SETTINGS_MODULE=project.settings.docker_build \
-    .venv/bin/python src/manage.py collectstatic --noinput
+    .venv/bin/python manage.py shell -c "from apps.daily_challenge.models import DailyChallenge"
 
+# Collect static files.
+RUN DJANGO_SETTINGS_MODULE=project.settings.docker_build \
+    .venv/bin/python manage.py collectstatic --noinput
+
+# Ok, let's get ready to run that server!
 EXPOSE 8080
 
 ENV DJANGO_SETTINGS_MODULE=project.settings.production
 
-ENV GUNICORN_CMD_ARGS="--bind :8080 --workers 2 --max-requests 120 --max-requests-jitter 20 --timeout 8"
+ENV GUNICORN_CMD_ARGS="--bind 0.0.0.0:8080 --workers 2 --max-requests 120 --max-requests-jitter 20 --timeout 8"
 
 RUN chmod +x scripts/start_server.sh
-CMD ["scripts/start_server.sh"]
+# See <https://hynek.me/articles/docker-signals/>.
+STOPSIGNAL SIGINT
+ENTRYPOINT ["scripts/start_server.sh"]

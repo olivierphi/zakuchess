@@ -1,52 +1,66 @@
-[tool.poetry]
+[project]
 name = "zakuchess"
 version = "0.1.0"
 description = "A daily chess challenge, where pieces are heroic-fantasy characters."
-license = "GPL-3.0-or-later"
-authors = ["Olivier Philippon <olivier@dunsap.com>"]
-homepage = "https://github.com/olivierphi/zakuchess"
-packages = [
-    { include = "apps", from = "src" },
-    { include = "lib", from = "src" },
-    { include = "project", from = "src" },
+license = { text = "GPL-3.0-or-later" }
+authors = [
+    {name = "Olivier Philippon", email = "olivier@dunsap.com"},
+]
+readme = "README.md"
+
+requires-python = ">=3.11"
+
+dependencies= [
+    "Django==5.1.*",
+    # Django doesn't follow SemVer, so we need to specify the minor version
+    "gunicorn==22.*",
+    "django-alive==1.*",
+    "chess==1.*",
+    "django-htmx==1.*",
+    "dominate==2.*",
+    "dj-database-url==2.*",
+    "requests==2.*",
+    "django-axes[ipware]==6.*",
+    "whitenoise==6.*",
+    "django-import-export==3.*",
+    "msgspec==0.18.*",
+    "zakuchess",
 ]
 
-[tool.poetry.dependencies]
-python = "^3.11"
-Django = "^5.0.3"
-gunicorn = "^22.0.0"
-django-alive = "^1.2.1"
-chess = "^1.9.3"
-django-htmx = "^1.13.0"
-dominate = "^2.7.0"
-dj-database-url = "^2.1.0"
-requests = "^2.32.2"
-django-axes = { extras = ["ipware"], version = "^6.1.1" }
-whitenoise = "^6.5.0"
-django-import-export = "^3.3.1"
-msgspec = "^0.18.5"
 
-[tool.poetry.group.dev.dependencies]
-python-dotenv = "^1.0.0"
-black = "^24.1.1"
-ruff = "0.1.14"
-mypy = "^1.8.0"
-pre-commit = "^3.6.0"
-ipython = "^8.6.0"
-types-requests = "^2.31.0.2"
-django-extensions = "^3.2.3"
-httpx = "^0.26.0" # only used in "scripts/download_assets.py" for parallel downloads
-sqlite-utils = "^3.35.1"
-
-[tool.poetry.group.test.dependencies]
-pytest = "^7.4.4"
-pytest-django = "^4.5.2"
-pytest-cov = "^4.1.0"
-time-machine = "^2.13.0"
+[project.optional-dependencies]
+dev = [
+    "python-dotenv==1.*",
+    "black==24.1.*",
+    "ruff==0.6.*",
+    "mypy==1.*",
+    "pre-commit==3.*",
+    "ipython==8.*",
+    "types-requests==2.*",
+    "django-extensions==3.*",
+    "httpx==0.26.*",   # only used in "scripts/download_assets.py" for parallel downloads
+    "sqlite-utils==3.*",
+    
+]
+test = [
+    "pytest==7.*",
+    "pytest-django==4.*",
+    "pytest-cov==4.*",
+    "time-machine==2.*",
+]
+load-testing = [
+    "locust==2.*",
+]
 
 
-[tool.poetry.group.load-testing.dependencies]
-locust = "^2.21.0"
+[project.urls]
+Website = "https://zakuchess.com"
+Repository = "https://github.com/olivierphi/zakuchess"
+
+
+[tool.uv]
+package = true
+
 
 [tool.black]
 # @link https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html
@@ -55,14 +69,12 @@ target-version = ['py311']
 [tool.ruff]
 # @link https://docs.astral.sh/ruff/configuration/
 target-version = "py311"
-ignore = ["E501"]
 exclude = [
     "src/project/settings",
 ]
-[tool.ruff.per-file-ignores]
-"src/lib/chess_engines/sunfish/sunfish.py" = ["F841", "F821"]
 
 [tool.ruff.lint]
+ignore = ["E501"]
 select = [
     "F", # flake8
     "I", # isort
@@ -71,6 +83,9 @@ select = [
     "TCH002", 
     "TCH003", 
 ]
+[tool.ruff.lint.per-file-ignores]
+"src/project/settings/*" = ["F405"]
+"src/lib/chess_engines/sunfish/sunfish.py" = ["F841", "F821"]
 
 [tool.ruff.lint.isort]
 # https://docs.astral.sh/ruff/settings/#lintisort
@@ -105,6 +120,7 @@ module = [
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
+pythonpath = "src"
 testpaths = [
     "src/apps/*/tests/",
     "src/project/tests/",
@@ -123,9 +139,3 @@ omit = [
     # also exclude Django settings:
     "src/project/settings/*.py",
 ]
-
-
-
-[build-system]
-requires = ["poetry-core>=1.2.0"]
-build-backend = "poetry.core.masonry.api"

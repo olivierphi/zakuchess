@@ -7,15 +7,18 @@
 
 cd ${0:A:h}/ # Change to the directory of the current file
 
+# Activate Python venv:
 source .venv/bin/activate
+# Select Node.js version:
+nvm use
 
 export DJANGO_SETTINGS_MODULE=project.settings.development
 alias run_in_dotenv='dotenv -f .env.local run -- '
 
-alias poetry='pipx run poetry==1.8.3'
+alias uv='bin/uv'
 alias djm='run_in_dotenv python src/manage.py'
 alias test='DJANGO_SETTINGS_MODULE=project.settings.test run_in_dotenv pytest -x --reuse-db'
 alias test-no-reuse='DJANGO_SETTINGS_MODULE=project.settings.test run_in_dotenv pytest -x'
 
 # Show the aliases we just defined:
-alias poetry && alias djm && alias test && alias test-no-reuse
+alias uv && alias djm && alias test && alias test-no-reuse

@@ -10,9 +10,9 @@ help:
 	@grep -P '^[.a-zA-Z/_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: install
-install: .venv ./node_modules ## Install the Python and frontend dependencies
+install: bin/uv .venv ./node_modules ## Install the Python and frontend dependencies
+	bin/uv sync --all-extras
 	${PYTHON_BINS}/pre-commit install
-	${PYTHON_BINS}/poetry install
 
 .PHONY: dev
 dev: .env.local db.sqlite3
@@ -71,8 +71,8 @@ code-quality/black: ## Automated 'a la Prettier' code formatting
 .PHONY: code-quality/ruff
 code-quality/ruff: ruff_opts ?= --fix
 code-quality/ruff: ## Fast linting
-# @link https://mypy.readthedocs.io/en/stable/
-	@${PYTHON_BINS}/ruff src/ ${ruff_opts}
+# @link https://docs.astral.sh/ruff/
+	@${PYTHON_BINS}/ruff check src/ ${ruff_opts}
 
 .PHONY: code-quality/mypy
 code-quality/mypy: mypy_opts ?=
@@ -142,10 +142,14 @@ frontend/img/copy_assets:
 
 # Here starts the "misc util targets" stuff
 
-.venv: poetry_version ?= 1.8.3
-.venv: ## Initialises the Python virtual environment in a ".venv" folder
-	python -m venv .venv
-	${PYTHON_BINS}/pip install -U pip poetry==${poetry_version}
+bin/uv: uv_version ?= 0.4.4
+bin/uv: # Install `uv` and `uvx` locally in the "bin/" folder
+	curl -LsSf "https://astral.sh/uv/${uv_version}/install.sh" | \
+		CARGO_DIST_FORCE_INSTALL_DIR="$$(pwd)" INSTALLER_NO_MODIFY_PATH=1 sh
+	@echo "We'll use 'bin/uv' to manage Python dependencies." 
+
+.venv: ## Initialises the Python virtual environment in a ".venv" folder, via uv
+	bin/uv venv
 
 .env.local:
 	cp .env.dist .env.local
@@ -164,7 +168,7 @@ django/manage: cmd ?= --help
 django/manage: .venv .env.local ## Run a Django management command
 	@DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE} ${env_vars} \
 		${PYTHON_BINS}/dotenv -f '${dotenv_file}' run -- \
-		${PYTHON} src/manage.py ${cmd}
+		${PYTHON} manage.py ${cmd}
 
 ./.venv/bin/django: .venv install
 
@@ -247,13 +251,13 @@ docker/local/shell:
 		-u ${user_id} \
 		${docker_env} ${docker_args} \
 		-e DJANGO_SETTINGS_MODULE=project.settings.production \
-		${DOCKER_IMG_NAME}:${DOCKER_TAG} \
-		${cmd}
+		--entrypoint ${cmd} \
+		${DOCKER_IMG_NAME}:${DOCKER_TAG}
 
 .PHONY: docker/local/migrate
 docker/local/migrate:
 	${SUB_MAKE} docker/local/shell \
-		cmd='/app/.venv/bin/python src/manage.py migrate'
+		cmd='/app/.venv/bin/python manage.py migrate'
 
 # Here starts Fly.io-related stuff
 .PHONY: fly.io/deploy
