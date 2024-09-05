@@ -6,8 +6,8 @@ from dominate.tags import button, div, fieldset, form, h3, h4, input_, label, le
 from apps.chess.components.misc_ui import modal_container
 from apps.chess.components.svg_icons import ICON_SVG_CONFIRM
 from apps.chess.models import UserPrefsBoardTextureChoices, UserPrefsGameSpeedChoices
+from apps.webui.components import common_styles
 
-from .common_styles import BUTTON_CONFIRM_CLASSES
 from .svg_icons import ICON_SVG_COG
 
 if TYPE_CHECKING:
@@ -69,7 +69,7 @@ def _user_prefs_form(user_prefs: "UserPrefs") -> "dom_tag":
             "Save preferences",
             " ",
             ICON_SVG_CONFIRM,
-            cls=BUTTON_CONFIRM_CLASSES,
+            cls=common_styles.BUTTON_CONFIRM_CLASSES,
         ),
     )
 

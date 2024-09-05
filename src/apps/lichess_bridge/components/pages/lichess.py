@@ -1,35 +1,68 @@
 from typing import TYPE_CHECKING
 
-from dominate.tags import section
-from dominate.util import raw
+from django.urls import reverse
+from dominate.tags import button, div, form, p, section
 
-from apps.lichess_bridge.authentication import (
-    get_lichess_token_retrieval_via_oauth2_process_starting_url,
-)
+from apps.webui.components import common_styles
+from apps.webui.components.forms_common import csrf_hidden_input
 from apps.webui.components.layout import page
+
+from ...lichess_api import get_lichess_api_client
+from ..misc_ui import detach_lichess_account_form
+from ..svg_icons import ICON_SVG_LOG_IN
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
 
-    from apps.lichess_bridge.authentication import (
-        LichessTokenRetrievalProcessContext,
-    )
+    from ...models import LichessAccessToken
 
 
 def lichess_no_account_linked_page(
     *,
     request: "HttpRequest",
-    lichess_oauth2_process_context: "LichessTokenRetrievalProcessContext",
 ) -> str:
-    target_url = get_lichess_token_retrieval_via_oauth2_process_starting_url(
-        context=lichess_oauth2_process_context
-    )
-
     return page(
         section(
-            raw(f"""Click here: <a href="{target_url}">{target_url}</a>"""),
+            form(
+                csrf_hidden_input(request),
+                p("Click here to log in to Lichess"),
+                button(
+                    "Log in via Lichess",
+                    " ",
+                    ICON_SVG_LOG_IN,
+                    type="submit",
+                    cls=common_styles.BUTTON_CLASSES,
+                ),
+                action=reverse("lichess_bridge:oauth2_start_flow"),
+                method="POST",
+            ),
             cls="text-slate-50",
         ),
         request=request,
         title="Lichess - no account linked",
+    )
+
+
+def lichess_account_linked_homepage(
+    *,
+    request: "HttpRequest",
+    access_token: "LichessAccessToken",
+) -> str:
+    me = get_lichess_api_client(access_token).account.get()
+
+    return page(
+        div(
+            section(
+                f'Hello {me["username"]}!',
+                cls="text-slate-50",
+            ),
+            div(
+                detach_lichess_account_form(request),
+                cls="mt-4",
+            ),
+            cls="w-full mx-auto bg-slate-900 min-h-48 "
+            "md:max-w-3xl xl:max-w-7xl xl:border xl:rounded-md xl:border-neutral-800",
+        ),
+        request=request,
+        title="Lichess - account linked",
     )

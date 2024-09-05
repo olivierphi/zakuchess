@@ -1096,6 +1096,18 @@ wheels = [
 ]
 
 [[package]]
+name = "pytest-blockage"
+version = "0.2.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pytest" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/58/21/10240e4d3d94b04e0caf66164ff22ae2060483bd1d6fb935bacb5ef49ec8/pytest-blockage-0.2.4.tar.gz", hash = "sha256:7127b9251242dfce7acce3f9f619727d06d22368249289c9cd7396134133c9a8", size = 3393 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fb/6b/8f30fd11bf57cff94079d00fb1c80661d539bfb3e5b3ffa2a8217fea69c5/pytest_blockage-0.2.4-py3-none-any.whl", hash = "sha256:b853f2259a290f079918cb886fb5f3e3fdd9e5e677d6aee60a580012daf9bf91", size = 3742 },
+]
+
+[[package]]
 name = "pytest-cov"
 version = "4.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1601,6 +1613,7 @@ load-testing = [
 ]
 test = [
     { name = "pytest" },
+    { name = "pytest-blockage" },
     { name = "pytest-cov" },
     { name = "pytest-django" },
     { name = "time-machine" },
@@ -1627,6 +1640,7 @@ requires-dist = [
     { name = "mypy", marker = "extra == 'dev'", specifier = "==1.*" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = "==3.*" },
     { name = "pytest", marker = "extra == 'test'", specifier = "==7.*" },
+    { name = "pytest-blockage", marker = "extra == 'test'", specifier = ">=0.2.4" },
     { name = "pytest-cov", marker = "extra == 'test'", specifier = "==4.*" },
     { name = "pytest-django", marker = "extra == 'test'", specifier = "==4.*" },
     { name = "python-dotenv", marker = "extra == 'dev'", specifier = "==1.*" },

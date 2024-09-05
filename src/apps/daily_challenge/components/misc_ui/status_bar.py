@@ -15,8 +15,7 @@ from apps.daily_challenge.components.misc_ui.help import (
     help_content,
     unit_display_container,
 )
-
-from .common_styles import BUTTON_CLASSES
+from apps.webui.components import common_styles
 
 if TYPE_CHECKING:
     from dominate.tags import dom_tag
@@ -47,7 +46,7 @@ def status_bar(
             div(
                 button(
                     "⇧ Scroll up to the board",
-                    cls=BUTTON_CLASSES,
+                    cls=common_styles.BUTTON_CLASSES,
                     onclick="""window.scrollTo({ top: 0, behavior: "smooth" })""",
                 ),
                 cls="w-full flex justify-center",

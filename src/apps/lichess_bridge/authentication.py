@@ -20,6 +20,8 @@ from django.urls import reverse
 if TYPE_CHECKING:
     from typing import Self
 
+    from .models import LichessAccessToken
+
 LICHESS_OAUTH2_SCOPES = ("board:play",)
 
 
@@ -91,7 +93,7 @@ class LichessTokenRetrievalProcessContext(
 
 class LichessToken(msgspec.Struct):
     token_type: Literal["Bearer"]
-    access_token: str
+    access_token: "LichessAccessToken"
     expires_in: int  # number of seconds
     expires_at: int  # a Unix timestamp
 

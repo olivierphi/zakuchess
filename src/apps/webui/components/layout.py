@@ -4,7 +4,7 @@ from functools import cache
 from typing import TYPE_CHECKING
 
 from django.conf import settings
-from django.template.backends.utils import get_token  # type: ignore[attr-defined]
+from django.template.backends.utils import get_token as get_csrf_token
 from django.templatetags.static import static
 from dominate.tags import (
     a,
@@ -94,7 +94,7 @@ def document(
             modals_container(),
             cls=_DOCUMENT_BG_COLOR,
             data_hx_headers=json.dumps(
-                {"X-CSRFToken": get_token(request) if request else "[no request]"}
+                {"X-CSRFToken": get_csrf_token(request) if request else "[no request]"}
             ),
             data_hx_ext="class-tools",  # enable CSS class transitions on the whole page
         ),

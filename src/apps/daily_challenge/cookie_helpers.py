@@ -15,8 +15,10 @@ if TYPE_CHECKING:
 
 
 _PLAYER_CONTENT_SESSION_KEY = "pc"
-_USER_PREFS_COOKIE_NAME = "uprefs"
-_USER_PREFS_COOKIE_MAX_AGE = 3600 * 24 * 30 * 6  # approximately 6 months
+_USER_PREFS_COOKIE = {
+    "name": "uprefs",
+    "max-age": 3600 * 24 * 30 * 6,  # approximately 6 months
+}
 
 _logger = logging.getLogger(__name__)
 
@@ -98,7 +100,7 @@ def get_user_prefs_from_request(request: "HttpRequest") -> UserPrefs:
     def new_content():
         return UserPrefs()
 
-    cookie_content: str | None = request.COOKIES.get(_USER_PREFS_COOKIE_NAME)
+    cookie_content: str | None = request.COOKIES.get(_USER_PREFS_COOKIE["name"])
     if cookie_content is None or len(cookie_content) < 5:
         return new_content()
 
@@ -125,10 +127,11 @@ def save_daily_challenge_state_in_session(
 
 def save_user_prefs(*, user_prefs: "UserPrefs", response: "HttpResponse") -> None:
     response.set_cookie(
-        _USER_PREFS_COOKIE_NAME,
+        _USER_PREFS_COOKIE["name"],
         user_prefs.to_cookie_content(),
-        max_age=_USER_PREFS_COOKIE_MAX_AGE,
+        max_age=_USER_PREFS_COOKIE["max-age"],
         httponly=True,
+        samesite="Lax",
     )
 
 

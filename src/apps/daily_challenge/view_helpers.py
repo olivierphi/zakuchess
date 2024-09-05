@@ -1,11 +1,8 @@
 import dataclasses
 from typing import TYPE_CHECKING, cast
 
+from . import cookie_helpers
 from .business_logic import manage_new_daily_challenge_stats_logic
-from .cookie_helpers import (
-    get_or_create_daily_challenge_state_for_player,
-    get_user_prefs_from_request,
-)
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
@@ -38,10 +35,12 @@ class GameContext:
     def create_from_request(cls, request: "HttpRequest") -> "GameContext":
         is_staff_user: bool = request.user.is_staff
         challenge, is_preview = get_current_daily_challenge_or_admin_preview(request)
-        game_state, stats, created = get_or_create_daily_challenge_state_for_player(
-            request=request, challenge=challenge
+        game_state, stats, created = (
+            cookie_helpers.get_or_create_daily_challenge_state_for_player(
+                request=request, challenge=challenge
+            )
         )
-        user_prefs = get_user_prefs_from_request(request)
+        user_prefs = cookie_helpers.get_user_prefs_from_request(request)
         # TODO: validate the "board_id" data?
         board_id = cast(str, request.GET.get("board_id", "main"))
 

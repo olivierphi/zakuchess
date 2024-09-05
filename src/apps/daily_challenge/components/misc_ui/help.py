@@ -9,15 +9,12 @@ from dominate.util import raw
 from apps.chess.components.chess_board import SQUARE_COLOR_TAILWIND_CLASSES
 from apps.chess.components.chess_helpers import chess_unit_symbol_class
 from apps.chess.consts import PIECE_TYPE_TO_NAME
-from apps.daily_challenge.components.misc_ui.common_styles import (
-    BUTTON_BASE_HOVER_TEXT_COLOR,
-    BUTTON_CLASSES,
-)
 from apps.daily_challenge.components.misc_ui.svg_icons import (
     ICON_SVG_COG,
     ICON_SVG_LIGHT_BULB,
     ICON_SVG_RESTART,
 )
+from apps.webui.components import common_styles
 
 if TYPE_CHECKING:
     from dominate.tags import dom_tag
@@ -96,7 +93,7 @@ def help_content(
                 span(
                     "Retry",
                     ICON_SVG_RESTART,
-                    cls=f"{BUTTON_CLASSES.replace(BUTTON_BASE_HOVER_TEXT_COLOR, '')} !mx-0",
+                    cls=f"{common_styles.BUTTON_CLASSES.replace(common_styles.BUTTON_BASE_HOVER_TEXT_COLOR, '')} !mx-0",
                 ),
                 " button.",
                 cls=f"{spacing}",
@@ -107,7 +104,7 @@ def help_content(
                 span(
                     "See solution",
                     ICON_SVG_LIGHT_BULB,
-                    cls=f"{BUTTON_CLASSES} !inline-block !mx-0",
+                    cls=f"{common_styles.BUTTON_CLASSES} !inline-block !mx-0",
                 ),
                 " button.",
                 cls=f"{spacing}",
@@ -118,7 +115,7 @@ def help_content(
                 span(
                     "Options",
                     ICON_SVG_COG,
-                    cls=f"{BUTTON_CLASSES} !inline-block !mx-0",
+                    cls=f"{common_styles.BUTTON_CLASSES} !inline-block !mx-0",
                 ),
                 " button.",
                 cls=f"{spacing}",

@@ -48,6 +48,7 @@ test = [
     "pytest-django==4.*",
     "pytest-cov==4.*",
     "time-machine==2.*",
+    "pytest-blockage==0.2.*",
 ]
 load-testing = [
     "locust==2.*",
@@ -109,6 +110,7 @@ exclude = [
 ]
 [[tool.mypy.overrides]]
 module = [
+    "authlib.*",
     "django.*",
     "dominate.*",
     "import_export.*",
@@ -125,6 +127,7 @@ testpaths = [
 python_files = ["test_*.py"]
 addopts = "--reuse-db"
 DJANGO_SETTINGS_MODULE = "project.settings.test"
+blockage = true # https://github.com/rob-b/pytest-blockage
 
 [tool.coverage.run]
 # @link https://coverage.readthedocs.io/en/latest/excluding.html

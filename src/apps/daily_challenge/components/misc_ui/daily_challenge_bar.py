@@ -9,9 +9,9 @@ from dominate.tags import b, button, div, p
 from dominate.util import raw
 
 from apps.chess.components.svg_icons import ICON_SVG_CANCEL, ICON_SVG_CONFIRM
+from apps.webui.components import common_styles
 
 from ...models import PlayerGameOverState
-from .common_styles import BUTTON_CANCEL_CLASSES, BUTTON_CLASSES, BUTTON_CONFIRM_CLASSES
 from .svg_icons import (
     ICON_SVG_COG,
     ICON_SVG_LIGHT_BULB,
@@ -163,14 +163,14 @@ def _confirmation_dialog(
                 "Confirm",
                 " ",
                 ICON_SVG_CONFIRM,
-                cls=BUTTON_CONFIRM_CLASSES,
+                cls=common_styles.BUTTON_CONFIRM_CLASSES,
                 **htmx_attributes_confirm,
             ),
             button(
                 "Cancel",
                 " ",
                 ICON_SVG_CANCEL,
-                cls=BUTTON_CANCEL_CLASSES,
+                cls=common_styles.BUTTON_CANCEL_CLASSES,
                 **htmx_attributes_cancel,
             ),
             cls="text-center",
@@ -362,7 +362,7 @@ def _user_prefs_button(board_id: str) -> "dom_tag":
 def _button_classes(*, full_width: bool = True, disabled: bool = False) -> str:
     return " ".join(
         (
-            BUTTON_CLASSES,
+            common_styles.BUTTON_CLASSES,
             ("w-full" if full_width else ""),
             (" opacity-50 cursor-not-allowed" if disabled else ""),
         )
