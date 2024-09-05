@@ -16,7 +16,7 @@ export DJANGO_SETTINGS_MODULE=project.settings.development
 alias run_in_dotenv='dotenv -f .env.local run -- '
 
 alias uv='bin/uv'
-alias djm='run_in_dotenv python src/manage.py'
+alias djm='run_in_dotenv python manage.py'
 alias test='DJANGO_SETTINGS_MODULE=project.settings.test run_in_dotenv pytest -x --reuse-db'
 alias test-no-reuse='DJANGO_SETTINGS_MODULE=project.settings.test run_in_dotenv pytest -x'
 

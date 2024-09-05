@@ -2,6 +2,7 @@ PYTHON_BINS ?= ./.venv/bin
 PYTHON ?= ${PYTHON_BINS}/python
 DJANGO_SETTINGS_MODULE ?= project.settings.development
 SUB_MAKE = ${MAKE} --no-print-directory
+UV ?= bin/uv
 
 .DEFAULT_GOAL := help
 
@@ -10,10 +11,8 @@ help:
 	@grep -P '^[.a-zA-Z/_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: install
-install: bin/uv .venv ./node_modules ## Install the Python and frontend dependencies
-	bin/uv sync --all-extras
-	${PYTHON_BINS}/pre-commit install
-	${SUB_MAKE} .venv/bin/black
+install: backend/install frontend/install ## Install the Python and frontend dependencies
+	
 
 .PHONY: dev
 dev: .env.local db.sqlite3
@@ -30,6 +29,13 @@ dev: ## Start Django in "development" mode, as well as our frontend assets compi
 download_assets: download_assets_opts ?=
 download_assets:
 	${PYTHON_BINS}/python scripts/download_assets.py ${download_assets_opts}
+
+.PHONY: backend/install
+backend/install: uv_sync_opts ?= --all-extras --no-build
+backend/install: bin/uv .venv ## Install the Python dependencies (via uv) and install pre-commit
+	${UV} sync ${uv_sync_opts}
+	${PYTHON_BINS}/pre-commit install
+	@${SUB_MAKE} .venv/bin/black
 
 .PHONY: backend/watch
 backend/watch: address ?= localhost
@@ -83,8 +89,12 @@ code-quality/mypy: ## Python's equivalent of TypeScript
 
 # Here starts the frontend stuff
 
+.PHONY: frontend/install
+frontend/install: ## Install the frontend dependencies (via npm)
+	npm install
+
 .PHONY: frontend/watch
-frontend/watch: ## Compile the CSS & JS assets of our various Django apps, in 'watch' mode
+frontend/watch: ./node_modules ## Compile the CSS & JS assets of our various Django apps, in 'watch' mode
 	@./node_modules/.bin/concurrently --names "img,css,js" --prefix-colors "yellow,green" \
 		"${SUB_MAKE} frontend/img" \
 		"${SUB_MAKE} frontend/css/watch" \
@@ -150,7 +160,7 @@ bin/uv: # Install `uv` and `uvx` locally in the "bin/" folder
 	@echo "We'll use 'bin/uv' to manage Python dependencies." 
 
 .venv: ## Initialises the Python virtual environment in a ".venv" folder, via uv
-	bin/uv venv
+	${UV} venv
 
 .env.local:
 	cp .env.dist .env.local
@@ -179,8 +189,6 @@ django/manage: .venv .env.local ## Run a Django management command
 
 ./node_modules: frontend/install
 
-frontend/install:
-	npm install
 
 # Here starts the "Lichess database" stuff
 
