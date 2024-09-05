@@ -11,8 +11,8 @@ readme = "README.md"
 requires-python = ">=3.11"
 
 dependencies= [
+    # Django doesn't follow SemVer, so we need to specify the minor version:
     "Django==5.1.*",
-    # Django doesn't follow SemVer, so we need to specify the minor version
     "gunicorn==22.*",
     "django-alive==1.*",
     "chess==1.*",
@@ -22,9 +22,11 @@ dependencies= [
     "requests==2.*",
     "django-axes[ipware]==6.*",
     "whitenoise==6.*",
-    "django-import-export==3.*",
+    "django-import-export==4.*",
     "msgspec==0.18.*",
     "zakuchess",
+    "authlib==1.*",
+    "berserk>=0.13.2",
 ]
 
 

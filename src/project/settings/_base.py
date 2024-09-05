@@ -48,6 +48,7 @@ INSTALLED_APPS = (
         "apps.authentication",
         "apps.chess",
         "apps.daily_challenge",
+        "apps.lichess_bridge",
         "apps.webui",
     ]
 )
@@ -191,7 +192,18 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Our custom settings:
 ZAKUCHESS_VERSION = env.get("ZAKUCHESS_VERSION", "dev")
-JS_CHESS_ENGINE = env.get("JS_CHESS_ENGINE", "stockfish")
 MASTODON_PAGE = env.get("MASTODON_PAGE")
 CANONICAL_URL = env.get("CANONICAL_URL", "https://zakuchess.com/")
+
 DEBUG_LAYOUT = env.get("DEBUG_LAYOUT", "") == "1"
+
+# Daily challenge app:
+JS_CHESS_ENGINE = env.get("JS_CHESS_ENGINE", "stockfish")
+
+# Lichess bridge app:
+# > Lichess supports unregistered and public clients
+# > (no client authentication, choose any unique client id).
+# So it's not a kind of API secret we would have created on Lichess' side, but just an
+# arbitrary identifier.
+LICHESS_CLIENT_ID = env.get("LICHESS_CLIENT_ID", "")
+LICHESS_HOST = env.get("LICHESS_HOST", "https://lichess.org")
