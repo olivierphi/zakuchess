@@ -1,3 +1,4 @@
+import datetime as dt
 import logging
 from typing import TYPE_CHECKING, NamedTuple
 
@@ -5,6 +6,10 @@ from django.utils.timezone import now
 from msgspec import MsgspecError
 
 from apps.chess.models import UserPrefs
+from lib.http_cookies_helpers import (
+    HttpCookieAttributes,
+    set_http_cookie_on_django_response,
+)
 
 from .models import PlayerGameState, PlayerSessionContent, PlayerStats
 
@@ -15,10 +20,13 @@ if TYPE_CHECKING:
 
 
 _PLAYER_CONTENT_SESSION_KEY = "pc"
-_USER_PREFS_COOKIE = {
-    "name": "uprefs",
-    "max-age": 3600 * 24 * 30 * 6,  # approximately 6 months
-}
+
+_USER_PREFS_COOKIE_ATTRS = HttpCookieAttributes(
+    name="uprefs",
+    max_age=dt.timedelta(days=30 * 6),  # approximately 6 months
+    http_only=True,
+    same_site="Lax",
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -100,7 +108,7 @@ def get_user_prefs_from_request(request: "HttpRequest") -> UserPrefs:
     def new_content():
         return UserPrefs()
 
-    cookie_content: str | None = request.COOKIES.get(_USER_PREFS_COOKIE["name"])
+    cookie_content: str | None = request.COOKIES.get(_USER_PREFS_COOKIE_ATTRS.name)
     if cookie_content is None or len(cookie_content) < 5:
         return new_content()
 
@@ -126,12 +134,10 @@ def save_daily_challenge_state_in_session(
 
 
 def save_user_prefs(*, user_prefs: "UserPrefs", response: "HttpResponse") -> None:
-    response.set_cookie(
-        _USER_PREFS_COOKIE["name"],
-        user_prefs.to_cookie_content(),
-        max_age=_USER_PREFS_COOKIE["max-age"],
-        httponly=True,
-        samesite="Lax",
+    set_http_cookie_on_django_response(
+        response=response,
+        attributes=_USER_PREFS_COOKIE_ATTRS,
+        value=user_prefs.to_cookie_content(),
     )
 
 

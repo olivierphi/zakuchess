@@ -17,7 +17,7 @@ from apps.chess.types import (  # we need real imports on these because they're 
     PieceRoleBySquare,
     PlayerSide,
 )
-from lib.django_helpers import literal_to_django_choices
+from lib.django_choices_helpers import literal_to_django_choices
 
 from .consts import BOT_SIDE, FACTIONS, PLAYER_SIDE
 

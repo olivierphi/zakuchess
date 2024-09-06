@@ -199,6 +199,7 @@ class DailyChallengeAdmin(ImportExportModelAdmin):
             lookup_key,
             expires=now() + _FUTURE_DAILY_CHALLENGE_COOKIE_DURATION,
             httponly=True,
+            samesite="Lax",
         )
 
         return response

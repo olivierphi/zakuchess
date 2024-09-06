@@ -1,11 +1,17 @@
+import datetime as dt
 import logging
 from typing import TYPE_CHECKING, cast
 
 from django.core.exceptions import SuspiciousOperation
 from msgspec import MsgspecError
 
+from lib.http_cookies_helpers import (
+    HttpCookieAttributes,
+    set_http_cookie_on_django_response,
+)
+
 from .authentication import LichessTokenRetrievalProcessContext
-from .models import LICHESS_ACCESS_TOKEN_PREFIX
+from .lichess_api import is_lichess_api_access_token_valid
 
 if TYPE_CHECKING:
     from django.http import HttpRequest, HttpResponse
@@ -13,18 +19,24 @@ if TYPE_CHECKING:
     from .authentication import LichessToken
     from .models import LichessAccessToken
 
-_OAUTH2_TOKEN_RETRIEVAL_CONTEXT_COOKIE = {
-    "name": "lichess.oauth2.ctx",
-    # One day should be more than enough to let the user grant their authorisation:
-    "max-age": 3600 * 24,
-}
+_OAUTH2_TOKEN_RETRIEVAL_CONTEXT_COOKIE_ATTRS = HttpCookieAttributes(
+    name="lichess.oauth2.ctx",
+    # This cookie only has to be valid while the user is redirected to Lichess
+    # and press the "Authorize" button there.
+    max_age=dt.timedelta(hours=1),
+    http_only=True,
+    same_site="Lax",
+)
 
-_API_ACCESS_TOKEN_COOKIE = {
-    "name": "lichess.access_token",
+_API_ACCESS_TOKEN_COOKIE_ATTRS = HttpCookieAttributes(
+    name="lichess.access_token",
     # Access tokens delivered by Lichess "are long-lived (expect one year)".
-    # Let's store them for approximately 6 months, on our end:
-    "max-age": 3600 * 24 * 30 * 6,
-}
+    # As Lichess gives us the expiry date of the tokens it gives us, we can use that
+    # for our own cookie - so no "max-age" entry here, but we'll specify one at runtime.
+    max_age=None,
+    http_only=True,
+    same_site="Lax",
+)
 
 
 _logger = logging.getLogger(__name__)
@@ -37,12 +49,10 @@ def store_oauth2_token_retrieval_context_in_response_cookie(
     Store OAuth2 token retrieval context into a short-lived response cookie.
     """
 
-    response.set_cookie(
-        _OAUTH2_TOKEN_RETRIEVAL_CONTEXT_COOKIE["name"],
-        context.to_cookie_content(),
-        max_age=_OAUTH2_TOKEN_RETRIEVAL_CONTEXT_COOKIE["max-age"],
-        httponly=True,
-        samesite="Lax",
+    set_http_cookie_on_django_response(
+        response=response,
+        attributes=_OAUTH2_TOKEN_RETRIEVAL_CONTEXT_COOKIE_ATTRS,
+        value=context.to_cookie_content(),
     )
 
 
@@ -53,7 +63,7 @@ def get_oauth2_token_retrieval_context_from_request(
     Returns a context created from the "CSRF state" and "code verifier" found in the request's cookies.
     """
     cookie_content: str | None = request.COOKIES.get(
-        _OAUTH2_TOKEN_RETRIEVAL_CONTEXT_COOKIE["name"]
+        _OAUTH2_TOKEN_RETRIEVAL_CONTEXT_COOKIE_ATTRS.name
     )
     if not cookie_content:
         return None
@@ -73,7 +83,7 @@ def get_oauth2_token_retrieval_context_from_request(
 def delete_oauth2_token_retrieval_context_from_cookies(
     response: "HttpResponse",
 ) -> None:
-    response.delete_cookie(_OAUTH2_TOKEN_RETRIEVAL_CONTEXT_COOKIE["name"])
+    response.delete_cookie(_OAUTH2_TOKEN_RETRIEVAL_CONTEXT_COOKIE_ATTRS.name)
 
 
 def store_lichess_api_access_token_in_response_cookie(
@@ -82,15 +92,17 @@ def store_lichess_api_access_token_in_response_cookie(
     """
     Store a Lichess API token into a long-lived response cookie.
     """
+    # TODO: use a secured cookie here?
 
-    response.set_cookie(
-        _API_ACCESS_TOKEN_COOKIE["name"],
-        token.access_token,
-        # TODO: should we use the token's `expires_in` here, rather than our custom
-        #   expiry period? There are pros and cons, let's decide that later :-)
-        max_age=_API_ACCESS_TOKEN_COOKIE["max-age"],
-        httponly=True,
-        samesite="Lax",
+    # Our cookie will expire when the access token given by Lichess will:
+    cookie_attributes = _API_ACCESS_TOKEN_COOKIE_ATTRS._replace(
+        max_age=dt.timedelta(seconds=token.expires_in),
+    )
+
+    set_http_cookie_on_django_response(
+        response=response,
+        attributes=cookie_attributes,
+        value=token.access_token,
     )
 
 
@@ -100,14 +112,13 @@ def get_lichess_api_access_token_from_request(
     """
     Returns a Lichess API token found in the request's cookies.
     """
-    cookie_content: str | None = request.COOKIES.get(_API_ACCESS_TOKEN_COOKIE["name"])
+    cookie_content: str | None = request.COOKIES.get(
+        _API_ACCESS_TOKEN_COOKIE_ATTRS.name
+    )
     if not cookie_content:
         return None
 
-    if (
-        not cookie_content.startswith(LICHESS_ACCESS_TOKEN_PREFIX)
-        or len(cookie_content) < 10
-    ):
+    if not is_lichess_api_access_token_valid(cookie_content):
         raise SuspiciousOperation(
             f"Suspicious Lichess API token value '{cookie_content}'"
         )
@@ -118,4 +129,4 @@ def get_lichess_api_access_token_from_request(
 def delete_lichess_api_access_token_from_cookies(
     response: "HttpResponse",
 ) -> None:
-    response.delete_cookie(_API_ACCESS_TOKEN_COOKIE["name"])
+    response.delete_cookie(_API_ACCESS_TOKEN_COOKIE_ATTRS.name)

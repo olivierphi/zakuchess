@@ -205,5 +205,5 @@ JS_CHESS_ENGINE = env.get("JS_CHESS_ENGINE", "stockfish")
 # > (no client authentication, choose any unique client id).
 # So it's not a kind of API secret we would have created on Lichess' side, but just an
 # arbitrary identifier.
-LICHESS_CLIENT_ID = env.get("LICHESS_CLIENT_ID", "")
+LICHESS_CLIENT_ID = env.get("LICHESS_CLIENT_ID", "zakuchess.com")
 LICHESS_HOST = env.get("LICHESS_HOST", "https://lichess.org")
