@@ -2,40 +2,77 @@ from typing import TYPE_CHECKING
 
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import redirect
-from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.http import (
+    require_http_methods,
+    require_POST,
+    require_safe,
+)
 
-from . import cookie_helpers
+from . import cookie_helpers, lichess_api
 from .authentication import (
     LichessTokenRetrievalProcessContext,
     check_csrf_state_from_oauth2_callback,
     fetch_lichess_token_from_oauth2_callback,
     get_lichess_token_retrieval_via_oauth2_process_starting_url,
 )
-from .components.pages.lichess import (
-    lichess_account_linked_homepage,
-    lichess_no_account_linked_page,
+from .components.pages import lichess_pages as lichess_pages
+from .forms import LichessCorrespondenceGameCreationForm
+from .views_decorators import (
+    redirect_if_no_lichess_access_token,
+    with_lichess_access_token,
 )
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
 
+    from .models import LichessAccessToken
 
-@require_GET
-async def lichess_home(request: "HttpRequest") -> HttpResponse:
-    # Do we have a Lichess API token for this user?
-    lichess_access_token = cookie_helpers.get_lichess_api_access_token_from_request(
-        request
-    )
+# TODO: use Django message framework for everything that happens outside of the chess
+#  board, so we can notify users of what's going on
+#  (we don't use HTMX for these steps, which will make the display of such messages easier)
 
+
+@require_safe
+@with_lichess_access_token
+async def lichess_home(
+    request: "HttpRequest", lichess_access_token: "LichessAccessToken | None"
+) -> HttpResponse:
     if not lichess_access_token:
-        page_content = lichess_no_account_linked_page(request=request)
+        page_content = lichess_pages.lichess_no_account_linked_page(request=request)
     else:
-        page_content = await lichess_account_linked_homepage(
+        page_content = await lichess_pages.lichess_account_linked_homepage(
             request=request,
             access_token=lichess_access_token,
         )
 
     return HttpResponse(page_content)
+
+
+@require_http_methods(["GET", "POST"])
+@with_lichess_access_token
+@redirect_if_no_lichess_access_token
+async def lichess_correspondence_game_create(
+    request: "HttpRequest", lichess_access_token: "LichessAccessToken"
+) -> HttpResponse:
+    form_errors = {}
+    if request.method == "POST":
+        form = LichessCorrespondenceGameCreationForm(request.POST)
+        if not form.is_valid():
+            form_errors = form.errors
+        else:
+            # N.B. This function returns a Lichess "Seek ID", but we don't use it atm.
+            await lichess_api.create_correspondence_game(
+                access_token=lichess_access_token,
+                days_per_turn=form.cleaned_data["days_per_turn"],
+            )
+
+            return redirect("lichess_bridge:homepage")
+
+    return HttpResponse(
+        lichess_pages.lichess_correspondence_game_creation_page(
+            request=request, form_errors=form_errors
+        )
+    )
 
 
 @require_POST
@@ -60,7 +97,7 @@ def lichess_redirect_to_oauth2_flow_starting_url(
     return response
 
 
-@require_GET
+@require_safe
 def lichess_webhook_oauth2_token_callback(request: "HttpRequest") -> HttpResponse:
     # Retrieve a context from the HTTP-only cookie we created above:
     lichess_oauth2_process_context = (
@@ -72,6 +109,7 @@ def lichess_webhook_oauth2_token_callback(request: "HttpRequest") -> HttpRespons
 
     # We have to check the "CSRF state":
     # ( https://stack-auth.com/blog/oauth-from-first-principles#attack-4 )
+    # TODO: add a test that checks that it does fail if the state doesn't match
     check_csrf_state_from_oauth2_callback(
         request=request, context=lichess_oauth2_process_context
     )

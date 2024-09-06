@@ -713,7 +713,7 @@ wheels = [
 
 [[package]]
 name = "httpx"
-version = "0.26.0"
+version = "0.27.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
@@ -722,9 +722,9 @@ dependencies = [
     { name = "idna" },
     { name = "sniffio" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/bd/26/2dc654950920f499bd062a211071925533f821ccdca04fa0c2fd914d5d06/httpx-0.26.0.tar.gz", hash = "sha256:451b55c30d5185ea6b23c2c793abf9bb237d2a7dfb901ced6ff69ad37ec1dfaf", size = 125671 }
+sdist = { url = "https://files.pythonhosted.org/packages/78/82/08f8c936781f67d9e6b9eeb8a0c8b4e406136ea4c3d1f89a5db71d42e0e6/httpx-0.27.2.tar.gz", hash = "sha256:f7c2be1d2f3c3c3160d441802406b206c2b76f5947b11115e6df10c6c65e66c2", size = 144189 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/39/9b/4937d841aee9c2c8102d9a4eeb800c7dad25386caabb4a1bf5010df81a57/httpx-0.26.0-py3-none-any.whl", hash = "sha256:8915f5a3627c4d47b73e8202457cb28f1266982d1159bd5779d86a80c0eab1cd", size = 75862 },
+    { url = "https://files.pythonhosted.org/packages/56/95/9377bcb415797e44274b51d46e3249eba641711cf3348050f76ee7b15ffc/httpx-0.27.2-py3-none-any.whl", hash = "sha256:7bb2708e112d8fdd7829cd4243970f0c223274051cb35ee80c03301ee29a3df0", size = 76395 },
 ]
 
 [[package]]
@@ -1104,7 +1104,7 @@ wheels = [
 
 [[package]]
 name = "pytest"
-version = "7.4.4"
+version = "8.3.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "colorama", marker = "sys_platform == 'win32'" },
@@ -1112,9 +1112,21 @@ dependencies = [
     { name = "packaging" },
     { name = "pluggy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/80/1f/9d8e98e4133ffb16c90f3b405c43e38d3abb715bb5d7a63a5a684f7e46a3/pytest-7.4.4.tar.gz", hash = "sha256:2cf0005922c6ace4a3e2ec8b4080eb0d9753fdc93107415332f50ce9e7994280", size = 1357116 }
+sdist = { url = "https://files.pythonhosted.org/packages/b4/8c/9862305bdcd6020bc7b45b1b5e7397a6caf1a33d3025b9a003b39075ffb2/pytest-8.3.2.tar.gz", hash = "sha256:c132345d12ce551242c87269de812483f5bcc87cdbb4722e48487ba194f9fdce", size = 1439314 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/51/ff/f6e8b8f39e08547faece4bd80f89d5a8de68a38b2d179cc1c4490ffa3286/pytest-7.4.4-py3-none-any.whl", hash = "sha256:b090cdf5ed60bf4c45261be03239c2c1c22df034fbffe691abe93cd80cea01d8", size = 325287 },
+    { url = "https://files.pythonhosted.org/packages/0f/f9/cf155cf32ca7d6fa3601bc4c5dd19086af4b320b706919d48a4c79081cf9/pytest-8.3.2-py3-none-any.whl", hash = "sha256:4ba08f9ae7dcf84ded419494d229b48d0903ea6407b030eaec46df5e6a73bba5", size = 341802 },
+]
+
+[[package]]
+name = "pytest-asyncio"
+version = "0.24.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pytest" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/52/6d/c6cf50ce320cf8611df7a1254d86233b3df7cc07f9b5f5cbcb82e08aa534/pytest_asyncio-0.24.0.tar.gz", hash = "sha256:d081d828e576d85f875399194281e92bf8a68d60d72d1a2faf2feddb6c46b276", size = 49855 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/96/31/6607dab48616902f76885dfcf62c08d929796fc3b2d2318faf9fd54dbed9/pytest_asyncio-0.24.0-py3-none-any.whl", hash = "sha256:a811296ed596b69bf0b6f3dc40f83bcaf341b155a269052d82efa2b25ac7037b", size = 18024 },
 ]
 
 [[package]]
@@ -1751,7 +1763,6 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "authlib" },
-    { name = "berserk" },
     { name = "chess" },
     { name = "dj-database-url" },
     { name = "django" },
@@ -1761,6 +1772,7 @@ dependencies = [
     { name = "django-import-export" },
     { name = "dominate" },
     { name = "gunicorn" },
+    { name = "httpx" },
     { name = "msgspec" },
     { name = "requests" },
     { name = "uvicorn", extra = ["standard"] },
@@ -1770,8 +1782,8 @@ dependencies = [
 
 [package.optional-dependencies]
 dev = [
+    { name = "berserk" },
     { name = "django-extensions" },
-    { name = "httpx" },
     { name = "ipython" },
     { name = "mypy" },
     { name = "pre-commit" },
@@ -1785,6 +1797,7 @@ load-testing = [
 ]
 test = [
     { name = "pytest" },
+    { name = "pytest-asyncio" },
     { name = "pytest-blockage" },
     { name = "pytest-cov" },
     { name = "pytest-django" },
@@ -1794,7 +1807,7 @@ test = [
 [package.metadata]
 requires-dist = [
     { name = "authlib", specifier = "==1.*" },
-    { name = "berserk", specifier = ">=0.13.2" },
+    { name = "berserk", marker = "extra == 'dev'", specifier = "==0.13.*" },
     { name = "chess", specifier = "==1.*" },
     { name = "dj-database-url", specifier = "==2.*" },
     { name = "django", specifier = "==5.1.*" },
@@ -1805,13 +1818,14 @@ requires-dist = [
     { name = "django-import-export", specifier = "==4.*" },
     { name = "dominate", specifier = "==2.*" },
     { name = "gunicorn", specifier = "==22.*" },
-    { name = "httpx", marker = "extra == 'dev'", specifier = "==0.26.*" },
+    { name = "httpx", specifier = "==0.27.*" },
     { name = "ipython", marker = "extra == 'dev'", specifier = "==8.*" },
     { name = "locust", marker = "extra == 'load-testing'", specifier = "==2.*" },
     { name = "msgspec", specifier = "==0.18.*" },
     { name = "mypy", marker = "extra == 'dev'", specifier = "==1.*" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = "==3.*" },
-    { name = "pytest", marker = "extra == 'test'", specifier = "==7.*" },
+    { name = "pytest", marker = "extra == 'test'", specifier = "==8.3.*" },
+    { name = "pytest-asyncio", marker = "extra == 'test'", specifier = "==0.24.*" },
     { name = "pytest-blockage", marker = "extra == 'test'", specifier = "==0.2.*" },
     { name = "pytest-cov", marker = "extra == 'test'", specifier = "==4.*" },
     { name = "pytest-django", marker = "extra == 'test'", specifier = "==4.*" },

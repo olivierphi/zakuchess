@@ -28,7 +28,7 @@ dependencies= [
     "msgspec==0.18.*",
     "zakuchess",
     "authlib==1.*",
-    "berserk>=0.13.2",
+    "httpx==0.27.*",
 ]
 
 
@@ -41,16 +41,20 @@ dev = [
     "ipython==8.*",
     "types-requests==2.*",
     "django-extensions==3.*",
-    # (httpx is only used in "scripts/download_assets.py" for parallel downloads)
-    "httpx==0.26.*",
     "sqlite-utils==3.*",
+    # N.B. As it turns out that Lichess' "Berserk" package misses some features we need,
+    # such as the creation of correspondence Seeks... 
+    # And as we had to wrap evey call in an `sync_to_async` anyway, which was not great... 
+    # We only use  for its `types` module at the momemt.
+    "berserk==0.13.*",
 ]
 test = [
-    "pytest==7.*",
+    "pytest==8.3.*",
     "pytest-django==4.*",
     "pytest-cov==4.*",
     "time-machine==2.*",
     "pytest-blockage==0.2.*",
+    "pytest-asyncio==0.24.*",
 ]
 load-testing = [
     "locust==2.*",
@@ -127,9 +131,17 @@ testpaths = [
     "src/project/tests/",
 ]
 python_files = ["test_*.py"]
+# pytest-django settings:
+# https://pytest-django.readthedocs.io/
 addopts = "--reuse-db"
 DJANGO_SETTINGS_MODULE = "project.settings.test"
-blockage = true # https://github.com/rob-b/pytest-blockage
+# pytest-asyncio settings:
+# https://pytest-asyncio.readthedocs.io/en/stable/reference/configuration.html
+asyncio_default_fixture_loop_scope = "function"
+asyncio_mode = "auto" 
+# pytest-blockage settings:
+# https://github.com/rob-b/pytest-blockage
+blockage = true 
 
 [tool.coverage.run]
 # @link https://coverage.readthedocs.io/en/latest/excluding.html

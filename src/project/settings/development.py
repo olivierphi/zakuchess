@@ -6,6 +6,14 @@ ALLOWED_HOSTS = ["*"]
 
 DEBUG = True
 
+INSTALLED_APPS.insert(
+    # Make sure `runserver` doesn't try to serve static assets,
+    # even without the `--no-static` option:
+    # (https://whitenoise.readthedocs.io/en/stable/django.html#using-whitenoise-in-development)
+    INSTALLED_APPS.index("django.contrib.staticfiles"),
+    "whitenoise.runserver_nostatic",
+)
+
 INSTALLED_APPS += [
     "django_extensions",
 ]

@@ -6,6 +6,13 @@ app_name = "lichess_bridge"
 
 urlpatterns = [
     path("", views.lichess_home, name="homepage"),
+    # Game management Views:
+    path(
+        "games/new/",
+        views.lichess_correspondence_game_create,
+        name="create_correspondence_game",
+    ),
+    # OAuth2 Views:
     path(
         "oauth2/start-flow/",
         views.lichess_redirect_to_oauth2_flow_starting_url,

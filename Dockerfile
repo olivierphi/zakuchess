@@ -115,8 +115,8 @@ FROM python:3.11-slim-bookworm AS assets_download
 # By having a separate build stage for downloading assets, we can cache them
 # as long as the `download_assets.py` doesn't change.
 
-# should preferably be the same as in `poetry.lock`:
-ENV PYTHON_HTTPX_VERSION=0.26.0
+# should preferably be the same as in `uv.lock`:
+ENV PYTHON_HTTPX_VERSION=0.27.2
 
 RUN pip install -U pip httpx==${PYTHON_HTTPX_VERSION}
 

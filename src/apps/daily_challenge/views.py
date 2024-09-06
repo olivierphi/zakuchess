@@ -25,7 +25,7 @@ from .business_logic._undo_last_move import undo_last_move
 from .components.misc_ui.help_modal import help_modal
 from .components.misc_ui.stats_modal import stats_modal
 from .components.misc_ui.user_prefs_modal import user_prefs_modal
-from .components.pages.daily_chess import (
+from .components.pages.daily_chess_pages import (
     daily_challenge_moving_parts_fragment,
     daily_challenge_page,
 )
