@@ -7,7 +7,7 @@ from apps.webui.components import common_styles
 from apps.webui.components.forms_common import csrf_hidden_input
 from apps.webui.components.layout import page
 
-from ...lichess_api import get_lichess_api_client
+from ... import lichess_api
 from ..misc_ui import detach_lichess_account_form
 from ..svg_icons import ICON_SVG_LOG_IN
 
@@ -43,12 +43,12 @@ def lichess_no_account_linked_page(
     )
 
 
-def lichess_account_linked_homepage(
+async def lichess_account_linked_homepage(
     *,
     request: "HttpRequest",
     access_token: "LichessAccessToken",
 ) -> str:
-    me = get_lichess_api_client(access_token).account.get()
+    me = await lichess_api.get_lichess_my_account(access_token)
 
     return page(
         div(

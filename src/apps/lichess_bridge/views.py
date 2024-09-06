@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
 
 @require_GET
-def lichess_home(request: "HttpRequest") -> HttpResponse:
+async def lichess_home(request: "HttpRequest") -> HttpResponse:
     # Do we have a Lichess API token for this user?
     lichess_access_token = cookie_helpers.get_lichess_api_access_token_from_request(
         request
@@ -30,7 +30,7 @@ def lichess_home(request: "HttpRequest") -> HttpResponse:
     if not lichess_access_token:
         page_content = lichess_no_account_linked_page(request=request)
     else:
-        page_content = lichess_account_linked_homepage(
+        page_content = await lichess_account_linked_homepage(
             request=request,
             access_token=lichess_access_token,
         )

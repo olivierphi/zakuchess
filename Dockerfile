@@ -179,7 +179,7 @@ EXPOSE 8080
 
 ENV DJANGO_SETTINGS_MODULE=project.settings.production
 
-ENV GUNICORN_CMD_ARGS="--bind 0.0.0.0:8080 --workers 2 --max-requests 120 --max-requests-jitter 20 --timeout 8"
+ENV GUNICORN_CMD_ARGS="--bind 0.0.0.0:8080 --workers 4 -k uvicorn_worker.UvicornWorker --max-requests 120 --max-requests-jitter 20 --timeout 8"
 
 RUN chmod +x scripts/start_server.sh
 # See <https://hynek.me/articles/docker-signals/>.

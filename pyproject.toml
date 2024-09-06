@@ -14,6 +14,8 @@ dependencies= [
     # Django doesn't follow SemVer, so we need to specify the minor version:
     "Django==5.1.*",
     "gunicorn==22.*",
+    "uvicorn[standard]==0.30.*",
+    "uvicorn-worker==0.2.*",
     "django-alive==1.*",
     "chess==1.*",
     "django-htmx==1.*",
