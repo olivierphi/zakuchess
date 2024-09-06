@@ -247,7 +247,7 @@ docker/local/run: ## Docker: launch the previously built image, listening on por
 		${cmd}
 
 .PHONY: docker/local/shell
-docker/local/shell: docker_args ?= --rm -it
+docker/local/shell: docker_args ?= --rm -it --user app
 docker/local/shell: docker_env ?= -e SECRET_KEY=does-not-matter-here -e DATABASE_URL=sqlite:////app/shared_volume/db.sqlite3 -e ALLOWED_HOSTS=* -e SECURE_SSL_REDIRECT=
 docker/local/shell: cmd ?= bash
 docker/local/shell: user_id ?= $$(id -u)

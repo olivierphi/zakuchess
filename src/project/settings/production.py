@@ -10,8 +10,15 @@ SESSION_COOKIE_SECURE = True
 
 # Static assets served by Whitenoise on production
 # @link http://whitenoise.evans.io/en/stable/
-MIDDLEWARE.append("whitenoise.middleware.WhiteNoiseMiddleware")
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+# > The WhiteNoise middleware should be placed directly after the
+# > Django SecurityMiddleware and before all other middleware
+MIDDLEWARE.insert(
+    MIDDLEWARE.index("django.middleware.security.SecurityMiddleware") + 1,
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+)
+STORAGES["staticfiles"] = {
+    "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+}
 
 # Logging
 LOGGING = {
