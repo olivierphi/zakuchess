@@ -1640,7 +1640,7 @@ requires-dist = [
     { name = "mypy", marker = "extra == 'dev'", specifier = "==1.*" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = "==3.*" },
     { name = "pytest", marker = "extra == 'test'", specifier = "==7.*" },
-    { name = "pytest-blockage", marker = "extra == 'test'", specifier = ">=0.2.4" },
+    { name = "pytest-blockage", marker = "extra == 'test'", specifier = "==0.2.*" },
     { name = "pytest-cov", marker = "extra == 'test'", specifier = "==4.*" },
     { name = "pytest-django", marker = "extra == 'test'", specifier = "==4.*" },
     { name = "python-dotenv", marker = "extra == 'dev'", specifier = "==1.*" },
