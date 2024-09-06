@@ -8,7 +8,9 @@ from ._base import *
 
 # Static assets served by Whitenoise on production
 # @link http://whitenoise.evans.io/en/stable/
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+STORAGES["staticfiles"] = {
+    "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+}
 
 LOGGING = {
     "version": 1,
