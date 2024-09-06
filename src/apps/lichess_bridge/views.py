@@ -7,7 +7,8 @@ from django.views.decorators.http import require_GET, require_POST
 from . import cookie_helpers
 from .authentication import (
     LichessTokenRetrievalProcessContext,
-    extract_lichess_token_from_oauth2_callback_url,
+    check_csrf_state_from_oauth2_callback,
+    fetch_lichess_token_from_oauth2_callback,
     get_lichess_token_retrieval_via_oauth2_process_starting_url,
 )
 from .components.pages.lichess import (
@@ -69,7 +70,14 @@ def lichess_webhook_oauth2_token_callback(request: "HttpRequest") -> HttpRespons
         # TODO: Do something with that error
         return redirect("lichess_bridge:homepage")
 
-    token = extract_lichess_token_from_oauth2_callback_url(
+    # We have to check the "CSRF state":
+    # ( https://stack-auth.com/blog/oauth-from-first-principles#attack-4 )
+    check_csrf_state_from_oauth2_callback(
+        request=request, context=lichess_oauth2_process_context
+    )
+
+    # Ok, now let's fetch an API access token from Lichess!
+    token = fetch_lichess_token_from_oauth2_callback(
         authorization_callback_response_url=request.get_full_path(),
         context=lichess_oauth2_process_context,
     )
@@ -80,7 +88,7 @@ def lichess_webhook_oauth2_token_callback(request: "HttpRequest") -> HttpRespons
     cookie_helpers.delete_oauth2_token_retrieval_context_from_cookies(response)
 
     # Now that we have an access token to interact with Lichess' API on behalf
-    # of the user, let's store it into a HTTP-only cookie:
+    # of the user, let's store it into a long-lived HTTP-only cookie:
     cookie_helpers.store_lichess_api_access_token_in_response_cookie(
         token=token,
         response=response,

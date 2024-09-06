@@ -27,7 +27,7 @@ def test_lichess_homepage_with_access_token_smoke_test(
         "username": "ChessChampion"
     }
 
-    client.cookies["lichess.access_token"] = "lio_123456"
+    client.cookies["lichess.access_token"] = "lio_123456789"
     response = client.get("/lichess/")
     assert response.status_code == HTTPStatus.OK
 
@@ -36,4 +36,4 @@ def test_lichess_homepage_with_access_token_smoke_test(
     assert "Log out from Lichess" in response_html
     assert "ChessChampion" in response_html
 
-    create_lichess_api_client_mock.assert_called_once_with("lio_123456")
+    create_lichess_api_client_mock.assert_called_once_with("lio_123456789")

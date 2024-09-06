@@ -15,10 +15,13 @@ import msgspec
 from authlib.common.security import generate_token
 from authlib.integrations.requests_client import OAuth2Session
 from django.conf import settings
+from django.core.exceptions import SuspiciousOperation
 from django.urls import reverse
 
 if TYPE_CHECKING:
     from typing import Self
+
+    from django.http import HttpRequest
 
     from .models import LichessAccessToken
 
@@ -104,7 +107,7 @@ def get_lichess_token_retrieval_via_oauth2_process_starting_url(
 ) -> str:
     lichess_authorization_endpoint = f"{settings.LICHESS_HOST}/oauth"
 
-    client = _get_lichess_client()
+    client = _get_lichess_oauth2_client()
     uri, state = client.create_authorization_url(
         lichess_authorization_endpoint,
         response_type="code",
@@ -117,14 +120,27 @@ def get_lichess_token_retrieval_via_oauth2_process_starting_url(
     return uri
 
 
-def extract_lichess_token_from_oauth2_callback_url(
+def check_csrf_state_from_oauth2_callback(
+    *, request: "HttpRequest", context: LichessTokenRetrievalProcessContext
+):
+    """
+    Raises a SuspiciousOperation if the state from the request's query string
+    doesn't match the state from the short-lived cookie.
+    """
+    csrf_state_from_request = request.GET["state"]
+    csrf_state_from_short_lived_cookie = context.csrf_state
+    if csrf_state_from_short_lived_cookie != csrf_state_from_request:
+        raise SuspiciousOperation("OAuth2 CSRF state mismatch")
+
+
+def fetch_lichess_token_from_oauth2_callback(
     *,
     authorization_callback_response_url: str,
     context: LichessTokenRetrievalProcessContext,
 ) -> LichessToken:
     lichess_token_endpoint = f"{settings.LICHESS_HOST}/api/token"
 
-    client = _get_lichess_client()
+    client = _get_lichess_oauth2_client()
     token_as_dict = client.fetch_token(
         lichess_token_endpoint,
         authorization_response=authorization_callback_response_url,
@@ -146,7 +162,7 @@ def _get_lichess_oauth2_zakuchess_redirect_uri(
     )
 
 
-def _get_lichess_client() -> OAuth2Session:
+def _get_lichess_oauth2_client() -> OAuth2Session:
     return OAuth2Session(
         client_id=settings.LICHESS_CLIENT_ID,
         code_challenge_method="S256",
