@@ -17,8 +17,11 @@ from .authentication import (
     get_lichess_token_retrieval_via_oauth2_process_starting_url,
 )
 from .components.pages import lichess_pages as lichess_pages
+from .components.pages.lichess_pages import lichess_game_moving_parts_fragment
 from .forms import LichessCorrespondenceGameCreationForm
+from .presenters import LichessCorrespondenceGamePresenter
 from .views_decorators import (
+    handle_chess_logic_exceptions,
     redirect_if_no_lichess_access_token,
     with_lichess_access_token,
 )
@@ -26,7 +29,14 @@ from .views_decorators import (
 if TYPE_CHECKING:
     from django.http import HttpRequest
 
-    from .models import LichessAccessToken, LichessGameId
+    from apps.chess.types import Square
+
+    from .models import (
+        LichessAccessToken,
+        LichessAccountInformation,
+        LichessGameExport,
+        LichessGameId,
+    )
 
 # TODO: use Django message framework for everything that happens outside of the chess
 #  board, so we can notify users of what's going on
@@ -101,26 +111,44 @@ async def lichess_correspondence_game(
     lichess_access_token: "LichessAccessToken",
     game_id: "LichessGameId",
 ) -> HttpResponse:
-    async with lichess_api.get_lichess_api_client(
-        access_token=lichess_access_token
-    ) as lichess_api_client:
-        # As the queries are unrelated, let's run them in parallel:
-        async with asyncio.TaskGroup() as tg:
-            me = tg.create_task(
-                lichess_api.get_my_account(api_client=lichess_api_client)
-            )
-            game_data = tg.create_task(
-                lichess_api.get_game_by_id(
-                    api_client=lichess_api_client, game_id=game_id
-                )
-            )
+    me, game_data = await _get_game_context_from_lichess(lichess_access_token, game_id)
+    game_presenter = LichessCorrespondenceGamePresenter(
+        game_data=game_data,
+        my_player_id=me.id,
+        refresh_last_move=True,
+        is_htmx_request=False,
+    )
 
     return HttpResponse(
         lichess_pages.lichess_correspondence_game_page(
             request=request,
-            me=me.result(),
-            game_data=game_data.result(),
+            game_presenter=game_presenter,
         )
+    )
+
+
+@require_safe
+@with_lichess_access_token
+@redirect_if_no_lichess_access_token
+@handle_chess_logic_exceptions
+async def htmx_game_select_piece(
+    request: "HttpRequest",
+    *,
+    lichess_access_token: "LichessAccessToken",
+    game_id: "LichessGameId",
+    location: "Square",
+) -> HttpResponse:
+    me, game_data = await _get_game_context_from_lichess(lichess_access_token, game_id)
+    game_presenter = LichessCorrespondenceGamePresenter(
+        game_data=game_data,
+        my_player_id=me.id,
+        selected_piece_square=location,
+        is_htmx_request=True,
+        refresh_last_move=False,
+    )
+
+    return _lichess_game_moving_parts_fragment_response(
+        game_presenter=game_presenter, request=request, board_id="main"
     )
 
 
@@ -191,3 +219,36 @@ def lichess_detach_account(request: "HttpRequest") -> HttpResponse:
     cookie_helpers.delete_lichess_api_access_token_from_cookies(response=response)
 
     return response
+
+
+def _lichess_game_moving_parts_fragment_response(
+    *,
+    game_presenter: LichessCorrespondenceGamePresenter,
+    request: "HttpRequest",
+    board_id: str,
+) -> HttpResponse:
+    return HttpResponse(
+        lichess_game_moving_parts_fragment(
+            game_presenter=game_presenter, request=request, board_id=board_id
+        ),
+    )
+
+
+async def _get_game_context_from_lichess(
+    lichess_access_token: "LichessAccessToken", game_id: "LichessGameId"
+) -> tuple["LichessAccountInformation", "LichessGameExport"]:
+    async with lichess_api.get_lichess_api_client(
+        access_token=lichess_access_token
+    ) as lichess_api_client:
+        # As the queries are unrelated, let's run them in parallel:
+        async with asyncio.TaskGroup() as tg:
+            me = tg.create_task(
+                lichess_api.get_my_account(api_client=lichess_api_client)
+            )
+            game_data = tg.create_task(
+                lichess_api.get_game_by_id(
+                    api_client=lichess_api_client, game_id=game_id
+                )
+            )
+
+    return me.result(), game_data.result()

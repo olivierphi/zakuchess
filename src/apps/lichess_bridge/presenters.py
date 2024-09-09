@@ -1,9 +1,11 @@
 import io
 from functools import cached_property
 from typing import TYPE_CHECKING, NamedTuple, Self, cast
+from urllib.parse import urlencode
 
 import chess
 import chess.pgn
+from django.urls import reverse
 
 from apps.chess.presenters import GamePresenter, GamePresenterUrls
 
@@ -79,7 +81,15 @@ class _LichessGamePlayers(NamedTuple):
 
 
 class LichessCorrespondenceGamePresenter(GamePresenter):
-    def __init__(self, game_data: "LichessGameExport", my_player_id: "LichessPlayerId"):
+    def __init__(
+        self,
+        *,
+        game_data: "LichessGameExport",
+        my_player_id: "LichessPlayerId",
+        refresh_last_move: bool,
+        is_htmx_request: bool,
+        selected_piece_square: "Square | None" = None,
+    ):
         self._my_player_id = my_player_id
         self._game_data = game_data
 
@@ -93,12 +103,14 @@ class LichessCorrespondenceGamePresenter(GamePresenter):
             self._chess_board, self.factions
         )
 
+        # TODO: handle `last_move`
         super().__init__(
             fen=fen,
             piece_role_by_square=piece_role_by_square,
             teams=teams,
-            refresh_last_move=True,
-            is_htmx_request=False,
+            refresh_last_move=refresh_last_move,
+            is_htmx_request=is_htmx_request,
+            selected_piece_square=selected_piece_square,
         )
 
     @cached_property
@@ -200,7 +212,19 @@ class LichessCorrespondenceGamePresenterUrls(GamePresenterUrls):
         return "#"  # TODO
 
     def htmx_game_select_piece_url(self, *, square: "Square", board_id: str) -> str:
-        return "#"  # TODO
+        return "".join(
+            (
+                reverse(
+                    "lichess_bridge:htmx_game_select_piece",
+                    kwargs={
+                        "game_id": self._game_presenter.game_id,
+                        "location": square,
+                    },
+                ),
+                "?",
+                urlencode({"board_id": board_id}),
+            )
+        )
 
     def htmx_game_move_piece_url(self, *, square: "Square", board_id: str) -> str:
         return "#"  # TODO

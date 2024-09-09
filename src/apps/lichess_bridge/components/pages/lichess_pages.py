@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from django.conf import settings
 from django.urls import reverse
 from dominate.tags import (
     a,
@@ -16,13 +17,18 @@ from dominate.tags import (
     section,
 )
 
-from apps.chess.components.chess_board import chess_arena
+from apps.chess.components.chess_board import (
+    chess_arena,
+    chess_available_targets,
+    chess_last_move,
+    chess_pieces,
+)
+from apps.chess.components.misc_ui import speech_bubble_container
 from apps.webui.components import common_styles
 from apps.webui.components.forms_common import csrf_hidden_input
 from apps.webui.components.layout import page
 
 from ...models import LichessCorrespondenceGameDaysChoice
-from ...presenters import LichessCorrespondenceGamePresenter
 from ..lichess_account import (
     detach_lichess_account_form,
     lichess_linked_account_inner_footer,
@@ -35,9 +41,9 @@ if TYPE_CHECKING:
 
     from ...models import (
         LichessAccountInformation,
-        LichessGameExport,
         LichessOngoingGameData,
     )
+    from ...presenters import LichessCorrespondenceGamePresenter
 
 
 def lichess_no_account_linked_page(
@@ -171,11 +177,8 @@ def lichess_correspondence_game_creation_page(
 def lichess_correspondence_game_page(
     *,
     request: "HttpRequest",
-    me: "LichessAccountInformation",
-    game_data: "LichessGameExport",
+    game_presenter: "LichessCorrespondenceGamePresenter",
 ) -> str:
-    game_presenter = LichessCorrespondenceGamePresenter(game_data, my_player_id=me.id)
-
     return page(
         chess_arena(
             game_presenter=game_presenter,
@@ -183,5 +186,46 @@ def lichess_correspondence_game_page(
             board_id="main",
         ),
         request=request,
-        title=f"Lichess - correspondence game {game_data.id}",
+        title=f"Lichess - correspondence game {game_presenter.game_id}",
+    )
+
+
+def lichess_game_moving_parts_fragment(
+    *,
+    game_presenter: "LichessCorrespondenceGamePresenter",
+    request: "HttpRequest",
+    board_id: str,
+) -> str:
+    return "\n".join(
+        (
+            dom_tag.render(pretty=settings.DEBUG)
+            for dom_tag in (
+                chess_pieces(
+                    game_presenter=game_presenter,
+                    board_id=board_id,
+                ),
+                chess_available_targets(
+                    game_presenter=game_presenter,
+                    board_id=board_id,
+                    data_hx_swap_oob="outerHTML",
+                ),
+                (
+                    chess_last_move(
+                        game_presenter=game_presenter,
+                        board_id=board_id,
+                        data_hx_swap_oob="outerHTML",
+                    )
+                    if game_presenter.refresh_last_move
+                    else div("")
+                ),
+                div(
+                    speech_bubble_container(
+                        game_presenter=game_presenter,
+                        board_id=board_id,
+                    ),
+                    id=f"chess-speech-container-{board_id}",
+                    data_hx_swap_oob="innerHTML",
+                ),
+            )
+        )
     )

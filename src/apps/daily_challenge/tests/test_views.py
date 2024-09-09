@@ -291,7 +291,7 @@ def test_stats_modal_can_display_todays_victory_metrics_test(
     # Test dependencies
     challenge_minimalist: "DailyChallenge",
     client: "DjangoClient",
-    cleared_django_cache,
+    cleared_django_default_cache,
 ):
     get_current_challenge_mock.return_value = challenge_minimalist
 

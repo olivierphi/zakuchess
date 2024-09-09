@@ -2,8 +2,10 @@ import functools
 from typing import TYPE_CHECKING
 
 from asgiref.sync import iscoroutinefunction
+from django.core.exceptions import BadRequest
 from django.shortcuts import redirect
 
+from ..chess.types import ChessLogicException
 from . import cookie_helpers
 
 if TYPE_CHECKING:
@@ -68,5 +70,27 @@ def redirect_if_no_lichess_access_token(func):
             return func(
                 request, *args, lichess_access_token=lichess_access_token, **kwargs
             )
+
+    return wrapper
+
+
+def handle_chess_logic_exceptions(func):
+    if iscoroutinefunction(func):
+
+        @functools.wraps(func)
+        async def wrapper(*args, **kwargs):
+            try:
+                return await func(*args, **kwargs)
+            except ChessLogicException as exc:
+                raise BadRequest(str(exc)) from exc
+
+    else:
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except ChessLogicException as exc:
+                raise BadRequest(str(exc)) from exc
 
     return wrapper

@@ -20,6 +20,7 @@ def test_lichess_homepage_no_access_token_smoke_test(client: "DjangoClient"):
 
 async def test_lichess_homepage_with_access_token_smoke_test(
     async_client: "DjangoAsyncClient",
+    cleared_django_default_cache,
 ):
     """Just a quick smoke test for now"""
 
@@ -47,6 +48,9 @@ async def test_lichess_homepage_with_access_token_smoke_test(
                     case _:
                         raise ValueError(f"Unexpected path: {self.path}")
                 return json.dumps(result)
+
+        def __init__(self):
+            self.lichess_access_token = access_token
 
         async def get(self, path, **kwargs):
             # The client's `get` method is async
@@ -133,6 +137,7 @@ _LICHESS_CORRESPONDENCE_GAME_JSON_RESPONSE = {
 
 async def test_lichess_correspondence_game_with_access_token_smoke_test(
     async_client: "DjangoAsyncClient",
+    cleared_django_default_cache,
 ):
     """Just a quick smoke test for now"""
 
@@ -160,6 +165,9 @@ async def test_lichess_correspondence_game_with_access_token_smoke_test(
                     case _:
                         raise ValueError(f"Unexpected path: {self.path}")
                 return json.dumps(result)
+
+        def __init__(self):
+            self.lichess_access_token = access_token
 
         async def get(self, path, **kwargs):
             # The client's `get` method is async
