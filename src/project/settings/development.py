@@ -21,9 +21,17 @@ INSTALLED_APPS += [
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
+    "formatters": {
+        "uvicorn": {
+            "()": "uvicorn.logging.DefaultFormatter",
+            "fmt": "%(levelprefix)s [%(name)s] %(message)s",
+            "use_colors": True,
+        },
+    },
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
+            "formatter": "uvicorn",
         },
     },
     "root": {
