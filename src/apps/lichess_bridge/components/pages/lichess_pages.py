@@ -151,7 +151,7 @@ def lichess_correspondence_game_creation_page(
                         type="submit",
                         cls=common_styles.BUTTON_CLASSES,
                     ),
-                    action=reverse("lichess_bridge:create_correspondence_game"),
+                    action=reverse("lichess_bridge:create_game"),
                     method="POST",
                 ),
                 cls="text-slate-50",

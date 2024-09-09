@@ -55,6 +55,7 @@ test = [
     "time-machine==2.*",
     "pytest-blockage==0.2.*",
     "pytest-asyncio==0.24.*",
+    "pytest-httpx-blockage==0.0.8",
 ]
 load-testing = [
     "locust==2.*",
@@ -142,6 +143,9 @@ asyncio_mode = "auto"
 # pytest-blockage settings:
 # https://github.com/rob-b/pytest-blockage
 blockage = true 
+# pytest-httpx-blockage settings:
+# https://github.com/SlavaSkvortsov/pytest-httpx-blockage
+blockage-httpx = true
 
 [tool.coverage.run]
 # @link https://coverage.readthedocs.io/en/latest/excluding.html

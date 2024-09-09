@@ -1167,6 +1167,19 @@ wheels = [
 ]
 
 [[package]]
+name = "pytest-httpx-blockage"
+version = "0.0.8"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "httpx" },
+    { name = "pytest" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/73/5c/330fa2d41d76f63b66a3f629da3aa04426953f988ccfbeb844f4d72fe836/pytest-httpx-blockage-0.0.8.tar.gz", hash = "sha256:c0eac96c806ab4c7842716bf13a15aa5846e4ddda87e810c8f0c7d91561e2c6d", size = 4590 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/85/13/49b0b11e681e10e23fa6ef6a3b872af7df7dc543f7dcd850b4dc37420819/pytest_httpx_blockage-0.0.8-py3-none-any.whl", hash = "sha256:7dbeea3005580a01e7a645784d6d12ba21c394c1f4307b7a6d2d382e693eaab7", size = 5504 },
+]
+
+[[package]]
 name = "python-dateutil"
 version = "2.9.0.post0"
 source = { registry = "https://pypi.org/simple" }
@@ -1801,6 +1814,7 @@ test = [
     { name = "pytest-blockage" },
     { name = "pytest-cov" },
     { name = "pytest-django" },
+    { name = "pytest-httpx-blockage" },
     { name = "time-machine" },
 ]
 
@@ -1829,6 +1843,7 @@ requires-dist = [
     { name = "pytest-blockage", marker = "extra == 'test'", specifier = "==0.2.*" },
     { name = "pytest-cov", marker = "extra == 'test'", specifier = "==4.*" },
     { name = "pytest-django", marker = "extra == 'test'", specifier = "==4.*" },
+    { name = "pytest-httpx-blockage", marker = "extra == 'test'", specifier = "==0.0.8" },
     { name = "python-dotenv", marker = "extra == 'dev'", specifier = "==1.*" },
     { name = "requests", specifier = "==2.*" },
     { name = "ruff", marker = "extra == 'dev'", specifier = "==0.6.*" },
