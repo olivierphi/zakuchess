@@ -1,93 +1,81 @@
-from typing import TYPE_CHECKING, Literal
+import contextlib
+import functools
+import logging
+import time
+from typing import TYPE_CHECKING
 
 import httpx
 import msgspec
 from django.conf import settings
 
-from .models import LICHESS_ACCESS_TOKEN_PREFIX
+from .models import (
+    LICHESS_ACCESS_TOKEN_PREFIX,
+    LichessAccountInformation,
+    LichessGameExport,
+    LichessOngoingGameData,
+)
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     from .models import LichessAccessToken, LichessGameSeekId
 
-
-class AccountInformation(
-    msgspec.Struct,
-):
-    """Information about an account, as returned by the Lichess API."""
-
-    # N.B. There are many more fields than this - but we only use these at the moment
-
-    id: str  # e.g.  "philippe"
-    username: str  # e.g.  "Philippe"
-    url: str  # e.g. "https://lichess.org/@/dunsap"
-
-
-class OpponentData(msgspec.Struct):
-    """Information about an opponent, as returned by the Lichess API."""
-
-    id: str  # e.g.  "philippe"
-    rating: int  # e.g. 1790
-    username: str  # e.g.  "Philippe"
-
-
-class OngoingGameData(msgspec.Struct):
-    """Information about an ongoing game, as returned by the Lichess API."""
-
-    gameId: str
-    fullId: str
-    color: Literal["white", "black"]
-    fen: str
-    hasMoved: bool
-    isMyTurn: bool
-    lastMove: str  # e.g. "b8c6"
-    opponent: OpponentData
-    perf: Literal["correspondence"]  # TODO: other values?
-    rated: bool
-    secondsLeft: int
-    source: Literal["lobby", "friend"]  # TODO: other values?
-    speed: Literal["correspondence"]  # TODO: other values?
-    variant: dict[str, str]
+_logger = logging.getLogger(__name__)
 
 
 def is_lichess_api_access_token_valid(token: str) -> bool:
     return token.startswith(LICHESS_ACCESS_TOKEN_PREFIX) and len(token) > 10
 
 
-async def get_my_account(
-    *,
-    access_token: "LichessAccessToken",
-) -> AccountInformation:
-    async with _create_lichess_api_client(access_token) as client:
-        # https://lichess.org/api#tag/Account/operation/accountMe
-        response = await client.get("/api/account")
-        return msgspec.json.decode(response.content, type=AccountInformation)
+@functools.lru_cache(maxsize=32)
+async def get_my_account(*, api_client: httpx.AsyncClient) -> LichessAccountInformation:
+    # https://lichess.org/api#tag/Account/operation/accountMe
+    endpoint = "/api/account"
+    with _lichess_api_monitoring("GET", endpoint):
+        response = await api_client.get(endpoint)
+    return msgspec.json.decode(response.content, type=LichessAccountInformation)
 
 
 async def get_my_ongoing_games(
     *,
-    access_token: "LichessAccessToken",
+    api_client: httpx.AsyncClient,
     count: int = 5,
-) -> list[OngoingGameData]:
-    async with _create_lichess_api_client(access_token) as client:
-        # https://lichess.org/api#tag/Games/operation/apiAccountPlaying
-        response = await client.get("/api/account/playing", params={"nb": count})
+) -> list[LichessOngoingGameData]:
+    # https://lichess.org/api#tag/Games/operation/apiAccountPlaying
+    endpoint = "/api/account/playing"
+    with _lichess_api_monitoring("GET", endpoint):
+        response = await api_client.get(endpoint, params={"nb": count})
 
-        class ResponseDataWrapper(msgspec.Struct):
-            nowPlaying: list[OngoingGameData]
+    class ResponseDataWrapper(msgspec.Struct):
+        """The ongoing games are wrapped in a "nowPlaying" root object's key"""
 
-        return msgspec.json.decode(
-            response.content, type=ResponseDataWrapper
-        ).nowPlaying
+        nowPlaying: list[LichessOngoingGameData]
+
+    return msgspec.json.decode(response.content, type=ResponseDataWrapper).nowPlaying
+
+
+async def get_game_by_id(
+    *, api_client: httpx.AsyncClient, game_id: str
+) -> LichessGameExport:
+    # https://lichess.org/api#tag/Games/operation/gamePgn
+    endpoint = f"/game/export/{game_id}"
+    with _lichess_api_monitoring("GET", endpoint):
+        # We only need the FEN, but it seems that the Lichess "game by ID" API endpoints
+        # can only return the full PGN - which will require a bit more work to parse.
+        response = await api_client.get(endpoint, params={"pgnInJson": "true"})
+
+    return msgspec.json.decode(response.content, type=LichessGameExport)
 
 
 async def create_correspondence_game(
-    *, access_token: "LichessAccessToken", days_per_turn: int
+    *, api_client: httpx.AsyncClient, days_per_turn: int
 ) -> "LichessGameSeekId":
-    async with _create_lichess_api_client(access_token) as client:
-        # https://lichess.org/api#tag/Board/operation/apiBoardSeek
-        # TODO: give more customisation options to the user
-        response = await client.post(
-            "/api/board/seek",
+    # https://lichess.org/api#tag/Board/operation/apiBoardSeek
+    # TODO: give more customisation options to the user
+    endpoint = "/api/board/seek"
+    with _lichess_api_monitoring("POST", endpoint):
+        response = await api_client.post(
+            endpoint,
             json={
                 "rated": False,
                 "days": days_per_turn,
@@ -95,12 +83,32 @@ async def create_correspondence_game(
                 "color": "random",
             },
         )
-        return str(response.json()["id"])
+    return str(response.json()["id"])
 
 
-# This is the function we'll mock during tests:
+def get_lichess_api_client(access_token: "LichessAccessToken") -> httpx.AsyncClient:
+    return _create_lichess_api_client(access_token)
+
+
+@contextlib.contextmanager
+def _lichess_api_monitoring(target_endpoint, method) -> "Iterator[None]":
+    start_time = time.monotonic()
+    yield
+    _logger.info(
+        "Lichess API: %s '%s' took %ims.",
+        method,
+        target_endpoint,
+        (time.monotonic() - start_time) * 1000,
+    )
+
+
+# This is the function we'll mock during tests - as it's private, we don't have to
+# mind about it being directly imported by other modules when we mock it.
 def _create_lichess_api_client(access_token: "LichessAccessToken") -> httpx.AsyncClient:
     return httpx.AsyncClient(
         base_url=settings.LICHESS_HOST,
-        headers={"Authorization": f"Bearer {access_token}"},
+        headers={
+            "Authorization": f"Bearer {access_token}",
+            "Accept": "application/json",
+        },
     )

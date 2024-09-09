@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 import chess
 
-from ..helpers import chess_lib_color_to_player_side
+from ..chess_helpers import chess_lib_color_to_player_side
 
 if TYPE_CHECKING:
     from apps.chess.types import FEN, PlayerSide

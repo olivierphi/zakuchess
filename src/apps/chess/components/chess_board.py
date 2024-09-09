@@ -9,7 +9,7 @@ from django.templatetags.static import static
 from dominate.tags import button, div, section, span
 from dominate.util import raw as unescaped_html
 
-from ..helpers import (
+from ..chess_helpers import (
     file_and_rank_from_square,
     piece_name_from_piece_role,
     player_side_from_piece_role,
@@ -623,7 +623,7 @@ def chess_unit_symbol_display(
             if player_side == "w"
             else "drop-shadow-piece-symbol-b"
         ),
-        chess_unit_symbol_class(player_side="w", piece_name=piece_name),
+        chess_unit_symbol_class(player_side=player_side, piece_name=piece_name),
     )
     symbol_display = div(
         cls=" ".join(symbol_class),

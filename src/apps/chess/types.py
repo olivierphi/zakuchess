@@ -1,5 +1,6 @@
 from typing import Literal, Required, TypeAlias, TypedDict
 
+# https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
 FEN: TypeAlias = str
 
 # fmt: off

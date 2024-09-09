@@ -4,7 +4,7 @@ from urllib.parse import urlencode
 
 from django.urls import reverse
 
-from apps.chess.helpers import uci_move_squares
+from apps.chess.chess_helpers import uci_move_squares
 from apps.chess.presenters import GamePresenter, GamePresenterUrls
 
 from .business_logic import get_speech_bubble

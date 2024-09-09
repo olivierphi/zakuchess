@@ -8,7 +8,7 @@ from django.shortcuts import redirect, resolve_url
 from django.views.decorators.http import require_POST, require_safe
 from django_htmx.http import HttpResponseClientRedirect
 
-from apps.chess.helpers import get_active_player_side_from_fen, uci_move_squares
+from apps.chess.chess_helpers import get_active_player_side_from_fen, uci_move_squares
 from apps.chess.types import ChessInvalidActionException, ChessInvalidMoveException
 from apps.utils.view_decorators import user_is_staff
 from apps.utils.views_helpers import htmx_aware_redirect
@@ -67,6 +67,7 @@ def game_view(request: "HttpRequest", *, ctx: "GameContext") -> HttpResponse:
         assert (
             ctx.challenge.fen_before_bot_first_move
             and ctx.challenge.piece_role_by_square_before_bot_first_move
+            and ctx.challenge.bot_first_move
         )
 
         ctx.game_state.fen = ctx.challenge.fen_before_bot_first_move
@@ -293,6 +294,9 @@ def htmx_restart_daily_challenge_ask_confirmation(
 def htmx_restart_daily_challenge_do(
     request: "HttpRequest", *, ctx: "GameContext"
 ) -> HttpResponse:
+    # This field is always set on a published challenge:
+    assert ctx.challenge.bot_first_move
+
     new_game_state = restart_daily_challenge(
         challenge=ctx.challenge,
         game_state=ctx.game_state,

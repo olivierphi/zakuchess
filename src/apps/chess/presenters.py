@@ -6,8 +6,7 @@ import chess
 
 from apps.chess.business_logic import calculate_piece_available_targets
 
-from .consts import PLAYER_SIDES
-from .helpers import (
+from .chess_helpers import (
     chess_lib_color_to_player_side,
     chess_lib_square_to_square,
     get_active_player_side_from_chess_board,
@@ -16,6 +15,7 @@ from .helpers import (
     symbol_from_piece_role,
     team_member_role_from_piece_role,
 )
+from .consts import PLAYER_SIDES
 from .models import UserPrefs
 from .types import ChessInvalidStateException
 
@@ -243,20 +243,25 @@ class GamePresenterUrls(ABC):
     def __init__(self, *, game_presenter: GamePresenter):
         self._game_presenter = game_presenter
 
+    @abstractmethod
     def htmx_game_no_selection_url(self, *, board_id: str) -> str:
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def htmx_game_select_piece_url(self, *, square: "Square", board_id: str) -> str:
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def htmx_game_move_piece_url(self, *, square: "Square", board_id: str) -> str:
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def htmx_game_play_bot_move_url(self, *, board_id: str) -> str:
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def htmx_game_play_solution_move_url(self, *, board_id: str) -> str:
-        raise NotImplementedError
+        pass
 
 
 class SelectedSquarePresenter:

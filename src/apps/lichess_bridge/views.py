@@ -1,3 +1,4 @@
+import asyncio
 from typing import TYPE_CHECKING
 
 from django.http import HttpResponse, HttpResponseRedirect
@@ -25,7 +26,7 @@ from .views_decorators import (
 if TYPE_CHECKING:
     from django.http import HttpRequest
 
-    from .models import LichessAccessToken
+    from .models import LichessAccessToken, LichessGameId
 
 # TODO: use Django message framework for everything that happens outside of the chess
 #  board, so we can notify users of what's going on
@@ -40,9 +41,22 @@ async def lichess_home(
     if not lichess_access_token:
         page_content = lichess_pages.lichess_no_account_linked_page(request=request)
     else:
-        page_content = await lichess_pages.lichess_account_linked_homepage(
+        async with lichess_api.get_lichess_api_client(
+            access_token=lichess_access_token
+        ) as lichess_api_client:
+            # As the queries are unrelated, let's run them in parallel:
+            async with asyncio.TaskGroup() as tg:
+                me = tg.create_task(
+                    lichess_api.get_my_account(api_client=lichess_api_client)
+                )
+                ongoing_games = tg.create_task(
+                    lichess_api.get_my_ongoing_games(api_client=lichess_api_client)
+                )
+
+        page_content = lichess_pages.lichess_account_linked_homepage(
             request=request,
-            access_token=lichess_access_token,
+            me=me.result(),
+            ongoing_games=ongoing_games.result(),
         )
 
     return HttpResponse(page_content)
@@ -51,7 +65,7 @@ async def lichess_home(
 @require_http_methods(["GET", "POST"])
 @with_lichess_access_token
 @redirect_if_no_lichess_access_token
-async def lichess_correspondence_game_create(
+async def lichess_game_create(
     request: "HttpRequest", lichess_access_token: "LichessAccessToken"
 ) -> HttpResponse:
     form_errors = {}
@@ -60,17 +74,52 @@ async def lichess_correspondence_game_create(
         if not form.is_valid():
             form_errors = form.errors
         else:
-            # N.B. This function returns a Lichess "Seek ID", but we don't use it atm.
-            await lichess_api.create_correspondence_game(
-                access_token=lichess_access_token,
-                days_per_turn=form.cleaned_data["days_per_turn"],
-            )
+            async with lichess_api.get_lichess_api_client(
+                access_token=lichess_access_token
+            ) as lichess_api_client:
+                # N.B. This function returns a Lichess "Seek ID",
+                # but we don't use it atm.
+                await lichess_api.create_correspondence_game(
+                    api_client=lichess_api_client,
+                    days_per_turn=form.cleaned_data["days_per_turn"],
+                )
 
             return redirect("lichess_bridge:homepage")
 
     return HttpResponse(
         lichess_pages.lichess_correspondence_game_creation_page(
             request=request, form_errors=form_errors
+        )
+    )
+
+
+@require_safe
+@with_lichess_access_token
+@redirect_if_no_lichess_access_token
+async def lichess_correspondence_game(
+    request: "HttpRequest",
+    lichess_access_token: "LichessAccessToken",
+    game_id: "LichessGameId",
+) -> HttpResponse:
+    async with lichess_api.get_lichess_api_client(
+        access_token=lichess_access_token
+    ) as lichess_api_client:
+        # As the queries are unrelated, let's run them in parallel:
+        async with asyncio.TaskGroup() as tg:
+            me = tg.create_task(
+                lichess_api.get_my_account(api_client=lichess_api_client)
+            )
+            game_data = tg.create_task(
+                lichess_api.get_game_by_id(
+                    api_client=lichess_api_client, game_id=game_id
+                )
+            )
+
+    return HttpResponse(
+        lichess_pages.lichess_correspondence_game_page(
+            request=request,
+            me=me.result(),
+            game_data=game_data.result(),
         )
     )
 

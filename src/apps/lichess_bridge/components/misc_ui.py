@@ -1,26 +1,17 @@
-from typing import TYPE_CHECKING
-
-from django.urls import reverse
-from dominate.tags import button, form
-
-from apps.webui.components import common_styles
-from apps.webui.components.forms_common import csrf_hidden_input
-
-from .svg_icons import ICON_SVG_LOG_OUT
-
-if TYPE_CHECKING:
-    from django.http import HttpRequest
+_ONE_DAY = 86_400
+_TWO_DAYS = _ONE_DAY * 2
 
 
-def detach_lichess_account_form(request: "HttpRequest") -> form:
-    return form(
-        csrf_hidden_input(request),
-        button(
-            "Log out from Lichess",
-            " ",
-            ICON_SVG_LOG_OUT,
-            cls=common_styles.BUTTON_CLASSES,
-        ),
-        action=reverse("lichess_bridge:detach_lichess_account"),
-        method="POST",
-    )
+def time_left_display(time_left_seconds: int) -> str:
+    # TODO: write a test for this
+    if time_left_seconds < 1:
+        return "time's up"
+    if time_left_seconds < 60:
+        return f"{time_left_seconds} seconds"
+    if time_left_seconds < 3600:
+        return f"{round(time_left_seconds/60)} minutes"
+    if time_left_seconds < _ONE_DAY:
+        return f"{round(time_left_seconds/3600)} hours"
+    if time_left_seconds < _TWO_DAYS:
+        return f"1 day and {round((time_left_seconds-_ONE_DAY)/3600)} hours"
+    return f"{round(time_left_seconds/_ONE_DAY)} days"

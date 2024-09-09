@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Literal, cast
 
 import chess
 
-from apps.chess.helpers import (
+from apps.chess.chess_helpers import (
     chess_lib_piece_to_piece_type,
     file_and_rank_from_square,
     square_from_file_and_rank,

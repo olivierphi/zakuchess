@@ -9,8 +9,13 @@ urlpatterns = [
     # Game management Views:
     path(
         "games/new/",
-        views.lichess_correspondence_game_create,
-        name="create_correspondence_game",
+        views.lichess_game_create,
+        name="create_game",
+    ),
+    path(
+        "games/correspondence/<str:game_id>/",
+        views.lichess_correspondence_game,
+        name="correspondence_game",
     ),
     # OAuth2 Views:
     path(

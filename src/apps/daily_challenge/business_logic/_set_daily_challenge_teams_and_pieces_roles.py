@@ -3,19 +3,19 @@ from typing import TYPE_CHECKING, cast
 
 import chess
 
-from apps.chess.data.team_member_names import FIRST_NAMES, LAST_NAMES
-from apps.chess.helpers import (
+from apps.chess.chess_helpers import (
     chess_lib_color_to_player_side,
     chess_lib_square_to_square,
+    piece_role_from_team_member_role_and_player_side,
     player_side_other,
 )
+from apps.chess.data.team_member_names import FIRST_NAMES, LAST_NAMES
 
 if TYPE_CHECKING:
     from apps.chess.types import (
         FEN,
         Faction,
         GameTeams,
-        PieceRole,
         PieceRoleBySquare,
         PieceType,
         PlayerSide,
@@ -74,17 +74,16 @@ def set_daily_challenge_teams_and_pieces_roles(
         team_member_role_counter, piece_role_max_value = team_members_counters[
             piece_player_side
         ][piece_type]
-        piece_role = cast(
-            "PieceRole",
+        team_member_role = cast(
+            "TeamMemberRole",
             (
                 f"{piece_type}{team_member_role_counter}"
                 if team_member_role_counter > 0
                 else piece_type
             ),
         )
-        team_member_role = cast(
-            "TeamMemberRole",
-            piece_role.upper() if piece_player_side == "w" else piece_role,
+        piece_role = piece_role_from_team_member_role_and_player_side(
+            team_member_role, piece_player_side
         )
 
         if team_member_role_counter > piece_role_max_value:
@@ -94,7 +93,7 @@ def set_daily_challenge_teams_and_pieces_roles(
             )
 
         square = chess_lib_square_to_square(chess_square)
-        piece_role_by_square[square] = team_member_role
+        piece_role_by_square[square] = piece_role
 
         team_member: "TeamMember" = {
             "role": team_member_role,

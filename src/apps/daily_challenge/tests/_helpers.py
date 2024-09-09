@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Literal
 
 from django.utils.timezone import now
 
-from apps.chess.helpers import uci_move_squares
+from apps.chess.chess_helpers import uci_move_squares
 
 from ..models import DailyChallengeStats, PlayerSessionContent
 

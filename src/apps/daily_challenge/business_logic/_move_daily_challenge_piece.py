@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, cast
 
 from apps.chess.business_logic import do_chess_move
-from apps.chess.helpers import get_active_player_side_from_fen
+from apps.chess.chess_helpers import get_active_player_side_from_fen
 from apps.chess.types import ChessInvalidStateException
 
 from ..models import PlayerGameOverState

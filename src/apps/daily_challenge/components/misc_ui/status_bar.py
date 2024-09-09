@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from dominate.tags import b, button, div, p
 from dominate.util import raw
 
-from apps.chess.helpers import (
+from apps.chess.chess_helpers import (
     piece_name_from_piece_role,
     player_side_from_piece_role,
     type_from_piece_role,

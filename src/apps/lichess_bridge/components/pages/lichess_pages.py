@@ -3,32 +3,41 @@ from typing import TYPE_CHECKING
 from django.urls import reverse
 from dominate.tags import (
     a,
+    b,
     button,
     div,
     fieldset,
     form,
+    h3,
     input_,
     label,
     legend,
-    li,
     p,
     section,
-    ul,
 )
 
+from apps.chess.components.chess_board import chess_arena
 from apps.webui.components import common_styles
 from apps.webui.components.forms_common import csrf_hidden_input
 from apps.webui.components.layout import page
 
-from ... import lichess_api
 from ...models import LichessCorrespondenceGameDaysChoice
-from ..misc_ui import detach_lichess_account_form
+from ...presenters import LichessCorrespondenceGamePresenter
+from ..lichess_account import (
+    detach_lichess_account_form,
+    lichess_linked_account_inner_footer,
+)
+from ..ongoing_games import lichess_ongoing_games
 from ..svg_icons import ICON_SVG_CREATE, ICON_SVG_LOG_IN
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
 
-    from ...models import LichessAccessToken
+    from ...models import (
+        LichessAccountInformation,
+        LichessGameExport,
+        LichessOngoingGameData,
+    )
 
 
 def lichess_no_account_linked_page(
@@ -57,36 +66,33 @@ def lichess_no_account_linked_page(
     )
 
 
-async def lichess_account_linked_homepage(
+def lichess_account_linked_homepage(
     *,
     request: "HttpRequest",
-    access_token: "LichessAccessToken",
+    me: "LichessAccountInformation",
+    ongoing_games: "list[LichessOngoingGameData]",
 ) -> str:
-    me = await lichess_api.get_my_account(access_token=access_token)
-    ongoing_games = await lichess_api.get_my_ongoing_games(access_token=access_token)
-
     return page(
         div(
             section(
-                f"Hello {me.username}!",
-                ul(
-                    *[li(game.gameId) for game in ongoing_games],
+                h3(
+                    "Logged in as ",
+                    b(f"{me.username}@Lichess", cls="text-yellow-400 font-bold"),
+                    cls="mb-2 border rounded-t-md border-slate-700 bg-slate-800 text-lg text-center",
                 ),
+                lichess_ongoing_games(ongoing_games),
                 p(
                     a(
                         "Create a new game",
-                        href=reverse("lichess_bridge:create_correspondence_game"),
+                        href=reverse("lichess_bridge:create_game"),
                         cls=common_styles.BUTTON_CLASSES,
                     ),
                 ),
-                cls="text-slate-50",
+                cls="text-center text-slate-50",
             ),
-            div(
-                detach_lichess_account_form(request),
-                cls="mt-4",
-            ),
-            cls="w-full mx-auto bg-slate-900 min-h-48 "
-            "md:max-w-3xl xl:max-w-7xl xl:border xl:rounded-md xl:border-neutral-800",
+            lichess_linked_account_inner_footer(request),
+            cls="w-full mx-auto bg-slate-900 min-h-48 pb-4 "
+            " md:max-w-3xl xl:max-w-7xl xl:border xl:rounded-md xl:border-neutral-800",
         ),
         request=request,
         title="Lichess - account linked",
@@ -159,4 +165,23 @@ def lichess_correspondence_game_creation_page(
         ),
         request=request,
         title="Lichess - new correspondence game",
+    )
+
+
+def lichess_correspondence_game_page(
+    *,
+    request: "HttpRequest",
+    me: "LichessAccountInformation",
+    game_data: "LichessGameExport",
+) -> str:
+    game_presenter = LichessCorrespondenceGamePresenter(game_data, my_player_id=me.id)
+
+    return page(
+        chess_arena(
+            game_presenter=game_presenter,
+            status_bars=[],
+            board_id="main",
+        ),
+        request=request,
+        title=f"Lichess - correspondence game {game_data.id}",
     )

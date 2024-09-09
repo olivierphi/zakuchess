@@ -60,11 +60,11 @@ async def test_lichess_homepage_with_access_token_smoke_test(
 
         response = await async_client.get("/lichess/")
 
-        assert create_lichess_api_client_mock.call_count == 2
+        assert create_lichess_api_client_mock.call_count == 1
 
     assert response.status_code == HTTPStatus.OK
 
     response_html = response.content.decode("utf-8")
     assert "Log in via Lichess" not in response_html
-    assert "Log out from Lichess" in response_html
+    assert "disconnect your Lichess account" in response_html
     assert "ChessChampion" in response_html

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from dominate.util import raw
 
-from apps.chess.helpers import (
+from apps.chess.chess_helpers import (
     chess_lib_square_to_square,
     player_side_to_chess_lib_color,
     team_member_role_from_piece_role,

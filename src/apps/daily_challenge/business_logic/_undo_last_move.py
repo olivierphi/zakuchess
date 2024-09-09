@@ -2,7 +2,7 @@ import logging
 import textwrap
 from typing import TYPE_CHECKING
 
-from apps.chess.helpers import uci_move_squares
+from apps.chess.chess_helpers import uci_move_squares
 
 from ..models import DailyChallengeStats
 from ._move_daily_challenge_piece import move_daily_challenge_piece
