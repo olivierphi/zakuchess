@@ -67,19 +67,15 @@ class LichessCorrespondenceGamePresenter(GamePresenter):
 
     @cached_property
     def is_my_turn(self) -> bool:
-        return True  # TODO
+        return self._game_data.players_from_my_perspective.active_player == "me"
 
     @cached_property
     def game_phase(self) -> "GamePhase":
         return "waiting_for_player_selection"  # TODO
 
     @cached_property
-    def is_player_turn(self) -> bool:
-        return True  # TODO
-
-    @cached_property
     def is_bot_turn(self) -> bool:
-        return False
+        return False  # no bots involved in Lichess correspondence games
 
     @property
     def solution_index(self) -> int | None:

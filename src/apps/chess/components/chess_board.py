@@ -303,7 +303,7 @@ def chess_piece(
 
     piece_can_be_moved_by_player = (
         game_presenter.solution_index is not None
-        and game_presenter.is_player_turn
+        and game_presenter.is_my_turn
         and square in game_presenter.squares_with_pieces_that_can_move
     )
     unit_display = chess_character_display(
@@ -409,6 +409,7 @@ def chess_available_target(
     assert game_presenter.selected_piece is not None
     can_move = (
         not game_presenter.is_game_over
+        and game_presenter.is_my_turn
         and game_presenter.active_player_side == piece_player_side
     )
     bg_class = (

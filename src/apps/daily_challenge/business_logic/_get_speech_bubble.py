@@ -130,7 +130,7 @@ def get_speech_bubble(
         )
 
     if (
-        game_presenter.is_player_turn
+        game_presenter.is_my_turn
         and game_presenter.is_htmx_request
         and not game_presenter.selected_piece
         and game_presenter.naive_score < -3

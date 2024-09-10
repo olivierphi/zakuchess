@@ -162,10 +162,6 @@ class GamePresenter(ABC):
 
     @property
     @abstractmethod
-    def is_player_turn(self) -> bool: ...
-
-    @property
-    @abstractmethod
     def is_bot_turn(self) -> bool: ...
 
     @property

@@ -73,7 +73,7 @@ class DailyChallengeGamePresenter(GamePresenter):
 
     @cached_property
     def is_my_turn(self) -> bool:
-        return self._challenge.my_side == self.active_player
+        return not self.is_bot_turn
 
     @cached_property
     def challenge_current_attempt_turns_counter(self) -> int:
@@ -114,11 +114,7 @@ class DailyChallengeGamePresenter(GamePresenter):
     def can_select_pieces(self) -> bool:
         # During the bot's turn we're not allowed to select any piece, as we're waiting
         # for the delayed HTMX request to play the bot's move.
-        return self.is_player_turn and not self.is_game_over
-
-    @cached_property
-    def is_player_turn(self) -> bool:
-        return self.active_player_side != self._challenge.bot_side
+        return self.is_my_turn and not self.is_game_over
 
     @cached_property
     def is_bot_turn(self) -> bool:
