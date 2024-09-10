@@ -27,6 +27,11 @@ urlpatterns = [
         views.htmx_game_select_piece,
         name="htmx_game_select_piece",
     ),
+    path(
+        "htmx/games/correspondence/<str:game_id>/pieces/<square:from_>/move/<square:to>/",
+        views.htmx_game_move_piece,
+        name="htmx_game_move_piece",
+    ),
     # OAuth2 Views:
     path(
         "oauth2/start-flow/",

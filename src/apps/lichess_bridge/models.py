@@ -1,9 +1,18 @@
-from typing import Literal, TypeAlias
+import dataclasses
+import functools
+import io
+from typing import TYPE_CHECKING, Literal, NamedTuple, TypeAlias
 
+import chess.pgn
 import msgspec
 from django.db import models
 
 from apps.chess.types import FEN  # used by msgspec, so it has to be a "real" import
+
+if TYPE_CHECKING:
+    import chess
+
+    from apps.chess.types import PlayerSide
 
 LichessAccessToken: TypeAlias = str  # e.g. "lio_6EeGimHMalSVH9qMcfUc2JJ3xdBPlqrL"
 
@@ -75,6 +84,13 @@ LichessGameStatus = Literal[
     "unknownFinish",
     "variantEnd",
 ]
+
+
+# Presenters are the objects we pass to our templates.
+_LICHESS_PLAYER_SIDE_TO_PLAYER_SIDE_MAPPING: dict["LichessPlayerSide", "PlayerSide"] = {
+    "white": "w",
+    "black": "b",
+}
 
 
 class LichessCorrespondenceGameDaysChoice(models.IntegerChoices):
@@ -171,3 +187,78 @@ class LichessGameExport(msgspec.Struct):
     pgn: str
     daysPerTurn: int
     division: dict  # ???
+
+
+class LichessGameExportMetadataPlayer(NamedTuple):
+    id: LichessPlayerId
+    username: LichessGameFullId
+    player_side: "PlayerSide"
+
+
+class LichessGameExportMetadataPlayers(NamedTuple):
+    """
+    Information about the players of a game, structured in a "me" and "them" way, and
+    giving us the "active player" as well.
+
+    (as opposed to the "players" field in the LichessGameExport class, which tells us
+    who the "white" and "black" players are but without telling us which one is "me",
+    or which one is the current active player)
+    """
+
+    me: LichessGameExportMetadataPlayer
+    them: LichessGameExportMetadataPlayer
+    active_player: Literal["me", "them"]
+
+
+@dataclasses.dataclass
+class LichessGameExportWithMetadata:
+    """
+    Wraps a LichessGameExport object with some additional metadata related to the
+    current player.
+    """
+
+    game_export: LichessGameExport
+    my_player_id: "LichessPlayerId"
+
+    @functools.cached_property
+    def chess_board(self) -> "chess.Board":
+        pgn_game = chess.pgn.read_game(io.StringIO(self.game_export.pgn))
+        if not pgn_game:
+            raise ValueError("Could not read PGN game")
+        return pgn_game.end().board()
+
+    @functools.cached_property
+    def active_player_side(self) -> "LichessPlayerSide":
+        return "white" if self.chess_board.turn else "black"
+
+    @functools.cached_property
+    def players_from_my_perspective(self) -> "LichessGameExportMetadataPlayers":
+        my_side: "LichessPlayerSide" = (
+            "white"
+            if self.game_export.players.white.user.id == self.my_player_id
+            else "black"
+        )
+        their_side: "LichessPlayerSide" = "black" if my_side == "white" else "white"
+
+        my_player: "LichessGameUser" = getattr(self.game_export.players, my_side).user
+        their_player: "LichessGameUser" = getattr(
+            self.game_export.players, their_side
+        ).user
+
+        result = LichessGameExportMetadataPlayers(
+            me=LichessGameExportMetadataPlayer(
+                id=my_player.id,
+                username=my_player.name,
+                player_side=_LICHESS_PLAYER_SIDE_TO_PLAYER_SIDE_MAPPING[my_side],
+            ),
+            them=LichessGameExportMetadataPlayer(
+                id=their_player.id,
+                username=their_player.name,
+                player_side=_LICHESS_PLAYER_SIDE_TO_PLAYER_SIDE_MAPPING[their_side],
+            ),
+            active_player="me" if self.active_player_side == my_side else "them",
+        )
+
+        print("***** Computed value for 'get_players_from_my_perspective'.")
+
+        return result

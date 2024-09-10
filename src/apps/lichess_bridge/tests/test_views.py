@@ -49,6 +49,9 @@ async def test_lichess_homepage_with_access_token_smoke_test(
                         raise ValueError(f"Unexpected path: {self.path}")
                 return json.dumps(result)
 
+            def raise_for_status(self):
+                pass
+
         def __init__(self):
             self.lichess_access_token = access_token
 
@@ -166,6 +169,9 @@ async def test_lichess_correspondence_game_with_access_token_smoke_test(
                         raise ValueError(f"Unexpected path: {self.path}")
                 return json.dumps(result)
 
+            def raise_for_status(self):
+                pass
+
         def __init__(self):
             self.lichess_access_token = access_token
 
@@ -177,8 +183,9 @@ async def test_lichess_correspondence_game_with_access_token_smoke_test(
     with mock.patch(
         "apps.lichess_bridge.lichess_api._create_lichess_api_client",
     ) as create_lichess_api_client_mock:
+        client_mock = HttpClientMock()
         create_lichess_api_client_mock.return_value.__aenter__.return_value = (
-            HttpClientMock()
+            client_mock
         )
 
         response = await async_client.get("/lichess/games/correspondence/tFfGsEpb/")

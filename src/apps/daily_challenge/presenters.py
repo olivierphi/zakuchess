@@ -204,7 +204,7 @@ class DailyChallengeGamePresenterUrls(GamePresenterUrls):
         )
 
     def htmx_game_move_piece_url(self, *, square: "Square", board_id: str) -> str:
-        assert self._game_presenter.selected_piece is not None
+        assert self._game_presenter.selected_piece is not None  # type checker: happy
         return "".join(
             (
                 reverse(

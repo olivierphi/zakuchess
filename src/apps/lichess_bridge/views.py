@@ -19,6 +19,7 @@ from .authentication import (
 from .components.pages import lichess_pages as lichess_pages
 from .components.pages.lichess_pages import lichess_game_moving_parts_fragment
 from .forms import LichessCorrespondenceGameCreationForm
+from .models import LichessGameExportWithMetadata
 from .presenters import LichessCorrespondenceGamePresenter
 from .views_decorators import (
     handle_chess_logic_exceptions,
@@ -29,12 +30,11 @@ from .views_decorators import (
 if TYPE_CHECKING:
     from django.http import HttpRequest
 
-    from apps.chess.types import Square
+    from apps.chess.types import ChessInvalidMoveException, Square
 
     from .models import (
         LichessAccessToken,
         LichessAccountInformation,
-        LichessGameExport,
         LichessGameId,
     )
 
@@ -114,7 +114,6 @@ async def lichess_correspondence_game(
     me, game_data = await _get_game_context_from_lichess(lichess_access_token, game_id)
     game_presenter = LichessCorrespondenceGamePresenter(
         game_data=game_data,
-        my_player_id=me.id,
         refresh_last_move=True,
         is_htmx_request=False,
     )
@@ -141,10 +140,67 @@ async def htmx_game_select_piece(
     me, game_data = await _get_game_context_from_lichess(lichess_access_token, game_id)
     game_presenter = LichessCorrespondenceGamePresenter(
         game_data=game_data,
-        my_player_id=me.id,
         selected_piece_square=location,
         is_htmx_request=True,
         refresh_last_move=False,
+    )
+
+    return _lichess_game_moving_parts_fragment_response(
+        game_presenter=game_presenter, request=request, board_id="main"
+    )
+
+
+@require_POST
+@with_lichess_access_token
+@redirect_if_no_lichess_access_token
+@handle_chess_logic_exceptions
+async def htmx_game_move_piece(
+    request: "HttpRequest",
+    *,
+    lichess_access_token: "LichessAccessToken",
+    game_id: "LichessGameId",
+    from_: "Square",
+    to: "Square",
+) -> HttpResponse:
+    if from_ == to:
+        raise ChessInvalidMoveException("Not a move")
+
+    # game_over_already = ctx.game_state.game_over != PlayerGameOverState.PLAYING
+    #
+    # if ctx.game_state.game_over != PlayerGameOverState.PLAYING:
+    #     raise ChessInvalidActionException("Game is over, cannot move pieces")
+
+    me, game_data = await _get_game_context_from_lichess(lichess_access_token, game_id)
+    is_my_turn = game_data.players_from_my_perspective.active_player == "me"
+    if not is_my_turn:
+        raise ChessInvalidMoveException("Not my turn")
+
+    async with lichess_api.get_lichess_api_client(
+        access_token=lichess_access_token
+    ) as lichess_api_client:
+        move_was_successful = await lichess_api.move_lichess_game_piece(
+            api_client=lichess_api_client, game_id=game_id, from_=from_, to=to
+        )
+        if not move_was_successful:
+            raise ChessInvalidMoveException(
+                f"Move '{from_}{to}' on game '{game_id}' was not successful on Lichess' side"
+            )
+        # The move was successful, let's re-fetch the updated game state:
+        # (the cache for this game's data has be cleared by `move_lichess_game_piece`)
+        game_export = await lichess_api.get_game_by_id(
+            api_client=lichess_api_client, game_id=game_id
+        )
+
+    # TODO: handle end of game after move!
+
+    game_data = LichessGameExportWithMetadata(
+        game_export=game_export, my_player_id=me.id
+    )
+    game_presenter = LichessCorrespondenceGamePresenter(
+        game_data=game_data,
+        last_move=(from_, to),
+        is_htmx_request=True,
+        refresh_last_move=True,
     )
 
     return _lichess_game_moving_parts_fragment_response(
@@ -236,19 +292,21 @@ def _lichess_game_moving_parts_fragment_response(
 
 async def _get_game_context_from_lichess(
     lichess_access_token: "LichessAccessToken", game_id: "LichessGameId"
-) -> tuple["LichessAccountInformation", "LichessGameExport"]:
+) -> tuple["LichessAccountInformation", "LichessGameExportWithMetadata"]:
     async with lichess_api.get_lichess_api_client(
         access_token=lichess_access_token
     ) as lichess_api_client:
         # As the queries are unrelated, let's run them in parallel:
         async with asyncio.TaskGroup() as tg:
-            me = tg.create_task(
+            me_task = tg.create_task(
                 lichess_api.get_my_account(api_client=lichess_api_client)
             )
-            game_data = tg.create_task(
+            game_data_task = tg.create_task(
                 lichess_api.get_game_by_id(
                     api_client=lichess_api_client, game_id=game_id
                 )
             )
 
-    return me.result(), game_data.result()
+    me, game_data = me_task.result(), game_data_task.result()
+
+    return me, LichessGameExportWithMetadata(game_export=game_data, my_player_id=me.id)
