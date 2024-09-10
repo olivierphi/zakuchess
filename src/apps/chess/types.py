@@ -29,7 +29,6 @@ PieceSymbol = Literal[
 
 PieceName = Literal["pawn", "knight", "bishop", "rook", "queen", "king"]
 
-
 # fmt: off
 TeamMemberRole = Literal[
     # 8 pawns:
@@ -101,6 +100,11 @@ GameEndReason = Literal[
     "fivefold_repetition",
     "fivefold_repetition",
     "fifty_moves",
+]
+
+BoardOrientation = Literal[
+    "1->8",  # initial "white" side on the left-hand side
+    "8->1",  # initial "black" side on the left-hand side
 ]
 
 

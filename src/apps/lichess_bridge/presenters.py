@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from apps.chess.presenters import SpeechBubbleData
     from apps.chess.types import (
         FEN,
+        BoardOrientation,
         Factions,
         GamePhase,
         GameTeams,
@@ -59,6 +60,14 @@ class LichessCorrespondenceGamePresenter(GamePresenter):
             is_htmx_request=is_htmx_request,
             selected_piece_square=selected_piece_square,
             last_move=last_move,
+        )
+
+    @cached_property
+    def board_orientation(self) -> "BoardOrientation":
+        return (
+            "1->8"
+            if self._game_data.players_from_my_perspective.me.player_side == "w"
+            else "8->1"
         )
 
     @cached_property

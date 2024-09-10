@@ -24,6 +24,7 @@ if TYPE_CHECKING:
 
     from .types import (
         FEN,
+        BoardOrientation,
         Factions,
         GamePhase,
         GameTeams,
@@ -106,6 +107,10 @@ class GamePresenter(ABC):
                 piece_square=selected_piece_square,
                 target_to_confirm=target_to_confirm,
             )
+
+    @property
+    @abstractmethod
+    def board_orientation(self) -> "BoardOrientation": ...
 
     @property
     @abstractmethod

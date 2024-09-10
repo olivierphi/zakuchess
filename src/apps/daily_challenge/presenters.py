@@ -14,7 +14,14 @@ if TYPE_CHECKING:
 
     from apps.chess.models import UserPrefs
     from apps.chess.presenters import SpeechBubbleData
-    from apps.chess.types import Factions, GamePhase, PieceRole, PlayerSide, Square
+    from apps.chess.types import (
+        BoardOrientation,
+        Factions,
+        GamePhase,
+        PieceRole,
+        PlayerSide,
+        Square,
+    )
 
     from .models import DailyChallenge, PlayerGameState
 
@@ -66,6 +73,10 @@ class DailyChallengeGamePresenter(GamePresenter):
         self.just_won = just_won
         self.is_very_first_game = is_very_first_game
         self._forced_speech_bubble = forced_speech_bubble
+
+    @cached_property
+    def board_orientation(self) -> "BoardOrientation":
+        return "1->8" if self._challenge.my_side == "w" else "8->1"
 
     @cached_property
     def urls(self) -> "DailyChallengeGamePresenterUrls":

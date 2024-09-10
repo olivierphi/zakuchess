@@ -259,6 +259,4 @@ class LichessGameExportWithMetadata:
             active_player="me" if self.active_player_side == my_side else "them",
         )
 
-        print("***** Computed value for 'get_players_from_my_perspective'.")
-
         return result
