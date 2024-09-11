@@ -33,12 +33,7 @@ if TYPE_CHECKING:
     from dominate.util import text
 
 # We'll do something cleaner later
-# TODO: subset the OpenSans font, once we have extracted text in i18n files.
 _FONTS_CSS = """
-@font-face {
-  font-family: 'OpenSans';
-  src: url('/static/webui/fonts/OpenSans.woff2') format('woff2');
-}
 @font-face {
   font-family: 'PixelFont';
   src: url('/static/webui/fonts/fibberish.ttf') format('truetype');
@@ -124,7 +119,14 @@ def head(*children: "dom_tag", title: str) -> "dom_tag":
             sizes="32x32",
             href=static("webui/img/favicon-32x32.png"),
         ),
+        # Fonts:
         style(_FONTS_CSS),
+        link(
+            # automatically created by `django-google-fonts`
+            rel="stylesheet",
+            href=static("fonts/opensans.css"),
+        ),
+        # CSS & JS
         link(rel="stylesheet", href=static("webui/css/zakuchess.css")),
         script(src=static("webui/js/main.js")),
         script(src=static("chess/js/chess-main.js")),

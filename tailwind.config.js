@@ -17,13 +17,15 @@ const PIECE_SYMBOL_B = `#3730a3${PIECE_SYMBOL_BORDER_OPACITY}` // indigo-800
 const PIECES_DROP_SHADOW_OFFSET = 1 // px
 const SPEECH_BUBBLE_DROP_SHADOW_COLOR = "#fbbf24" // amber-400
 
+// https://github.com/tailwindlabs/tailwindcss/blob/main/stubs/config.full.js
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
     content: ["./src/apps/*/components/**/*.py"],
     safelist: chessRelatedClassesSafeList(),
     theme: {
         fontFamily: {
-            sans: ["OpenSans", "sans-serif"],
+            sans: ["Open Sans", "sans-serif"],
             pixel: ["PixelFont", "monospace"],
             mono: ["monospace"],
         },

@@ -29,6 +29,7 @@ dependencies= [
     "zakuchess",
     "authlib==1.*",
     "httpx==0.27.*",
+    "django-google-fonts==0.0.3",
 ]
 
 

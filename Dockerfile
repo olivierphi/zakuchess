@@ -159,7 +159,6 @@ COPY --chown=1001:1001 --from=frontend_build /app/src/apps/chess/static src/apps
 
 COPY --chown=1001:1001 --from=backend_build /app/.venv .venv
 
-COPY --chown=1001:1001 --from=assets_download /app/src/apps/webui/static/webui/fonts/OpenSans.woff2 src/apps/webui/static/webui/fonts/OpenSans.woff2
 COPY --chown=1001:1001 --from=assets_download /app/src/apps/chess/static/chess/js/bot src/apps/chess/static/chess/js/bot
 COPY --chown=1001:1001 --from=assets_download /app/src/apps/chess/static/chess/units src/apps/chess/static/chess/units
 COPY --chown=1001:1001 --from=assets_download /app/src/apps/chess/static/chess/symbols src/apps/chess/static/chess/symbols

@@ -43,6 +43,7 @@ INSTALLED_APPS = (
         "django_htmx",
         "axes",  # https://github.com/jazzband/django-axes
         "import_export",  # https://django-import-export.readthedocs.io/
+        "django_google_fonts",  # https://github.com/andymckay/django-google-fonts
     ]
     + [
         "apps.authentication",
@@ -190,6 +191,12 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# Google fonts to mirror locally:
+# https://github.com/andymckay/django-google-fonts
+GOOGLE_FONTS = (
+    "Open Sans",  # https://fonts.google.com/specimen/Open+Sans
+)
+GOOGLE_FONTS_DIR = BASE_DIR / "src" / "apps" / "webui" / "static"
 
 # Our custom settings:
 ZAKUCHESS_VERSION = env.get("ZAKUCHESS_VERSION", "dev")

@@ -1,7 +1,7 @@
 version = 1
 requires-python = ">=3.11"
 resolution-markers = [
-    "python_full_version == '3.11'",
+    "python_full_version <= '3.11'",
     "python_full_version > '3.11'",
 ]
 
@@ -311,7 +311,7 @@ wheels = [
 
 [package.optional-dependencies]
 toml = [
-    { name = "tomli", marker = "python_full_version == '3.11'" },
+    { name = "tomli", marker = "python_full_version <= '3.11'" },
 ]
 
 [[package]]
@@ -449,6 +449,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/8a/f1/318684c9466968bf9a9c221663128206e460c1a67f595055be4b284cde8a/django-extensions-3.2.3.tar.gz", hash = "sha256:44d27919d04e23b3f40231c4ab7af4e61ce832ef46d610cc650d53e68328410a", size = 277216 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a7/7e/ba12b9660642663f5273141018d2bec0a1cae1711f4f6d1093920e157946/django_extensions-3.2.3-py3-none-any.whl", hash = "sha256:9600b7562f79a92cbf1fde6403c04fee314608fefbb595502e34383ae8203401", size = 229868 },
+]
+
+[[package]]
+name = "django-google-fonts"
+version = "0.0.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "requests" },
+    { name = "tinycss2" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ed/e9/a0d5a8988e0450444f69f99c94a896da5c4a0f8405ab8ab863cc377ece44/django_google_fonts-0.0.3.tar.gz", hash = "sha256:0439c4d89919970b141258bd3be0a085cc538f4e9c53e54f40eb2953ec2e5d30", size = 6878 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/db/35/7096ffbfadbd9acf332d99de078a56a48d7632f5b8c56714aa29f3333b36/django_google_fonts-0.0.3-py3-none-any.whl", hash = "sha256:f8f0b943107932d5fbb66da26f2088e0c6d89cde8b66ed66c3f58a6f40d54994", size = 7944 },
 ]
 
 [[package]]
@@ -1493,6 +1506,18 @@ wheels = [
 ]
 
 [[package]]
+name = "tinycss2"
+version = "1.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "webencodings" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/44/6f/38d2335a2b70b9982d112bb177e3dbe169746423e33f718bf5e9c7b3ddd3/tinycss2-1.3.0.tar.gz", hash = "sha256:152f9acabd296a8375fbca5b84c961ff95971fcfc32e79550c8df8e29118c54d", size = 67360 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2c/4d/0db5b8a613d2a59bbc29bc5bb44a2f8070eb9ceab11c50d477502a8a0092/tinycss2-1.3.0-py3-none-any.whl", hash = "sha256:54a8dbdffb334d536851be0226030e9505965bb2f30f21a4a82c55fb2a80fae7", size = 22532 },
+]
+
+[[package]]
 name = "tomli"
 version = "2.0.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1679,6 +1704,15 @@ wheels = [
 ]
 
 [[package]]
+name = "webencodings"
+version = "0.5.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/0b/02/ae6ceac1baeda530866a85075641cec12989bd8d31af6d5ab4a3e8c92f47/webencodings-0.5.1.tar.gz", hash = "sha256:b36a1c245f2d304965eb4e0a82848379241dc04b865afcc4aab16748587e1923", size = 9721 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f4/24/2a3e3df732393fed8b3ebf2ec078f05546de641fe1b667ee316ec1dcf3b7/webencodings-0.5.1-py2.py3-none-any.whl", hash = "sha256:a0af1213f3c2226497a97e2b3aa01a7e4bee4f403f95be16fc9acd2947514a78", size = 11774 },
+]
+
+[[package]]
 name = "websockets"
 version = "13.0.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1781,6 +1815,7 @@ dependencies = [
     { name = "django" },
     { name = "django-alive" },
     { name = "django-axes", extra = ["ipware"] },
+    { name = "django-google-fonts" },
     { name = "django-htmx" },
     { name = "django-import-export" },
     { name = "dominate" },
@@ -1828,6 +1863,7 @@ requires-dist = [
     { name = "django-alive", specifier = "==1.*" },
     { name = "django-axes", extras = ["ipware"], specifier = "==6.*" },
     { name = "django-extensions", marker = "extra == 'dev'", specifier = "==3.*" },
+    { name = "django-google-fonts", specifier = "==0.0.3" },
     { name = "django-htmx", specifier = "==1.*" },
     { name = "django-import-export", specifier = "==4.*" },
     { name = "dominate", specifier = "==2.*" },
