@@ -1,14 +1,13 @@
-from functools import lru_cache
 from typing import TYPE_CHECKING, Literal, cast
 
 import chess
 
-from apps.chess.chess_helpers import (
+from ..chess_helpers import (
     chess_lib_piece_to_piece_type,
     file_and_rank_from_square,
     square_from_file_and_rank,
 )
-from apps.chess.types import (
+from ..types import (
     ChessInvalidMoveException,
     ChessMoveResult,
     GameOverDescription,
@@ -62,12 +61,27 @@ _EN_PASSANT_CAPTURED_PIECES_RANK_CONVERSION: dict["Rank", "Rank"] = {
 }
 
 
-@lru_cache(maxsize=512)
-def do_chess_move(*, fen: "FEN", from_: "Square", to: "Square") -> ChessMoveResult:
+def do_chess_move(
+    *,
+    from_: "Square",
+    to: "Square",
+    fen: "FEN | None" = None,
+    chess_board: chess.Board | None = None,
+) -> ChessMoveResult:
+    """
+    Execute a move on the given board and return the result of that move.
+    The board can be passed as a FEN string *or* as a `chess.Board` object.
+    """
+    if (not fen and not chess_board) or (fen and chess_board):
+        raise ValueError(
+            "You must provide either a FEN string or a `chess.Board` object"
+        )
+
     moves: list["MoveTuple"] = []
     captured: "Square | None" = None
 
-    chess_board = chess.Board(fen)
+    if not chess_board:
+        chess_board = chess.Board(fen)
     chess_from = chess.parse_square(from_)
     chess_to = chess.parse_square(to)
 

@@ -29,10 +29,10 @@ if TYPE_CHECKING:
 
     from dominate.tags import dom_tag
 
+    from ..models import GameFactions
     from ..presenters import GamePresenter
     from ..types import (
         BoardOrientation,
-        Factions,
         PieceRole,
         PieceType,
         PlayerSide,
@@ -241,8 +241,15 @@ def chess_board(*, game_presenter: "GamePresenter", board_id: str) -> "dom_tag":
 def chess_pieces(
     *, game_presenter: "GamePresenter", board_id: str, **extra_attrs: str
 ) -> "dom_tag":
+    pieces_to_append: "list[tuple[Square, PieceRole]]" = sorted(
+        # We sort the pieces by their role, so that the pieces are always displayed
+        # in the same order, regardless of their position on the chess board.
+        game_presenter.piece_role_by_square.items(),
+        key=lambda item: item[1],
+    )
+
     pieces: "list[dom_tag]" = []
-    for square, piece_role in game_presenter.piece_role_by_square.items():
+    for square, piece_role in pieces_to_append:
         pieces.append(
             chess_piece(
                 square=square,
@@ -501,7 +508,7 @@ def chess_character_display(
     game_presenter: "GamePresenter | None" = None,
     square: "Square | None" = None,
     additional_classes: "Sequence[str]|None" = None,
-    factions: "Factions | None" = None,
+    factions: "GameFactions | None" = None,
     board_orientation: "BoardOrientation" = "1->8",
 ) -> "dom_tag":
     assert (
@@ -569,7 +576,7 @@ def chess_character_display(
         "top-2" if is_knight and is_from_original_left_hand_side else "top-1"
     )
 
-    game_factions = cast("Factions", factions or game_presenter.factions)  # type: ignore
+    game_factions = cast("GameFactions", factions or game_presenter.factions)  # type: ignore
 
     classes = [
         "relative",
@@ -633,7 +640,7 @@ def chess_unit_display_with_ground_marker(
     *,
     piece_role: "PieceRole",
     game_presenter: "GamePresenter | None" = None,
-    factions: "Factions | None" = None,
+    factions: "GameFactions | None" = None,
 ) -> "dom_tag":
     assert (
         game_presenter or factions

@@ -41,7 +41,7 @@ def status_bar(
         inner_content = div(
             help_content(
                 challenge_solution_turns_count=game_presenter.challenge_solution_turns_count,
-                factions_tuple=tuple(game_presenter.factions.items()),
+                factions=game_presenter.factions,
             ),
             div(
                 button(
@@ -109,12 +109,7 @@ def _chess_status_bar_selected_piece(
     unit_display = unit_display_container(
         piece_role=piece_role, factions=game_presenter.factions
     )
-    team_member_name = team_member.get("name", "")
-    name_display = (
-        " ".join(team_member_name)
-        if isinstance(team_member_name, list)
-        else team_member_name
-    )
+    name_display = " ".join(team_member.name)
 
     unit_about = div(
         div("> ", b(name_display, cls="text-yellow-400"), " <") if name_display else "",

@@ -1,4 +1,5 @@
 # ruff: noqa: F401
+
 from ._compute_fields_before_bot_first_move import compute_fields_before_bot_first_move
 from ._get_current_daily_challenge import get_current_daily_challenge
 from ._get_speech_bubble import get_speech_bubble

@@ -11,10 +11,10 @@ from apps.chess.consts import PIECE_TYPE_TO_NAME
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from apps.chess.models import GameFactions
     from apps.chess.types import (
         BoardOrientation,
         Faction,
-        Factions,
         File,
         PieceName,
         PieceRole,
@@ -163,35 +163,21 @@ def piece_should_face_left(
     )
 
 
+@cache
 def piece_character_classes(
     *,
     board_orientation: "BoardOrientation",
     piece_role: "PieceRole",
-    factions: "Factions",
+    factions: "GameFactions",
 ) -> "Sequence[str]":
-    return _piece_character_classes_for_factions(
-        board_orientation=board_orientation,
-        piece_role=piece_role,
-        factions_tuple=tuple(factions.items()),
-    )
-
-
-@cache
-def _piece_character_classes_for_factions(
-    *,
-    board_orientation: "BoardOrientation",
-    piece_role: "PieceRole",
-    factions_tuple: "tuple[tuple[PlayerSide, Faction], ...]",
-) -> "Sequence[str]":
-    # N.B. We use a tuple here for the factions, so they're hashable and can be used as cached key
+    player_side = player_side_from_piece_role(piece_role)
     piece_name = PIECE_TYPE_TO_NAME[type_from_piece_role(piece_role)]
-    player_side = player_side_from_piece_role(piece_role)
-    factions_dict = dict(factions_tuple)
-    faction = factions_dict[player_side]
+    faction = factions.get_faction_for_side(player_side)
     classes = [_PIECE_UNITS_CLASSES[faction][piece_name]]
-    player_side = player_side_from_piece_role(piece_role)
+
     if piece_should_face_left(board_orientation, player_side):
         classes.append("-scale-x-100")
+
     return classes
 
 

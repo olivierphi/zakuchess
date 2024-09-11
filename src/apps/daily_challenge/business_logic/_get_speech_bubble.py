@@ -13,7 +13,8 @@ from apps.chess.presenters import SpeechBubbleData
 if TYPE_CHECKING:
     import chess
 
-    from apps.chess.types import PlayerSide, Square, TeamMember
+    from apps.chess.models import TeamMember
+    from apps.chess.types import PlayerSide, Square
     from apps.daily_challenge.presenters import DailyChallengeGamePresenter
 
 # This code was originally part of the DailyChallengeGamePresenter class,
@@ -91,11 +92,7 @@ def get_speech_bubble(
                 game_presenter.challenge.my_side
             ][team_member_role]
         )
-        if isinstance(name := captured_team_member["name"], str):
-            # TODO: remove that code when we finished migrating to a list-name
-            captured_team_member_display = name.split(" ")[0]
-        else:
-            captured_team_member_display = name[0]
+        captured_team_member_display = captured_team_member.name[0]
         reaction, reaction_time_out = random.choice(_UNIT_LOST_REACTIONS)
         return SpeechBubbleData(
             text=reaction.format(captured_team_member_display),

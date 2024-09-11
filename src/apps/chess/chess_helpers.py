@@ -1,4 +1,4 @@
-from functools import cache
+from functools import cache, lru_cache
 from typing import TYPE_CHECKING, cast
 
 import chess
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
 @cache
 def chess_lib_square_to_square(chess_lib_square: int) -> "Square":
-    return cast("Square", chess.square_name(chess_lib_square))
+    return cast("Square", chess.SQUARE_NAMES[chess_lib_square])
 
 
 @cache
@@ -145,6 +145,7 @@ def get_active_player_side_from_chess_board(board: chess.Board) -> "PlayerSide":
     return "w" if board.turn else "b"
 
 
+@lru_cache
 def uci_move_squares(move: str) -> tuple["Square", "Square"]:
     return cast("Square", move[:2]), cast("Square", move[2:4])
 

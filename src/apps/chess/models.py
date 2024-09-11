@@ -1,8 +1,12 @@
 import enum
-from typing import Self
+from typing import TYPE_CHECKING, NamedTuple, Self
 
 import msgspec
 from django.db import models
+
+if TYPE_CHECKING:
+    from .types import Faction, GameTeamsDict, PlayerSide, TeamMemberRole
+
 
 # MsgSpec doesn't seem to be handling Django Choices correctly, so we have one
 # "Python enum" for the Struct and one `models.IntegerChoices` derived from it for
@@ -59,3 +63,51 @@ class UserPrefs(
     @classmethod
     def from_cookie_content(cls, cookie_content: str) -> Self:
         return msgspec.json.decode(cookie_content.encode(), type=cls)
+
+
+class GameFactions(NamedTuple):
+    w: "Faction"  # the faction for the "w" player
+    b: "Faction"  # the faction for the "b" player
+
+    def get_faction_for_side(self, item: "PlayerSide") -> "Faction":
+        return getattr(self, item)
+
+
+class TeamMember(NamedTuple):
+    role: "TeamMemberRole"
+    name: tuple[str, ...]
+    faction: "Faction | None" = None
+
+
+class GameTeams(NamedTuple):
+    """
+    We'll use this immutable class to store the team members for each player side.
+    """
+
+    w: tuple["TeamMember", ...]  # the team members for the "w" player
+    b: tuple["TeamMember", ...]  # the team members for the "b" player
+
+    def get_team_for_side(self, item: "PlayerSide") -> "tuple[TeamMember]":
+        return getattr(self, item)
+
+    def to_dict(self) -> "GameTeamsDict":
+        """
+        Used to store that in the database
+        """
+        return {"w": list(self.w), "b": list(self.b)}
+
+    @classmethod
+    def from_dict(cls, data: "GameTeamsDict") -> "GameTeams":
+        """
+        Used to re-hydrate the data from the database.
+        """
+        return cls(
+            w=tuple(
+                TeamMember(**member) if isinstance(member, dict) else member  # type: ignore[arg-type]
+                for member in data["w"]
+            ),
+            b=tuple(
+                TeamMember(**member) if isinstance(member, dict) else member  # type: ignore[arg-type]
+                for member in data["b"]
+            ),
+        )

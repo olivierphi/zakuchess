@@ -2,32 +2,21 @@ from functools import cached_property
 from typing import TYPE_CHECKING, cast
 from urllib.parse import urlencode
 
-import chess
-import chess.pgn
 from django.urls import reverse
 
 from apps.chess.presenters import GamePresenter, GamePresenterUrls
 
-from ..chess.chess_helpers import (
-    chess_lib_color_to_player_side,
-    chess_lib_square_to_square,
-    team_member_role_from_piece_role,
-)
+from ..chess.models import GameFactions
 
 if TYPE_CHECKING:
     from apps.chess.presenters import SpeechBubbleData
     from apps.chess.types import (
         FEN,
         BoardOrientation,
-        Factions,
+        Faction,
         GamePhase,
-        GameTeams,
-        PieceRole,
-        PieceRoleBySquare,
-        PieceSymbol,
         PlayerSide,
         Square,
-        TeamMember,
     )
 
     from .models import LichessGameExportWithMetadata
@@ -48,14 +37,10 @@ class LichessCorrespondenceGamePresenter(GamePresenter):
         self._chess_board = game_data.chess_board
         fen = cast("FEN", self._chess_board.fen())
 
-        teams, piece_role_by_square = self._create_teams_and_piece_role_by_square(
-            self._chess_board, self.factions
-        )
-
         super().__init__(
             fen=fen,
-            piece_role_by_square=piece_role_by_square,
-            teams=teams,
+            piece_role_by_square=game_data.piece_role_by_square,
+            teams=game_data.teams,
             refresh_last_move=refresh_last_move,
             is_htmx_request=is_htmx_request,
             selected_piece_square=selected_piece_square,
@@ -95,13 +80,14 @@ class LichessCorrespondenceGamePresenter(GamePresenter):
         return self._game_data.game_export.id
 
     @cached_property
-    def factions(self) -> "Factions":
+    def factions(self) -> GameFactions:
         players = self._game_data.players_from_my_perspective
-
-        return {
-            players.me.player_side: "humans",
-            players.them.player_side: "undeads",
-        }
+        w_faction: "Faction" = "humans" if players.me.player_side == "w" else "undeads"
+        b_faction: "Faction" = "undeads" if w_faction == "humans" else "humans"
+        return GameFactions(
+            w=w_faction,
+            b=b_faction,
+        )
 
     @property
     def is_intro_turn(self) -> bool:
@@ -114,48 +100,6 @@ class LichessCorrespondenceGamePresenter(GamePresenter):
     @cached_property
     def speech_bubble(self) -> "SpeechBubbleData | None":
         return None
-
-    @staticmethod
-    def _create_teams_and_piece_role_by_square(
-        chess_board: "chess.Board", factions: "Factions"
-    ) -> "tuple[GameTeams, PieceRoleBySquare]":
-        # fmt: off
-        piece_counters:dict["PieceSymbol", int | None] = {
-            "P": 0, "R": 0, "N": 0, "B": 0, "Q": None, "K": None,
-            "p": 0, "r": 0, "n": 0, "b": 0, "q": None, "k": None,
-        }
-        # fmt: on
-
-        teams: "GameTeams" = {"w": [], "b": []}
-        piece_role_by_square: "PieceRoleBySquare" = {}
-        for chess_square in chess.SQUARES:
-            piece = chess_board.piece_at(chess_square)
-            if not piece:
-                continue
-
-            player_side = chess_lib_color_to_player_side(piece.color)
-            symbol = cast("PieceSymbol", piece.symbol())  # e.g. "P", "p", "R", "r"...
-
-            if piece_counters[symbol] is not None:
-                piece_counters[symbol] += 1  # type: ignore[operator]
-                piece_role = cast(
-                    "PieceRole", f"{symbol}{piece_counters[symbol]}"
-                )  # e.g "P1", "r2"....
-            else:
-                piece_role = cast("PieceRole", symbol)  # e.g. "Q", "k"...
-
-            team_member_role = team_member_role_from_piece_role(piece_role)
-            team_member: "TeamMember" = {
-                "role": team_member_role,
-                "name": "",
-                "faction": factions[player_side],
-            }
-            teams[player_side].append(team_member)
-
-            square = chess_lib_square_to_square(chess_square)
-            piece_role_by_square[square] = piece_role
-
-        return teams, piece_role_by_square
 
 
 class LichessCorrespondenceGamePresenterUrls(GamePresenterUrls):

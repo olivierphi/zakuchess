@@ -7,12 +7,23 @@ import chess.pgn
 import msgspec
 from django.db import models
 
-from apps.chess.types import FEN  # used by msgspec, so it has to be a "real" import
+from apps.chess.models import GameFactions
+from apps.chess.types import FEN
+
+from .business_logic import rebuild_game_from_starting_position
 
 if TYPE_CHECKING:
     import chess
 
-    from apps.chess.types import PlayerSide
+    from apps.chess.models import GameTeams
+    from apps.chess.types import (
+        Faction,
+        PieceRoleBySquare,
+        PlayerSide,
+        UCIMove,
+    )
+
+    from .business_logic import RebuildGameFromStartingPositionResult
 
 LichessAccessToken: TypeAlias = str  # e.g. "lio_6EeGimHMalSVH9qMcfUc2JJ3xdBPlqrL"
 
@@ -189,10 +200,16 @@ class LichessGameExport(msgspec.Struct):
     division: dict  # ???
 
 
+class LichessGameExportMetadataPlayerSides(NamedTuple):
+    me: "LichessPlayerSide"
+    them: "LichessPlayerSide"
+
+
 class LichessGameExportMetadataPlayer(NamedTuple):
     id: LichessPlayerId
     username: LichessGameFullId
     player_side: "PlayerSide"
+    faction: "Faction"
 
 
 class LichessGameExportMetadataPlayers(NamedTuple):
@@ -221,11 +238,27 @@ class LichessGameExportWithMetadata:
     my_player_id: "LichessPlayerId"
 
     @functools.cached_property
-    def chess_board(self) -> "chess.Board":
+    def pgn_game(self) -> "chess.pgn.Game":
         pgn_game = chess.pgn.read_game(io.StringIO(self.game_export.pgn))
         if not pgn_game:
             raise ValueError("Could not read PGN game")
-        return pgn_game.end().board()
+        return pgn_game
+
+    @functools.cached_property
+    def chess_board(self) -> "chess.Board":
+        return self._rebuilt_game.chess_board
+
+    @functools.cached_property
+    def moves(self) -> "list[UCIMove]":
+        return self._rebuilt_game.moves
+
+    @functools.cached_property
+    def piece_role_by_square(self) -> "PieceRoleBySquare":
+        return self._rebuilt_game.piece_role_by_square
+
+    @functools.cached_property
+    def teams(self) -> "GameTeams":
+        return self._rebuilt_game.teams
 
     @functools.cached_property
     def active_player_side(self) -> "LichessPlayerSide":
@@ -233,12 +266,7 @@ class LichessGameExportWithMetadata:
 
     @functools.cached_property
     def players_from_my_perspective(self) -> "LichessGameExportMetadataPlayers":
-        my_side: "LichessPlayerSide" = (
-            "white"
-            if self.game_export.players.white.user.id == self.my_player_id
-            else "black"
-        )
-        their_side: "LichessPlayerSide" = "black" if my_side == "white" else "white"
+        my_side, their_side = self._players_sides
 
         my_player: "LichessGameUser" = getattr(self.game_export.players, my_side).user
         their_player: "LichessGameUser" = getattr(
@@ -250,13 +278,54 @@ class LichessGameExportWithMetadata:
                 id=my_player.id,
                 username=my_player.name,
                 player_side=_LICHESS_PLAYER_SIDE_TO_PLAYER_SIDE_MAPPING[my_side],
+                faction="humans",
             ),
             them=LichessGameExportMetadataPlayer(
                 id=their_player.id,
                 username=their_player.name,
                 player_side=_LICHESS_PLAYER_SIDE_TO_PLAYER_SIDE_MAPPING[their_side],
+                faction="undeads",
             ),
             active_player="me" if self.active_player_side == my_side else "them",
         )
 
         return result
+
+    @functools.cached_property
+    def game_factions(self) -> GameFactions:
+        my_side = self._players_sides[0]
+        # For now we hard-code the fact that "me" always plays the "humans" faction,
+        # and "them" always plays the "undeads" faction.
+        factions: "tuple[Faction, Faction]" = (
+            "humans",
+            "undeads",
+        )
+        if my_side == "white":
+            w_faction, b_faction = factions
+        else:
+            b_faction, w_faction = factions
+
+        return GameFactions(
+            w=w_faction,
+            b=b_faction,
+        )
+
+    @functools.cached_property
+    def _players_sides(self) -> LichessGameExportMetadataPlayerSides:
+        my_side: "LichessPlayerSide" = (
+            "white"
+            if self.game_export.players.white.user.id == self.my_player_id
+            else "black"
+        )
+        their_side: "LichessPlayerSide" = "black" if my_side == "white" else "white"
+
+        return LichessGameExportMetadataPlayerSides(
+            me=my_side,
+            them=their_side,
+        )
+
+    @functools.cached_property
+    def _rebuilt_game(self) -> "RebuildGameFromStartingPositionResult":
+        return rebuild_game_from_starting_position(
+            pgn_game=self.pgn_game, factions=self.game_factions
+        )

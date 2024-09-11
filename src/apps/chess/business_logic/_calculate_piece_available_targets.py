@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 import chess
 
-from apps.chess.chess_helpers import chess_lib_square_to_square
+from ..chess_helpers import chess_lib_square_to_square
 
 if TYPE_CHECKING:
     from apps.chess.types import Square

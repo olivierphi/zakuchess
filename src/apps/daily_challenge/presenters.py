@@ -5,6 +5,7 @@ from urllib.parse import urlencode
 from django.urls import reverse
 
 from apps.chess.chess_helpers import uci_move_squares
+from apps.chess.models import GameTeams
 from apps.chess.presenters import GamePresenter, GamePresenterUrls
 
 from .business_logic import get_speech_bubble
@@ -12,11 +13,10 @@ from .business_logic import get_speech_bubble
 if TYPE_CHECKING:
     import chess
 
-    from apps.chess.models import UserPrefs
+    from apps.chess.models import GameFactions, UserPrefs
     from apps.chess.presenters import SpeechBubbleData
     from apps.chess.types import (
         BoardOrientation,
-        Factions,
         GamePhase,
         PieceRole,
         PlayerSide,
@@ -54,7 +54,7 @@ class DailyChallengeGamePresenter(GamePresenter):
         super().__init__(
             fen=game_state.fen,
             piece_role_by_square=game_state.piece_role_by_square,
-            teams=challenge.teams,
+            teams=GameTeams.from_dict(challenge.teams),
             refresh_last_move=refresh_last_move,
             is_htmx_request=is_htmx_request,
             selected_piece_square=selected_piece_square,
@@ -140,7 +140,7 @@ class DailyChallengeGamePresenter(GamePresenter):
         return str(self._challenge.id)
 
     @cached_property
-    def factions(self) -> "Factions":
+    def factions(self) -> "GameFactions":
         return self._challenge.factions
 
     @cached_property

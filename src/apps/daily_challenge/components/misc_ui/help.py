@@ -19,16 +19,14 @@ from apps.webui.components import common_styles
 if TYPE_CHECKING:
     from dominate.tags import dom_tag
 
+    from apps.chess.models import GameFactions
     from apps.chess.types import (
-        Faction,
-        Factions,
         PieceName,
         PieceRole,
         PieceType,
         PlayerSide,
         TeamMemberRole,
     )
-
 
 _CHARACTER_TYPE_TIP: dict["PieceType", str] = {
     "p": "Characters with <b>swords</b>",
@@ -54,13 +52,12 @@ _CHARACTER_TYPE_ROLE_MAPPING: dict["PieceType", "TeamMemberRole"] = {
 def help_content(
     *,
     challenge_solution_turns_count: int,
-    factions_tuple: "tuple[tuple[PlayerSide, Faction], ...]",
+    factions: "GameFactions",
 ) -> "dom_tag":
     # N.B. We use a tuple here for the factions, so they're hashable
     # and can be used as cached key
 
     spacing = "mb-3"
-    factions = dict(factions_tuple)
 
     return raw(
         div(
@@ -146,7 +143,7 @@ def help_content(
 
 def chess_status_bar_tip(
     *,
-    factions: "Factions",
+    factions: "GameFactions",
     piece_type: "PieceType | None" = None,
     additional_classes: str = "",
     row_counter: int | None = None,
@@ -178,7 +175,7 @@ def chess_status_bar_tip(
 
 
 def unit_display_container(
-    *, piece_role: "PieceRole", factions: "Factions", row_counter: int | None = None
+    *, piece_role: "PieceRole", factions: "GameFactions", row_counter: int | None = None
 ) -> "dom_tag":
     from apps.chess.components.chess_board import chess_unit_display_with_ground_marker
 

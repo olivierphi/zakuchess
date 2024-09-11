@@ -1,7 +1,12 @@
-from typing import Literal, Required, TypeAlias, TypedDict
+from typing import TYPE_CHECKING, Literal, TypeAlias, TypedDict
+
+if TYPE_CHECKING:
+    from .models import TeamMember
 
 # https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
 FEN: TypeAlias = str
+# https://en.wikipedia.org/wiki/Portable_Game_Notation
+PGN: TypeAlias = str
 
 # fmt: off
 PlayerSide = Literal[
@@ -72,6 +77,7 @@ Square = Literal[
 ]
 # fmt: on
 
+UCIMove: TypeAlias = str  # e.g. "e2e4", "a7a8q"...
 MoveTuple = tuple[Square, Square]
 
 SquareColor = Literal["light", "dark"]
@@ -113,8 +119,6 @@ Faction = Literal[
     "undeads",
 ]
 
-Factions: TypeAlias = dict[PlayerSide, Faction]
-
 
 class GameOverDescription(TypedDict):
     winner: "PlayerSide | None"
@@ -131,14 +135,7 @@ class ChessMoveResult(TypedDict):
     game_over: GameOverDescription | None
 
 
-class TeamMember(TypedDict, total=False):
-    role: Required["TeamMemberRole"]
-    # TODO: change this to just `lst[str]` when we finished migrating to a list-name
-    name: Required[list[str] | str]
-    faction: "Faction"
-
-
-GameTeams: TypeAlias = dict["PlayerSide", list["TeamMember"]]
+GameTeamsDict: TypeAlias = "dict[PlayerSide, list[TeamMember]]"
 
 
 class ChessLogicException(Exception):

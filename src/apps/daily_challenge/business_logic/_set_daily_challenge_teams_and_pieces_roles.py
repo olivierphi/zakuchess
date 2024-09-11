@@ -1,5 +1,5 @@
 import random
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, TypeAlias, cast
 
 import chess
 
@@ -10,16 +10,15 @@ from apps.chess.chess_helpers import (
     player_side_other,
 )
 from apps.chess.data.team_member_names import FIRST_NAMES, LAST_NAMES
+from apps.chess.models import GameTeams, TeamMember
 
 if TYPE_CHECKING:
     from apps.chess.types import (
         FEN,
         Faction,
-        GameTeams,
         PieceRoleBySquare,
         PieceType,
         PlayerSide,
-        TeamMember,
         TeamMemberRole,
     )
 
@@ -32,6 +31,8 @@ _CHESS_LIB_PIECE_TYPE_TO_PIECE_TYPE_MAPPING: dict[int, "PieceType"] = {
     chess.KING: "k",
 }
 
+TeamsDict: TypeAlias = "dict[PlayerSide, list[TeamMember]]"
+
 
 def set_daily_challenge_teams_and_pieces_roles(
     *,
@@ -41,7 +42,7 @@ def set_daily_challenge_teams_and_pieces_roles(
     bot_side: "PlayerSide" = "b",
     # TODO: allow partial customisation of team members?
     # custom_team_members: "GameTeams | None" = None,
-) -> tuple["GameTeams", "PieceRoleBySquare"]:
+) -> tuple[GameTeams, "PieceRoleBySquare"]:
     chess_board = chess.Board(fen)
 
     # fmt: off
@@ -66,7 +67,7 @@ def set_daily_challenge_teams_and_pieces_roles(
         "b": default_faction_b,
     }
 
-    teams: "GameTeams" = {"w": [], "b": []}
+    teams: TeamsDict = {"w": [], "b": []}
 
     for chess_square, chess_piece in chess_board.piece_map().items():
         piece_player_side = chess_lib_color_to_player_side(chess_piece.color)
@@ -95,27 +96,33 @@ def set_daily_challenge_teams_and_pieces_roles(
         square = chess_lib_square_to_square(chess_square)
         piece_role_by_square[square] = piece_role
 
-        team_member: "TeamMember" = {
-            "role": team_member_role,
-            "name": "",  # will be filled below by `_set_character_names_for_non_bot_side`
-            "faction": piece_faction[piece_player_side],
-        }
+        team_member = TeamMember(
+            role=team_member_role,
+            name=tuple(),  # will be filled below by `_set_character_names_for_non_bot_side`
+            faction=piece_faction[piece_player_side],
+        )
         teams[piece_player_side].append(team_member)
 
         team_members_counters[piece_player_side][piece_type][0] += 1
 
     # Give a name to the player's team members
-    _set_character_names_for_non_bot_side(teams, bot_side=bot_side)
+    player_side = player_side_other(bot_side)
+    _set_character_names_for_team(teams, player_side)
 
-    return teams, piece_role_by_square
+    return (
+        GameTeams(w=tuple(teams["w"]), b=tuple(teams["b"])),
+        piece_role_by_square,
+    )
 
 
-def _set_character_names_for_non_bot_side(
-    teams: "GameTeams", bot_side: "PlayerSide"
-) -> None:
-    player_side: "PlayerSide" = player_side_other(bot_side)
-    player_team_members = teams[player_side]
-    first_names = random.sample(FIRST_NAMES, k=len(player_team_members))
-    last_names = random.sample(LAST_NAMES, k=len(player_team_members))
-    for team_member in player_team_members:
-        team_member["name"] = [first_names.pop(), last_names.pop()]
+def _set_character_names_for_team(teams: TeamsDict, side: "PlayerSide") -> None:
+    anonymous_team_members = teams[side]
+    first_names = random.sample(FIRST_NAMES, k=len(anonymous_team_members))
+    last_names = random.sample(LAST_NAMES, k=len(anonymous_team_members))
+
+    named_team_members: list[TeamMember] = []
+    for team_member in anonymous_team_members:
+        named_team_members.append(
+            team_member._replace(name=(first_names.pop(), last_names.pop()))
+        )
+    teams[side] = named_team_members
