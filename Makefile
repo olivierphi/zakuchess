@@ -31,11 +31,18 @@ download_assets:
 	${PYTHON_BINS}/python scripts/download_assets.py ${download_assets_opts}
 
 .PHONY: backend/install
-backend/install: uv_sync_opts ?= --all-extras --no-build
+backend/install: uv_sync_opts ?= --all-extras
 backend/install: bin/uv .venv ## Install the Python dependencies (via uv) and install pre-commit
+# Install Python dependencies:
 	${UV} sync ${uv_sync_opts}
+# Install the project in editable mode, so we don't have to add "src/" to the Python path:
+	${UV} pip install -e .
+# Install pre-commit hooks:
 	${PYTHON_BINS}/pre-commit install
+# Create a shim for Black (actually using Ruff), so the IDE can use it:
 	@${SUB_MAKE} .venv/bin/black
+# Create the database if it doesn't exist:
+	@${SUB_MAKE} db.sqlite3
 
 .PHONY: backend/watch
 backend/watch: env_vars ?=
@@ -189,6 +196,7 @@ django/manage: env_vars ?=
 django/manage: dotenv_file ?= .env.local
 django/manage: cmd ?= --help
 django/manage: .venv .env.local ## Run a Django management command
+	@echo "Running Django management command: ${cmd}"
 	@DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE} ${env_vars} \
 		${PYTHON_BINS}/dotenv -f '${dotenv_file}' run -- \
 		${PYTHON} manage.py ${cmd}

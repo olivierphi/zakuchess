@@ -68,7 +68,7 @@ Repository = "https://github.com/olivierphi/zakuchess"
 
 
 [tool.uv]
-package = true # symlinks the project's "src/" root folder to the venv
+package = false
 
 
 [tool.ruff]
