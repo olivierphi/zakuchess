@@ -17,11 +17,11 @@ urlpatterns = [
         views.lichess_correspondence_game,
         name="correspondence_game",
     ),
-    # path(
-    #     "htmx/games/correspondence/<str:game_id>/no-selection/",
-    #     views.htmx_game_no_selection,
-    #     name="htmx_game_no_selection",
-    # ),
+    path(
+        "htmx/games/correspondence/<str:game_id>/no-selection/",
+        views.htmx_lichess_correspondence_game_no_selection,
+        name="htmx_game_no_selection",
+    ),
     path(
         "htmx/games/correspondence/<str:game_id>/pieces/<square:location>/select/",
         views.htmx_game_select_piece,

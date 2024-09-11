@@ -64,8 +64,19 @@ class LichessCorrespondenceGamePresenter(GamePresenter):
         return self._game_data.players_from_my_perspective.active_player == "me"
 
     @cached_property
+    def my_side(self) -> "PlayerSide | None":
+        return self._game_data.players_from_my_perspective.me.player_side
+
+    @cached_property
     def game_phase(self) -> "GamePhase":
-        return "waiting_for_player_selection"  # TODO
+        # TODO: manage "game over" situations
+        if self.is_my_turn:
+            if self.selected_piece is None:
+                return "waiting_for_player_selection"
+            if self.selected_piece.target_to_confirm is None:
+                return "waiting_for_player_target_choice"
+            return "waiting_for_player_target_choice_confirmation"
+        return "waiting_for_opponent_turn"
 
     @cached_property
     def is_bot_turn(self) -> bool:
@@ -104,7 +115,18 @@ class LichessCorrespondenceGamePresenter(GamePresenter):
 
 class LichessCorrespondenceGamePresenterUrls(GamePresenterUrls):
     def htmx_game_no_selection_url(self, *, board_id: str) -> str:
-        return "#"  # TODO
+        return "".join(
+            (
+                reverse(
+                    "lichess_bridge:htmx_game_no_selection",
+                    kwargs={
+                        "game_id": self._game_presenter.game_id,
+                    },
+                ),
+                "?",
+                urlencode({"board_id": board_id}),
+            )
+        )
 
     def htmx_game_select_piece_url(self, *, square: "Square", board_id: str) -> str:
         return "".join(

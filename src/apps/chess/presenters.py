@@ -120,6 +120,10 @@ class GamePresenter(ABC):
 
     @property
     @abstractmethod
+    def my_side(self) -> "PlayerSide | None": ...
+
+    @property
+    @abstractmethod
     def game_phase(self) -> "GamePhase": ...
 
     # Properties derived from the chess board:

@@ -450,12 +450,12 @@ def chess_available_target(
     can_move = (
         not game_presenter.is_game_over
         and game_presenter.is_my_turn
-        and game_presenter.active_player_side == piece_player_side
+        and game_presenter.my_side == piece_player_side
     )
     bg_class = (
-        "bg-active-chess-available-target-marker"
+        "bg-playable-chess-available-target-marker"
         if can_move
-        else "bg-opponent-chess-available-target-marker"
+        else "bg-non-playable-chess-available-target-marker"
     )
     hover_class = "hover:w-1/3 hover:h-1/3" if can_move else ""
     target_marker = div(
@@ -517,8 +517,14 @@ def chess_character_display(
 
     # Some data we'll need:
     piece_player_side = player_side_from_piece_role(piece_role)
-    is_active_player_piece = (
-        game_presenter.active_player == piece_player_side if game_presenter else False
+    is_my_turn = game_presenter.is_my_turn if game_presenter else False
+    is_playable = is_my_turn and (
+        (
+            piece_player_side == game_presenter.my_side
+            and not game_presenter.is_game_over
+        )
+        if game_presenter
+        else False
     )
     is_potential_capture: bool = False
     is_highlighted: bool = False
@@ -552,7 +558,7 @@ def chess_character_display(
     # Right, let's do this shall we?
     if (
         is_king
-        and is_active_player_piece
+        and is_my_turn
         and game_presenter
         and game_presenter.solution_index is None
         and game_presenter.is_check
@@ -560,7 +566,7 @@ def chess_character_display(
         is_potential_capture = True  # let's highlight our king if it's in check
     elif (
         is_king
-        and is_active_player_piece
+        and is_my_turn
         and game_presenter
         and game_presenter.solution_index is not None
         and game_presenter.is_check
@@ -595,9 +601,9 @@ def chess_character_display(
         # Conditional classes:
         (
             (
-                "drop-shadow-active-selected-piece"
-                if is_active_player_piece
-                else "drop-shadow-opponent-selected-piece"
+                "drop-shadow-playable-selected-piece"
+                if is_playable
+                else "drop-shadow-non-playable-selected-piece"
             )
             if is_highlighted
             else (

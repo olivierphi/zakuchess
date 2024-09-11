@@ -87,6 +87,10 @@ class DailyChallengeGamePresenter(GamePresenter):
         return not self.is_bot_turn
 
     @cached_property
+    def my_side(self) -> "PlayerSide | None":
+        return self._challenge.my_side
+
+    @cached_property
     def challenge_current_attempt_turns_counter(self) -> int:
         return self.game_state.current_attempt_turns_counter
 

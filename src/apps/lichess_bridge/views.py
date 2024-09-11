@@ -76,7 +76,7 @@ async def lichess_home(
 @with_lichess_access_token
 @redirect_if_no_lichess_access_token
 async def lichess_game_create(
-    request: "HttpRequest", lichess_access_token: "LichessAccessToken"
+    request: "HttpRequest", *, lichess_access_token: "LichessAccessToken"
 ) -> HttpResponse:
     form_errors = {}
     if request.method == "POST":
@@ -108,14 +108,15 @@ async def lichess_game_create(
 @redirect_if_no_lichess_access_token
 async def lichess_correspondence_game(
     request: "HttpRequest",
+    *,
     lichess_access_token: "LichessAccessToken",
     game_id: "LichessGameId",
 ) -> HttpResponse:
     me, game_data = await _get_game_context_from_lichess(lichess_access_token, game_id)
     game_presenter = LichessCorrespondenceGamePresenter(
         game_data=game_data,
-        refresh_last_move=True,
         is_htmx_request=False,
+        refresh_last_move=True,
     )
 
     return HttpResponse(
@@ -123,6 +124,27 @@ async def lichess_correspondence_game(
             request=request,
             game_presenter=game_presenter,
         )
+    )
+
+
+@require_safe
+@with_lichess_access_token
+@redirect_if_no_lichess_access_token
+async def htmx_lichess_correspondence_game_no_selection(
+    request: "HttpRequest",
+    *,
+    lichess_access_token: "LichessAccessToken",
+    game_id: "LichessGameId",
+) -> HttpResponse:
+    me, game_data = await _get_game_context_from_lichess(lichess_access_token, game_id)
+    game_presenter = LichessCorrespondenceGamePresenter(
+        game_data=game_data,
+        is_htmx_request=True,
+        refresh_last_move=False,
+    )
+
+    return _lichess_game_moving_parts_fragment_response(
+        game_presenter=game_presenter, request=request, board_id="main"
     )
 
 

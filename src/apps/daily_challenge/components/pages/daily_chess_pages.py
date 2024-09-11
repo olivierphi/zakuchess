@@ -197,6 +197,7 @@ _MODAL_TEMPLATE = Template(
 
 
 def _open_modal(modal_id: "Literal['stats', 'help']", delay: int) -> "dom_tag":
+    # TODO: use a web component for this
     return div(
         script(
             raw(_MODAL_TEMPLATE.substitute(MODAL_ID=modal_id, DELAY=delay)),
