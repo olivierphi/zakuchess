@@ -1,3 +1,5 @@
+import logging
+import time
 from typing import TYPE_CHECKING, NamedTuple
 
 import chess
@@ -11,6 +13,8 @@ if TYPE_CHECKING:
     from apps.chess.types import PieceRoleBySquare, UCIMove
 
     from ...chess.models import GameFactions, GameTeams
+
+_logger = logging.getLogger(__name__)
 
 
 class RebuildGameFromStartingPositionResult(NamedTuple):
@@ -27,13 +31,17 @@ def rebuild_game_from_starting_position(
         create_teams_and_piece_role_by_square_for_starting_position,
     )
 
+    start_time = time.monotonic()
+
     # We start with a "starting position "chess board"...
     teams, piece_role_by_square_tuple = (
         create_teams_and_piece_role_by_square_for_starting_position(factions)
     )
     piece_role_by_square = dict(piece_role_by_square_tuple)
 
-    # ...and then we apply the moves from the game data to it.
+    # ...and then we apply the moves from the game data to it, one by one:
+    # (while keeping track of the piece roles on the board, so if "p1" moves,
+    # we can "follow" that pawn)
     chess_board = chess.Board()
     uci_moves: list[str] = []
     for move in pgn_game.mainline_moves():
@@ -50,6 +58,12 @@ def rebuild_game_from_starting_position(
             )
         )
         uci_moves.append(move.uci())
+
+    _logger.info(
+        "`rebuild_game_from_starting_position` took %d ms. for %d moves",
+        (time.monotonic() - start_time) * 1000,
+        len(uci_moves),
+    )
 
     return RebuildGameFromStartingPositionResult(
         chess_board=chess_board,
