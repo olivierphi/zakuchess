@@ -47,7 +47,7 @@ def create_teams_and_piece_role_by_square_for_starting_position(
 
         player_side = chess_lib_color_to_player_side(piece.color)
         symbol = cast("PieceSymbol", piece.symbol())  # e.g. "P", "p", "R", "r"...
-        if piece_counters[symbol]:
+        if piece_counters[symbol] is not None:
             piece_counters[symbol] += 1  # type: ignore[operator]
             piece_role = cast(
                 "PieceRole", f"{symbol}{piece_counters[symbol]}"
