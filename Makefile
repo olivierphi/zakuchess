@@ -170,7 +170,7 @@ frontend/img/copy_assets:
 
 # Here starts the "misc util targets" stuff
 
-bin/uv: uv_version ?= 0.4.4
+bin/uv: uv_version ?= 0.4.9
 bin/uv: # Install `uv` and `uvx` locally in the "bin/" folder
 	curl -LsSf "https://astral.sh/uv/${uv_version}/install.sh" | \
 		CARGO_DIST_FORCE_INSTALL_DIR="$$(pwd)" INSTALLER_NO_MODIFY_PATH=1 sh

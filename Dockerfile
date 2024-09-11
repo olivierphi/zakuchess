@@ -74,7 +74,7 @@ EOT
 
 # Install uv.
 # https://docs.astral.sh/uv/guides/integration/docker/
-COPY --from=ghcr.io/astral-sh/uv:0.4.4 /uv /usr/local/bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.4.9 /uv /usr/local/bin/uv
 
 RUN mkdir -p /app
 WORKDIR /app
