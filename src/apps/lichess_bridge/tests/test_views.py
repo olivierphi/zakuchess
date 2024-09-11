@@ -3,8 +3,27 @@ from http import HTTPStatus
 from typing import TYPE_CHECKING, Any
 from unittest import mock
 
+import pytest
+
 if TYPE_CHECKING:
     from django.test import AsyncClient as DjangoAsyncClient, Client as DjangoClient
+
+
+class HttpClientMockBase:
+    def __init__(self, access_token):
+        self.lichess_access_token = access_token
+
+    @property
+    def headers(self):
+        return {"Authorization": f"Bearer {self.lichess_access_token}"}
+
+
+class HttpClientResponseMockBase:
+    def __init__(self, path):
+        self.path = path
+
+    def raise_for_status(self):
+        pass
 
 
 def test_lichess_homepage_no_access_token_smoke_test(client: "DjangoClient"):
@@ -18,20 +37,18 @@ def test_lichess_homepage_no_access_token_smoke_test(client: "DjangoClient"):
     assert "Log out from Lichess" not in response_html
 
 
+@pytest.mark.django_db  # just because we use the DatabaseCache
 async def test_lichess_homepage_with_access_token_smoke_test(
     async_client: "DjangoAsyncClient",
-    cleared_django_default_cache,
+    acleared_django_default_cache,
 ):
     """Just a quick smoke test for now"""
 
     access_token = "lio_123456789"
     async_client.cookies["lichess.access_token"] = access_token
 
-    class HttpClientMock:
-        class HttpClientResponseMock:
-            def __init__(self, path):
-                self.path = path
-
+    class HttpClientMock(HttpClientMockBase):
+        class HttpClientResponseMock(HttpClientResponseMockBase):
             @property
             def content(self) -> str:
                 # The client's response's `content` is a property
@@ -49,12 +66,6 @@ async def test_lichess_homepage_with_access_token_smoke_test(
                         raise ValueError(f"Unexpected path: {self.path}")
                 return json.dumps(result)
 
-            def raise_for_status(self):
-                pass
-
-        def __init__(self):
-            self.lichess_access_token = access_token
-
         async def get(self, path, **kwargs):
             # The client's `get` method is async
             assert path.startswith("/api/")
@@ -64,7 +75,7 @@ async def test_lichess_homepage_with_access_token_smoke_test(
         "apps.lichess_bridge.lichess_api._create_lichess_api_client",
     ) as create_lichess_api_client_mock:
         create_lichess_api_client_mock.return_value.__aenter__.return_value = (
-            HttpClientMock()
+            HttpClientMock(access_token)
         )
 
         response = await async_client.get("/lichess/")
@@ -87,6 +98,7 @@ async def test_lichess_create_game_without_access_token_should_redirect(
     assert response.status_code == HTTPStatus.FOUND
 
 
+@pytest.mark.django_db  # just because we use the DatabaseCache
 async def test_lichess_create_game_with_access_token_smoke_test(
     async_client: "DjangoAsyncClient",
 ):
@@ -132,26 +144,45 @@ _LICHESS_CORRESPONDENCE_GAME_JSON_RESPONSE = {
     },
     "opening": {"eco": "B01", "name": "Scandinavian Defense", "ply": 2},
     "moves": "e4 d5",
-    "pgn": '[Event "Casual correspondence game"]\n[Site "https://lichess.org/tFXGsEcq"]\n[Date "2024.09.06"]\n[White "ChessChampion"]\n[Black "ChessMaster74960"]\n[Result "*"]\n[UTCDate "2024.09.06"]\n[UTCTime "15:37:24"]\n[WhiteElo "1500"]\n[BlackElo "2078"]\n[Variant "Standard"]\n[TimeControl "-"]\n[ECO "B01"]\n[Opening "Scandinavian Defense"]\n[Termination "Unterminated"]\n\n1. e4 d5 *\n\n\n',
+    "pgn": "\n".join(
+        # https://en.wikipedia.org/wiki/Portable_Game_Notation
+        (
+            '[Event "Casual correspondence game"]',
+            '[Site "https://lichess.org/tFXGsEcq"]',
+            '[Date "2024.09.06"]',
+            '[White "ChessChampion"]',
+            '[Black "ChessMaster74960"]',
+            '[Result "*"]',
+            '[UTCDate "2024.09.06"]',
+            '[UTCTime "15:37:24"]',
+            '[WhiteElo "1500"]',
+            '[BlackElo "2078"]',
+            '[Variant "Standard"]',
+            '[TimeControl "-"]',
+            '[ECO "B01"]',
+            '[Opening "Scandinavian Defense"]',
+            '[Termination "Unterminated"]',
+            "\n1. e4 d5 *",
+            "\n\n",
+        )
+    ),
     "daysPerTurn": 3,
     "division": {},
 }
 
 
+@pytest.mark.django_db  # just because we use the DatabaseCache
 async def test_lichess_correspondence_game_with_access_token_smoke_test(
     async_client: "DjangoAsyncClient",
-    cleared_django_default_cache,
+    acleared_django_default_cache,
 ):
     """Just a quick smoke test for now"""
 
     access_token = "lio_123456789"
     async_client.cookies["lichess.access_token"] = access_token
 
-    class HttpClientMock:
-        class HttpClientResponseMock:
-            def __init__(self, path):
-                self.path = path
-
+    class HttpClientMock(HttpClientMockBase):
+        class HttpClientResponseMock(HttpClientResponseMockBase):
             @property
             def content(self) -> str:
                 # The client's response's `content` is a property
@@ -169,12 +200,6 @@ async def test_lichess_correspondence_game_with_access_token_smoke_test(
                         raise ValueError(f"Unexpected path: {self.path}")
                 return json.dumps(result)
 
-            def raise_for_status(self):
-                pass
-
-        def __init__(self):
-            self.lichess_access_token = access_token
-
         async def get(self, path, **kwargs):
             # The client's `get` method is async
             assert path.startswith(("/api/", "/game/export/"))
@@ -183,7 +208,7 @@ async def test_lichess_correspondence_game_with_access_token_smoke_test(
     with mock.patch(
         "apps.lichess_bridge.lichess_api._create_lichess_api_client",
     ) as create_lichess_api_client_mock:
-        client_mock = HttpClientMock()
+        client_mock = HttpClientMock(access_token)
         create_lichess_api_client_mock.return_value.__aenter__.return_value = (
             client_mock
         )

@@ -43,6 +43,8 @@ backend/install: bin/uv .venv ## Install the Python dependencies (via uv) and in
 	@${SUB_MAKE} .venv/bin/black
 # Create the database if it doesn't exist:
 	@${SUB_MAKE} db.sqlite3
+# Make sure the SQLite database is up-to-date:
+	@${SUB_MAKE} django/manage cmd='createcachetable'
 
 .PHONY: backend/watch
 backend/watch: env_vars ?=

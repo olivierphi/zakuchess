@@ -107,9 +107,7 @@ DATABASES = {
 
 CACHES = {
     "default": {
-        # Let's kiss things simple for now, and let each Django worker
-        # manage their own in-memory cache.
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
     }
 }
 

@@ -10,7 +10,11 @@ set -o errexit
 # initialised some environment variables in the Dockerfile, 
 # such as DJANGO_SETTINGS_MODULE and GUNICORN_CMD_ARGS.
 
-# TODO: remove this once we have a proper deployment pipeline
+# TODO: remove this once we have a proper deployment pipeline?
+
+echo "Make sure the cache table is operational."
+.venv/bin/python manage.py createcachetable
+
 echo "Running Django migrations."
 .venv/bin/python manage.py migrate --noinput
 

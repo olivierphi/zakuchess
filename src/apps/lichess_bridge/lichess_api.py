@@ -46,16 +46,16 @@ async def get_my_account(*, api_client: httpx.AsyncClient) -> LichessAccountInfo
     """
     This is cached for a short amount of time.
     """
-    # Let's not expose any access tokens in our cache keys,
-    # and use a quick hash of them instead.
+    # Let's not expose any access tokens in our cache keys, and instead use a quick hash
+    # of the "Authorization" header (which contains the token).
     # "An Adler-32 checksum is almost as reliable as a CRC32 but can be computed much more quickly."
     # --> should be enough for our case :-)
-    lichess_access_token_hash = adler32(api_client.lichess_access_token.encode())  # type: ignore[attr-defined]
+    lichess_access_token_hash = adler32(api_client.headers["Authorization"].encode())
 
     cache_key = _GET_MY_ACCOUNT_CACHE["KEY_PATTERN"].format(  # type: ignore[attr-defined]
         lichess_access_token_hash=lichess_access_token_hash
     )
-    if cached_data := cache.get(cache_key):
+    if cached_data := await cache.aget(cache_key):
         _logger.info("Using cached data for 'get_my_account'.")
         response_content = cached_data
     else:
@@ -66,7 +66,7 @@ async def get_my_account(*, api_client: httpx.AsyncClient) -> LichessAccountInfo
             response.raise_for_status()
 
         response_content = response.content
-        cache.set(cache_key, response_content, _GET_MY_ACCOUNT_CACHE["DURATION"])
+        await cache.aset(cache_key, response_content, _GET_MY_ACCOUNT_CACHE["DURATION"])
 
     return msgspec.json.decode(response_content, type=LichessAccountInformation)
 
@@ -100,7 +100,7 @@ async def get_game_by_id(
     cache_key = _GET_GAME_BY_ID_CACHE["KEY_PATTERN"].format(  # type: ignore[attr-defined]
         game_id=game_id,
     )
-    if cached_data := cache.get(cache_key):
+    if cached_data := await cache.aget(cache_key):
         _logger.info("Using cached data for 'get_game_by_id'.")
         response_content = cached_data
     else:
@@ -113,7 +113,7 @@ async def get_game_by_id(
             response.raise_for_status()
 
         response_content = response.content
-        cache.set(cache_key, response_content, _GET_GAME_BY_ID_CACHE["DURATION"])
+        await cache.aset(cache_key, response_content, _GET_GAME_BY_ID_CACHE["DURATION"])
 
     return msgspec.json.decode(response_content, type=LichessGameExport)
 
@@ -194,10 +194,5 @@ def _create_lichess_api_client(access_token: "LichessAccessToken") -> httpx.Asyn
             "Accept": "application/json",
         },
     )
-
-    # We store the access token in the client object, so we can access it later
-    # Not super clean, but... this is a side project, and where's the joy if I cannot
-    # allow myself some dirty shortcuts in such a context? 😄
-    client.lichess_access_token = access_token  # type: ignore[attr-defined]
 
     return client
