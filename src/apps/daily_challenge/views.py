@@ -12,6 +12,7 @@ from apps.chess.chess_helpers import get_active_player_side_from_fen, uci_move_s
 from apps.chess.types import ChessInvalidActionException, ChessInvalidMoveException
 from apps.utils.view_decorators import user_is_staff
 from apps.utils.views_helpers import htmx_aware_redirect
+from apps.webui.cookie_helpers import save_user_prefs
 
 from .business_logic import (
     manage_daily_challenge_defeat_logic,
@@ -20,8 +21,8 @@ from .business_logic import (
     move_daily_challenge_piece,
     restart_daily_challenge,
     see_daily_challenge_solution,
+    undo_last_move,
 )
-from .business_logic._undo_last_move import undo_last_move
 from .components.misc_ui.help_modal import help_modal
 from .components.misc_ui.stats_modal import stats_modal
 from .components.misc_ui.user_prefs_modal import user_prefs_modal
@@ -33,7 +34,6 @@ from .cookie_helpers import (
     clear_daily_challenge_game_state_in_session,
     get_or_create_daily_challenge_state_for_player,
     save_daily_challenge_state_in_session,
-    save_user_prefs,
 )
 from .forms import UserPrefsForm
 from .models import PlayerGameOverState

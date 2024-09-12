@@ -1,4 +1,4 @@
-from functools import cache, lru_cache
+from functools import cache
 from typing import TYPE_CHECKING, cast
 
 import chess
@@ -9,7 +9,6 @@ from .consts import (
     PIECE_TYPE_TO_NAME,
     PIECE_TYPE_TO_UNICODE,
     RANKS,
-    SQUARES,
 )
 
 if TYPE_CHECKING:
@@ -145,14 +144,8 @@ def get_active_player_side_from_chess_board(board: chess.Board) -> "PlayerSide":
     return "w" if board.turn else "b"
 
 
-@lru_cache
 def uci_move_squares(move: str) -> tuple["Square", "Square"]:
     return cast("Square", move[:2]), cast("Square", move[2:4])
-
-
-@cache
-def get_square_order(square: "Square") -> int:
-    return SQUARES.index(square)
 
 
 @cache

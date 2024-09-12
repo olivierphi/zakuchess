@@ -6,6 +6,7 @@ from django.core.exceptions import BadRequest
 from django.shortcuts import redirect
 
 from ..chess.types import ChessLogicException
+from ..webui.cookie_helpers import get_user_prefs_from_request
 from . import cookie_helpers
 
 if TYPE_CHECKING:
@@ -36,6 +37,24 @@ def with_lichess_access_token(func):
             return func(
                 request, *args, lichess_access_token=lichess_access_token, **kwargs
             )
+
+    return wrapper
+
+
+def with_user_prefs(func):
+    if iscoroutinefunction(func):
+
+        @functools.wraps(func)
+        async def wrapper(request: "HttpRequest", *args, **kwargs):
+            user_prefs = get_user_prefs_from_request(request)
+            return await func(request, *args, user_prefs=user_prefs, **kwargs)
+
+    else:
+
+        @functools.wraps(func)
+        def wrapper(request: "HttpRequest", *args, **kwargs):
+            user_prefs = get_user_prefs_from_request(request)
+            return func(request, *args, user_prefs=user_prefs, **kwargs)
 
     return wrapper
 

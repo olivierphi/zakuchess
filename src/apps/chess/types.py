@@ -3,6 +3,10 @@ from typing import TYPE_CHECKING, Literal, TypeAlias, TypedDict
 if TYPE_CHECKING:
     from .models import TeamMember
 
+# Apart from cases when we use these types in msgspec models (the package will need their
+# "real" imports to be able to work with them), the types defined here should always
+# be used in `if TYPE_CHECKING:` blocks.
+
 # https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
 FEN: TypeAlias = str
 # https://en.wikipedia.org/wiki/Portable_Game_Notation

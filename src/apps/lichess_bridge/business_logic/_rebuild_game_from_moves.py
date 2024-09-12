@@ -5,9 +5,11 @@ from typing import TYPE_CHECKING, NamedTuple
 import chess
 
 from ...chess.business_logic import do_chess_move_with_piece_role_by_square
-from ...chess.chess_helpers import chess_lib_square_to_square
+from ...chess.chess_helpers import uci_move_squares
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     import chess.pgn
 
     from apps.chess.types import PieceRoleBySquare, UCIMove
@@ -17,16 +19,16 @@ if TYPE_CHECKING:
 _logger = logging.getLogger(__name__)
 
 
-class RebuildGameFromStartingPositionResult(NamedTuple):
+class RebuildGameFromMovesResult(NamedTuple):
     chess_board: chess.Board
     teams: "GameTeams"
     piece_role_by_square: "PieceRoleBySquare"
-    moves: list["UCIMove"]
+    moves: "Sequence[UCIMove]"
 
 
-def rebuild_game_from_starting_position(
-    *, pgn_game: "chess.pgn.Game", factions: "GameFactions"
-) -> RebuildGameFromStartingPositionResult:
+def rebuild_game_from_moves(
+    *, uci_moves: "Sequence[UCIMove]", factions: "GameFactions"
+) -> RebuildGameFromMovesResult:
     from ._create_teams_and_piece_role_by_square_for_starting_position import (
         create_teams_and_piece_role_by_square_for_starting_position,
     )
@@ -43,12 +45,8 @@ def rebuild_game_from_starting_position(
     # (while keeping track of the piece roles on the board, so if "p1" moves,
     # we can "follow" that pawn)
     chess_board = chess.Board()
-    uci_moves: list[str] = []
-    for move in pgn_game.mainline_moves():
-        from_, to = (
-            chess_lib_square_to_square(move.from_square),
-            chess_lib_square_to_square(move.to_square),
-        )
+    for move in uci_moves:
+        from_, to = uci_move_squares(move)
         move_result, piece_role_by_square, captured_piece = (
             do_chess_move_with_piece_role_by_square(
                 from_=from_,
@@ -57,15 +55,14 @@ def rebuild_game_from_starting_position(
                 chess_board=chess_board,
             )
         )
-        uci_moves.append(move.uci())
 
     _logger.info(
-        "`rebuild_game_from_starting_position` took %d ms. for %d moves",
+        "`rebuild_game_from_moves` took %d ms. for %d moves",
         (time.monotonic() - start_time) * 1000,
         len(uci_moves),
     )
 
-    return RebuildGameFromStartingPositionResult(
+    return RebuildGameFromMovesResult(
         chess_board=chess_board,
         teams=teams,
         piece_role_by_square=piece_role_by_square,

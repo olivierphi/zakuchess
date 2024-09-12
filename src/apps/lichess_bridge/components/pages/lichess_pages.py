@@ -72,7 +72,7 @@ def lichess_no_account_linked_page(
     )
 
 
-def lichess_account_linked_homepage(
+def lichess_my_current_games_list_page(
     *,
     request: "HttpRequest",
     me: "LichessAccountInformation",

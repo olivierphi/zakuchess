@@ -14,6 +14,7 @@ from .models import (
     LICHESS_ACCESS_TOKEN_PREFIX,
     LichessAccountInformation,
     LichessGameExport,
+    LichessGameFullFromStream,
     LichessOngoingGameData,
 )
 
@@ -32,8 +33,13 @@ _GET_MY_ACCOUNT_CACHE = {
     "DURATION": dt.timedelta(seconds=120).total_seconds(),
 }
 
-_GET_GAME_BY_ID_CACHE = {
-    "KEY_PATTERN": "lichess_bridge::get_game_by_id::{game_id}",
+_GET_GAME_BY_ID_FROM_STREAM_CACHE = {
+    "KEY_PATTERN": "lichess_bridge::get_game_by_id_from_stream::{game_id}",
+    "DURATION": dt.timedelta(seconds=30).total_seconds(),
+}
+
+_GET_EXPORT_BY_ID_CACHE = {
+    "KEY_PATTERN": "lichess_bridge::get_game_export_by_id::{game_id}",
     "DURATION": dt.timedelta(seconds=30).total_seconds(),
 }
 
@@ -90,32 +96,95 @@ async def get_my_ongoing_games(
     return msgspec.json.decode(response.content, type=ResponseDataWrapper).nowPlaying
 
 
-async def get_game_by_id(
-    *, api_client: httpx.AsyncClient, game_id: "LichessGameId"
+async def get_game_export_by_id(
+    *,
+    api_client: httpx.AsyncClient,
+    game_id: "LichessGameId",
+    try_fetching_from_cache: bool = True,
 ) -> LichessGameExport:
     """
     This is cached for a short amount of time, so we don't re-fetch the same games again
     while the player is selecting pieces.
     """
-    cache_key = _GET_GAME_BY_ID_CACHE["KEY_PATTERN"].format(  # type: ignore[attr-defined]
+    cache_key = _GET_EXPORT_BY_ID_CACHE["KEY_PATTERN"].format(  # type: ignore[attr-defined]
         game_id=game_id,
     )
-    if cached_data := await cache.aget(cache_key):
-        _logger.info("Using cached data for 'get_game_by_id'.")
-        response_content = cached_data
-    else:
+
+    response_content: bytes | None = None
+    if try_fetching_from_cache:
+        if cached_data := await cache.aget(cache_key):
+            _logger.info("Using cached data for 'get_game_export_by_id'.")
+            response_content = cached_data
+
+    if not response_content:
         # https://lichess.org/api#tag/Games/operation/gamePgn
+        # An important aspect to keep in mind:
+        # > Ongoing games are delayed by a few seconds ranging from 3 to 60
+        # > depending on the time control, as to prevent cheat bots from using this API.
         endpoint = f"/game/export/{game_id}"
         with _lichess_api_monitoring("GET", endpoint):
             # We only need the FEN, but it seems that the Lichess "game by ID" API endpoints
             # can only return the full PGN - which will require a bit more work to parse.
-            response = await api_client.get(endpoint, params={"pgnInJson": "true"})
+            response = await api_client.get(
+                endpoint,
+                params={"pgnInJson": "1", "tags": "0", "moves": "0", "evals": "0"},
+            )
             response.raise_for_status()
 
         response_content = response.content
-        await cache.aset(cache_key, response_content, _GET_GAME_BY_ID_CACHE["DURATION"])
+        await cache.aset(
+            cache_key, response_content, _GET_EXPORT_BY_ID_CACHE["DURATION"]
+        )
 
     return msgspec.json.decode(response_content, type=LichessGameExport)
+
+
+async def get_game_by_id_from_stream(
+    *,
+    api_client: httpx.AsyncClient,
+    game_id: "LichessGameId",
+    try_fetching_from_cache: bool = True,
+) -> LichessGameFullFromStream:
+    """
+    This is cached for a short amount of time, so we don't re-fetch the same games again
+    while the player is selecting pieces.
+    """
+    cache_key = _GET_GAME_BY_ID_FROM_STREAM_CACHE["KEY_PATTERN"].format(  # type: ignore[attr-defined]
+        game_id=game_id,
+    )
+
+    response_content: str | None = None
+    if try_fetching_from_cache:
+        if cached_data := await cache.aget(cache_key):
+            _logger.info("Using cached data for 'get_game_by_id_from_stream'.")
+            response_content = cached_data
+
+    if not response_content:
+        # https://lichess.org/api#tag/Board/operation/boardGameStream
+        endpoint = f"/api/board/game/stream/{game_id}"
+        with _lichess_api_monitoring("GET (stream)", endpoint):
+            async with api_client.stream("GET", endpoint) as response:
+                async for line in response.aiter_lines():
+                    if line and '"gameFull"' in line:
+                        response_content = line
+                        # We got what we need, let's break that loop - HTTPX will
+                        # automatically close the stream as we exit the `.stream` block.
+                        break
+            response.raise_for_status()
+
+        await cache.aset(
+            cache_key, response_content, _GET_GAME_BY_ID_FROM_STREAM_CACHE["DURATION"]
+        )
+
+    assert type(response_content) == str  # for type checkers
+    return msgspec.json.decode(response_content, type=LichessGameFullFromStream)
+
+
+async def clear_game_by_id_cache(game_id: "LichessGameId") -> None:
+    get_game_by_id_cache_key = _GET_EXPORT_BY_ID_CACHE["KEY_PATTERN"].format(  # type: ignore[attr-defined]
+        game_id=game_id,
+    )
+    await cache.adelete(get_game_by_id_cache_key)
 
 
 async def move_lichess_game_piece(
@@ -139,10 +208,7 @@ async def move_lichess_game_piece(
         )
         response.raise_for_status()
 
-    get_game_by_id_cache_key = _GET_GAME_BY_ID_CACHE["KEY_PATTERN"].format(  # type: ignore[attr-defined]
-        game_id=game_id,
-    )
-    cache.delete(get_game_by_id_cache_key)
+    await clear_game_by_id_cache(game_id)
 
     return response.json()["ok"]
 

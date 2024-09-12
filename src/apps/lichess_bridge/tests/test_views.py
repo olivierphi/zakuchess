@@ -1,3 +1,4 @@
+import contextlib
 import json
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any
@@ -120,7 +121,41 @@ async def test_lichess_correspondence_game_without_access_token_should_redirect(
     assert response.status_code == HTTPStatus.FOUND
 
 
-_LICHESS_CORRESPONDENCE_GAME_JSON_RESPONSE = {
+_LICHESS_CORRESPONDENCE_GAME_FROM_STREAM_JSON_RESPONSE = {
+    "id": "tFfGsEpb",
+    "variant": {"key": "standard", "name": "Standard", "short": "Std"},
+    "speed": "correspondence",
+    "perf": {"name": "Correspondence"},
+    "rated": False,
+    "createdAt": 1725637044590,
+    "white": {
+        "id": "chesschampion",
+        "name": "ChessChampion",
+        "title": None,
+        "rating": 1500,
+        "provisional": True,
+    },
+    "black": {
+        "id": "chessmaster74960",
+        "name": "ChessMaster74960",
+        "title": None,
+        "rating": 2078,
+    },
+    "initialFen": "startpos",
+    "daysPerTurn": 3,
+    "type": "gameFull",
+    "state": {
+        "type": "gameState",
+        "moves": "e2e4 d7d5 f2f3 e7e5 f1d3 f8c5 b2b3",
+        "wtime": 259200000,
+        "btime": 255151000,
+        "winc": 0,
+        "binc": 0,
+        "status": "started",
+    },
+}
+
+_LICHESS_CORRESPONDENCE_GAME_EXPORT_JSON_RESPONSE = {
     "id": "tFfGsEpb",
     "fullId": "tFfGsEpbd0mL",
     "rated": False,
@@ -194,16 +229,25 @@ async def test_lichess_correspondence_game_with_access_token_smoke_test(
                             "url": "https://lichess.org/@/chesschampion",
                             "username": "ChessChampion",
                         }
-                    case "/game/export/tFfGsEpb":
-                        result = _LICHESS_CORRESPONDENCE_GAME_JSON_RESPONSE
                     case _:
                         raise ValueError(f"Unexpected path: {self.path}")
                 return json.dumps(result)
 
+            async def aiter_lines(self):
+                yield json.dumps(_LICHESS_CORRESPONDENCE_GAME_FROM_STREAM_JSON_RESPONSE)
+                raise ValueError(
+                    "aiterlines should be stopped after the 1st line was read"
+                )
+
         async def get(self, path, **kwargs):
             # The client's `get` method is async
-            assert path.startswith(("/api/", "/game/export/"))
+            assert path.startswith("/api/")
             return self.HttpClientResponseMock(path)
+
+        @contextlib.asynccontextmanager
+        async def stream(self, method, path, **kwargs):
+            assert method == "GET" and path.startswith("/api/board/game/stream/")
+            yield self.HttpClientResponseMock(path)
 
     with mock.patch(
         "apps.lichess_bridge.lichess_api._create_lichess_api_client",

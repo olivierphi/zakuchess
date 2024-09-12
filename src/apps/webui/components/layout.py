@@ -9,6 +9,7 @@ from django.templatetags.static import static
 from dominate.tags import (
     a,
     body,
+    comment,
     div,
     footer as base_footer,
     h1,
@@ -101,6 +102,9 @@ def document(
 
 def head(*children: "dom_tag", title: str) -> "dom_tag":
     return base_head(
+        comment(
+            "ZakuChess is open source! See https://github.com/olivierphi/zakuchess"
+        ),
         meta(charset="utf-8"),
         base_title(title),
         meta(name="viewport", content="width=device-width, initial-scale=1"),

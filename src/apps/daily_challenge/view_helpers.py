@@ -1,6 +1,8 @@
 import dataclasses
 from typing import TYPE_CHECKING, cast
 
+from apps.webui.cookie_helpers import get_user_prefs_from_request
+
 from . import cookie_helpers
 from .business_logic import manage_new_daily_challenge_stats_logic
 
@@ -40,7 +42,7 @@ class GameContext:
                 request=request, challenge=challenge
             )
         )
-        user_prefs = cookie_helpers.get_user_prefs_from_request(request)
+        user_prefs = get_user_prefs_from_request(request)
         # TODO: validate the "board_id" data?
         board_id = cast(str, request.GET.get("board_id", "main"))
 

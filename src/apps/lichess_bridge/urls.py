@@ -5,8 +5,9 @@ from . import views
 app_name = "lichess_bridge"
 
 urlpatterns = [
-    path("", views.lichess_home, name="homepage"),
-    # Game management Views:
+    path("", views.lichess_home_page, name="homepage"),
+    path("games/", views.lichess_my_games_list_page, name="my_games"),
+    # Gameplay Views:
     path(
         "games/new/",
         views.lichess_game_create,
@@ -14,7 +15,7 @@ urlpatterns = [
     ),
     path(
         "games/correspondence/<str:game_id>/",
-        views.lichess_correspondence_game,
+        views.lichess_correspondence_game_page,
         name="correspondence_game",
     ),
     path(

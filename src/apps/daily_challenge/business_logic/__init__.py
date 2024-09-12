@@ -19,3 +19,4 @@ from ._see_daily_challenge_solution import see_daily_challenge_solution
 from ._set_daily_challenge_teams_and_pieces_roles import (
     set_daily_challenge_teams_and_pieces_roles,
 )
+from ._undo_last_move import undo_last_move

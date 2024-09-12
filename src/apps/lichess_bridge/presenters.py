@@ -4,11 +4,12 @@ from urllib.parse import urlencode
 
 from django.urls import reverse
 
+from apps.chess.chess_helpers import uci_move_squares
+from apps.chess.models import GameFactions
 from apps.chess.presenters import GamePresenter, GamePresenterUrls
 
-from ..chess.models import GameFactions
-
 if TYPE_CHECKING:
+    from apps.chess.models import UserPrefs
     from apps.chess.presenters import SpeechBubbleData
     from apps.chess.types import (
         FEN,
@@ -19,23 +20,28 @@ if TYPE_CHECKING:
         Square,
     )
 
-    from .models import LichessGameExportWithMetadata
+    from .models import LichessGameFullFromStreamWithMetadata
 
 
 class LichessCorrespondenceGamePresenter(GamePresenter):
     def __init__(
         self,
         *,
-        game_data: "LichessGameExportWithMetadata",
+        game_data: "LichessGameFullFromStreamWithMetadata",
         refresh_last_move: bool,
         is_htmx_request: bool,
         selected_piece_square: "Square | None" = None,
-        last_move: tuple["Square", "Square"] | None = None,
+        user_prefs: "UserPrefs | None" = None,
     ):
         self._game_data = game_data
 
         self._chess_board = game_data.chess_board
         fen = cast("FEN", self._chess_board.fen())
+
+        if self._game_data.moves:
+            last_move = uci_move_squares(self._game_data.moves[-1])
+        else:
+            last_move = None
 
         super().__init__(
             fen=fen,
@@ -45,6 +51,7 @@ class LichessCorrespondenceGamePresenter(GamePresenter):
             is_htmx_request=is_htmx_request,
             selected_piece_square=selected_piece_square,
             last_move=last_move,
+            user_prefs=user_prefs,
         )
 
     @cached_property
@@ -88,7 +95,7 @@ class LichessCorrespondenceGamePresenter(GamePresenter):
 
     @cached_property
     def game_id(self) -> str:
-        return self._game_data.game_export.id
+        return self._game_data.raw_data.id
 
     @cached_property
     def factions(self) -> GameFactions:
