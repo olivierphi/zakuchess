@@ -4,11 +4,7 @@ from django.conf import settings
 from django.urls import reverse
 from dominate.tags import (
     a,
-    b,
-    br,
-    button,
     div,
-    form,
     h3,
     p,
     section,
@@ -22,19 +18,15 @@ from apps.chess.components.chess_board import (
     chess_pieces,
 )
 from apps.chess.components.misc_ui import speech_bubble_container
-from apps.chess.models import GameFactions
 from apps.webui.components import common_styles
-from apps.webui.components.chess_units import (
-    unit_display_container,
-)
-from apps.webui.components.forms_common import csrf_hidden_input
 from apps.webui.components.layout import page
 from apps.webui.components.misc_ui.header import header_button
 from apps.webui.components.misc_ui.user_prefs_modal import user_prefs_button
 
 from ..game_creation import game_creation_form
+from ..no_linked_account import no_linked_account_content
 from ..ongoing_games import lichess_ongoing_games
-from ..svg_icons import ICON_SVG_LOG_IN, ICON_SVG_USER
+from ..svg_icons import ICON_SVG_USER
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
@@ -57,8 +49,6 @@ def lichess_no_account_linked_page(
     *,
     request: "HttpRequest",
 ) -> str:
-    game_factions = GameFactions(w="humans", b="undeads")
-
     return page(
         section(
             div(
@@ -66,66 +56,7 @@ def lichess_no_account_linked_page(
                     "Play games on ZakuChess with your Lichess account",
                     cls=_PAGE_TITLE_CSS,
                 ),
-                p(
-                    "You can play games with your friends and other people all around the world on ZakuChess, "
-                    "by linking your Lichess account.",
-                    cls="mb-4 text-center",
-                ),
-                p(
-                    "This will allow you to play Lichess games via ZakuChess' boards, "
-                    "where chess pieces are played by pixel art characters 🙂",
-                    cls="mb-4 text-center",
-                ),
-                div(
-                    unit_display_container(
-                        piece_role="K", factions=game_factions, row_counter=0
-                    ),
-                    unit_display_container(
-                        piece_role="Q", factions=game_factions, row_counter=1
-                    ),
-                    unit_display_container(
-                        piece_role="N1", factions=game_factions, row_counter=0
-                    ),
-                    div("VS", cls="grow px-4 text-center"),
-                    unit_display_container(
-                        piece_role="n1", factions=game_factions, row_counter=0
-                    ),
-                    unit_display_container(
-                        piece_role="q", factions=game_factions, row_counter=1
-                    ),
-                    unit_display_container(
-                        piece_role="k", factions=game_factions, row_counter=0
-                    ),
-                    cls="flex justify-center items-center gap-1 md:gap-3",
-                ),
-                form(
-                    csrf_hidden_input(request),
-                    p(
-                        b("Click here to log in to Lichess"),
-                        cls="mb-4 text-center font-bold",
-                    ),
-                    p(
-                        button(
-                            "Log in via Lichess",
-                            " ",
-                            ICON_SVG_LOG_IN,
-                            type="submit",
-                            cls=common_styles.BUTTON_CLASSES,
-                        ),
-                        cls="mb-4 text-center",
-                    ),
-                    action=reverse("lichess_bridge:oauth2_start_flow"),
-                    method="POST",
-                    cls="my-8",
-                ),
-                p(
-                    "You will be able to disconnect your Lichess account from ZakuChess at any time.",
-                    br(),
-                    b(
-                        "None of your Lichess data is stored on our end: it is only stored in your web browser."
-                    ),
-                    cls="mt-8 text-center text-sm",
-                ),
+                no_linked_account_content(request),
                 cls=_NON_GAME_PAGE_SECTION_INNER_CONTAINER_CSS,
             ),
             cls=_NON_GAME_PAGE_MAIN_SECTION_BASE_CSS,

@@ -75,7 +75,11 @@ def chess_status_bar_tip(
 
 
 def unit_display_container(
-    *, piece_role: "PieceRole", factions: "GameFactions", row_counter: int | None = None
+    *,
+    piece_role: "PieceRole",
+    factions: "GameFactions",
+    row_counter: int | None = None,
+    additional_classes: str = "",
 ) -> "dom_tag":
     from apps.chess.components.chess_board import chess_unit_display_with_ground_marker
 
@@ -84,7 +88,7 @@ def unit_display_container(
         factions=factions,
     )
 
-    additional_classes = (
+    rounded_square_classes = (
         f"{SQUARE_COLOR_TAILWIND_CLASSES[row_counter%2]} rounded-lg"
         if row_counter is not None
         else ""
@@ -92,7 +96,7 @@ def unit_display_container(
 
     return div(
         unit_display,
-        cls=f"h-16 aspect-square {additional_classes}",
+        cls=f"h-16 aspect-square {rounded_square_classes} {additional_classes}",
     )
 
 
