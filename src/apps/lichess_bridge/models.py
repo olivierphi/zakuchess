@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 
     from apps.chess.models import GameTeams
     from apps.chess.types import (
+        BoardOrientation,
         Faction,
         PieceRoleBySquare,
         PlayerSide,
@@ -42,6 +43,7 @@ LichessGameFullId: TypeAlias = str  # e.g. "tFfGsEpbd0mL" (always 12 chars?)
 # Well... Let's still rely on this for now ^^
 # TODO: remove this, as it may break one day?
 LICHESS_ACCESS_TOKEN_PREFIX = "lio_"
+
 
 # The values of these enums can be found in the OpenAPI spec one can download
 # by clicking the "Download" button at the top of this page:
@@ -99,6 +101,12 @@ LichessGameStatus = Literal[
     "variantEnd",
 ]
 
+# For now we hard-code the fact that "me" always plays the "humans" faction,
+# and "them" always plays the "undeads" faction.
+_FACTIONS_BY_BOARD_ORIENTATION: dict["BoardOrientation", GameFactions] = {
+    "1->8": GameFactions(w="humans", b="undeads"),
+    "8->1": GameFactions(w="undeads", b="humans"),
+}
 
 # Presenters are the objects we pass to our templates.
 _LICHESS_PLAYER_SIDE_TO_PLAYER_SIDE_MAPPING: dict["LichessPlayerSide", "PlayerSide"] = {
@@ -245,6 +253,10 @@ class LichessGameFullFromStream(msgspec.Struct):
     type: Literal["gameFull"]
     state: LichessGameState
 
+    @property
+    def is_ongoing_game(self) -> bool:
+        return self.state.status == "started"
+
 
 class LichessGameWithMetadataBase(ABC):
     @property
@@ -272,23 +284,12 @@ class LichessGameWithMetadataBase(ABC):
     def players_from_my_perspective(self) -> "LichessGameMetadataPlayers": ...
 
     @functools.cached_property
-    def game_factions(self) -> GameFactions:
-        my_side = self._players_sides[0]
-        # For now we hard-code the fact that "me" always plays the "humans" faction,
-        # and "them" always plays the "undeads" faction.
-        factions: "tuple[Faction, Faction]" = (
-            "humans",
-            "undeads",
-        )
-        if my_side == "white":
-            w_faction, b_faction = factions
-        else:
-            b_faction, w_faction = factions
+    def board_orientation(self) -> "BoardOrientation":
+        return self._players_sides.board_orientation
 
-        return GameFactions(
-            w=w_faction,
-            b=b_faction,
-        )
+    @functools.cached_property
+    def game_factions(self) -> GameFactions:
+        return _FACTIONS_BY_BOARD_ORIENTATION[self.board_orientation]
 
     @property
     @abstractmethod
@@ -327,7 +328,7 @@ class LichessGameFullFromStreamWithMetadata(LichessGameWithMetadataBase):
 
     @functools.cached_property
     def players_from_my_perspective(self) -> "LichessGameMetadataPlayers":
-        my_side, their_side = self._players_sides
+        my_side, their_side, _ = self._players_sides
 
         my_player: "LichessGameEventPlayer" = getattr(self.raw_data, my_side)
         their_player: "LichessGameEventPlayer" = getattr(self.raw_data, their_side)
@@ -356,10 +357,12 @@ class LichessGameFullFromStreamWithMetadata(LichessGameWithMetadataBase):
             "white" if self.raw_data.white.id == self.my_player_id else "black"
         )
         their_side: "LichessPlayerSide" = "black" if my_side == "white" else "white"
+        board_orientation: "BoardOrientation" = "1->8" if my_side == "white" else "8->1"
 
         return LichessGameMetadataPlayerSides(
             me=my_side,
             them=their_side,
+            board_orientation=board_orientation,
         )
 
     @functools.cached_property
@@ -409,7 +412,7 @@ class LichessGameExportWithMetadata(LichessGameWithMetadataBase):
 
     @functools.cached_property
     def players_from_my_perspective(self) -> "LichessGameMetadataPlayers":
-        my_side, their_side = self._players_sides
+        my_side, their_side, _ = self._players_sides
 
         my_player: "LichessGameUser" = getattr(self.raw_data.players, my_side).user
         their_player: "LichessGameUser" = getattr(
@@ -435,25 +438,6 @@ class LichessGameExportWithMetadata(LichessGameWithMetadataBase):
         return result
 
     @functools.cached_property
-    def game_factions(self) -> GameFactions:
-        my_side = self._players_sides[0]
-        # For now we hard-code the fact that "me" always plays the "humans" faction,
-        # and "them" always plays the "undeads" faction.
-        factions: "tuple[Faction, Faction]" = (
-            "humans",
-            "undeads",
-        )
-        if my_side == "white":
-            w_faction, b_faction = factions
-        else:
-            b_faction, w_faction = factions
-
-        return GameFactions(
-            w=w_faction,
-            b=b_faction,
-        )
-
-    @functools.cached_property
     def _players_sides(self) -> "LichessGameMetadataPlayerSides":
         my_side: "LichessPlayerSide" = (
             "white"
@@ -461,10 +445,12 @@ class LichessGameExportWithMetadata(LichessGameWithMetadataBase):
             else "black"
         )
         their_side: "LichessPlayerSide" = "black" if my_side == "white" else "white"
+        board_orientation: "BoardOrientation" = "1->8" if my_side == "white" else "8->1"
 
         return LichessGameMetadataPlayerSides(
             me=my_side,
             them=their_side,
+            board_orientation=board_orientation,
         )
 
     @functools.cached_property
@@ -477,6 +463,7 @@ class LichessGameExportWithMetadata(LichessGameWithMetadataBase):
 class LichessGameMetadataPlayerSides(NamedTuple):
     me: "LichessPlayerSide"
     them: "LichessPlayerSide"
+    board_orientation: "BoardOrientation"
 
 
 class LichessGameMetadataPlayer(NamedTuple):

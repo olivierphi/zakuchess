@@ -9,12 +9,13 @@ from dominate.util import raw
 from apps.chess.components.chess_board import SQUARE_COLOR_TAILWIND_CLASSES
 from apps.chess.components.chess_helpers import chess_unit_symbol_class
 from apps.chess.consts import PIECE_TYPE_TO_NAME
-from apps.daily_challenge.components.misc_ui.svg_icons import (
-    ICON_SVG_COG,
+from apps.webui.components import common_styles
+from apps.webui.components.misc_ui.svg_icons import ICON_SVG_COG
+
+from .svg_icons import (
     ICON_SVG_LIGHT_BULB,
     ICON_SVG_RESTART,
 )
-from apps.webui.components import common_styles
 
 if TYPE_CHECKING:
     from dominate.tags import dom_tag
@@ -54,9 +55,6 @@ def help_content(
     challenge_solution_turns_count: int,
     factions: "GameFactions",
 ) -> "dom_tag":
-    # N.B. We use a tuple here for the factions, so they're hashable
-    # and can be used as cached key
-
     spacing = "mb-3"
 
     return raw(

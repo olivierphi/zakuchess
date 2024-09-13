@@ -1,10 +1,9 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
 from django.conf import settings
 from django.urls import reverse
 from dominate.tags import (
     a,
-    b,
     button,
     div,
     fieldset,
@@ -15,6 +14,7 @@ from dominate.tags import (
     legend,
     p,
     section,
+    span,
 )
 
 from apps.chess.components.chess_board import (
@@ -27,17 +27,16 @@ from apps.chess.components.misc_ui import speech_bubble_container
 from apps.webui.components import common_styles
 from apps.webui.components.forms_common import csrf_hidden_input
 from apps.webui.components.layout import page
+from apps.webui.components.misc_ui.header import header_button
+from apps.webui.components.misc_ui.user_prefs_modal import user_prefs_button
 
 from ...models import LichessCorrespondenceGameDaysChoice
-from ..lichess_account import (
-    detach_lichess_account_form,
-    lichess_linked_account_inner_footer,
-)
 from ..ongoing_games import lichess_ongoing_games
-from ..svg_icons import ICON_SVG_CREATE, ICON_SVG_LOG_IN
+from ..svg_icons import ICON_SVG_CREATE, ICON_SVG_LOG_IN, ICON_SVG_USER
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
+    from dominate.tags import dom_tag
 
     from ...models import (
         LichessAccountInformation,
@@ -69,6 +68,7 @@ def lichess_no_account_linked_page(
         ),
         request=request,
         title="Lichess - no account linked",
+        **_get_page_header_buttons(lichess_profile_linked=False),
     )
 
 
@@ -82,9 +82,8 @@ def lichess_my_current_games_list_page(
         div(
             section(
                 h3(
-                    "Logged in as ",
-                    b(f"{me.username}@Lichess", cls="text-yellow-400 font-bold"),
-                    cls="mb-2 border rounded-t-md border-slate-700 bg-slate-800 text-lg text-center",
+                    "Your ongoing games on Lichess",
+                    cls="text-slate-50 font-bold text-center",
                 ),
                 lichess_ongoing_games(ongoing_games),
                 p(
@@ -93,20 +92,20 @@ def lichess_my_current_games_list_page(
                         href=reverse("lichess_bridge:create_game"),
                         cls=common_styles.BUTTON_CLASSES,
                     ),
+                    cls="my-8 text-center text-slate-50",
                 ),
-                cls="text-center text-slate-50",
             ),
-            lichess_linked_account_inner_footer(request),
-            cls="w-full mx-auto bg-slate-900 min-h-48 pb-4 "
-            " md:max-w-3xl xl:max-w-7xl xl:border xl:rounded-md xl:border-neutral-800",
+            _lichess_account_footer(me),
+            cls="w-full mx-auto bg-slate-900 min-h-48 pb-4 md:max-w-3xl",
         ),
         request=request,
         title="Lichess - account linked",
+        **_get_page_header_buttons(lichess_profile_linked=True),
     )
 
 
 def lichess_correspondence_game_creation_page(
-    request: "HttpRequest", form_errors: dict
+    request: "HttpRequest", *, me: "LichessAccountInformation", form_errors: dict
 ) -> str:
     return page(
         div(
@@ -144,11 +143,6 @@ def lichess_correspondence_game_creation_page(
                             ),
                             cls="block text-sm font-bold mb-2",
                         ),
-                        input_(
-                            id="days-per-turn",
-                            cls="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline",
-                        ),
-                        cls="mb-4",
                     ),
                     button(
                         "Create",
@@ -160,23 +154,21 @@ def lichess_correspondence_game_creation_page(
                     action=reverse("lichess_bridge:create_game"),
                     method="POST",
                 ),
+                _lichess_account_footer(me),
                 cls="text-slate-50",
             ),
-            div(
-                detach_lichess_account_form(request),
-                cls="mt-4",
-            ),
-            cls="w-full mx-auto bg-slate-900 min-h-48 "
-            "md:max-w-3xl xl:max-w-7xl xl:border xl:rounded-md xl:border-neutral-800",
+            cls="w-full mx-auto bg-slate-900 min-h-48 md:max-w-3xl",
         ),
         request=request,
         title="Lichess - new correspondence game",
+        **_get_page_header_buttons(lichess_profile_linked=True),
     )
 
 
 def lichess_correspondence_game_page(
     *,
     request: "HttpRequest",
+    me: "LichessAccountInformation",
     game_presenter: "LichessCorrespondenceGamePresenter",
 ) -> str:
     return page(
@@ -185,8 +177,10 @@ def lichess_correspondence_game_page(
             status_bars=[],
             board_id="main",
         ),
+        _lichess_account_footer(me),
         request=request,
         title=f"Lichess - correspondence game {game_presenter.game_id}",
+        **_get_page_header_buttons(lichess_profile_linked=True),
     )
 
 
@@ -228,4 +222,39 @@ def lichess_game_moving_parts_fragment(
                 ),
             )
         )
+    )
+
+
+def _lichess_account_footer(me: "LichessAccountInformation") -> "dom_tag":
+    return p(
+        "Your Lichess account: ",
+        span(me.username, cls="text-yellow-400"),
+        cls="mt-8 mb-4 text-slate-50 text-center text-sm",
+    )
+
+
+class _PageHeaderButtons(TypedDict):
+    left_side_buttons: list["dom_tag"]
+    right_side_buttons: list["dom_tag"]
+
+
+def _get_page_header_buttons(lichess_profile_linked: bool) -> _PageHeaderButtons:
+    return _PageHeaderButtons(
+        left_side_buttons=[_user_account_button()] if lichess_profile_linked else [],
+        right_side_buttons=[user_prefs_button()],
+    )
+
+
+def _user_account_button() -> "dom_tag":
+    htmx_attributes = {
+        "data_hx_get": reverse("lichess_bridge:htmx_modal_user_account"),
+        "data_hx_target": "#modals-container",
+        "data_hx_swap": "outerHTML",
+    }
+
+    return header_button(
+        icon=ICON_SVG_USER,
+        title="Manage your Lichess account",
+        id_="stats-button",
+        htmx_attributes=htmx_attributes,
     )

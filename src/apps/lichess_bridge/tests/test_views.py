@@ -35,7 +35,7 @@ def test_lichess_homepage_no_access_token_smoke_test(client: "DjangoClient"):
 
     response_html = response.content.decode("utf-8")
     assert "Log in via Lichess" in response_html
-    assert "Log out from Lichess" not in response_html
+    assert "Manage your Lichess account" not in response_html
 
 
 @pytest.mark.django_db  # just because we use the DatabaseCache
@@ -87,7 +87,7 @@ async def test_lichess_homepage_with_access_token_smoke_test(
 
     response_html = response.content.decode("utf-8")
     assert "Log in via Lichess" not in response_html
-    assert "disconnect your Lichess account" in response_html
+    assert "Manage your Lichess account" in response_html
     assert "ChessChampion" in response_html
 
 

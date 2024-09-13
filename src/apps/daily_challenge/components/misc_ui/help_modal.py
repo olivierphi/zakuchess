@@ -4,8 +4,7 @@ from dominate.tags import div, h3
 
 from apps.chess.components.misc_ui import modal_container
 from apps.daily_challenge.components.misc_ui.help import help_content
-
-from .svg_icons import ICON_SVG_HELP
+from apps.webui.components.misc_ui.svg_icons import ICON_SVG_HELP
 
 if TYPE_CHECKING:
     from dominate.tags import dom_tag

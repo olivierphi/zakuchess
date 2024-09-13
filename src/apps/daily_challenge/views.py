@@ -4,15 +4,13 @@ from typing import TYPE_CHECKING
 
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse
-from django.shortcuts import redirect, resolve_url
+from django.shortcuts import redirect
 from django.views.decorators.http import require_POST, require_safe
-from django_htmx.http import HttpResponseClientRedirect
 
 from apps.chess.chess_helpers import get_active_player_side_from_fen, uci_move_squares
 from apps.chess.types import ChessInvalidActionException, ChessInvalidMoveException
 from apps.utils.view_decorators import user_is_staff
 from apps.utils.views_helpers import htmx_aware_redirect
-from apps.webui.cookie_helpers import save_user_prefs
 
 from .business_logic import (
     manage_daily_challenge_defeat_logic,
@@ -25,7 +23,6 @@ from .business_logic import (
 )
 from .components.misc_ui.help_modal import help_modal
 from .components.misc_ui.stats_modal import stats_modal
-from .components.misc_ui.user_prefs_modal import user_prefs_modal
 from .components.pages.daily_chess_pages import (
     daily_challenge_moving_parts_fragment,
     daily_challenge_page,
@@ -35,7 +32,6 @@ from .cookie_helpers import (
     get_or_create_daily_challenge_state_for_player,
     save_daily_challenge_state_in_session,
 )
-from .forms import UserPrefsForm
 from .models import PlayerGameOverState
 from .presenters import DailyChallengeGamePresenter
 from .view_helpers import get_current_daily_challenge_or_admin_preview
@@ -254,16 +250,6 @@ def htmx_daily_challenge_help_modal(
     return HttpResponse(str(modal_content))
 
 
-@require_safe
-@with_game_context
-def htmx_daily_challenge_user_prefs_modal(
-    request: "HttpRequest", *, ctx: "GameContext"
-) -> HttpResponse:
-    modal_content = user_prefs_modal(user_prefs=ctx.user_prefs)
-
-    return HttpResponse(str(modal_content))
-
-
 @require_POST
 @with_game_context
 @redirect_if_game_not_started
@@ -376,22 +362,6 @@ def htmx_undo_last_move_do(
     return _daily_challenge_moving_parts_fragment_response(
         game_presenter=game_presenter, request=request, board_id=ctx.board_id
     )
-
-
-@require_POST
-def htmx_daily_challenge_user_prefs_save(request: "HttpRequest") -> HttpResponse:
-    # As user preferences updates can have an impact on any part of the UI
-    # (changing the way the chess board is displayed, for example), we'd better
-    # reload the whole page after having saved preferences.
-    response = HttpResponseClientRedirect(
-        resolve_url("daily_challenge:daily_game_view")
-    )
-
-    form = UserPrefsForm(request.POST)
-    if user_prefs := form.to_user_prefs():
-        save_user_prefs(user_prefs=user_prefs, response=response)
-
-    return response
 
 
 @require_POST

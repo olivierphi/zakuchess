@@ -10,10 +10,10 @@ from dominate.util import raw
 
 from apps.chess.components.svg_icons import ICON_SVG_CANCEL, ICON_SVG_CONFIRM
 from apps.webui.components import common_styles
+from apps.webui.components.misc_ui.svg_icons import ICON_SVG_COG
 
 from ...models import PlayerGameOverState
 from .svg_icons import (
-    ICON_SVG_COG,
     ICON_SVG_LIGHT_BULB,
     ICON_SVG_RESTART,
     ICON_SVG_UNDO,
@@ -340,7 +340,7 @@ def _see_solution_button(
 
 def _user_prefs_button(board_id: str) -> "dom_tag":
     htmx_attributes = {
-        "data_hx_get": reverse("daily_challenge:htmx_daily_challenge_modal_user_prefs"),
+        "data_hx_get": reverse("webui:htmx_modal_user_prefs"),
         "data_hx_target": "#modals-container",
         "data_hx_swap": "outerHTML",
     }

@@ -33,6 +33,12 @@ urlpatterns = [
         views.htmx_game_move_piece,
         name="htmx_game_move_piece",
     ),
+    # Modals:
+    path(
+        "htmx/modals/user-account/",
+        views.htmx_user_account_modal,
+        name="htmx_modal_user_account",
+    ),
     # OAuth2 Views:
     path(
         "oauth2/start-flow/",

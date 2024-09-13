@@ -1,3 +1,4 @@
+import asyncio
 import contextlib
 import datetime as dt
 import logging
@@ -30,7 +31,7 @@ _logger = logging.getLogger(__name__)
 
 _GET_MY_ACCOUNT_CACHE = {
     "KEY_PATTERN": "lichess_bridge::get_my_account::{lichess_access_token_hash}",
-    "DURATION": dt.timedelta(seconds=120).total_seconds(),
+    "DURATION": dt.timedelta(minutes=30).total_seconds(),
 }
 
 _GET_GAME_BY_ID_FROM_STREAM_CACHE = {
@@ -181,10 +182,21 @@ async def get_game_by_id_from_stream(
 
 
 async def clear_game_by_id_cache(game_id: "LichessGameId") -> None:
-    get_game_by_id_cache_key = _GET_EXPORT_BY_ID_CACHE["KEY_PATTERN"].format(  # type: ignore[attr-defined]
+    """
+    Clear the cached data of `get_game_export_by_id` and `get_game_by_id_from_stream` for
+    a given game ID.
+    """
+    get_game_export_by_id_cache_key = _GET_EXPORT_BY_ID_CACHE["KEY_PATTERN"].format(  # type: ignore[attr-defined]
         game_id=game_id,
     )
-    await cache.adelete(get_game_by_id_cache_key)
+    get_game_by_id_from_stream_cache_key = _GET_GAME_BY_ID_FROM_STREAM_CACHE[
+        "KEY_PATTERN"
+    ].format(  # type: ignore[attr-defined]
+        game_id=game_id,
+    )
+    async with asyncio.TaskGroup() as tg:
+        tg.create_task(cache.adelete(get_game_export_by_id_cache_key))
+        tg.create_task(cache.adelete(get_game_by_id_from_stream_cache_key))
 
 
 async def move_lichess_game_piece(
@@ -197,7 +209,8 @@ async def move_lichess_game_piece(
 ) -> bool:
     """
     Calling this function will make a move in a Lichess game.
-    As a side effect, it will also clear the `get_game_by_id` cache for that game.
+    As a side effect, it will also clear the cached data of `get_game_export_by_id`
+    and `get_game_by_id_from_stream` for that game.
     """
     # https://lichess.org/api#tag/Board/operation/boardGameMove
     move_uci = f"{from_}{to}"
@@ -239,11 +252,11 @@ def get_lichess_api_client(access_token: "LichessAccessToken") -> httpx.AsyncCli
 
 
 @contextlib.contextmanager
-def _lichess_api_monitoring(target_endpoint, method) -> "Iterator[None]":
+def _lichess_api_monitoring(method, target_endpoint) -> "Iterator[None]":
     start_time = time.monotonic()
     yield
     _logger.info(
-        "Lichess API: %s '%s' took %ims.",
+        "Lichess API: %s '%s' took %i ms.",
         method,
         target_endpoint,
         (time.monotonic() - start_time) * 1000,

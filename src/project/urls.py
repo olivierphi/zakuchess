@@ -12,6 +12,7 @@ from apps.chess.url_converters import ChessSquareConverter
 register_converter(ChessSquareConverter, "square")
 
 urlpatterns = [
+    path("", include("apps.webui.urls")),
     path("", include("apps.daily_challenge.urls")),
     path("lichess/", include("apps.lichess_bridge.urls")),
     path("-/", include("django_alive.urls")),

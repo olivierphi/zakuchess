@@ -120,7 +120,7 @@ BoardOrientation = Literal[
 
 Faction = Literal[
     "humans",
-    "undeads",
+    "undeads",  # mispelled, but it's a bit everywhere in the codebase now 😅
 ]
 
 

@@ -128,7 +128,7 @@ def head(*children: "dom_tag", title: str) -> "dom_tag":
         link(
             # automatically created by `django-google-fonts`
             rel="stylesheet",
-            href=static("fonts/opensans.css"),
+            href=static("fonts/opensans::ital,wght@0,300..800;1,300..800.css"),
         ),
         # CSS & JS
         link(rel="stylesheet", href=static("webui/css/zakuchess.css")),

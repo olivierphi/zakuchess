@@ -5,16 +5,14 @@ from urllib.parse import urlencode
 from django.urls import reverse
 
 from apps.chess.chess_helpers import uci_move_squares
-from apps.chess.models import GameFactions
 from apps.chess.presenters import GamePresenter, GamePresenterUrls
 
 if TYPE_CHECKING:
-    from apps.chess.models import UserPrefs
+    from apps.chess.models import GameFactions, UserPrefs
     from apps.chess.presenters import SpeechBubbleData
     from apps.chess.types import (
         FEN,
         BoardOrientation,
-        Faction,
         GamePhase,
         PlayerSide,
         Square,
@@ -56,11 +54,7 @@ class LichessCorrespondenceGamePresenter(GamePresenter):
 
     @cached_property
     def board_orientation(self) -> "BoardOrientation":
-        return (
-            "1->8"
-            if self._game_data.players_from_my_perspective.me.player_side == "w"
-            else "8->1"
-        )
+        return self._game_data.board_orientation
 
     @cached_property
     def urls(self) -> "GamePresenterUrls":
@@ -98,14 +92,8 @@ class LichessCorrespondenceGamePresenter(GamePresenter):
         return self._game_data.raw_data.id
 
     @cached_property
-    def factions(self) -> GameFactions:
-        players = self._game_data.players_from_my_perspective
-        w_faction: "Faction" = "humans" if players.me.player_side == "w" else "undeads"
-        b_faction: "Faction" = "undeads" if w_faction == "humans" else "humans"
-        return GameFactions(
-            w=w_faction,
-            b=b_faction,
-        )
+    def factions(self) -> "GameFactions":
+        return self._game_data.game_factions
 
     @property
     def is_intro_turn(self) -> bool:

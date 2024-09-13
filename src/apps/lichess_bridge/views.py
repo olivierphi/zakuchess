@@ -16,6 +16,7 @@ from .authentication import (
     fetch_lichess_token_from_oauth2_callback,
     get_lichess_token_retrieval_via_oauth2_process_starting_url,
 )
+from .components.misc_ui.user_profile_modal import user_profile_modal
 from .components.pages import lichess_pages as lichess_pages
 from .components.pages.lichess_pages import lichess_game_moving_parts_fragment
 from .forms import LichessCorrespondenceGameCreationForm
@@ -32,7 +33,11 @@ if TYPE_CHECKING:
     from django.http import HttpRequest
 
     from apps.chess.models import UserPrefs
-    from apps.chess.types import ChessInvalidMoveException, Square
+    from apps.chess.types import (
+        ChessInvalidActionException,
+        ChessInvalidMoveException,
+        Square,
+    )
 
     from .models import (
         LichessAccessToken,
@@ -81,6 +86,8 @@ async def lichess_my_games_list_page(
 async def lichess_game_create(
     request: "HttpRequest", *, lichess_access_token: "LichessAccessToken"
 ) -> HttpResponse:
+    me = await _get_me_from_lichess(lichess_access_token)
+
     form_errors = {}
     if request.method == "POST":
         form = LichessCorrespondenceGameCreationForm(request.POST)
@@ -101,7 +108,7 @@ async def lichess_game_create(
 
     return HttpResponse(
         lichess_pages.lichess_correspondence_game_creation_page(
-            request=request, form_errors=form_errors
+            request=request, me=me, form_errors=form_errors
         )
     )
 
@@ -130,6 +137,7 @@ async def lichess_correspondence_game_page(
     return HttpResponse(
         lichess_pages.lichess_correspondence_game_page(
             request=request,
+            me=me,
             game_presenter=game_presenter,
         )
     )
@@ -203,12 +211,11 @@ async def htmx_game_move_piece(
     if from_ == to:
         raise ChessInvalidMoveException("Not a move")
 
-    # game_over_already = ctx.game_state.game_over != PlayerGameOverState.PLAYING
-    #
-    # if ctx.game_state.game_over != PlayerGameOverState.PLAYING:
-    #     raise ChessInvalidActionException("Game is over, cannot move pieces")
-
     me, game_data = await _get_game_context_from_lichess(lichess_access_token, game_id)
+
+    if not game_data.raw_data.is_ongoing_game:
+        raise ChessInvalidActionException("Game is over, cannot move pieces")
+
     is_my_turn = game_data.players_from_my_perspective.active_player == "me"
     if not is_my_turn:
         raise ChessInvalidMoveException("Not my turn")
@@ -226,7 +233,9 @@ async def htmx_game_move_piece(
         # The move was successful, let's re-fetch the updated game state:
         # (the cache for this game's data has be cleared by `move_lichess_game_piece`)
         game_data_raw = await lichess_api.get_game_by_id_from_stream(
-            api_client=lichess_api_client, game_id=game_id
+            api_client=lichess_api_client,
+            game_id=game_id,
+            try_fetching_from_cache=False,
         )
 
     # TODO: handle end of game after move!
@@ -244,6 +253,21 @@ async def htmx_game_move_piece(
     return _lichess_game_moving_parts_fragment_response(
         game_presenter=game_presenter, request=request, board_id="main"
     )
+
+
+@require_safe
+@with_lichess_access_token
+@redirect_if_no_lichess_access_token
+async def htmx_user_account_modal(
+    request: "HttpRequest",
+    *,
+    lichess_access_token: "LichessAccessToken",
+) -> HttpResponse:
+    me = await _get_me_from_lichess(lichess_access_token)
+
+    modal_content = user_profile_modal(request=request, me=me)
+
+    return HttpResponse(str(modal_content))
 
 
 @require_POST
@@ -350,6 +374,15 @@ async def _get_my_games_list_page_content(
         me=me.result(),
         ongoing_games=ongoing_games.result(),
     )
+
+
+async def _get_me_from_lichess(
+    lichess_access_token: "LichessAccessToken",
+) -> "LichessAccountInformation":
+    async with lichess_api.get_lichess_api_client(
+        access_token=lichess_access_token
+    ) as lichess_api_client:
+        return await lichess_api.get_my_account(api_client=lichess_api_client)
 
 
 async def _get_game_context_from_lichess(
