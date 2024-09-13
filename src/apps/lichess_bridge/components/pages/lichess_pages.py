@@ -4,14 +4,12 @@ from django.conf import settings
 from django.urls import reverse
 from dominate.tags import (
     a,
+    b,
+    br,
     button,
     div,
-    fieldset,
     form,
     h3,
-    input_,
-    label,
-    legend,
     p,
     section,
     span,
@@ -24,15 +22,19 @@ from apps.chess.components.chess_board import (
     chess_pieces,
 )
 from apps.chess.components.misc_ui import speech_bubble_container
+from apps.chess.models import GameFactions
 from apps.webui.components import common_styles
+from apps.webui.components.chess_units import (
+    unit_display_container,
+)
 from apps.webui.components.forms_common import csrf_hidden_input
 from apps.webui.components.layout import page
 from apps.webui.components.misc_ui.header import header_button
 from apps.webui.components.misc_ui.user_prefs_modal import user_prefs_button
 
-from ...models import LichessCorrespondenceGameDaysChoice
+from ..game_creation import game_creation_form
 from ..ongoing_games import lichess_ongoing_games
-from ..svg_icons import ICON_SVG_CREATE, ICON_SVG_LOG_IN, ICON_SVG_USER
+from ..svg_icons import ICON_SVG_LOG_IN, ICON_SVG_USER
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
@@ -44,27 +46,89 @@ if TYPE_CHECKING:
     )
     from ...presenters import LichessCorrespondenceGamePresenter
 
+_PAGE_TITLE_CSS = "mb-8 text-center font-bold text-yellow-400"
+_NON_GAME_PAGE_MAIN_SECTION_BASE_CSS = (
+    "w-full mx-auto py-4 bg-slate-900 text-slate-50 min-h-48 md:max-w-3xl"
+)
+_NON_GAME_PAGE_SECTION_INNER_CONTAINER_CSS = "px-8 pb-8 md:px-0 md:w-8/12 md:mx-auto"
+
 
 def lichess_no_account_linked_page(
     *,
     request: "HttpRequest",
 ) -> str:
+    game_factions = GameFactions(w="humans", b="undeads")
+
     return page(
         section(
-            form(
-                csrf_hidden_input(request),
-                p("Click here to log in to Lichess"),
-                button(
-                    "Log in via Lichess",
-                    " ",
-                    ICON_SVG_LOG_IN,
-                    type="submit",
-                    cls=common_styles.BUTTON_CLASSES,
+            div(
+                h3(
+                    "Play games on ZakuChess with your Lichess account",
+                    cls=_PAGE_TITLE_CSS,
                 ),
-                action=reverse("lichess_bridge:oauth2_start_flow"),
-                method="POST",
+                p(
+                    "You can play games with your friends and other people all around the world on ZakuChess, "
+                    "by linking your Lichess account.",
+                    cls="mb-4 text-center",
+                ),
+                p(
+                    "This will allow you to play Lichess games via ZakuChess' boards, "
+                    "where chess pieces are played by pixel art characters 🙂",
+                    cls="mb-4 text-center",
+                ),
+                div(
+                    unit_display_container(
+                        piece_role="K", factions=game_factions, row_counter=0
+                    ),
+                    unit_display_container(
+                        piece_role="Q", factions=game_factions, row_counter=1
+                    ),
+                    unit_display_container(
+                        piece_role="N1", factions=game_factions, row_counter=0
+                    ),
+                    div("VS", cls="grow px-4 text-center"),
+                    unit_display_container(
+                        piece_role="n1", factions=game_factions, row_counter=0
+                    ),
+                    unit_display_container(
+                        piece_role="q", factions=game_factions, row_counter=1
+                    ),
+                    unit_display_container(
+                        piece_role="k", factions=game_factions, row_counter=0
+                    ),
+                    cls="flex justify-center items-center gap-1 md:gap-3",
+                ),
+                form(
+                    csrf_hidden_input(request),
+                    p(
+                        b("Click here to log in to Lichess"),
+                        cls="mb-4 text-center font-bold",
+                    ),
+                    p(
+                        button(
+                            "Log in via Lichess",
+                            " ",
+                            ICON_SVG_LOG_IN,
+                            type="submit",
+                            cls=common_styles.BUTTON_CLASSES,
+                        ),
+                        cls="mb-4 text-center",
+                    ),
+                    action=reverse("lichess_bridge:oauth2_start_flow"),
+                    method="POST",
+                    cls="my-8",
+                ),
+                p(
+                    "You will be able to disconnect your Lichess account from ZakuChess at any time.",
+                    br(),
+                    b(
+                        "None of your Lichess data is stored on our end: it is only stored in your web browser."
+                    ),
+                    cls="mt-8 text-center text-sm",
+                ),
+                cls=_NON_GAME_PAGE_SECTION_INNER_CONTAINER_CSS,
             ),
-            cls="text-slate-50",
+            cls=_NON_GAME_PAGE_MAIN_SECTION_BASE_CSS,
         ),
         request=request,
         title="Lichess - no account linked",
@@ -79,11 +143,11 @@ def lichess_my_current_games_list_page(
     ongoing_games: "list[LichessOngoingGameData]",
 ) -> str:
     return page(
-        div(
-            section(
+        section(
+            div(
                 h3(
                     "Your ongoing games on Lichess",
-                    cls="text-slate-50 font-bold text-center",
+                    cls=_PAGE_TITLE_CSS,
                 ),
                 lichess_ongoing_games(ongoing_games),
                 p(
@@ -94,9 +158,10 @@ def lichess_my_current_games_list_page(
                     ),
                     cls="my-8 text-center text-slate-50",
                 ),
+                _lichess_account_footer(me),
+                cls=_NON_GAME_PAGE_SECTION_INNER_CONTAINER_CSS,
             ),
-            _lichess_account_footer(me),
-            cls="w-full mx-auto bg-slate-900 min-h-48 pb-4 md:max-w-3xl",
+            cls=_NON_GAME_PAGE_MAIN_SECTION_BASE_CSS,
         ),
         request=request,
         title="Lichess - account linked",
@@ -105,59 +170,23 @@ def lichess_my_current_games_list_page(
 
 
 def lichess_correspondence_game_creation_page(
-    request: "HttpRequest", *, me: "LichessAccountInformation", form_errors: dict
+    request: "HttpRequest",
+    *,
+    me: "LichessAccountInformation",
+    form_errors: dict,
 ) -> str:
     return page(
-        div(
-            section(
-                form(
-                    csrf_hidden_input(request),
-                    div(
-                        fieldset(
-                            legend("Days per turn."),
-                            (
-                                p(form_errors["days_per_turn"], cls="text-red-600 ")
-                                if "days_per_turn" in form_errors
-                                else ""
-                            ),
-                            div(
-                                *[
-                                    div(
-                                        input_(
-                                            id=f"days-per-turn-{value}",
-                                            type="radio",
-                                            name="days_per_turn",
-                                            value=value,
-                                            checked=(
-                                                value
-                                                == LichessCorrespondenceGameDaysChoice.THREE_DAYS.value  # type: ignore[attr-defined]
-                                            ),
-                                        ),
-                                        label(
-                                            display, html_for=f"days-per-turn-{value}"
-                                        ),
-                                    )
-                                    for value, display in LichessCorrespondenceGameDaysChoice.choices
-                                ],
-                                cls="flex gap-3",
-                            ),
-                            cls="block text-sm font-bold mb-2",
-                        ),
-                    ),
-                    button(
-                        "Create",
-                        " ",
-                        ICON_SVG_CREATE,
-                        type="submit",
-                        cls=common_styles.BUTTON_CLASSES,
-                    ),
-                    action=reverse("lichess_bridge:create_game"),
-                    method="POST",
+        section(
+            div(
+                h3(
+                    "New correspondence game, via Lichess",
+                    cls=_PAGE_TITLE_CSS,
                 ),
+                game_creation_form(request=request, form_errors=form_errors),
                 _lichess_account_footer(me),
-                cls="text-slate-50",
+                cls=_NON_GAME_PAGE_SECTION_INNER_CONTAINER_CSS,
             ),
-            cls="w-full mx-auto bg-slate-900 min-h-48 md:max-w-3xl",
+            cls=_NON_GAME_PAGE_MAIN_SECTION_BASE_CSS,
         ),
         request=request,
         title="Lichess - new correspondence game",
@@ -226,10 +255,19 @@ def lichess_game_moving_parts_fragment(
 
 
 def _lichess_account_footer(me: "LichessAccountInformation") -> "dom_tag":
-    return p(
-        "Your Lichess account: ",
-        span(me.username, cls="text-yellow-400"),
-        cls="mt-8 mb-4 text-slate-50 text-center text-sm",
+    return div(
+        p(
+            "Your Lichess account: ",
+            span(me.username, cls="text-yellow-400"),
+            cls="w-9/12 mx-auto mt-8 mb-4 text-slate-50 text-center text-sm",
+        ),
+        p(
+            "You can disconnect your Lichess account from ZakuChess at any time "
+            "in your 'user account' ",
+            ICON_SVG_USER,
+            " settings, accessible from the top menu.",
+            cls="w-9/12 mx-auto text-slate-50 text-center text-sm",
+        ),
     )
 
 

@@ -10,7 +10,7 @@ urlpatterns = [
     # Gameplay Views:
     path(
         "games/new/",
-        views.lichess_game_create,
+        views.lichess_game_create_form_page,
         name="create_game",
     ),
     path(

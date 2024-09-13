@@ -1,7 +1,9 @@
+from textwrap import dedent
 from typing import TYPE_CHECKING
 
 from django.urls import reverse
-from dominate.tags import a, b, caption, div, table, tbody, td, th, thead, tr
+from dominate.tags import a, b, caption, div, script, table, tbody, td, th, thead, tr
+from dominate.util import raw
 
 from apps.chess.chess_helpers import get_turns_counter_from_fen
 
@@ -11,6 +13,36 @@ if TYPE_CHECKING:
     from dominate.tags import html_tag
 
     from ..models import LichessOngoingGameData
+
+_CLICK_ON_TR_SCRIPT = script(
+    # quick-n-dirty script to allow one to click anywhere on a <tr>
+    # to go to the game page
+    raw(
+        dedent(
+            """
+            {
+                function onRowClick(event) {
+                    const row = event.currentTarget;
+                    const link = row.querySelector("a");
+                    if (link) {
+                        link.click();
+                    }
+                }
+                
+                function initRowClickBehaviour() {
+                    const rows = document.querySelectorAll("#lichess-ongoing-games tbody tr");
+                    rows.forEach(row => {
+                        row.addEventListener("click", onRowClick);
+                        row.classList.add("cursor-pointer");
+                    });
+                }
+                
+                document.addEventListener("DOMContentLoaded", initRowClickBehaviour);
+            }
+            """
+        )
+    )
+)
 
 
 def lichess_ongoing_games(ongoing_games: "list[LichessOngoingGameData]") -> "html_tag":
@@ -23,7 +55,7 @@ def lichess_ongoing_games(ongoing_games: "list[LichessOngoingGameData]") -> "htm
                 tr(
                     th("Opponent", cls=th_classes),
                     th("Moves", cls=th_classes),
-                    th("Time", cls=th_classes),
+                    th("Time left for next move", cls=th_classes),
                     th("Turn", cls=th_classes),
                     cls="bg-rose-900 text-slate-200 font-bold",
                 ),
@@ -41,8 +73,10 @@ def lichess_ongoing_games(ongoing_games: "list[LichessOngoingGameData]") -> "htm
                     )
                 ),
             ),
+            id="lichess-ongoing-games",
             cls="w-full border-separate border-spacing-0 border border-slate-500 rounded-md",
         ),
+        _CLICK_ON_TR_SCRIPT,
         cls="my-4 px-1 ",
     )
 
@@ -63,5 +97,8 @@ def _ongoing_game_row(game: "LichessOngoingGameData") -> tr:
         ),
         td(get_turns_counter_from_fen(game.fen), cls=f"{td_classes} text-right"),
         td(time_left_display(game.secondsLeft), cls=f"{td_classes} text-right"),
-        td(b("Mine") if game.isMyTurn else "Theirs", cls=f"{td_classes} text-right"),
+        td(
+            b("Mine", cls="text-slate-50") if game.isMyTurn else "Theirs",
+            cls=f"{td_classes} text-right",
+        ),
     )

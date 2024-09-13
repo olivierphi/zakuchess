@@ -9,13 +9,15 @@ from apps.chess.chess_helpers import (
     type_from_piece_role,
 )
 from apps.daily_challenge.components.misc_ui.help import (
-    character_type_tip,
     chess_status_bar_tip,
-    chess_unit_symbol_display,
     help_content,
     unit_display_container,
 )
 from apps.webui.components import common_styles
+from apps.webui.components.chess_units import (
+    character_type_tip,
+    chess_unit_symbol_display,
+)
 
 if TYPE_CHECKING:
     from dominate.tags import dom_tag

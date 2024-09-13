@@ -83,7 +83,7 @@ async def lichess_my_games_list_page(
 @require_http_methods(["GET", "POST"])
 @with_lichess_access_token
 @redirect_if_no_lichess_access_token
-async def lichess_game_create(
+async def lichess_game_create_form_page(
     request: "HttpRequest", *, lichess_access_token: "LichessAccessToken"
 ) -> HttpResponse:
     me = await _get_me_from_lichess(lichess_access_token)

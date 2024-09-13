@@ -195,7 +195,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Google fonts to mirror locally:
 # https://github.com/andymckay/django-google-fonts
 GOOGLE_FONTS = (
-    "Open Sans::ital,wght@0,300..800;1,300..800",  # https://fonts.google.com/specimen/Open+Sans
+    "Open Sans:ital,wght@0,300..800;1,300..800",  # https://fonts.google.com/specimen/Open+Sans
 )
 GOOGLE_FONTS_DIR = BASE_DIR / "src" / "apps" / "webui" / "static"
 
