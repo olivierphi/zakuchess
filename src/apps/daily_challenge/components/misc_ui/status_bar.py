@@ -3,20 +3,21 @@ from typing import TYPE_CHECKING
 from dominate.tags import b, button, div, p
 from dominate.util import raw
 
-from apps.chess.helpers import (
+from apps.chess.chess_helpers import (
     piece_name_from_piece_role,
     player_side_from_piece_role,
     type_from_piece_role,
 )
 from apps.daily_challenge.components.misc_ui.help import (
-    character_type_tip,
     chess_status_bar_tip,
-    chess_unit_symbol_display,
     help_content,
     unit_display_container,
 )
-
-from .common_styles import BUTTON_CLASSES
+from apps.webui.components import common_styles
+from apps.webui.components.chess_units import (
+    character_type_tip,
+    chess_unit_symbol_display,
+)
 
 if TYPE_CHECKING:
     from dominate.tags import dom_tag
@@ -42,12 +43,12 @@ def status_bar(
         inner_content = div(
             help_content(
                 challenge_solution_turns_count=game_presenter.challenge_solution_turns_count,
-                factions_tuple=tuple(game_presenter.factions.items()),
+                factions=game_presenter.factions,
             ),
             div(
                 button(
                     "⇧ Scroll up to the board",
-                    cls=BUTTON_CLASSES,
+                    cls=common_styles.BUTTON_CLASSES,
                     onclick="""window.scrollTo({ top: 0, behavior: "smooth" })""",
                 ),
                 cls="w-full flex justify-center",
@@ -110,12 +111,7 @@ def _chess_status_bar_selected_piece(
     unit_display = unit_display_container(
         piece_role=piece_role, factions=game_presenter.factions
     )
-    team_member_name = team_member.get("name", "")
-    name_display = (
-        " ".join(team_member_name)
-        if isinstance(team_member_name, list)
-        else team_member_name
-    )
+    name_display = " ".join(team_member.name)
 
     unit_about = div(
         div("> ", b(name_display, cls="text-yellow-400"), " <") if name_display else "",

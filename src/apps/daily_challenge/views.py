@@ -4,11 +4,10 @@ from typing import TYPE_CHECKING
 
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse
-from django.shortcuts import redirect, resolve_url
+from django.shortcuts import redirect
 from django.views.decorators.http import require_POST, require_safe
-from django_htmx.http import HttpResponseClientRedirect
 
-from apps.chess.helpers import get_active_player_side_from_fen, uci_move_squares
+from apps.chess.chess_helpers import get_active_player_side_from_fen, uci_move_squares
 from apps.chess.types import ChessInvalidActionException, ChessInvalidMoveException
 from apps.utils.view_decorators import user_is_staff
 from apps.utils.views_helpers import htmx_aware_redirect
@@ -20,12 +19,11 @@ from .business_logic import (
     move_daily_challenge_piece,
     restart_daily_challenge,
     see_daily_challenge_solution,
+    undo_last_move,
 )
-from .business_logic._undo_last_move import undo_last_move
 from .components.misc_ui.help_modal import help_modal
 from .components.misc_ui.stats_modal import stats_modal
-from .components.misc_ui.user_prefs_modal import user_prefs_modal
-from .components.pages.daily_chess import (
+from .components.pages.daily_chess_pages import (
     daily_challenge_moving_parts_fragment,
     daily_challenge_page,
 )
@@ -33,9 +31,7 @@ from .cookie_helpers import (
     clear_daily_challenge_game_state_in_session,
     get_or_create_daily_challenge_state_for_player,
     save_daily_challenge_state_in_session,
-    save_user_prefs,
 )
-from .forms import UserPrefsForm
 from .models import PlayerGameOverState
 from .presenters import DailyChallengeGamePresenter
 from .view_helpers import get_current_daily_challenge_or_admin_preview
@@ -67,6 +63,7 @@ def game_view(request: "HttpRequest", *, ctx: "GameContext") -> HttpResponse:
         assert (
             ctx.challenge.fen_before_bot_first_move
             and ctx.challenge.piece_role_by_square_before_bot_first_move
+            and ctx.challenge.bot_first_move
         )
 
         ctx.game_state.fen = ctx.challenge.fen_before_bot_first_move
@@ -253,16 +250,6 @@ def htmx_daily_challenge_help_modal(
     return HttpResponse(str(modal_content))
 
 
-@require_safe
-@with_game_context
-def htmx_daily_challenge_user_prefs_modal(
-    request: "HttpRequest", *, ctx: "GameContext"
-) -> HttpResponse:
-    modal_content = user_prefs_modal(user_prefs=ctx.user_prefs)
-
-    return HttpResponse(str(modal_content))
-
-
 @require_POST
 @with_game_context
 @redirect_if_game_not_started
@@ -293,6 +280,9 @@ def htmx_restart_daily_challenge_ask_confirmation(
 def htmx_restart_daily_challenge_do(
     request: "HttpRequest", *, ctx: "GameContext"
 ) -> HttpResponse:
+    # This field is always set on a published challenge:
+    assert ctx.challenge.bot_first_move
+
     new_game_state = restart_daily_challenge(
         challenge=ctx.challenge,
         game_state=ctx.game_state,
@@ -372,22 +362,6 @@ def htmx_undo_last_move_do(
     return _daily_challenge_moving_parts_fragment_response(
         game_presenter=game_presenter, request=request, board_id=ctx.board_id
     )
-
-
-@require_POST
-def htmx_daily_challenge_user_prefs_save(request: "HttpRequest") -> HttpResponse:
-    # As user preferences updates can have an impact on any part of the UI
-    # (changing the way the chess board is displayed, for example), we'd better
-    # reload the whole page after having saved preferences.
-    response = HttpResponseClientRedirect(
-        resolve_url("daily_challenge:daily_game_view")
-    )
-
-    form = UserPrefsForm(request.POST)
-    if user_prefs := form.to_user_prefs():
-        save_user_prefs(user_prefs=user_prefs, response=response)
-
-    return response
 
 
 @require_POST

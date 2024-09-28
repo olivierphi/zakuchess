@@ -1,6 +1,16 @@
-from typing import Literal, Required, TypeAlias, TypedDict
+from typing import TYPE_CHECKING, Literal, TypeAlias, TypedDict
 
+if TYPE_CHECKING:
+    from .models import TeamMember
+
+# Apart from cases when we use these types in msgspec models (the package will need their
+# "real" imports to be able to work with them), the types defined here should always
+# be used in `if TYPE_CHECKING:` blocks.
+
+# https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
 FEN: TypeAlias = str
+# https://en.wikipedia.org/wiki/Portable_Game_Notation
+PGN: TypeAlias = str
 
 # fmt: off
 PlayerSide = Literal[
@@ -27,7 +37,6 @@ PieceSymbol = Literal[
 # fmt: on
 
 PieceName = Literal["pawn", "knight", "bishop", "rook", "queen", "king"]
-
 
 # fmt: off
 TeamMemberRole = Literal[
@@ -72,6 +81,7 @@ Square = Literal[
 ]
 # fmt: on
 
+UCIMove: TypeAlias = str  # e.g. "e2e4", "a7a8q"...
 MoveTuple = tuple[Square, Square]
 
 SquareColor = Literal["light", "dark"]
@@ -102,13 +112,16 @@ GameEndReason = Literal[
     "fifty_moves",
 ]
 
+BoardOrientation = Literal[
+    "1->8",  # initial "white" side on the left-hand side
+    "8->1",  # initial "black" side on the left-hand side
+]
+
 
 Faction = Literal[
     "humans",
-    "undeads",
+    "undeads",  # mispelled, but it's a bit everywhere in the codebase now 😅
 ]
-
-Factions: TypeAlias = dict[PlayerSide, Faction]
 
 
 class GameOverDescription(TypedDict):
@@ -126,14 +139,7 @@ class ChessMoveResult(TypedDict):
     game_over: GameOverDescription | None
 
 
-class TeamMember(TypedDict, total=False):
-    role: Required["TeamMemberRole"]
-    # TODO: change this to just `lst[str]` when we finished migrating to a list-name
-    name: Required[list[str] | str]
-    faction: "Faction"
-
-
-GameTeams: TypeAlias = dict["PlayerSide", list["TeamMember"]]
+GameTeamsDict: TypeAlias = "dict[PlayerSide, list[TeamMember]]"
 
 
 class ChessLogicException(Exception):

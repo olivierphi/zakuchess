@@ -20,30 +20,33 @@ jobs:
 
     steps:
       - uses: "actions/checkout@v4"
-      - name: Set up uv
-        # Install a specific uv version using the installer
-        run: "curl -LsSf https://astral.sh/uv/${UV_VERSION}/install.sh | sh"
-        env: 
-          UV_VERSION: "0.4.4"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v2
+        with:
+          version: "0.4.9"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
       - name: Set up Python
         run: uv python install
       - name: "Install dependencies via uv"
         run: uv sync --all-extras
+      - name: "Install the project in 'editable' mode"
+        run: uv pip install -e .
       - name: "Run linting checks: Ruff checker"
-        run: uv run ruff format --check --quiet src/
+        run: uv run --no-sync ruff format --check --quiet src/
       - name: "Run linting checks: Ruff linter"
-        run: uv run ruff check --quiet src/
+        run: uv run --no-sync ruff check --quiet src/
       - name: "Run linting checks: Mypy"
-        run: uv run mypy src/
+        run: uv run --no-sync mypy src/
       - name: "Check that Django DB migrations are up to date"
-        run: uv run python manage.py makemigrations | grep "No changes detected"
+        run: uv run --no-sync python manage.py makemigrations | grep "No changes detected"
       - name: "Run tests"
         # TODO: progressively  increase minimum coverage to something closer to 80%
-        run: uv run pytest --cov=src --cov-report xml:coverage.xml
+        run: uv run --no-sync pytest --cov=src --cov-report xml:coverage.xml
         # --cov-fail-under=60 --> we'll actually do that with the "Report coverage" step
       - name: "Report coverage"
         # @link https://github.com/orgoro/coverage
-        uses: "orgoro/coverage@v3.1"
+        uses: "orgoro/coverage@v3.2"
         continue-on-error: true
         with:
           coverageFile: coverage.xml

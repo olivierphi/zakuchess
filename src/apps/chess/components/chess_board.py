@@ -9,7 +9,7 @@ from django.templatetags.static import static
 from dominate.tags import button, div, section, span
 from dominate.util import raw as unescaped_html
 
-from ..helpers import (
+from ..chess_helpers import (
     file_and_rank_from_square,
     piece_name_from_piece_role,
     player_side_from_piece_role,
@@ -19,7 +19,8 @@ from ..models import UserPrefsBoardTexture, UserPrefsGameSpeed
 from .chess_helpers import (
     chess_unit_symbol_class,
     piece_character_classes,
-    square_to_piece_tailwind_classes,
+    piece_should_face_left,
+    square_to_positioning_tailwind_classes,
 )
 from .misc_ui import speech_bubble_container
 
@@ -28,8 +29,15 @@ if TYPE_CHECKING:
 
     from dominate.tags import dom_tag
 
+    from ..models import GameFactions
     from ..presenters import GamePresenter
-    from ..types import Factions, PieceRole, PieceType, PlayerSide, Square
+    from ..types import (
+        BoardOrientation,
+        PieceRole,
+        PieceType,
+        PlayerSide,
+        Square,
+    )
 
 
 SQUARE_COLOR_TAILWIND_CLASSES = ("bg-chess-square-dark", "bg-chess-square-light")
@@ -52,7 +60,8 @@ _CHESS_PIECE_Z_INDEXES: dict[str, str] = {
     "character": "z-20",
 }
 
-
+# TODO: get rid of _PLAY_BOT_JS_TEMPLATE and _PLAY_SOLUTION_JS_TEMPLATE, and implement
+#   this as Web Components we return in the HTMX response.
 # We'll wait that amount of milliseconds before starting the bot move's calculation:
 _BOT_MOVE_DELAY = 700
 _BOT_MOVE_DELAY_FIRST_TURN_OF_THE_DAY = 1_400
@@ -177,14 +186,27 @@ def chess_board(*, game_presenter: "GamePresenter", board_id: str) -> "dom_tag":
         game_presenter.force_square_info or game_presenter.is_preview
     )
     squares: list[dom_tag] = []
-    for file in FILE_NAMES:
-        for rank in RANK_NAMES:
-            squares.append(
-                chess_board_square(
-                    cast("Square", f"{file}{rank}"),
-                    force_square_info=force_square_info,
-                )
-            )
+    match game_presenter.board_orientation:
+        case "1->8":
+            for file in FILE_NAMES:
+                for rank in RANK_NAMES:
+                    squares.append(
+                        chess_board_square(
+                            game_presenter.board_orientation,
+                            cast("Square", f"{file}{rank}"),
+                            force_square_info=force_square_info,
+                        )
+                    )
+        case "8->1":
+            for file in reversed(FILE_NAMES):
+                for rank in reversed(RANK_NAMES):
+                    squares.append(
+                        chess_board_square(
+                            game_presenter.board_orientation,
+                            cast("Square", f"{file}{rank}"),
+                            force_square_info=force_square_info,
+                        )
+                    )
 
     squares_container_classes: list[str] = [
         "relative",
@@ -219,8 +241,15 @@ def chess_board(*, game_presenter: "GamePresenter", board_id: str) -> "dom_tag":
 def chess_pieces(
     *, game_presenter: "GamePresenter", board_id: str, **extra_attrs: str
 ) -> "dom_tag":
+    pieces_to_append: "list[tuple[Square, PieceRole]]" = sorted(
+        # We sort the pieces by their role, so that the pieces are always displayed
+        # in the same order, regardless of their position on the chess board.
+        game_presenter.piece_role_by_square.items(),
+        key=lambda item: item[1],
+    )
+
     pieces: "list[dom_tag]" = []
-    for square, piece_role in game_presenter.piece_role_by_square.items():
+    for square, piece_role in pieces_to_append:
         pieces.append(
             chess_piece(
                 square=square,
@@ -253,7 +282,10 @@ def chess_pieces(
 
 @cache
 def chess_board_square(
-    square: "Square", *, force_square_info: bool = False
+    board_orientation: "BoardOrientation",
+    square: "Square",
+    *,
+    force_square_info: bool = False,
 ) -> "dom_tag":
     file, rank = file_and_rank_from_square(square)
     square_index = FILE_NAMES.index(file) + RANK_NAMES.index(rank)
@@ -263,23 +295,29 @@ def chess_board_square(
         "aspect-square",
         "w-1/8",
         square_color_cls,
-        *square_to_piece_tailwind_classes(square),
+        *square_to_positioning_tailwind_classes(board_orientation, square),
     ]
 
-    display_square_info = force_square_info or (rank == "1" or file == "a")
-    if display_square_info:
-        square_name = (
-            f"{file}{rank}"
-            if force_square_info
-            else "".join((file if rank == "1" else "", rank if file == "a" else ""))
-        )
-        square_info = (
-            span(
-                square_name,
-                cls="text-chess-square-square-info select-none",
-            )
-            if display_square_info
-            else ""
+    displayed_file, displayed_rank = None, None
+    if force_square_info:
+        displayed_file, displayed_rank = file, rank
+    else:
+        match board_orientation:
+            case "1->8":
+                if rank == "1":
+                    displayed_file = file
+                if file == "a":
+                    displayed_rank = rank
+            case "8->1":
+                if rank == "8":
+                    displayed_file = file
+                if file == "h":
+                    displayed_rank = rank
+    if displayed_file or displayed_rank:
+        square_name = f"{displayed_file or ''}{displayed_rank or ''}"
+        square_info = span(
+            square_name,
+            cls="text-chess-square-square-info select-none",
         )
     else:
         square_info = ""
@@ -303,14 +341,14 @@ def chess_piece(
 
     piece_can_be_moved_by_player = (
         game_presenter.solution_index is not None
-        and game_presenter.is_player_turn
+        and game_presenter.is_my_turn
         and square in game_presenter.squares_with_pieces_that_can_move
     )
     unit_display = chess_character_display(
         piece_role=piece_role, game_presenter=game_presenter, square=square
     )
     unit_chess_symbol_display = chess_unit_symbol_display(
-        piece_role=piece_role, square=square
+        board_orientation=game_presenter.board_orientation, piece_role=piece_role
     )
     ground_marker = chess_unit_ground_marker(
         player_side=player_side, can_move=piece_can_be_moved_by_player
@@ -331,7 +369,9 @@ def chess_piece(
         "absolute",
         "aspect-square",
         "w-1/8",
-        *square_to_piece_tailwind_classes(square),
+        *square_to_positioning_tailwind_classes(
+            game_presenter.board_orientation, square
+        ),
         "cursor-pointer" if not is_game_over else "cursor-default",
         "pointer-events-auto" if not is_game_over else "pointer-events-none",
         # Transition-related classes:
@@ -409,12 +449,13 @@ def chess_available_target(
     assert game_presenter.selected_piece is not None
     can_move = (
         not game_presenter.is_game_over
-        and game_presenter.active_player_side == piece_player_side
+        and game_presenter.is_my_turn
+        and game_presenter.my_side == piece_player_side
     )
     bg_class = (
-        "bg-active-chess-available-target-marker"
+        "bg-playable-chess-available-target-marker"
         if can_move
-        else "bg-opponent-chess-available-target-marker"
+        else "bg-non-playable-chess-available-target-marker"
     )
     hover_class = "hover:w-1/3 hover:h-1/3" if can_move else ""
     target_marker = div(
@@ -429,7 +470,9 @@ def chess_available_target(
         "aspect-square",
         "w-1/8",
         "block",
-        *square_to_piece_tailwind_classes(square),
+        *square_to_positioning_tailwind_classes(
+            game_presenter.board_orientation, square
+        ),
     ]
     additional_attributes = {}
 
@@ -465,7 +508,8 @@ def chess_character_display(
     game_presenter: "GamePresenter | None" = None,
     square: "Square | None" = None,
     additional_classes: "Sequence[str]|None" = None,
-    factions: "Factions | None" = None,
+    factions: "GameFactions | None" = None,
+    board_orientation: "BoardOrientation" = "1->8",
 ) -> "dom_tag":
     assert (
         game_presenter or factions
@@ -473,8 +517,14 @@ def chess_character_display(
 
     # Some data we'll need:
     piece_player_side = player_side_from_piece_role(piece_role)
-    is_active_player_piece = (
-        game_presenter.active_player == piece_player_side if game_presenter else False
+    is_my_turn = game_presenter.is_my_turn if game_presenter else False
+    is_playable = is_my_turn and (
+        (
+            piece_player_side == game_presenter.my_side
+            and not game_presenter.is_game_over
+        )
+        if game_presenter
+        else False
     )
     is_potential_capture: bool = False
     is_highlighted: bool = False
@@ -495,14 +545,20 @@ def chess_character_display(
         ):
             is_potential_capture = True
 
-    is_w_side = piece_player_side == "w"
+    if game_presenter:
+        board_orientation = game_presenter.board_orientation
+    is_from_original_left_hand_side = (
+        piece_player_side == "w"
+        if board_orientation == "1->8"
+        else piece_player_side == "b"
+    )
     piece_type: "PieceType" = type_from_piece_role(piece_role)
     is_knight, is_king = piece_type == "n", piece_type == "k"
 
     # Right, let's do this shall we?
     if (
         is_king
-        and is_active_player_piece
+        and is_my_turn
         and game_presenter
         and game_presenter.solution_index is None
         and game_presenter.is_check
@@ -510,7 +566,7 @@ def chess_character_display(
         is_potential_capture = True  # let's highlight our king if it's in check
     elif (
         is_king
-        and is_active_player_piece
+        and is_my_turn
         and game_presenter
         and game_presenter.solution_index is not None
         and game_presenter.is_check
@@ -518,11 +574,15 @@ def chess_character_display(
         is_potential_capture = True  # let's highlight checks in "see solution" mode
 
     horizontal_translation = (
-        ("left-3" if is_knight else "left-0") if is_w_side else "right-0"
+        ("left-2" if (is_knight or is_king) else "left-0")
+        if is_from_original_left_hand_side
+        else "right-0"
     )
-    vertical_translation = "top-2" if is_knight and is_w_side else "top-1"
+    vertical_translation = (
+        "top-2" if is_knight and is_from_original_left_hand_side else "top-1"
+    )
 
-    game_factions = cast("Factions", factions or game_presenter.factions)  # type: ignore
+    game_factions = cast("GameFactions", factions or game_presenter.factions)  # type: ignore
 
     classes = [
         "relative",
@@ -533,19 +593,23 @@ def chess_character_display(
         _CHESS_PIECE_Z_INDEXES["character"],
         horizontal_translation,
         vertical_translation,
-        *piece_character_classes(piece_role=piece_role, factions=game_factions),
+        *piece_character_classes(
+            board_orientation=board_orientation,
+            piece_role=piece_role,
+            factions=game_factions,
+        ),
         # Conditional classes:
         (
             (
-                "drop-shadow-active-selected-piece"
-                if is_active_player_piece
-                else "drop-shadow-opponent-selected-piece"
+                "drop-shadow-playable-selected-piece"
+                if is_playable
+                else "drop-shadow-non-playable-selected-piece"
             )
             if is_highlighted
             else (
-                "drop-shadow-piece-symbol-w"
+                "drop-shadow-piece-unit-w"
                 if piece_player_side == "w"
-                else "drop-shadow-piece-symbol-b"
+                else "drop-shadow-piece-unit-b"
             )
         ),
         "drop-shadow-potential-capture" if is_potential_capture else "",
@@ -582,7 +646,7 @@ def chess_unit_display_with_ground_marker(
     *,
     piece_role: "PieceRole",
     game_presenter: "GamePresenter | None" = None,
-    factions: "Factions | None" = None,
+    factions: "GameFactions | None" = None,
 ) -> "dom_tag":
     assert (
         game_presenter or factions
@@ -603,13 +667,17 @@ def chess_unit_display_with_ground_marker(
 
 
 def chess_unit_symbol_display(
-    *, piece_role: "PieceRole", square: "Square"
+    *, board_orientation: "BoardOrientation", piece_role: "PieceRole"
 ) -> "dom_tag":
     player_side = player_side_from_piece_role(piece_role)
     piece_type = type_from_piece_role(piece_role)
     piece_name = piece_name_from_piece_role(piece_role)
 
     is_knight, is_pawn = piece_type == "n", piece_type == "p"
+
+    unit_symbol_class = chess_unit_symbol_class(
+        player_side=player_side, piece_name=piece_name
+    )
 
     symbol_class = (
         # We have to do some ad-hoc adjustments for Knights and Pawns:
@@ -623,19 +691,20 @@ def chess_unit_symbol_display(
             if player_side == "w"
             else "drop-shadow-piece-symbol-b"
         ),
-        chess_unit_symbol_class(player_side="w", piece_name=piece_name),
+        unit_symbol_class,
     )
     symbol_display = div(
         cls=" ".join(symbol_class),
     )
 
+    should_face_left = piece_should_face_left(board_orientation, player_side)
     symbol_display_container_classes = (
         "absolute",
         "top-0",
-        "left-0" if player_side == "w" else "right-0",
+        "right-0" if should_face_left else "left-0",
         _CHESS_PIECE_Z_INDEXES["symbol"],
         # Quick custom display for white knights, so they face the inside of the board:
-        "-scale-x-100" if player_side == "w" and is_knight else "",
+        "-scale-x-100" if is_knight and not should_face_left else "",
     )
 
     return div(
@@ -652,8 +721,16 @@ def chess_last_move(
     if last_move := game_presenter.last_move:
         children.extend(
             [
-                chess_last_move_marker(square=last_move[0], move_part="from"),
-                chess_last_move_marker(square=last_move[1], move_part="to"),
+                chess_last_move_marker(
+                    board_orientation=game_presenter.board_orientation,
+                    square=last_move[0],
+                    move_part="from",
+                ),
+                chess_last_move_marker(
+                    board_orientation=game_presenter.board_orientation,
+                    square=last_move[1],
+                    move_part="to",
+                ),
             ]
         )
 
@@ -668,7 +745,10 @@ def chess_last_move(
 
 
 def chess_last_move_marker(
-    *, square: "Square", move_part: Literal["from", "to"]
+    *,
+    board_orientation: "BoardOrientation",
+    square: "Square",
+    move_part: Literal["from", "to"],
 ) -> "dom_tag":
     match move_part:
         case "from":
@@ -708,7 +788,7 @@ def chess_last_move_marker(
         "aspect-square",
         "w-1/8",
         "flex items-center justify-center",
-        *square_to_piece_tailwind_classes(square),
+        *square_to_positioning_tailwind_classes(board_orientation, square),
     ]
 
     return div(

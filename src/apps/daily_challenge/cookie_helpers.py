@@ -4,19 +4,16 @@ from typing import TYPE_CHECKING, NamedTuple
 from django.utils.timezone import now
 from msgspec import MsgspecError
 
-from apps.chess.models import UserPrefs
-
 from .models import PlayerGameState, PlayerSessionContent, PlayerStats
 
 if TYPE_CHECKING:
-    from django.http import HttpRequest, HttpResponse
+    from django.http import HttpRequest
 
     from .models import DailyChallenge
 
 
 _PLAYER_CONTENT_SESSION_KEY = "pc"
-_USER_PREFS_COOKIE_NAME = "uprefs"
-_USER_PREFS_COOKIE_MAX_AGE = 3600 * 24 * 30 * 6  # approximately 6 months
+
 
 _logger = logging.getLogger(__name__)
 
@@ -94,24 +91,6 @@ def get_player_session_content_from_request(
         return new_content()
 
 
-def get_user_prefs_from_request(request: "HttpRequest") -> UserPrefs:
-    def new_content():
-        return UserPrefs()
-
-    cookie_content: str | None = request.COOKIES.get(_USER_PREFS_COOKIE_NAME)
-    if cookie_content is None or len(cookie_content) < 5:
-        return new_content()
-
-    try:
-        user_prefs = UserPrefs.from_cookie_content(cookie_content)
-        return user_prefs
-    except MsgspecError:
-        _logger.exception(
-            "Could not decode cookie content; restarting with a blank one."
-        )
-        return new_content()
-
-
 def save_daily_challenge_state_in_session(
     *, request: "HttpRequest", game_state: PlayerGameState, player_stats: PlayerStats
 ) -> None:
@@ -121,15 +100,6 @@ def save_daily_challenge_state_in_session(
         games={challenge_id: game_state}, stats=player_stats
     )
     _store_player_session_content(request, session_content)
-
-
-def save_user_prefs(*, user_prefs: "UserPrefs", response: "HttpResponse") -> None:
-    response.set_cookie(
-        _USER_PREFS_COOKIE_NAME,
-        user_prefs.to_cookie_content(),
-        max_age=_USER_PREFS_COOKIE_MAX_AGE,
-        httponly=True,
-    )
 
 
 def clear_daily_challenge_game_state_in_session(

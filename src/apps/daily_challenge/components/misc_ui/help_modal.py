@@ -4,8 +4,7 @@ from dominate.tags import div, h3
 
 from apps.chess.components.misc_ui import modal_container
 from apps.daily_challenge.components.misc_ui.help import help_content
-
-from .svg_icons import ICON_SVG_HELP
+from apps.webui.components.misc_ui.svg_icons import ICON_SVG_HELP
 
 if TYPE_CHECKING:
     from dominate.tags import dom_tag
@@ -25,7 +24,7 @@ def help_modal(*, game_presenter: "DailyChallengeGamePresenter") -> "dom_tag":
         body=div(
             help_content(
                 challenge_solution_turns_count=game_presenter.challenge_solution_turns_count,
-                factions_tuple=tuple(game_presenter.factions.items()),
+                factions=game_presenter.factions,
             ),
             cls="p-6 space-y-6",
         ),

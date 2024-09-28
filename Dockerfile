@@ -40,6 +40,7 @@ COPY src/apps/chess/static-src ./src/apps/chess/static-src
 # so that Tailwind see the classes used in them:
 COPY src/apps/chess/components ./src/apps/chess/components
 COPY src/apps/daily_challenge/components ./src/apps/daily_challenge/components
+COPY src/apps/lichess_bridge/components ./src/apps/lichess_bridge/components
 COPY src/apps/webui/components ./src/apps/webui/components
 # We're going to use our Makefile to build the assets:
 COPY Makefile ./
@@ -74,7 +75,7 @@ EOT
 
 # Install uv.
 # https://docs.astral.sh/uv/guides/integration/docker/
-COPY --from=ghcr.io/astral-sh/uv:0.4.4 /uv /usr/local/bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.4.9 /uv /usr/local/bin/uv
 
 RUN mkdir -p /app
 WORKDIR /app
@@ -115,8 +116,8 @@ FROM python:3.11-slim-bookworm AS assets_download
 # By having a separate build stage for downloading assets, we can cache them
 # as long as the `download_assets.py` doesn't change.
 
-# should preferably be the same as in `poetry.lock`:
-ENV PYTHON_HTTPX_VERSION=0.26.0
+# should preferably be the same as in `uv.lock`:
+ENV PYTHON_HTTPX_VERSION=0.27.2
 
 RUN pip install -U pip httpx==${PYTHON_HTTPX_VERSION}
 
@@ -159,7 +160,6 @@ COPY --chown=1001:1001 --from=frontend_build /app/src/apps/chess/static src/apps
 
 COPY --chown=1001:1001 --from=backend_build /app/.venv .venv
 
-COPY --chown=1001:1001 --from=assets_download /app/src/apps/webui/static/webui/fonts/OpenSans.woff2 src/apps/webui/static/webui/fonts/OpenSans.woff2
 COPY --chown=1001:1001 --from=assets_download /app/src/apps/chess/static/chess/js/bot src/apps/chess/static/chess/js/bot
 COPY --chown=1001:1001 --from=assets_download /app/src/apps/chess/static/chess/units src/apps/chess/static/chess/units
 COPY --chown=1001:1001 --from=assets_download /app/src/apps/chess/static/chess/symbols src/apps/chess/static/chess/symbols
@@ -179,7 +179,7 @@ EXPOSE 8080
 
 ENV DJANGO_SETTINGS_MODULE=project.settings.production
 
-ENV GUNICORN_CMD_ARGS="--bind 0.0.0.0:8080 --workers 2 --max-requests 120 --max-requests-jitter 20 --timeout 8"
+ENV GUNICORN_CMD_ARGS="--bind 0.0.0.0:8080 --workers 4 -k uvicorn_worker.UvicornWorker --max-requests 120 --max-requests-jitter 20 --timeout 8"
 
 RUN chmod +x scripts/start_server.sh
 # See <https://hynek.me/articles/docker-signals/>.

@@ -43,17 +43,22 @@ INSTALLED_APPS = (
         "django_htmx",
         "axes",  # https://github.com/jazzband/django-axes
         "import_export",  # https://django-import-export.readthedocs.io/
+        "django_google_fonts",  # https://github.com/andymckay/django-google-fonts
     ]
     + [
         "apps.authentication",
         "apps.chess",
         "apps.daily_challenge",
+        "apps.lichess_bridge",
         "apps.webui",
     ]
 )
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # > The WhiteNoise middleware should be placed directly after the
+    # > Django SecurityMiddleware and before all other middleware
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -103,9 +108,8 @@ DATABASES = {
 
 CACHES = {
     "default": {
-        # Let's kiss things simple for now, and let each Django worker
-        # manage their own in-memory cache.
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "django_cache",
     }
 }
 
@@ -188,10 +192,27 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# Google fonts to mirror locally:
+# https://github.com/andymckay/django-google-fonts
+GOOGLE_FONTS = (
+    "Open Sans:ital,wght@0,300..800;1,300..800",  # https://fonts.google.com/specimen/Open+Sans
+)
+GOOGLE_FONTS_DIR = BASE_DIR / "src" / "apps" / "webui" / "static"
 
 # Our custom settings:
 ZAKUCHESS_VERSION = env.get("ZAKUCHESS_VERSION", "dev")
-JS_CHESS_ENGINE = env.get("JS_CHESS_ENGINE", "stockfish")
 MASTODON_PAGE = env.get("MASTODON_PAGE")
 CANONICAL_URL = env.get("CANONICAL_URL", "https://zakuchess.com/")
+
 DEBUG_LAYOUT = env.get("DEBUG_LAYOUT", "") == "1"
+
+# Daily challenge app:
+JS_CHESS_ENGINE = env.get("JS_CHESS_ENGINE", "stockfish")
+
+# Lichess bridge app:
+# > Lichess supports unregistered and public clients
+# > (no client authentication, choose any unique client id).
+# So it's not a kind of API secret we would have created on Lichess' side, but just an
+# arbitrary identifier.
+LICHESS_CLIENT_ID = env.get("LICHESS_CLIENT_ID", "zakuchess.com")
+LICHESS_HOST = env.get("LICHESS_HOST", "https://lichess.org")

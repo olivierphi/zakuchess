@@ -6,8 +6,7 @@ import chess
 
 from apps.chess.business_logic import calculate_piece_available_targets
 
-from .consts import PLAYER_SIDES
-from .helpers import (
+from .chess_helpers import (
     chess_lib_color_to_player_side,
     chess_lib_square_to_square,
     get_active_player_side_from_chess_board,
@@ -16,24 +15,24 @@ from .helpers import (
     symbol_from_piece_role,
     team_member_role_from_piece_role,
 )
+from .consts import PLAYER_SIDES
 from .models import UserPrefs
 from .types import ChessInvalidStateException
 
 if TYPE_CHECKING:
     from dominate.util import text
 
+    from .models import GameFactions, GameTeams, TeamMember
     from .types import (
         FEN,
-        Factions,
+        BoardOrientation,
         GamePhase,
-        GameTeams,
         PieceRole,
         PieceRoleBySquare,
         PieceSymbol,
         PieceType,
         PlayerSide,
         Square,
-        TeamMember,
         TeamMemberRole,
     )
 
@@ -109,11 +108,19 @@ class GamePresenter(ABC):
 
     @property
     @abstractmethod
+    def board_orientation(self) -> "BoardOrientation": ...
+
+    @property
+    @abstractmethod
     def urls(self) -> "GamePresenterUrls": ...
 
     @property
     @abstractmethod
     def is_my_turn(self) -> bool: ...
+
+    @property
+    @abstractmethod
+    def my_side(self) -> "PlayerSide | None": ...
 
     @property
     @abstractmethod
@@ -162,10 +169,6 @@ class GamePresenter(ABC):
 
     @property
     @abstractmethod
-    def is_player_turn(self) -> bool: ...
-
-    @property
-    @abstractmethod
     def is_bot_turn(self) -> bool: ...
 
     @property
@@ -178,7 +181,7 @@ class GamePresenter(ABC):
 
     @property
     @abstractmethod
-    def factions(self) -> "Factions": ...
+    def factions(self) -> "GameFactions": ...
 
     @property
     @abstractmethod
@@ -209,8 +212,8 @@ class GamePresenter(ABC):
         result: "dict[PlayerSide, dict[TeamMemberRole, TeamMember]]" = {}
         for player_side in PLAYER_SIDES:
             result[player_side] = {}
-            for team_member in self._teams[player_side]:
-                member_role = team_member_role_from_piece_role(team_member["role"])
+            for team_member in self._teams.get_team_for_side(player_side):
+                member_role = team_member_role_from_piece_role(team_member.role)
                 result[player_side][member_role] = team_member
         return result
 
@@ -243,20 +246,25 @@ class GamePresenterUrls(ABC):
     def __init__(self, *, game_presenter: GamePresenter):
         self._game_presenter = game_presenter
 
+    @abstractmethod
     def htmx_game_no_selection_url(self, *, board_id: str) -> str:
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def htmx_game_select_piece_url(self, *, square: "Square", board_id: str) -> str:
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def htmx_game_move_piece_url(self, *, square: "Square", board_id: str) -> str:
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def htmx_game_play_bot_move_url(self, *, board_id: str) -> str:
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def htmx_game_play_solution_move_url(self, *, board_id: str) -> str:
-        raise NotImplementedError
+        pass
 
 
 class SelectedSquarePresenter:

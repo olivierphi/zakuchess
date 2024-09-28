@@ -21,7 +21,6 @@ WEBUI_STATIC = BASE_DIR / "src" / "apps" / "webui" / "static" / "webui"
 CHESS_STATIC = BASE_DIR / "src" / "apps" / "chess" / "static" / "chess"
 
 ASSETS_PATTERNS: dict[str, str] = {
-    "GOOGLE_FONTS": "https://fonts.gstatic.com/s/{font_name}/{v}/{file_id}.woff2",
     "STOCKFISH_CDN": "https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/{file}",
     "LOZZA_GITHUB": "https://raw.githubusercontent.com/op12no2/lozza/{rev}/lozza.js",
     "WESNOTH_UNITS_GITHUB": "https://raw.githubusercontent.com/wesnoth/wesnoth/master/data/core/images/units/{path}",
@@ -43,8 +42,6 @@ _USER_AGENT = " ".join(
 
 # fmt: off
 ASSETS_MAP: dict[URL, Path] = {
-    # Fonts:
-    ASSETS_PATTERNS["GOOGLE_FONTS"].format(font_name="opensans", file_id="mem8YaGs126MiZpBA-UFVZ0b", v="v35"): WEBUI_STATIC / "fonts" / "OpenSans.woff2",
     # Stockfish:
     ASSETS_PATTERNS["STOCKFISH_CDN"].format(file="stockfish.min.js"): CHESS_STATIC / "js" / "bot" / "stockfish.js",
     ASSETS_PATTERNS["STOCKFISH_CDN"].format(file="stockfish.wasm"): CHESS_STATIC / "js" / "bot" / "stockfish.wasm",
@@ -90,7 +87,6 @@ async def download_assets(*, even_if_exists: bool) -> None:
 
     limits = httpx.Limits(
         max_connections=DOWNLOADS_CONCURRENCY,
-        max_keepalive_connections=DOWNLOADS_CONCURRENCY,
     )
     async with httpx.AsyncClient(
         limits=limits, headers={"User-Agent": _USER_AGENT}

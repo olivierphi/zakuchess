@@ -1,5 +1,6 @@
 import pytest
 
+from ...chess.models import TeamMember
 from ..models import (
     DailyChallenge,
     DailyChallengeStatus,
@@ -19,13 +20,6 @@ _MINIMALIST_GAME = {
         "a1": "K",
     },
 }
-
-
-@pytest.fixture
-def cleared_django_cache():
-    from django.core.cache import cache
-
-    cache.clear()
 
 
 @pytest.fixture
@@ -61,15 +55,15 @@ def challenge_minimalist() -> DailyChallenge:
         piece_role_by_square=_MINIMALIST_GAME["piece_role_by_square"],
         teams={
             "w": [
-                {"role": "Q", "name": ["QUEEN", "1"], "faction": "humans"},
-                {"role": "B1", "name": ["BISHOP", "1"], "faction": "humans"},
-                {"role": "K", "name": ["KING", "1"], "faction": "humans"},
+                TeamMember("q", ("QUEEN", "1"), "humans"),
+                TeamMember("b1", ("BISHOP", "1"), "humans"),
+                TeamMember("k", ("KING",), "humans"),
             ],
             "b": [
-                {"role": "k", "name": "", "faction": "undeads"},
-                {"role": "p1", "name": "", "faction": "undeads"},
-                {"role": "p2", "name": "", "faction": "undeads"},
-                {"role": "p3", "name": "", "faction": "undeads"},
+                TeamMember("k", [], "undeads"),
+                TeamMember("p1", [], "undeads"),
+                TeamMember("p2", [], "undeads"),
+                TeamMember("p3", [], "undeads"),
             ],
         },
         fen_before_bot_first_move="1k6/pp3Q2/7p/8/8/8/7B/K7 b - - 0 1",

@@ -130,7 +130,7 @@ def test_htmx_game_select_piece_input_validation(
         "expected_team_member_name_display",
     ),
     (
-        ("a1", "KING 1"),
+        ("a1", "KING"),
         ("f7", "QUEEN 1"),
     ),
 )
@@ -157,7 +157,7 @@ def test_htmx_game_select_piece_returned_html(
 
     response_html = response.content.decode()
     assert expected_team_member_name_display in response_html
-    not_expected_team_member_names_display = {"KING 1", "QUEEN 1", "BISHOP 1"} - {
+    not_expected_team_member_names_display = {"KING", "QUEEN 1", "BISHOP 1"} - {
         expected_team_member_name_display
     }
     for other_team_member_name in not_expected_team_member_names_display:
@@ -291,7 +291,7 @@ def test_stats_modal_can_display_todays_victory_metrics_test(
     # Test dependencies
     challenge_minimalist: "DailyChallenge",
     client: "DjangoClient",
-    cleared_django_cache,
+    cleared_django_default_cache,
 ):
     get_current_challenge_mock.return_value = challenge_minimalist
 

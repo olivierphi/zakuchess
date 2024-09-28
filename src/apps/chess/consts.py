@@ -40,7 +40,7 @@ FILES: Final[tuple["File", ...]] = ("a", "b", "c", "d", "e", "f", "g", "h")
 RANKS: Final[tuple["Rank", ...]] = ("1", "2", "3", "4", "5", "6", "7", "8")
 
 
-MOVES = frozenset(f"{sq1}{sq2}" for sq1 in SQUARES for sq2 in SQUARES if sq1 != sq2)
+# MOVES = frozenset(f"{sq1}{sq2}" for sq1 in SQUARES for sq2 in SQUARES if sq1 != sq2)
 
 STARTING_PIECES: dict["PlayerSide", tuple["PieceSymbol"]] = {
     "w": (*("P" * 8), *("N" * 2), *("B" * 2), *("R" * 2), "Q", "K"),  # type: ignore

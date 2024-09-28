@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from django.conf import settings
 from django.templatetags.static import static
 from django.urls import reverse
-from dominate.tags import button, div, meta, script
+from dominate.tags import div, meta, script
 from dominate.util import raw
 
 from apps.chess.components.chess_board import (
@@ -19,10 +19,13 @@ from apps.chess.components.misc_ui import (
     speech_bubble_container,
 )
 from apps.webui.components.layout import page
+from apps.webui.components.misc_ui.header import header_button
+from apps.webui.components.misc_ui.svg_icons import ICON_SVG_HELP
+from apps.webui.components.misc_ui.user_prefs_modal import user_prefs_button
 
 from ..misc_ui.daily_challenge_bar import daily_challenge_bar
 from ..misc_ui.status_bar import status_bar
-from ..misc_ui.svg_icons import ICON_SVG_COG, ICON_SVG_HELP, ICON_SVG_STATS
+from ..misc_ui.svg_icons import ICON_SVG_STATS
 
 if TYPE_CHECKING:
     from typing import Literal
@@ -56,7 +59,7 @@ def daily_challenge_page(
         _open_help_modal() if game_presenter.is_very_first_game else div(""),
         request=request,
         left_side_buttons=[_stats_button()],
-        right_side_buttons=[_user_prefs_button(), _help_button()],
+        right_side_buttons=[user_prefs_button(), _help_button()],
         head_children=_open_graph_meta_tags(),
     )
 
@@ -125,25 +128,10 @@ def _stats_button() -> "dom_tag":
         "data_hx_swap": "outerHTML",
     }
 
-    return _header_button(
+    return header_button(
         icon=ICON_SVG_STATS,
         title="Visualise your stats for daily challenges",
         id_="stats-button",
-        htmx_attributes=htmx_attributes,
-    )
-
-
-def _user_prefs_button() -> "dom_tag":
-    htmx_attributes = {
-        "data_hx_get": reverse("daily_challenge:htmx_daily_challenge_modal_user_prefs"),
-        "data_hx_target": "#modals-container",
-        "data_hx_swap": "outerHTML",
-    }
-
-    return _header_button(
-        icon=ICON_SVG_COG,
-        title="Edit preferences",
-        id_="user-prefs-button",
         htmx_attributes=htmx_attributes,
     )
 
@@ -155,23 +143,11 @@ def _help_button() -> "dom_tag":
         "data_hx_swap": "outerHTML",
     }
 
-    return _header_button(
+    return header_button(
         icon=ICON_SVG_HELP,
         title="How to play",
         id_="help-button",
         htmx_attributes=htmx_attributes,
-    )
-
-
-def _header_button(
-    *, icon: str, title: str, id_: str, htmx_attributes: dict[str, str]
-) -> "dom_tag":
-    return button(
-        icon,
-        cls="block px-1 py-1 text-sm text-slate-50 hover:text-slate-400",
-        title=title,
-        id=id_,
-        **htmx_attributes,
     )
 
 
@@ -197,6 +173,7 @@ _MODAL_TEMPLATE = Template(
 
 
 def _open_modal(modal_id: "Literal['stats', 'help']", delay: int) -> "dom_tag":
+    # TODO: use a web component for this
     return div(
         script(
             raw(_MODAL_TEMPLATE.substitute(MODAL_ID=modal_id, DELAY=delay)),

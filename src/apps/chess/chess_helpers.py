@@ -1,4 +1,4 @@
-from functools import cache, lru_cache
+from functools import cache
 from typing import TYPE_CHECKING, cast
 
 import chess
@@ -9,7 +9,6 @@ from .consts import (
     PIECE_TYPE_TO_NAME,
     PIECE_TYPE_TO_UNICODE,
     RANKS,
-    SQUARES,
 )
 
 if TYPE_CHECKING:
@@ -29,7 +28,7 @@ if TYPE_CHECKING:
 
 @cache
 def chess_lib_square_to_square(chess_lib_square: int) -> "Square":
-    return cast("Square", chess.square_name(chess_lib_square))
+    return cast("Square", chess.SQUARE_NAMES[chess_lib_square])
 
 
 @cache
@@ -132,23 +131,21 @@ def get_squares_with_pieces_that_can_move(board: chess.Board) -> frozenset["Squa
     )
 
 
-@lru_cache
 def get_active_player_side_from_fen(fen: "FEN") -> "PlayerSide":
     return cast("PlayerSide", fen.split(" ")[1])
+
+
+def get_turns_counter_from_fen(fen: "FEN") -> int:
+    """Returns the fullmove number, starting from 1"""
+    return int(fen.split(" ")[-1])
 
 
 def get_active_player_side_from_chess_board(board: chess.Board) -> "PlayerSide":
     return "w" if board.turn else "b"
 
 
-@lru_cache
 def uci_move_squares(move: str) -> tuple["Square", "Square"]:
     return cast("Square", move[:2]), cast("Square", move[2:4])
-
-
-@cache
-def get_square_order(square: "Square") -> int:
-    return SQUARES.index(square)
 
 
 @cache

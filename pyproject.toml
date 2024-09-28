@@ -11,20 +11,25 @@ readme = "README.md"
 requires-python = ">=3.11"
 
 dependencies= [
+    # Django doesn't follow SemVer, so we need to specify the minor version:
     "Django==5.1.*",
-    # Django doesn't follow SemVer, so we need to specify the minor version
     "gunicorn==22.*",
+    "uvicorn[standard]==0.30.*",
+    "uvicorn-worker==0.2.*",
     "django-alive==1.*",
     "chess==1.*",
     "django-htmx==1.*",
     "dominate==2.*",
     "dj-database-url==2.*",
     "requests==2.*",
-    "django-axes[ipware]==6.*",
+    "django-axes[ipware]==6.5.*",
     "whitenoise==6.*",
-    "django-import-export==3.*",
+    "django-import-export==4.*",
     "msgspec==0.18.*",
     "zakuchess",
+    "authlib==1.*",
+    "httpx==0.27.*",
+    "django-google-fonts==0.0.3",
 ]
 
 
@@ -37,15 +42,21 @@ dev = [
     "ipython==8.*",
     "types-requests==2.*",
     "django-extensions==3.*",
-    # (httpx is only used in "scripts/download_assets.py" for parallel downloads)
-    "httpx==0.26.*",
     "sqlite-utils==3.*",
+    # N.B. As it turns out that Lichess' "Berserk" package misses some features we need,
+    # such as the creation of correspondence Seeks... 
+    # And as we had to wrap evey call in an `sync_to_async` anyway, which was not great... 
+    # We only use  for its `types` module at the momemt.
+    "berserk==0.13.*",
 ]
 test = [
-    "pytest==7.*",
+    "pytest==8.3.*",
     "pytest-django==4.*",
     "pytest-cov==4.*",
     "time-machine==2.*",
+    "pytest-blockage==0.2.*",
+    "pytest-asyncio==0.24.*",
+    "pytest-httpx-blockage==0.0.8",
 ]
 load-testing = [
     "locust==2.*",
@@ -58,7 +69,7 @@ Repository = "https://github.com/olivierphi/zakuchess"
 
 
 [tool.uv]
-package = true # symlinks the project's "src/" root folder to the venv
+package = false
 
 
 [tool.ruff]
@@ -107,6 +118,7 @@ exclude = [
 ]
 [[tool.mypy.overrides]]
 module = [
+    "authlib.*",
     "django.*",
     "dominate.*",
     "import_export.*",
@@ -121,8 +133,20 @@ testpaths = [
     "src/project/tests/",
 ]
 python_files = ["test_*.py"]
+# pytest-django settings:
+# https://pytest-django.readthedocs.io/
 addopts = "--reuse-db"
 DJANGO_SETTINGS_MODULE = "project.settings.test"
+# pytest-asyncio settings:
+# https://pytest-asyncio.readthedocs.io/en/stable/reference/configuration.html
+asyncio_default_fixture_loop_scope = "function"
+asyncio_mode = "auto" 
+# pytest-blockage settings:
+# https://github.com/rob-b/pytest-blockage
+blockage = true 
+# pytest-httpx-blockage settings:
+# https://github.com/SlavaSkvortsov/pytest-httpx-blockage
+blockage-httpx = true
 
 [tool.coverage.run]
 # @link https://coverage.readthedocs.io/en/latest/excluding.html

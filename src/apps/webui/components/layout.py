@@ -4,11 +4,12 @@ from functools import cache
 from typing import TYPE_CHECKING
 
 from django.conf import settings
-from django.template.backends.utils import get_token  # type: ignore[attr-defined]
+from django.template.backends.utils import get_token as get_csrf_token
 from django.templatetags.static import static
 from dominate.tags import (
     a,
     body,
+    comment,
     div,
     footer as base_footer,
     h1,
@@ -33,12 +34,7 @@ if TYPE_CHECKING:
     from dominate.util import text
 
 # We'll do something cleaner later
-# TODO: subset the OpenSans font, once we have extracted text in i18n files.
 _FONTS_CSS = """
-@font-face {
-  font-family: 'OpenSans';
-  src: url('/static/webui/fonts/OpenSans.woff2') format('woff2');
-}
 @font-face {
   font-family: 'PixelFont';
   src: url('/static/webui/fonts/fibberish.ttf') format('truetype');
@@ -94,7 +90,7 @@ def document(
             modals_container(),
             cls=_DOCUMENT_BG_COLOR,
             data_hx_headers=json.dumps(
-                {"X-CSRFToken": get_token(request) if request else "[no request]"}
+                {"X-CSRFToken": get_csrf_token(request) if request else "[no request]"}
             ),
             data_hx_ext="class-tools",  # enable CSS class transitions on the whole page
         ),
@@ -106,6 +102,9 @@ def document(
 
 def head(*children: "dom_tag", title: str) -> "dom_tag":
     return base_head(
+        comment(
+            "ZakuChess is open source! See https://github.com/olivierphi/zakuchess"
+        ),
         meta(charset="utf-8"),
         base_title(title),
         meta(name="viewport", content="width=device-width, initial-scale=1"),
@@ -124,7 +123,14 @@ def head(*children: "dom_tag", title: str) -> "dom_tag":
             sizes="32x32",
             href=static("webui/img/favicon-32x32.png"),
         ),
+        # Fonts:
         style(_FONTS_CSS),
+        link(
+            # automatically created by `django-google-fonts`
+            rel="stylesheet",
+            href=static("fonts/opensans:ital,wght@0,300..800;1,300..800.css"),
+        ),
+        # CSS & JS
         link(rel="stylesheet", href=static("webui/css/zakuchess.css")),
         script(src=static("webui/js/main.js")),
         script(src=static("chess/js/chess-main.js")),

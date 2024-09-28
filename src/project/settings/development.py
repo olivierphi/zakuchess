@@ -6,6 +6,14 @@ ALLOWED_HOSTS = ["*"]
 
 DEBUG = True
 
+INSTALLED_APPS.insert(
+    # Make sure `runserver` doesn't try to serve static assets,
+    # even without the `--no-static` option:
+    # (https://whitenoise.readthedocs.io/en/stable/django.html#using-whitenoise-in-development)
+    INSTALLED_APPS.index("django.contrib.staticfiles"),
+    "whitenoise.runserver_nostatic",
+)
+
 INSTALLED_APPS += [
     "django_extensions",
 ]
@@ -13,9 +21,17 @@ INSTALLED_APPS += [
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
+    "formatters": {
+        "uvicorn": {
+            "()": "uvicorn.logging.DefaultFormatter",
+            "fmt": "%(levelprefix)s [%(name)s] %(message)s",
+            "use_colors": True,
+        },
+    },
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
+            "formatter": "uvicorn",
         },
     },
     "root": {

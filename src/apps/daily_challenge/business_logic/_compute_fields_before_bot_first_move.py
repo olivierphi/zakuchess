@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from apps.chess.helpers import uci_move_squares
+from apps.chess.chess_helpers import uci_move_squares
 
 from ...chess.business_logic import calculate_fen_before_move
 from ..consts import BOT_SIDE

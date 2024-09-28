@@ -8,14 +8,19 @@ const PIECE_NAMES = ["pawn", "knight", "bishop", "rook", "queen", "king"]
 const PLAYER_SIDES = ["w", "b"]
 const FACTIONS = ["humans", "undeads"]
 
-const ACTIVE_PLAYER_SELECTION_COLOR = "#ffff00"
-const OPPONENT_PLAYER_SELECTION_COLOR = "#ffd000"
+const PLAYABLE_SELECTION_COLOR = "#ffff00"
+const NON_PLAYABLE_SELECTION_COLOR = "#ffd000"
 const POTENTIAL_CAPTURE_COLOR = "#c00000"
-const PIECE_SYMBOL_BORDER_OPACITY = Math.round(0.4 * 0xff).toString(16) // 40% of 255
+const PIECE_UNIT_BORDER_OPACITY = Math.round(0.5 * 0xff).toString(16) // 50% of 255
+const PIECE_SYMBOL_BORDER_OPACITY = Math.round(0.9 * 0xff).toString(16) // 90% of 255
+const PIECE_UNIT_W = `#065f46${PIECE_UNIT_BORDER_OPACITY}` // emerald-800
+const PIECE_UNIT_B = `#3730a3${PIECE_UNIT_BORDER_OPACITY}` // indigo-800
 const PIECE_SYMBOL_W = `#065f46${PIECE_SYMBOL_BORDER_OPACITY}` // emerald-800
-const PIECE_SYMBOL_B = `#3730a3${PIECE_SYMBOL_BORDER_OPACITY}` // indigo-800
+const PIECE_SYMBOL_B = `#a855f7${PIECE_SYMBOL_BORDER_OPACITY}` // purple-500
 const PIECES_DROP_SHADOW_OFFSET = 1 // px
 const SPEECH_BUBBLE_DROP_SHADOW_COLOR = "#fbbf24" // amber-400
+
+// https://github.com/tailwindlabs/tailwindcss/blob/main/stubs/config.full.js
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -23,7 +28,7 @@ module.exports = {
     safelist: chessRelatedClassesSafeList(),
     theme: {
         fontFamily: {
-            sans: ["OpenSans", "sans-serif"],
+            sans: ["Open Sans", "sans-serif"],
             pixel: ["PixelFont", "monospace"],
             mono: ["monospace"],
         },
@@ -35,8 +40,8 @@ module.exports = {
                 "chess-square-dark": "#a57713", // "#881337", // Amber 700 // "#a57713", // "#9f1239",
                 "chess-square-square-info": "#58400b",
                 "body-background": "#120222", // @link https://www.tints.dev/purple/A855F7
-                "active-chess-available-target-marker": ACTIVE_PLAYER_SELECTION_COLOR,
-                "opponent-chess-available-target-marker": OPPONENT_PLAYER_SELECTION_COLOR,
+                "playable-chess-available-target-marker": PLAYABLE_SELECTION_COLOR,
+                "non-playable-chess-available-target-marker": NON_PLAYABLE_SELECTION_COLOR,
             },
             width: {
                 "1/8": "12.5%",
@@ -80,20 +85,20 @@ module.exports = {
                 size: "width, height",
             },
             dropShadow: {
-                // "piece-symbol-w": `0 0 0.1rem ${PIECE_SYMBOL_W}`,
-                // "piece-symbol-b": `0 0 0.1rem ${PIECE_SYMBOL_B}`,
+                "piece-unit-w": borderFromDropShadow(1, PIECE_UNIT_W),
+                "piece-unit-b": borderFromDropShadow(1, PIECE_UNIT_B),
                 "piece-symbol-w": borderFromDropShadow(1, PIECE_SYMBOL_W),
                 "piece-symbol-b": borderFromDropShadow(1, PIECE_SYMBOL_B),
-                "active-selected-piece": borderFromDropShadow(
+                "playable-selected-piece": borderFromDropShadow(PIECES_DROP_SHADOW_OFFSET, PLAYABLE_SELECTION_COLOR),
+                "non-playable-selected-piece": borderFromDropShadow(
                     PIECES_DROP_SHADOW_OFFSET,
-                    ACTIVE_PLAYER_SELECTION_COLOR,
-                ),
-                "opponent-selected-piece": borderFromDropShadow(
-                    PIECES_DROP_SHADOW_OFFSET,
-                    OPPONENT_PLAYER_SELECTION_COLOR,
+                    NON_PLAYABLE_SELECTION_COLOR,
                 ),
                 "potential-capture": borderFromDropShadow(PIECES_DROP_SHADOW_OFFSET, POTENTIAL_CAPTURE_COLOR),
                 "speech-bubble": `0 0 2px ${SPEECH_BUBBLE_DROP_SHADOW_COLOR}`,
+            },
+            brightness: {
+                60: ".6",
             },
         },
     },

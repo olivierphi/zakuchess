@@ -199,6 +199,7 @@ class DailyChallengeAdmin(ImportExportModelAdmin):
             lookup_key,
             expires=now() + _FUTURE_DAILY_CHALLENGE_COOKIE_DURATION,
             httponly=True,
+            samesite="Lax",
         )
 
         return response
@@ -418,7 +419,7 @@ def _get_game_presenter(
     )
     challenge_preview = DailyChallenge(
         fen=fen,
-        teams=game_teams,
+        teams=game_teams.to_dict(),
         piece_role_by_square=piece_role_by_square,
     )
     setattr(challenge_preview, "max_turns_count", 40)  # we need this to return a value

@@ -17,13 +17,14 @@ from apps.chess.types import (  # we need real imports on these because they're 
     PieceRoleBySquare,
     PlayerSide,
 )
-from lib.django_helpers import literal_to_django_choices
+from lib.django_choices_helpers import literal_to_django_choices
 
 from .consts import BOT_SIDE, FACTIONS, PLAYER_SIDE
 
 if TYPE_CHECKING:
-    from apps.chess.types import Factions, GameTeams, Square
+    from apps.chess.types import GameTeamsDict, Square
 
+    from ..chess.models import GameFactions
 
 GameID: TypeAlias = str
 
@@ -117,7 +118,7 @@ class DailyChallenge(models.Model):
     piece_role_by_square_before_bot_first_move: "PieceRoleBySquare | None" = (
         models.JSONField(null=True, editable=False)
     )
-    teams: "GameTeams|None" = models.JSONField(null=True, editable=False)
+    teams: "GameTeamsDict | None" = models.JSONField(null=True, editable=False)
     intro_turn_speech_text: str = models.CharField(max_length=100, blank=True)
     solution_turns_count: int = models.PositiveSmallIntegerField(
         null=True, editable=False
@@ -135,7 +136,7 @@ class DailyChallenge(models.Model):
         return BOT_SIDE
 
     @property
-    def factions(self) -> "Factions":
+    def factions(self) -> "GameFactions":
         return FACTIONS
 
     def clean(self) -> None:
@@ -184,7 +185,7 @@ class DailyChallenge(models.Model):
         teams, piece_role_by_square = set_daily_challenge_teams_and_pieces_roles(
             fen=self.fen
         )
-        self.teams = teams
+        self.teams = teams.to_dict()
         self.piece_role_by_square = piece_role_by_square
 
         # Set `*_before_bot_first_move` fields. Can raise validation errors.

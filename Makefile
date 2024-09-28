@@ -2,6 +2,7 @@ PYTHON_BINS ?= ./.venv/bin
 PYTHON ?= ${PYTHON_BINS}/python
 DJANGO_SETTINGS_MODULE ?= project.settings.development
 SUB_MAKE = ${MAKE} --no-print-directory
+UV ?= bin/uv
 
 .DEFAULT_GOAL := help
 
@@ -10,10 +11,8 @@ help:
 	@grep -P '^[.a-zA-Z/_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: install
-install: bin/uv .venv ./node_modules ## Install the Python and frontend dependencies
-	bin/uv sync --all-extras
-	${PYTHON_BINS}/pre-commit install
-	${SUB_MAKE} .venv/bin/black
+install: backend/install frontend/install ## Install the Python and frontend dependencies
+	
 
 .PHONY: dev
 dev: .env.local db.sqlite3
@@ -31,18 +30,48 @@ download_assets: download_assets_opts ?=
 download_assets:
 	${PYTHON_BINS}/python scripts/download_assets.py ${download_assets_opts}
 
+.PHONY: backend/install
+backend/install: uv_sync_opts ?= --all-extras
+backend/install: bin/uv .venv ## Install the Python dependencies (via uv) and install pre-commit
+# Install Python dependencies:
+	${UV} sync ${uv_sync_opts}
+# Install the project in editable mode, so we don't have to add "src/" to the Python path:
+	${UV} pip install -e .
+# Install pre-commit hooks:
+	${PYTHON_BINS}/pre-commit install
+# Create a shim for Black (actually using Ruff), so the IDE can use it:
+	@${SUB_MAKE} .venv/bin/black
+# Create the database if it doesn't exist:
+	@${SUB_MAKE} db.sqlite3
+# Make sure the SQLite database is up-to-date:
+	@${SUB_MAKE} django/manage cmd='createcachetable'
+
 .PHONY: backend/watch
+backend/watch: env_vars ?=
 backend/watch: address ?= localhost
 backend/watch: port ?= 8000
 backend/watch: dotenv_file ?= .env.local
-backend/watch: ## Start the Django development server
-	@${SUB_MAKE} django/manage cmd='runserver ${address}:${port}'
+backend/watch: uvicorn_opts ?= --use-colors --access-log
+backend/watch: ## Start Django via Uvicorn, in "watch" mode
+	@DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE} ${env_vars} \
+		${UV} run uvicorn \
+		--reload --reload-dir src/ \
+		--host ${address} --port ${port} \
+		--env-file ${dotenv_file} \
+		${uvicorn_opts} \
+		project.asgi:application
 
 .PHONY: backend/resetdb
-backend/resetdb: dotenv_file ?= .env.local
-backend/resetdb: # Destroys the SQLite database and recreates it from scratch
+backend/resetdb: .confirm # Destroys the SQLite database and recreates it from scratch
 	rm -f db.sqlite3
 	@${SUB_MAKE} db.sqlite3
+
+.PHONY: backend/backupdb
+backend/backupdb: backup_name ?= $$(date --iso-8601=seconds | cut -d + -f 1)
+backend/backupdb: # Creates a backup of the SQLite database
+	@sqlite3 db.sqlite3 ".backup 'db.local.${backup_name}.backup.sqlite3'"
+	@echo "Backup created as 'db.local.${backup_name}.backup.sqlite3'"
+
 
 .PHONY: backend/createsuperuser
 backend/createsuperuser: dotenv_file ?= .env.local
@@ -83,8 +112,12 @@ code-quality/mypy: ## Python's equivalent of TypeScript
 
 # Here starts the frontend stuff
 
+.PHONY: frontend/install
+frontend/install: ## Install the frontend dependencies (via npm)
+	npm install
+
 .PHONY: frontend/watch
-frontend/watch: ## Compile the CSS & JS assets of our various Django apps, in 'watch' mode
+frontend/watch: ./node_modules ## Compile the CSS & JS assets of our various Django apps, in 'watch' mode
 	@./node_modules/.bin/concurrently --names "img,css,js" --prefix-colors "yellow,green" \
 		"${SUB_MAKE} frontend/img" \
 		"${SUB_MAKE} frontend/css/watch" \
@@ -143,14 +176,14 @@ frontend/img/copy_assets:
 
 # Here starts the "misc util targets" stuff
 
-bin/uv: uv_version ?= 0.4.4
+bin/uv: uv_version ?= 0.4.9
 bin/uv: # Install `uv` and `uvx` locally in the "bin/" folder
 	curl -LsSf "https://astral.sh/uv/${uv_version}/install.sh" | \
 		CARGO_DIST_FORCE_INSTALL_DIR="$$(pwd)" INSTALLER_NO_MODIFY_PATH=1 sh
 	@echo "We'll use 'bin/uv' to manage Python dependencies." 
 
 .venv: ## Initialises the Python virtual environment in a ".venv" folder, via uv
-	bin/uv venv
+	${UV} venv
 
 .env.local:
 	cp .env.dist .env.local
@@ -171,6 +204,7 @@ django/manage: env_vars ?=
 django/manage: dotenv_file ?= .env.local
 django/manage: cmd ?= --help
 django/manage: .venv .env.local ## Run a Django management command
+	@echo "Running Django management command: ${cmd}"
 	@DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE} ${env_vars} \
 		${PYTHON_BINS}/dotenv -f '${dotenv_file}' run -- \
 		${PYTHON} manage.py ${cmd}
@@ -179,8 +213,13 @@ django/manage: .venv .env.local ## Run a Django management command
 
 ./node_modules: frontend/install
 
-frontend/install:
-	npm install
+
+# Here starts the "Internal Makefile utils" stuff
+
+.PHONY: .confirm
+.confirm:
+# https://www.alexedwards.net/blog/a-time-saving-makefile-for-your-go-projects
+	@echo -n 'Are you sure? [y/N] ' && read ans && [ $${ans:-N} = y ]
 
 # Here starts the "Lichess database" stuff
 

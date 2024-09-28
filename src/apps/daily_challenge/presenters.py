@@ -4,7 +4,8 @@ from urllib.parse import urlencode
 
 from django.urls import reverse
 
-from apps.chess.helpers import uci_move_squares
+from apps.chess.chess_helpers import uci_move_squares
+from apps.chess.models import GameTeams
 from apps.chess.presenters import GamePresenter, GamePresenterUrls
 
 from .business_logic import get_speech_bubble
@@ -12,9 +13,15 @@ from .business_logic import get_speech_bubble
 if TYPE_CHECKING:
     import chess
 
-    from apps.chess.models import UserPrefs
+    from apps.chess.models import GameFactions, UserPrefs
     from apps.chess.presenters import SpeechBubbleData
-    from apps.chess.types import Factions, GamePhase, PieceRole, PlayerSide, Square
+    from apps.chess.types import (
+        BoardOrientation,
+        GamePhase,
+        PieceRole,
+        PlayerSide,
+        Square,
+    )
 
     from .models import DailyChallenge, PlayerGameState
 
@@ -31,7 +38,6 @@ class DailyChallengeGamePresenter(GamePresenter):
         is_htmx_request: bool,
         forced_bot_move: tuple["Square", "Square"] | None = None,
         forced_speech_bubble: tuple["Square", str] | None = None,
-        selected_square: "Square | None" = None,
         selected_piece_square: "Square | None" = None,
         target_to_confirm: "Square | None" = None,
         is_bot_move: bool = False,
@@ -48,10 +54,9 @@ class DailyChallengeGamePresenter(GamePresenter):
         super().__init__(
             fen=game_state.fen,
             piece_role_by_square=game_state.piece_role_by_square,
-            teams=challenge.teams,
+            teams=GameTeams.from_dict(challenge.teams),
             refresh_last_move=refresh_last_move,
             is_htmx_request=is_htmx_request,
-            selected_square=selected_square,
             selected_piece_square=selected_piece_square,
             target_to_confirm=target_to_confirm,
             forced_bot_move=forced_bot_move,
@@ -70,12 +75,20 @@ class DailyChallengeGamePresenter(GamePresenter):
         self._forced_speech_bubble = forced_speech_bubble
 
     @cached_property
+    def board_orientation(self) -> "BoardOrientation":
+        return "1->8" if self._challenge.my_side == "w" else "8->1"
+
+    @cached_property
     def urls(self) -> "DailyChallengeGamePresenterUrls":
         return DailyChallengeGamePresenterUrls(game_presenter=self)
 
     @cached_property
     def is_my_turn(self) -> bool:
-        return self._challenge.my_side == self.active_player
+        return not self.is_bot_turn
+
+    @cached_property
+    def my_side(self) -> "PlayerSide | None":
+        return self._challenge.my_side
 
     @cached_property
     def challenge_current_attempt_turns_counter(self) -> int:
@@ -116,11 +129,7 @@ class DailyChallengeGamePresenter(GamePresenter):
     def can_select_pieces(self) -> bool:
         # During the bot's turn we're not allowed to select any piece, as we're waiting
         # for the delayed HTMX request to play the bot's move.
-        return self.is_player_turn and not self.is_game_over
-
-    @cached_property
-    def is_player_turn(self) -> bool:
-        return self.active_player_side != self._challenge.bot_side
+        return self.is_my_turn and not self.is_game_over
 
     @cached_property
     def is_bot_turn(self) -> bool:
@@ -135,7 +144,7 @@ class DailyChallengeGamePresenter(GamePresenter):
         return str(self._challenge.id)
 
     @cached_property
-    def factions(self) -> "Factions":
+    def factions(self) -> "GameFactions":
         return self._challenge.factions
 
     @cached_property
@@ -206,7 +215,7 @@ class DailyChallengeGamePresenterUrls(GamePresenterUrls):
         )
 
     def htmx_game_move_piece_url(self, *, square: "Square", board_id: str) -> str:
-        assert self._game_presenter.selected_piece is not None
+        assert self._game_presenter.selected_piece is not None  # type checker: happy
         return "".join(
             (
                 reverse(
