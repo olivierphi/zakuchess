@@ -574,7 +574,7 @@ def chess_character_display(
         is_potential_capture = True  # let's highlight checks in "see solution" mode
 
     horizontal_translation = (
-        ("left-3" if is_knight else "left-0")
+        ("left-2" if (is_knight or is_king) else "left-0")
         if is_from_original_left_hand_side
         else "right-0"
     )
@@ -607,9 +607,9 @@ def chess_character_display(
             )
             if is_highlighted
             else (
-                "drop-shadow-piece-symbol-w"
+                "drop-shadow-piece-unit-w"
                 if piece_player_side == "w"
-                else "drop-shadow-piece-symbol-b"
+                else "drop-shadow-piece-unit-b"
             )
         ),
         "drop-shadow-potential-capture" if is_potential_capture else "",
@@ -675,9 +675,9 @@ def chess_unit_symbol_display(
 
     is_knight, is_pawn = piece_type == "n", piece_type == "p"
 
-    # We always display a "w" symbol, because for some reason I find the board
-    # game clearer that way. We'll just make it a bit less white for "b" pieces.
-    unit_symbol_class = chess_unit_symbol_class(player_side="w", piece_name=piece_name)
+    unit_symbol_class = chess_unit_symbol_class(
+        player_side=player_side, piece_name=piece_name
+    )
 
     symbol_class = (
         # We have to do some ad-hoc adjustments for Knights and Pawns:
@@ -691,7 +691,6 @@ def chess_unit_symbol_display(
             if player_side == "w"
             else "drop-shadow-piece-symbol-b"
         ),
-        *(("brightness-60",) if player_side == "b" else []),
         unit_symbol_class,
     )
     symbol_display = div(
