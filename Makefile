@@ -62,10 +62,16 @@ backend/watch: ## Start Django via Uvicorn, in "watch" mode
 		project.asgi:application
 
 .PHONY: backend/resetdb
-backend/resetdb: dotenv_file ?= .env.local
-backend/resetdb: # Destroys the SQLite database and recreates it from scratch
+backend/resetdb: .confirm # Destroys the SQLite database and recreates it from scratch
 	rm -f db.sqlite3
 	@${SUB_MAKE} db.sqlite3
+
+.PHONY: backend/backupdb
+backend/backupdb: backup_name ?= $$(date --iso-8601=seconds | cut -d + -f 1)
+backend/backupdb: # Creates a backup of the SQLite database
+	@sqlite3 db.sqlite3 ".backup 'db.local.${backup_name}.backup.sqlite3'"
+	@echo "Backup created as 'db.local.${backup_name}.backup.sqlite3'"
+
 
 .PHONY: backend/createsuperuser
 backend/createsuperuser: dotenv_file ?= .env.local
@@ -207,6 +213,13 @@ django/manage: .venv .env.local ## Run a Django management command
 
 ./node_modules: frontend/install
 
+
+# Here starts the "Internal Makefile utils" stuff
+
+.PHONY: .confirm
+.confirm:
+# https://www.alexedwards.net/blog/a-time-saving-makefile-for-your-go-projects
+	@echo -n 'Are you sure? [y/N] ' && read ans && [ $${ans:-N} = y ]
 
 # Here starts the "Lichess database" stuff
 

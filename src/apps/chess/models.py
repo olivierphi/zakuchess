@@ -5,6 +5,8 @@ import msgspec
 from django.db import models
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from .types import Faction, GameTeamsDict, PlayerSide, TeamMemberRole
 
 
@@ -75,7 +77,7 @@ class GameFactions(NamedTuple):
 
 class TeamMember(NamedTuple):
     role: "TeamMemberRole"
-    name: tuple[str, ...]
+    name: "Sequence[str]"
     faction: "Faction | None" = None
 
 
@@ -102,12 +104,6 @@ class GameTeams(NamedTuple):
         Used to re-hydrate the data from the database.
         """
         return cls(
-            w=tuple(
-                TeamMember(**member) if isinstance(member, dict) else member  # type: ignore[arg-type]
-                for member in data["w"]
-            ),
-            b=tuple(
-                TeamMember(**member) if isinstance(member, dict) else member  # type: ignore[arg-type]
-                for member in data["b"]
-            ),
+            w=tuple(TeamMember(*member) for member in data["w"]),
+            b=tuple(TeamMember(*member) for member in data["b"]),
         )
