@@ -423,15 +423,15 @@ wheels = [
 
 [[package]]
 name = "django-axes"
-version = "6.1.1"
+version = "6.5.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "asgiref" },
     { name = "django" },
-    { name = "setuptools" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/4d/0c/5efb4ddf29afaf2353b6de1c4561d34bb462762af8a438c915d6d859facd/django-axes-6.1.1.tar.gz", hash = "sha256:cd1bc4f7becc8e9243eb4090dffa258d7d7125ca0ce3153b6ffc920bccbf2c3f", size = 244358 }
+sdist = { url = "https://files.pythonhosted.org/packages/8e/cc/383f9c247f65e5e2e90df4a2be0c982053684364349b51c1d1509d6e7a75/django_axes-6.5.2.tar.gz", hash = "sha256:c2c007d61a3de018ef97649350dc15e5663cd9def1a05de8eeb0fe6adc1ed2ab", size = 246681 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/31/80/d2ac4181d65cc75199eed1a76a8526daaad4242707d5aaae7d220e5cc145/django_axes-6.1.1-py3-none-any.whl", hash = "sha256:29c48ff5f09046afd5e9a16e96d3bbb79f6c11c59f0a7bbd732559e60d0aa9fa", size = 64396 },
+    { url = "https://files.pythonhosted.org/packages/da/89/340932f7ef3adeab4aa4a1824a7f094bd24be86025c62bd26c0183e0ff0c/django_axes-6.5.2-py3-none-any.whl", hash = "sha256:fab92b98032fff55d7d2e0fdfade2be189949b6590b9e0c90e6fd213dd70bb67", size = 68447 },
 ]
 
 [package.optional-dependencies]
@@ -1861,7 +1861,7 @@ requires-dist = [
     { name = "dj-database-url", specifier = "==2.*" },
     { name = "django", specifier = "==5.1.*" },
     { name = "django-alive", specifier = "==1.*" },
-    { name = "django-axes", extras = ["ipware"], specifier = "==6.*" },
+    { name = "django-axes", extras = ["ipware"], specifier = "==6.5.*" },
     { name = "django-extensions", marker = "extra == 'dev'", specifier = "==3.*" },
     { name = "django-google-fonts", specifier = "==0.0.3" },
     { name = "django-htmx", specifier = "==1.*" },

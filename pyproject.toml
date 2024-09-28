@@ -22,7 +22,7 @@ dependencies= [
     "dominate==2.*",
     "dj-database-url==2.*",
     "requests==2.*",
-    "django-axes[ipware]==6.*",
+    "django-axes[ipware]==6.5.*",
     "whitenoise==6.*",
     "django-import-export==4.*",
     "msgspec==0.18.*",
