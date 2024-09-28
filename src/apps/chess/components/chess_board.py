@@ -675,6 +675,10 @@ def chess_unit_symbol_display(
 
     is_knight, is_pawn = piece_type == "n", piece_type == "p"
 
+    # We always display a "w" symbol, because for some reason I find the board
+    # game clearer that way. We'll just make it a bit less white for "b" pieces.
+    unit_symbol_class = chess_unit_symbol_class(player_side="w", piece_name=piece_name)
+
     symbol_class = (
         # We have to do some ad-hoc adjustments for Knights and Pawns:
         "w-7" if (is_pawn or is_knight) else "w-8",
@@ -687,7 +691,8 @@ def chess_unit_symbol_display(
             if player_side == "w"
             else "drop-shadow-piece-symbol-b"
         ),
-        chess_unit_symbol_class(player_side=player_side, piece_name=piece_name),
+        *(("brightness-60",) if player_side == "b" else []),
+        unit_symbol_class,
     )
     symbol_display = div(
         cls=" ".join(symbol_class),

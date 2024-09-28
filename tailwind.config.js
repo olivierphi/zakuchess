@@ -94,6 +94,9 @@ module.exports = {
                 "potential-capture": borderFromDropShadow(PIECES_DROP_SHADOW_OFFSET, POTENTIAL_CAPTURE_COLOR),
                 "speech-bubble": `0 0 2px ${SPEECH_BUBBLE_DROP_SHADOW_COLOR}`,
             },
+            brightness: {
+                60: ".6",
+            },
         },
     },
     plugins: [],
