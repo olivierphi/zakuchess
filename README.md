@@ -1,6 +1,6 @@
 # Welcome to Remix!
 
-- 📖 [Remix docs](https://remix.run/docs)
+-   📖 [Remix docs](https://remix.run/docs)
 
 ## Development
 
@@ -32,8 +32,8 @@ If you're familiar with deploying Node applications, the built-in Remix app serv
 
 Make sure to deploy the output of `npm run build`
 
-- `build/server`
-- `build/client`
+-   `build/server`
+-   `build/client`
 
 ## Styling
 
