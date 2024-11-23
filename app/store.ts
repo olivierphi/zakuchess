@@ -1,10 +1,13 @@
 import { Store } from "@tanstack/react-store"
 
+import {
+    type ChessBoardState,
+    getBoardState,
+} from "./business-logic/chess/chess-state.helpers"
 import type { FEN } from "./business-logic/chess/chess.domain"
-import { getBoardState, type ChessBoardState } from "./business-logic/chess/chess-state.helpers"
 
 type ChessGameState = {
-    board: ChessBoardState,
+    board: ChessBoardState
 }
 
 type GameStore = Store<ChessGameState>

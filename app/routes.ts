@@ -1,7 +1,3 @@
-import type { DefineRouteFunction } from "@remix-run/dev/dist/config/routes"
+import { type RouteConfig, route } from "@react-router/dev/routes"
 
-// https://remix.run/docs/en/main/discussion/routes#manual-route-configuration
-
-export const routesDefinition = (route: DefineRouteFunction) => {
-    route("/", "pages/Homepage.tsx", { index: true })
-}
+export default [route("/", "./pages/Homepage.tsx")] satisfies RouteConfig
