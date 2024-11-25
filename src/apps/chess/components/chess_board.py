@@ -517,6 +517,11 @@ def chess_character_display(
 
     # Some data we'll need:
     piece_player_side = player_side_from_piece_role(piece_role)
+    belongs_to_active_player = (
+        bool(piece_player_side == game_presenter.active_player_side)
+        if game_presenter
+        else False
+    )
     is_my_turn = game_presenter.is_my_turn if game_presenter else False
     is_playable = is_my_turn and (
         (
@@ -558,20 +563,12 @@ def chess_character_display(
     # Right, let's do this shall we?
     if (
         is_king
-        and is_my_turn
         and game_presenter
-        and game_presenter.solution_index is None
+        and belongs_to_active_player
         and game_presenter.is_check
     ):
-        is_potential_capture = True  # let's highlight our king if it's in check
-    elif (
-        is_king
-        and is_my_turn
-        and game_presenter
-        and game_presenter.solution_index is not None
-        and game_presenter.is_check
-    ):
-        is_potential_capture = True  # let's highlight checks in "see solution" mode
+        # let's always highlight a king if it's in check:
+        is_potential_capture = True
 
     horizontal_translation = (
         ("left-2" if (is_knight or is_king) else "left-0")
