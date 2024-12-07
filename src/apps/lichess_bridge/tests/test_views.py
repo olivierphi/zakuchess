@@ -110,7 +110,35 @@ async def test_lichess_create_game_with_access_token_smoke_test(
     access_token = "lio_123456789"
     async_client.cookies["lichess.access_token"] = access_token
 
-    response = await async_client.get("/lichess/games/new/")
+    class HttpClientMock(HttpClientMockBase):
+        class HttpClientResponseMock(HttpClientResponseMockBase):
+            @property
+            def content(self) -> str:
+                # The client's response's `content` is a property
+                result: dict[str, Any] = {}
+                match self.path:
+                    case "/api/account":
+                        result = {
+                            "id": "chesschampion",
+                            "url": "https://lichess.org/@/chesschampion",
+                            "username": "ChessChampion",
+                        }
+                    case _:
+                        raise ValueError(f"Unexpected path: {self.path}")
+                return json.dumps(result)
+
+        async def get(self, path, **kwargs):
+            # The client's `get` method is async
+            assert path.startswith("/api/")
+            return self.HttpClientResponseMock(path)
+
+    with mock.patch(
+        "apps.lichess_bridge.lichess_api._create_lichess_api_client",
+    ) as create_lichess_api_client_mock:
+        create_lichess_api_client_mock.return_value.__aenter__.return_value = (
+            HttpClientMock(access_token)
+        )
+        response = await async_client.get("/lichess/games/new/")
 
     assert response.status_code == HTTPStatus.OK
 

@@ -6,13 +6,13 @@ from ..chess_helpers import (
     get_active_player_side_from_chess_board,
     get_active_player_side_from_fen,
 )
+from ..exceptions import ChessInvalidStateException
 
 if TYPE_CHECKING:
     import chess
 
     from ..types import (
         FEN,
-        ChessInvalidStateException,
         ChessMoveResult,
         PieceRole,
         PieceRoleBySquare,

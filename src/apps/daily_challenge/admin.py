@@ -302,9 +302,7 @@ class DailyChallengeAdmin(ImportExportModelAdmin):
                     else ""
                 ),
                 # Last but certainly not least, display the chess board:
-                chess_arena(
-                    game_presenter=game_presenter, status_bars=[], board_id=board_id
-                ),
+                chess_arena(game_presenter=game_presenter, board_id=board_id),
                 request=request,
             )
         )

@@ -30,6 +30,7 @@ class LichessCorrespondenceGamePresenter(GamePresenter):
         game_data: LichessGameFullFromStreamWithMetadata,
         refresh_last_move: bool,
         is_htmx_request: bool,
+        target_square_to_confirm: Square | None = None,
         selected_piece_square: Square | None = None,
         user_prefs: UserPrefs | None = None,
     ):
@@ -48,6 +49,7 @@ class LichessCorrespondenceGamePresenter(GamePresenter):
             piece_role_by_square=game_data.piece_role_by_square,
             teams=game_data.teams,
             refresh_last_move=refresh_last_move,
+            target_square_to_confirm=target_square_to_confirm,
             is_htmx_request=is_htmx_request,
             selected_piece_square=selected_piece_square,
             last_move=last_move,
@@ -61,6 +63,11 @@ class LichessCorrespondenceGamePresenter(GamePresenter):
     @cached_property
     def urls(self) -> GamePresenterUrls:
         return LichessCorrespondenceGamePresenterUrls(game_presenter=self)
+
+    @property
+    def moves_must_be_confirmed(self) -> bool:
+        # TODO: make this dynamic, via a user setting?
+        return True
 
     @cached_property
     def is_my_turn(self) -> bool:
@@ -109,6 +116,10 @@ class LichessCorrespondenceGamePresenter(GamePresenter):
     def speech_bubble(self) -> SpeechBubbleData | None:
         return None
 
+    @cached_property
+    def opponent_username(self) -> str:
+        return self._game_data.players_from_my_perspective.them.username
+
 
 class LichessCorrespondenceGamePresenterUrls(GamePresenterUrls):
     def htmx_game_no_selection_url(self, *, board_id: str) -> str:
@@ -140,6 +151,25 @@ class LichessCorrespondenceGamePresenterUrls(GamePresenterUrls):
             )
         )
 
+    def htmx_game_move_piece_confirmation_dialog_url(
+        self, *, square: Square, board_id: str
+    ) -> str:
+        assert self._game_presenter.selected_piece is not None  # type checker: happy
+        return "".join(
+            (
+                reverse(
+                    "lichess_bridge:htmx_game_move_piece_confirmation_dialog",
+                    kwargs={
+                        "game_id": self._game_presenter.game_id,
+                        "from_": self._game_presenter.selected_piece.square,
+                        "to": square,
+                    },
+                ),
+                "?",
+                urlencode({"board_id": board_id}),
+            )
+        )
+
     def htmx_game_move_piece_url(self, *, square: Square, board_id: str) -> str:
         assert self._game_presenter.selected_piece is not None  # type checker: happy
         return "".join(
@@ -158,7 +188,7 @@ class LichessCorrespondenceGamePresenterUrls(GamePresenterUrls):
         )
 
     def htmx_game_play_bot_move_url(self, *, board_id: str) -> str:
-        return "#"  # TODO
+        raise NotImplementedError("No bots on Lichess games")
 
     def htmx_game_play_solution_move_url(self, *, board_id: str) -> str:
-        return "#"  # TODO
+        raise NotImplementedError("No game solution on Lichess games")

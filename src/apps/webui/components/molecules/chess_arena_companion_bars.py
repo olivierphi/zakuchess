@@ -52,6 +52,7 @@ def confirmation_dialog_bar(
     question: dom_tag,
     htmx_attrs_confirm: Mapping[str, str | bool],
     htmx_attrs_cancel: Mapping[str, str | bool],
+    htmx_attrs: Mapping[str, str | bool] | None = None,
     id_: str | None = None,
 ) -> dom_tag:
     inner_content = div(
@@ -73,4 +74,6 @@ def confirmation_dialog_bar(
         ),
     )
 
-    return companion_bar(inner_content=inner_content, position="top", id_=id_)
+    return companion_bar(
+        inner_content=inner_content, position="top", id_=id_, htmx_attrs=htmx_attrs
+    )

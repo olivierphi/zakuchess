@@ -39,9 +39,9 @@ urlpatterns = [
     ),
     # Restart views
     path(
-        "htmx/daily-challenge/restart/ask-confirmation/",
-        views.htmx_restart_daily_challenge_ask_confirmation,
-        name="htmx_restart_daily_challenge_ask_confirmation",
+        "htmx/daily-challenge/restart/confirmation-dialog/",
+        views.htmx_restart_daily_challenge_confirmation_dialog,
+        name="htmx_restart_daily_challenge_confirmation_dialog",
     ),
     path(
         "htmx/daily-challenge/restart/do/",
@@ -50,9 +50,9 @@ urlpatterns = [
     ),
     # Undo views
     path(
-        "htmx/daily-challenge/undo/ask-confirmation/",
-        views.htmx_undo_last_move_ask_confirmation,
-        name="htmx_undo_last_move_ask_confirmation",
+        "htmx/daily-challenge/undo/confirmation-dialog/",
+        views.htmx_undo_last_move_confirmation_dialog,
+        name="htmx_undo_last_move_confirmation_dialog",
     ),
     path(
         "htmx/daily-challenge/undo/do/",
@@ -61,9 +61,9 @@ urlpatterns = [
     ),
     # "See the solution" views
     path(
-        "htmx/daily-challenge/see-solution/ask-confirmation/",
-        views.htmx_see_daily_challenge_solution_ask_confirmation,
-        name="htmx_see_daily_challenge_solution_ask_confirmation",
+        "htmx/daily-challenge/see-solution/confirmation-dialog/",
+        views.htmx_see_daily_challenge_solution_confirmation_dialog,
+        name="htmx_see_daily_challenge_solution_confirmation_dialog",
     ),
     path(
         "htmx/daily-challenge/see-solution/do/",

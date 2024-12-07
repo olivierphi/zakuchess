@@ -95,6 +95,7 @@ def zc_button(
 def zc_header_icon_button(
     *, icon: str, title: str, id_: str, htmx_attributes: dict[str, str]
 ) -> dom_tag:
+    """A 'zakuchess' (`zc_*`) header button, visually displayed as an icon."""
     return button(
         icon,
         cls="block px-1 py-1 text-sm text-slate-50 hover:text-slate-400",

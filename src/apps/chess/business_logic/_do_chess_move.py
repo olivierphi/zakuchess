@@ -9,8 +9,8 @@ from ..chess_helpers import (
     file_and_rank_from_square,
     square_from_file_and_rank,
 )
+from ..exceptions import ChessInvalidMoveException
 from ..types import (
-    ChessInvalidMoveException,
     ChessMoveResult,
     GameOverDescription,
 )

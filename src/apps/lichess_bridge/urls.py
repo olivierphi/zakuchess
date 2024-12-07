@@ -29,6 +29,11 @@ urlpatterns = [
         name="htmx_game_select_piece",
     ),
     path(
+        "htmx/games/correspondence/<str:game_id>/pieces/<square:from_>/move/<square:to>/confirmation-dialog/",
+        views.htmx_game_move_piece_confirmation_dialog,
+        name="htmx_game_move_piece_confirmation_dialog",
+    ),
+    path(
         "htmx/games/correspondence/<str:game_id>/pieces/<square:from_>/move/<square:to>/",
         views.htmx_game_move_piece,
         name="htmx_game_move_piece",

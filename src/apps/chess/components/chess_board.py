@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from functools import cache
 from string import Template
-from typing import TYPE_CHECKING, Literal, cast
+from typing import TYPE_CHECKING, Literal, NotRequired, TypedDict, cast
 
 from chess import FILE_NAMES, RANK_NAMES
 from django.conf import settings
@@ -97,8 +97,16 @@ _PLAY_SOLUTION_JS_TEMPLATE = Template(
 )
 
 
+class ChessArenaCompanionBars(TypedDict):
+    top: NotRequired[dom_tag]
+    bottom: NotRequired[dom_tag]
+
+
 def chess_arena(
-    *, game_presenter: GamePresenter, status_bars: list[dom_tag], board_id: str
+    *,
+    game_presenter: GamePresenter,
+    companion_bars: ChessArenaCompanionBars | None = None,
+    board_id: str,
 ) -> dom_tag:
     arena_additional_classes = (
         "border-3 border-solid md:border-lime-400 xl:border-red-400"
@@ -145,7 +153,8 @@ def chess_arena(
         ),
         chess_bot_data(board_id),
         div(
-            *status_bars,
+            companion_bars.get("top", "") if companion_bars else "",
+            companion_bars.get("bottom", "") if companion_bars else "",
             id=f"chess-status-bars-{board_id}",
             cls="xl:px-2 xl:w-1/3 xl:bg-slate-950",
         ),
@@ -423,15 +432,31 @@ def chess_available_targets(
 
     if game_presenter.selected_piece and not game_presenter.is_game_over:
         selected_piece_player_side = game_presenter.selected_piece.player_side
-        for square in game_presenter.selected_piece.available_targets:
+        if (
+            game_presenter.moves_must_be_confirmed
+            and game_presenter.target_square_to_confirm is not None
+        ):
+            # We're waiting for the user confirmation for a specific move:
+            # --> let's only display the target square as a target!
+            # TODO: also display a "preview" of the selected piece on the target square?
             children.append(
                 chess_available_target(
                     game_presenter=game_presenter,
                     piece_player_side=selected_piece_player_side,
-                    square=square,
+                    square=game_presenter.target_square_to_confirm,
                     board_id=board_id,
                 )
             )
+        else:
+            for square in game_presenter.selected_piece.available_targets:
+                children.append(
+                    chess_available_target(
+                        game_presenter=game_presenter,
+                        piece_player_side=selected_piece_player_side,
+                        square=square,
+                        board_id=board_id,
+                    )
+                )
 
     return div(
         *children,
@@ -460,8 +485,15 @@ def chess_available_target(
         else "bg-non-playable-chess-available-target-marker"
     )
     hover_class = "hover:w-1/3 hover:h-1/3" if can_move else ""
+    target_marker_size = (
+        "w-1/5 h-1/5"
+        if not game_presenter.moves_must_be_confirmed
+        or game_presenter.target_square_to_confirm is None
+        or game_presenter.target_square_to_confirm != square
+        else "w-1/2 h-1/2"
+    )
     target_marker = div(
-        cls=f"w-1/5 h-1/5 rounded-full transition-size {bg_class} {hover_class}",
+        cls=f"{target_marker_size} rounded-full transition-size {bg_class} {hover_class}",
     )
     target_marker_container = div(
         target_marker,
@@ -485,12 +517,20 @@ def chess_available_target(
         additional_attributes["disabled"] = True
 
     if can_move:
-        htmx_attributes = {
-            "data_hx_post": game_presenter.urls.htmx_game_move_piece_url(
-                square=square, board_id=board_id
-            ),
-            "data_hx_target": f"#chess-pieces-container-{board_id}",
-        }
+        if game_presenter.moves_must_be_confirmed:
+            htmx_attributes = {
+                "data_hx_get": game_presenter.urls.htmx_game_move_piece_confirmation_dialog_url(
+                    square=square, board_id=board_id
+                ),
+                "data_hx_target": f"#chess-pieces-container-{board_id}",
+            }
+        else:
+            htmx_attributes = {
+                "data_hx_post": game_presenter.urls.htmx_game_move_piece_url(
+                    square=square, board_id=board_id
+                ),
+                "data_hx_target": f"#chess-pieces-container-{board_id}",
+            }
     else:
         htmx_attributes = {}
 

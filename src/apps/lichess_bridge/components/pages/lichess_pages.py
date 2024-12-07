@@ -23,6 +23,7 @@ from apps.webui.components.atoms.buttons import zc_button, zc_header_icon_button
 from apps.webui.components.layout import page
 from apps.webui.components.misc_ui.user_prefs_modal import user_prefs_button
 
+from ..companion_bars.top_companion_bar import lichess_bridge_bar
 from ..game_creation import game_creation_form
 from ..no_linked_account import no_linked_account_content
 from ..ongoing_games import lichess_ongoing_games
@@ -134,7 +135,11 @@ def lichess_correspondence_game_page(
     return page(
         chess_arena(
             game_presenter=game_presenter,
-            status_bars=[],
+            companion_bars={
+                "top": lichess_bridge_bar(
+                    game_presenter=game_presenter, board_id="main"
+                ),
+            },
             board_id="main",
         ),
         _lichess_account_footer(me),
@@ -170,6 +175,11 @@ def lichess_game_moving_parts_fragment(
                 )
                 if game_presenter.refresh_last_move
                 else div("")
+            ),
+            lichess_bridge_bar(
+                game_presenter=game_presenter,
+                board_id=board_id,
+                htmx_attrs={"data_hx_swap_oob": "outerHTML"},
             ),
             div(
                 speech_bubble_container(

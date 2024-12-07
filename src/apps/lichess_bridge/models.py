@@ -369,8 +369,10 @@ class LichessGameFullFromStreamWithMetadata(LichessGameWithMetadataBase):
 
     @functools.cached_property
     def _rebuilt_game(self) -> RebuildGameFromMovesResult:
+        moves_str = self.raw_data.state.moves.strip()
+
         return rebuild_game_from_moves(
-            uci_moves=self.raw_data.state.moves.strip().split(" "),
+            uci_moves=moves_str.split(" ") if moves_str else [],
             factions=self.game_factions,
         )
 

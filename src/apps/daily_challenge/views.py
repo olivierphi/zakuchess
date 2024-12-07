@@ -10,7 +10,7 @@ from django.shortcuts import redirect
 from django.views.decorators.http import require_POST, require_safe
 
 from apps.chess.chess_helpers import get_active_player_side_from_fen, uci_move_squares
-from apps.chess.types import ChessInvalidActionException, ChessInvalidMoveException
+from apps.chess.exceptions import ChessInvalidActionException, ChessInvalidMoveException
 from apps.utils.view_decorators import user_is_staff
 from apps.utils.views_helpers import htmx_aware_redirect
 
@@ -250,13 +250,13 @@ def htmx_daily_challenge_help_modal(
     return HttpResponse(str(modal_content))
 
 
-@require_POST
+@require_safe
 @with_game_context
 @redirect_if_game_not_started
-def htmx_restart_daily_challenge_ask_confirmation(
+def htmx_restart_daily_challenge_confirmation_dialog(
     request: HttpRequest, *, ctx: GameContext
 ) -> HttpResponse:
-    from apps.daily_challenge.components.companion_bars.top_companion_bar import (
+    from .components.companion_bars.top_companion_bar import (
         retry_confirmation_dialog_bar,
     )
 
@@ -300,13 +300,13 @@ def htmx_restart_daily_challenge_do(
     )
 
 
-@require_POST
+@require_safe
 @with_game_context
 @redirect_if_game_not_started
-def htmx_undo_last_move_ask_confirmation(
+def htmx_undo_last_move_confirmation_dialog(
     request: HttpRequest, *, ctx: GameContext
 ) -> HttpResponse:
-    from apps.daily_challenge.components.companion_bars.top_companion_bar import (
+    from .components.companion_bars.top_companion_bar import (
         undo_confirmation_dialog_bar,
     )
 
@@ -342,13 +342,13 @@ def htmx_undo_last_move_do(request: HttpRequest, *, ctx: GameContext) -> HttpRes
     )
 
 
-@require_POST
+@require_safe
 @with_game_context
 @redirect_if_game_not_started
-def htmx_see_daily_challenge_solution_ask_confirmation(
+def htmx_see_daily_challenge_solution_confirmation_dialog(
     request: HttpRequest, *, ctx: GameContext
 ) -> HttpResponse:
-    from apps.daily_challenge.components.companion_bars.top_companion_bar import (
+    from .components.companion_bars.top_companion_bar import (
         see_solution_confirmation_dialog_bar,
     )
 

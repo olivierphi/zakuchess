@@ -11,6 +11,11 @@ from django.views.decorators.http import (
     require_safe,
 )
 
+from apps.chess.exceptions import (
+    ChessInvalidActionException,
+    ChessInvalidMoveException,
+)
+
 from . import cookie_helpers, lichess_api
 from .authentication import (
     LichessTokenRetrievalProcessContext,
@@ -35,11 +40,7 @@ if TYPE_CHECKING:
     from django.http import HttpRequest
 
     from apps.chess.models import UserPrefs
-    from apps.chess.types import (
-        ChessInvalidActionException,
-        ChessInvalidMoveException,
-        Square,
-    )
+    from apps.chess.types import Square
 
     from .models import (
         LichessAccessToken,
@@ -69,7 +70,6 @@ async def lichess_home_page(
 
 
 @require_safe
-@with_lichess_access_token
 @redirect_if_no_lichess_access_token
 async def lichess_my_games_list_page(
     request: HttpRequest, lichess_access_token: LichessAccessToken
@@ -83,7 +83,6 @@ async def lichess_my_games_list_page(
 
 
 @require_http_methods(["GET", "POST"])
-@with_lichess_access_token
 @redirect_if_no_lichess_access_token
 async def lichess_game_create_form_page(
     request: HttpRequest, *, lichess_access_token: LichessAccessToken
@@ -116,7 +115,6 @@ async def lichess_game_create_form_page(
 
 
 @require_safe
-@with_lichess_access_token
 @with_user_prefs
 @redirect_if_no_lichess_access_token
 async def lichess_correspondence_game_page(
@@ -146,7 +144,6 @@ async def lichess_correspondence_game_page(
 
 
 @require_safe
-@with_lichess_access_token
 @with_user_prefs
 @redirect_if_no_lichess_access_token
 async def htmx_lichess_correspondence_game_no_selection(
@@ -170,7 +167,6 @@ async def htmx_lichess_correspondence_game_no_selection(
 
 
 @require_safe
-@with_lichess_access_token
 @with_user_prefs
 @redirect_if_no_lichess_access_token
 @handle_chess_logic_exceptions
@@ -196,8 +192,46 @@ async def htmx_game_select_piece(
     )
 
 
+@require_safe
+@with_user_prefs
+@redirect_if_no_lichess_access_token
+@handle_chess_logic_exceptions
+async def htmx_game_move_piece_confirmation_dialog(
+    request: HttpRequest,
+    *,
+    lichess_access_token: LichessAccessToken,
+    game_id: LichessGameId,
+    from_: Square,
+    to: Square,
+    user_prefs: UserPrefs | None,
+) -> HttpResponse:
+    if from_ == to:
+        raise ChessInvalidMoveException("Not a move")
+
+    me, game_data = await _get_game_context_from_lichess(lichess_access_token, game_id)
+
+    if not game_data.raw_data.is_ongoing_game:
+        raise ChessInvalidActionException("Game is over, cannot move pieces")
+
+    is_my_turn = game_data.players_from_my_perspective.active_player == "me"
+    if not is_my_turn:
+        raise ChessInvalidMoveException("Not my turn")
+
+    game_presenter = LichessCorrespondenceGamePresenter(
+        game_data=game_data,
+        selected_piece_square=from_,
+        target_square_to_confirm=to,
+        is_htmx_request=True,
+        refresh_last_move=False,
+        user_prefs=user_prefs,
+    )
+
+    return _lichess_game_moving_parts_fragment_response(
+        game_presenter=game_presenter, request=request, board_id="main"
+    )
+
+
 @require_POST
-@with_lichess_access_token
 @with_user_prefs
 @redirect_if_no_lichess_access_token
 @handle_chess_logic_exceptions
@@ -258,7 +292,6 @@ async def htmx_game_move_piece(
 
 
 @require_safe
-@with_lichess_access_token
 @redirect_if_no_lichess_access_token
 async def htmx_user_account_modal(
     request: HttpRequest,

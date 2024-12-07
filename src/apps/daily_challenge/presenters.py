@@ -84,6 +84,12 @@ class DailyChallengeGamePresenter(GamePresenter):
     def urls(self) -> DailyChallengeGamePresenterUrls:
         return DailyChallengeGamePresenterUrls(game_presenter=self)
 
+    @property
+    def moves_must_be_confirmed(self) -> bool:
+        # Daily challenges are meant to be played quickly, with infinite number of
+        # attempts, so we shouldn't need to confirm the moves.
+        return False
+
     @cached_property
     def is_my_turn(self) -> bool:
         return not self.is_bot_turn
@@ -214,6 +220,13 @@ class DailyChallengeGamePresenterUrls(GamePresenterUrls):
                 "?",
                 urlencode({"board_id": board_id}),
             )
+        )
+
+    def htmx_game_move_piece_confirmation_dialog_url(
+        self, *, square: Square, board_id: str
+    ) -> str:
+        raise NotImplementedError(
+            "Daily challenges don't have a move confirmation dialog"
         )
 
     def htmx_game_move_piece_url(self, *, square: Square, board_id: str) -> str:

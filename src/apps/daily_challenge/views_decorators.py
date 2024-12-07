@@ -5,8 +5,7 @@ from typing import TYPE_CHECKING
 
 from django.core.exceptions import BadRequest
 
-from apps.chess.types import ChessLogicException
-
+from ..chess.exceptions import ChessLogicException
 from ..utils.views_helpers import htmx_aware_redirect
 from .cookie_helpers import clear_daily_challenge_game_state_in_session
 from .view_helpers import GameContext

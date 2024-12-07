@@ -202,9 +202,9 @@ def _undo_button(
 
     htmx_attrs = (
         {
-            "data_hx_post": "".join(
+            "data_hx_get": "".join(
                 (
-                    reverse("daily_challenge:htmx_undo_last_move_ask_confirmation"),
+                    reverse("daily_challenge:htmx_undo_last_move_confirmation_dialog"),
                     "?",
                     urlencode({"board_id": board_id}),
                 )
@@ -238,10 +238,10 @@ def _retry_button(
 
     htmx_attrs = (
         {
-            "data_hx_post": "".join(
+            "data_hx_get": "".join(
                 (
                     reverse(
-                        "daily_challenge:htmx_restart_daily_challenge_ask_confirmation"
+                        "daily_challenge:htmx_restart_daily_challenge_confirmation_dialog"
                     ),
                     "?",
                     urlencode({"board_id": board_id}),
@@ -275,8 +275,9 @@ def _see_solution_button(
     target_route = (
         "daily_challenge:htmx_see_daily_challenge_solution_do"
         if see_it_again
-        else "daily_challenge:htmx_see_daily_challenge_solution_ask_confirmation"
+        else "daily_challenge:htmx_see_daily_challenge_solution_confirmation_dialog"
     )
+    target_route_http_method = "post" if see_it_again else "get"
     target_selector = (
         f"#chess-board-pieces-{board_id}"
         if see_it_again
@@ -289,7 +290,7 @@ def _see_solution_button(
     )
 
     htmx_attrs = {
-        "data_hx_post": "".join(
+        f"data_hx_{target_route_http_method}": "".join(
             (
                 reverse(target_route),
                 "?",

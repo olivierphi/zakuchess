@@ -16,10 +16,11 @@ from .chess_helpers import (
     player_side_from_piece_symbol,
     symbol_from_piece_role,
     team_member_role_from_piece_role,
+    type_from_piece_role,
 )
-from .consts import PLAYER_SIDES
+from .consts import PIECE_TYPE_TO_NAME, PLAYER_SIDES
+from .exceptions import ChessInvalidStateException
 from .models import UserPrefs
-from .types import ChessInvalidStateException
 
 if TYPE_CHECKING:
     from dominate.util import text
@@ -29,6 +30,7 @@ if TYPE_CHECKING:
         FEN,
         BoardOrientation,
         GamePhase,
+        PieceName,
         PieceRole,
         PieceRoleBySquare,
         PieceSymbol,
@@ -71,6 +73,7 @@ class GamePresenter(ABC):
         target_to_confirm: Square | None = None,
         forced_bot_move: tuple[Square, Square] | None = None,
         force_square_info: bool = False,
+        target_square_to_confirm: Square | None = None,
         last_move: tuple[Square, Square] | None = None,
         captured_piece_role: PieceRole | None = None,
         is_preview: bool = False,
@@ -86,6 +89,7 @@ class GamePresenter(ABC):
         self.refresh_last_move = refresh_last_move
         self.is_htmx_request = is_htmx_request
         self.force_square_info = force_square_info
+        self.target_square_to_confirm = target_square_to_confirm
         self.last_move = last_move
         self.captured_piece_role = captured_piece_role
         self.is_preview = is_preview
@@ -115,6 +119,10 @@ class GamePresenter(ABC):
     @property
     @abstractmethod
     def urls(self) -> GamePresenterUrls: ...
+
+    @property
+    @abstractmethod
+    def moves_must_be_confirmed(self) -> bool: ...
 
     @property
     @abstractmethod
@@ -257,6 +265,12 @@ class GamePresenterUrls(ABC):
         pass
 
     @abstractmethod
+    def htmx_game_move_piece_confirmation_dialog_url(
+        self, *, square: Square, board_id: str
+    ) -> str:
+        pass
+
+    @abstractmethod
     def htmx_game_move_piece_url(self, *, square: Square, board_id: str) -> str:
         pass
 
@@ -368,6 +382,10 @@ class SelectedPiecePresenter(SelectedSquarePresenter):
             self.piece_at.color,
             self._chess_lib_square,
         )
+
+    @cached_property
+    def piece_name(self) -> PieceName:
+        return PIECE_TYPE_TO_NAME[type_from_piece_role(self.piece_role)]
 
     def __str__(self) -> str:
         return f"{self.piece_role} at {self.square}"

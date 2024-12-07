@@ -142,19 +142,3 @@ class ChessMoveResult(TypedDict):
 
 
 GameTeamsDict: TypeAlias = "dict[PlayerSide, list[TeamMember]]"
-
-
-class ChessLogicException(Exception):
-    pass
-
-
-class ChessInvalidStateException(ChessLogicException):
-    pass
-
-
-class ChessInvalidActionException(ChessLogicException):
-    pass
-
-
-class ChessInvalidMoveException(ChessInvalidActionException):
-    pass

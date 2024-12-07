@@ -54,13 +54,15 @@ def daily_challenge_page(
         chess_arena(
             game_presenter=game_presenter,
             board_id=board_id,
-            status_bars=[
-                daily_challenge_bar(game_presenter=game_presenter, board_id=board_id),
-                status_bar(
+            companion_bars={
+                "top": daily_challenge_bar(
+                    game_presenter=game_presenter, board_id=board_id
+                ),
+                "bottom": status_bar(
                     game_presenter=game_presenter,
                     board_id=board_id,
                 ),
-            ],
+            },
         ),
         _open_help_modal() if game_presenter.is_very_first_game else div(""),
         request=request,
