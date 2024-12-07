@@ -3,14 +3,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from django.urls import reverse
-from dominate.tags import button, div, fieldset, form, h3, h4, input_, label, legend
+from dominate.tags import div, fieldset, form, h3, h4, input_, label, legend
 
 from apps.chess.components.misc_ui import modal_container
 from apps.chess.components.svg_icons import ICON_SVG_CONFIRM
 from apps.chess.models import UserPrefsBoardTextureChoices, UserPrefsGameSpeedChoices
 
-from .. import common_styles
-from .header import header_button
+from ..atoms.button import zc_button, zc_header_icon_button
 from .svg_icons import ICON_SVG_COG
 
 if TYPE_CHECKING:
@@ -32,7 +31,7 @@ def user_prefs_button() -> dom_tag:
         "data_hx_swap": "outerHTML",
     }
 
-    return header_button(
+    return zc_header_icon_button(
         icon=ICON_SVG_COG,
         title="Edit preferences",
         id_="user-prefs-button",
@@ -83,11 +82,10 @@ def _user_prefs_form(user_prefs: UserPrefs) -> dom_tag:
     )
 
     submit_button = (
-        button(
+        zc_button(
             "Save preferences",
-            " ",
-            ICON_SVG_CONFIRM,
-            cls=common_styles.BUTTON_CONFIRM_CLASSES,
+            svg_icon=ICON_SVG_CONFIRM,
+            button_type="confirm",
         ),
     )
 

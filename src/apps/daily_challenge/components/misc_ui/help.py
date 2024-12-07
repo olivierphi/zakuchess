@@ -7,7 +7,7 @@ from django.conf import settings
 from dominate.tags import div, h4, p, span
 from dominate.util import raw
 
-from apps.webui.components import common_styles
+from apps.webui.components.atoms.button import zc_button
 from apps.webui.components.chess_units import (
     CHARACTER_TYPE_TIP,
     chess_status_bar_tip,
@@ -62,10 +62,11 @@ def help_content(
             div(
                 raw("You can <b>restart from the beginning</b> at any time, "),
                 "by clicking the ",
-                span(
+                zc_button(
                     "Retry",
-                    ICON_SVG_RESTART,
-                    cls=f"{common_styles.BUTTON_CLASSES.replace(common_styles.BUTTON_BASE_HOVER_TEXT_COLOR, '')} !mx-0",
+                    svg_icon=ICON_SVG_RESTART,
+                    button_type="action",
+                    is_a_help_for_actual_button=True,
                 ),
                 " button.",
                 cls=f"{spacing}",
@@ -73,10 +74,11 @@ def help_content(
             div(
                 "If you can't solve today's challenge ",
                 raw("you can decide to <b>see a solution</b>, by clicking the "),
-                span(
+                zc_button(
                     "See solution",
-                    ICON_SVG_LIGHT_BULB,
-                    cls=f"{common_styles.BUTTON_CLASSES} !inline-block !mx-0",
+                    svg_icon=ICON_SVG_LIGHT_BULB,
+                    button_type="action",
+                    is_a_help_for_actual_button=True,
                 ),
                 " button.",
                 cls=f"{spacing}",
@@ -84,10 +86,11 @@ def help_content(
             div(
                 raw("You can <b>customise some game settings</b>"),
                 " - such as the speed of the game or the appearance of the board - via the ",
-                span(
+                zc_button(
                     "Options",
-                    ICON_SVG_COG,
-                    cls=f"{common_styles.BUTTON_CLASSES} !inline-block !mx-0",
+                    svg_icon=ICON_SVG_COG,
+                    button_type="action",
+                    is_a_help_for_actual_button=True,
                 ),
                 " button.",
                 cls=f"{spacing}",

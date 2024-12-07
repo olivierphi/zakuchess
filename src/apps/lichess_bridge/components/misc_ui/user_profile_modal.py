@@ -3,10 +3,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from django.urls import reverse
-from dominate.tags import button, div, form, h3, h4, p, span
+from dominate.tags import div, form, h3, h4, p, span
 
 from apps.chess.components.misc_ui import modal_container
-from apps.webui.components import common_styles
+from apps.webui.components.atoms.button import zc_button
 from apps.webui.components.forms_common import csrf_hidden_input
 
 from ..svg_icons import ICON_SVG_LOG_OUT, ICON_SVG_USER
@@ -56,12 +56,11 @@ def _user_profile_form(request: HttpRequest, me: LichessAccountInformation) -> f
             cls=f"{spacing} text-center",
         ),
         p(
-            button(
+            zc_button(
                 "Disconnect Lichess account",
-                " ",
-                ICON_SVG_LOG_OUT,
-                type="submit",
-                cls=common_styles.BUTTON_CANCEL_CLASSES,
+                svg_icon=ICON_SVG_LOG_OUT,
+                button_type="action",
+                html_type="submit",
             ),
             cls=f"{spacing} text-center",
         ),

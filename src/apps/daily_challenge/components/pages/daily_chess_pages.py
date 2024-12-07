@@ -20,8 +20,8 @@ from apps.chess.components.misc_ui import (
     reset_chess_engine_worker,
     speech_bubble_container,
 )
+from apps.webui.components.atoms.button import zc_header_icon_button
 from apps.webui.components.layout import page
-from apps.webui.components.misc_ui.header import header_button
 from apps.webui.components.misc_ui.svg_icons import ICON_SVG_HELP
 from apps.webui.components.misc_ui.user_prefs_modal import user_prefs_button
 
@@ -128,7 +128,7 @@ def _stats_button() -> dom_tag:
         "data_hx_swap": "outerHTML",
     }
 
-    return header_button(
+    return zc_header_icon_button(
         icon=ICON_SVG_STATS,
         title="Visualise your stats for daily challenges",
         id_="stats-button",
@@ -143,7 +143,7 @@ def _help_button() -> dom_tag:
         "data_hx_swap": "outerHTML",
     }
 
-    return header_button(
+    return zc_header_icon_button(
         icon=ICON_SVG_HELP,
         title="How to play",
         id_="help-button",

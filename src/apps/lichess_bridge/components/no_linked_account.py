@@ -3,11 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from django.urls import reverse
-from dominate.tags import b, br, button, div, form, p
+from dominate.tags import b, br, div, form, p
 
 from apps.chess.models import GameFactions
 from apps.lichess_bridge.components.svg_icons import ICON_SVG_LOG_IN
-from apps.webui.components import common_styles
+from apps.webui.components.atoms.button import zc_button
 from apps.webui.components.chess_units import unit_display_container
 from apps.webui.components.forms_common import csrf_hidden_input
 
@@ -67,12 +67,11 @@ def no_linked_account_content(request: HttpRequest) -> dom_tag:
                 cls="mb-4 text-center font-bold",
             ),
             p(
-                button(
+                zc_button(
                     "Log in via Lichess",
-                    " ",
-                    ICON_SVG_LOG_IN,
-                    type="submit",
-                    cls=common_styles.BUTTON_CLASSES,
+                    svg_icon=ICON_SVG_LOG_IN,
+                    html_type="submit",
+                    button_type="action",
                 ),
                 cls="mb-4 text-center",
             ),

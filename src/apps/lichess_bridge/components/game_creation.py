@@ -3,11 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from django.urls import reverse
-from dominate.tags import button, div, fieldset, form, input_, label, legend, p
+from dominate.tags import div, fieldset, form, input_, label, legend, p
 
 from apps.lichess_bridge.components.svg_icons import ICON_SVG_CREATE
 from apps.lichess_bridge.models import LichessCorrespondenceGameDaysChoice
-from apps.webui.components import common_styles
+from apps.webui.components.atoms.button import zc_button
 from apps.webui.components.forms_common import csrf_hidden_input
 
 if TYPE_CHECKING:
@@ -50,12 +50,11 @@ def game_creation_form(*, request: HttpRequest, form_errors: dict) -> form:
             cls="mb-8",
         ),
         div(
-            button(
+            zc_button(
                 "Create",
-                " ",
-                ICON_SVG_CREATE,
-                type="submit",
-                cls=common_styles.BUTTON_CLASSES,
+                svg_icon=ICON_SVG_CREATE,
+                button_type="action",
+                html_type="submit",
             ),
             cls="text-center",
         ),

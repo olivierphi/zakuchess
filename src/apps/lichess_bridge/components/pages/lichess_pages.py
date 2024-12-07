@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, TypedDict
 from django.conf import settings
 from django.urls import reverse
 from dominate.tags import (
-    a,
     div,
     h3,
     p,
@@ -20,9 +19,8 @@ from apps.chess.components.chess_board import (
     chess_pieces,
 )
 from apps.chess.components.misc_ui import speech_bubble_container
-from apps.webui.components import common_styles
+from apps.webui.components.atoms.button import zc_button, zc_header_icon_button
 from apps.webui.components.layout import page
-from apps.webui.components.misc_ui.header import header_button
 from apps.webui.components.misc_ui.user_prefs_modal import user_prefs_button
 
 from ..game_creation import game_creation_form
@@ -84,10 +82,10 @@ def lichess_my_current_games_list_page(
                 ),
                 lichess_ongoing_games(ongoing_games),
                 p(
-                    a(
+                    zc_button(
                         "Create a new game",
                         href=reverse("lichess_bridge:create_game"),
-                        cls=common_styles.BUTTON_CLASSES,
+                        button_type="action",
                     ),
                     cls="my-8 text-center text-slate-50",
                 ),
@@ -221,7 +219,7 @@ def _user_account_button() -> dom_tag:
         "data_hx_swap": "outerHTML",
     }
 
-    return header_button(
+    return zc_header_icon_button(
         icon=ICON_SVG_USER,
         title="Manage your Lichess account",
         id_="stats-button",

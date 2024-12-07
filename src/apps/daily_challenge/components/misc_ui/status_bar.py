@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from dominate.tags import b, button, div, p
+from dominate.tags import b, div, p
 from dominate.util import raw
 
 from apps.chess.chess_helpers import (
@@ -15,7 +15,7 @@ from apps.daily_challenge.components.misc_ui.help import (
     help_content,
     unit_display_container,
 )
-from apps.webui.components import common_styles
+from apps.webui.components.atoms.button import zc_button
 from apps.webui.components.chess_units import (
     character_type_tip,
     chess_unit_symbol_display,
@@ -48,10 +48,12 @@ def status_bar(
                 factions=game_presenter.factions,
             ),
             div(
-                button(
+                zc_button(
                     "⇧ Scroll up to the board",
-                    cls=common_styles.BUTTON_CLASSES,
-                    onclick="""window.scrollTo({ top: 0, behavior: "smooth" })""",
+                    button_type="action",
+                    additional_attributes={
+                        "onclick": """"window.scrollTo({ top: 0, behavior: "smooth" })"""
+                    },
                 ),
                 cls="w-full flex justify-center",
             ),

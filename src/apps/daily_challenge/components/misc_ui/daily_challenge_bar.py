@@ -7,11 +7,11 @@ from urllib.parse import urlencode
 
 from django.contrib.humanize.templatetags.humanize import ordinal
 from django.urls import reverse
-from dominate.tags import b, button, div, p
+from dominate.tags import b, div, p
 from dominate.util import raw
 
 from apps.chess.components.svg_icons import ICON_SVG_CANCEL, ICON_SVG_CONFIRM
-from apps.webui.components import common_styles
+from apps.webui.components.atoms.button import zc_button
 from apps.webui.components.misc_ui.svg_icons import ICON_SVG_COG
 
 from ...models import PlayerGameOverState
@@ -22,6 +22,8 @@ from .svg_icons import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from dominate.tags import dom_tag
 
     from ...presenters import DailyChallengeGamePresenter
@@ -161,19 +163,17 @@ def _confirmation_dialog(
     return div(
         question,
         div(
-            button(
+            zc_button(
                 "Confirm",
-                " ",
-                ICON_SVG_CONFIRM,
-                cls=common_styles.BUTTON_CONFIRM_CLASSES,
-                **htmx_attributes_confirm,
+                button_type="confirm",
+                svg_icon=ICON_SVG_CONFIRM,
+                htmx_attributes=htmx_attributes_confirm,
             ),
-            button(
+            zc_button(
                 "Cancel",
-                " ",
-                ICON_SVG_CANCEL,
-                cls=common_styles.BUTTON_CANCEL_CLASSES,
-                **htmx_attributes_cancel,
+                svg_icon=ICON_SVG_CANCEL,
+                button_type="cancel",
+                htmx_attributes=htmx_attributes_cancel,
             ),
             cls="text-center",
         ),
@@ -246,15 +246,15 @@ def _undo_button(
     additional_attributes = {"disabled": True} if not can_undo else {}
     classes = _button_classes(disabled=not can_undo)
 
-    return button(
+    return zc_button(
         "Undo",
-        " ",
-        ICON_SVG_UNDO,
-        cls=classes,
+        svg_icon=ICON_SVG_UNDO,
+        button_type="action",
         title="Undo your last move",
-        id=f"chess-board-undo-daily-challenge-{board_id}",
-        **additional_attributes,
-        **htmx_attributes,
+        id_=f"chess-board-undo-daily-challenge-{board_id}",
+        htmx_attributes=htmx_attributes,
+        additional_classes=classes,
+        additional_attributes=additional_attributes,
     )
 
 
@@ -284,15 +284,15 @@ def _retry_button(
     additional_attributes = {"disabled": True} if not can_retry else {}
     classes = _button_classes(disabled=not can_retry)
 
-    return button(
+    return zc_button(
         "Retry",
-        " ",
-        ICON_SVG_RESTART,
-        cls=classes,
+        svg_icon=ICON_SVG_RESTART,
+        button_type="action",
+        additional_classes=classes,
         title="Try this daily challenge again, from the beginning",
-        id=f"chess-board-restart-daily-challenge-{board_id}",
-        **additional_attributes,
-        **htmx_attributes,
+        id_=f"chess-board-restart-daily-challenge-{board_id}",
+        additional_attributes=additional_attributes,
+        htmx_attributes=htmx_attributes,
     )
 
 
@@ -329,14 +329,14 @@ def _see_solution_button(
 
     classes = _button_classes(full_width=full_width)
 
-    return button(
+    return zc_button(
         "See solution",
-        " ",
-        ICON_SVG_LIGHT_BULB,
-        cls=classes,
+        svg_icon=ICON_SVG_LIGHT_BULB,
+        button_type="action",
+        additional_classes=classes,
         title=title,
-        id=f"chess-board-restart-daily-challenge-{board_id}",
-        **htmx_attributes,
+        id_=f"chess-board-restart-daily-challenge-{board_id}",
+        htmx_attributes=htmx_attributes,
     )
 
 
@@ -349,25 +349,24 @@ def _user_prefs_button(board_id: str) -> dom_tag:
 
     classes = _button_classes()
 
-    return button(
+    return zc_button(
         "Preferences",
-        " ",
-        ICON_SVG_COG,
-        cls=classes,
+        svg_icon=ICON_SVG_COG,
+        button_type="action",
+        additional_classes=classes,
         title="Edit preferences",
-        id=f"chess-board-preferences-daily-challenge-{board_id}",
-        **htmx_attributes,
+        id_=f"chess-board-preferences-daily-challenge-{board_id}",
+        htmx_attributes=htmx_attributes,
     )
 
 
 @functools.cache
-def _button_classes(*, full_width: bool = True, disabled: bool = False) -> str:
-    return " ".join(
-        (
-            common_styles.BUTTON_CLASSES,
-            ("w-full" if full_width else ""),
-            (" opacity-50 cursor-not-allowed" if disabled else ""),
-        )
+def _button_classes(
+    *, full_width: bool = True, disabled: bool = False
+) -> Sequence[str]:
+    return (
+        ("w-full" if full_width else ""),
+        (" opacity-50 cursor-not-allowed" if disabled else ""),
     )
 
 
