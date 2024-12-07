@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from functools import cache
 from typing import TYPE_CHECKING
 
@@ -28,8 +30,8 @@ if TYPE_CHECKING:
 def help_content(
     *,
     challenge_solution_turns_count: int,
-    factions: "GameFactions",
-) -> "dom_tag":
+    factions: GameFactions,
+) -> dom_tag:
     spacing = "mb-3"
 
     return raw(

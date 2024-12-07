@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import functools
 from typing import TYPE_CHECKING, cast
 
@@ -28,17 +30,17 @@ PieceRoleBySquareTuple = tuple[tuple["Square", "PieceRole"], ...]
 
 @functools.cache
 def create_teams_and_piece_role_by_square_for_starting_position(
-    factions: "GameFactions",
-) -> "tuple[GameTeams, PieceRoleBySquareTuple]":
+    factions: GameFactions,
+) -> tuple[GameTeams, PieceRoleBySquareTuple]:
     # fmt: off
-    piece_counters: dict["PieceSymbol", int | None] = {
+    piece_counters: dict[PieceSymbol, int | None] = {
         "P": 0, "R": 0, "N": 0, "B": 0, "Q": None, "K": None,
         "p": 0, "r": 0, "n": 0, "b": 0, "q": None, "k": None,
     }
     # fmt: on
 
-    teams: "dict[PlayerSide, list[TeamMember]]" = {"w": [], "b": []}
-    piece_role_by_square: "PieceRoleBySquare" = {}
+    teams: dict[PlayerSide, list[TeamMember]] = {"w": [], "b": []}
+    piece_role_by_square: PieceRoleBySquare = {}
     chess_board = chess.Board()
     for chess_square in chess.SQUARES:
         piece = chess_board.piece_at(chess_square)

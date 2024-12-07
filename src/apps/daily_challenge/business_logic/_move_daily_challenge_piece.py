@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, NamedTuple
 
 from apps.chess.business_logic import do_chess_move_with_piece_role_by_square
@@ -11,15 +13,15 @@ if TYPE_CHECKING:
 
 
 class MoveDailyChallengePieceResult(NamedTuple):
-    game_state: "PlayerGameState"
-    captured_piece: "PieceRole | None"
+    game_state: PlayerGameState
+    captured_piece: PieceRole | None
 
 
 def move_daily_challenge_piece(
     *,
-    game_state: "PlayerGameState",
-    from_: "Square",
-    to: "Square",
+    game_state: PlayerGameState,
+    from_: Square,
+    to: Square,
     is_my_side: bool,
 ) -> MoveDailyChallengePieceResult:
     move_result, piece_role_by_square, captured_piece = (

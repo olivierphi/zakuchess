@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from apps.chess.chess_helpers import uci_move_squares
@@ -10,7 +12,7 @@ if TYPE_CHECKING:
 
 
 def compute_fields_before_bot_first_move(
-    challenge: "DailyChallenge",
+    challenge: DailyChallenge,
 ) -> None:
     """
     Set the `*_before_bot_first_move` fields on the given challenge models,

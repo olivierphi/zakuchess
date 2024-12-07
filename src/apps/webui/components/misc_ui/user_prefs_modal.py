@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from django.urls import reverse
@@ -23,7 +25,7 @@ if TYPE_CHECKING:
 # TODO: manage i18n
 
 
-def user_prefs_button() -> "dom_tag":
+def user_prefs_button() -> dom_tag:
     htmx_attributes = {
         "data_hx_get": reverse("webui:htmx_modal_user_prefs"),
         "data_hx_target": "#modals-container",
@@ -38,7 +40,7 @@ def user_prefs_button() -> "dom_tag":
     )
 
 
-def user_prefs_modal(*, user_prefs: "UserPrefs") -> "dom_tag":
+def user_prefs_modal(*, user_prefs: UserPrefs) -> dom_tag:
     return modal_container(
         header=h3(
             "Preferences ",
@@ -53,7 +55,7 @@ def user_prefs_modal(*, user_prefs: "UserPrefs") -> "dom_tag":
     )
 
 
-def _user_prefs_form(user_prefs: "UserPrefs") -> "dom_tag":
+def _user_prefs_form(user_prefs: UserPrefs) -> dom_tag:
     form_htmx_attributes = {
         "data_hx_post": reverse("webui:htmx_modal_user_prefs"),
         "data_hx_target": "#modals-container",
@@ -101,9 +103,9 @@ def _form_fieldset(
     *,
     fieldset_legend: str,
     input_name: str,
-    choices: "type[Choices]",
+    choices: type[Choices],
     # choices_icons: dict,
-    current_value: "Any",
+    current_value: Any,
 ) -> fieldset:
     return fieldset(
         legend(

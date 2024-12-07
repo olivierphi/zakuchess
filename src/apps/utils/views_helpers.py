@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, cast
 
 from django.shortcuts import redirect, resolve_url
@@ -8,7 +10,7 @@ if TYPE_CHECKING:
     from django_htmx.middleware import HtmxDetails
 
 
-def htmx_aware_redirect(request: "HttpRequest", url: str) -> "HttpResponse":
+def htmx_aware_redirect(request: HttpRequest, url: str) -> HttpResponse:
     htmx_details = cast("HtmxDetails", getattr(request, "htmx"))
     if htmx_details:
         return HttpResponseClientRedirect(resolve_url(url))

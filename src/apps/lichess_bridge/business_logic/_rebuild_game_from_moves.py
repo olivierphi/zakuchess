@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import time
 from typing import TYPE_CHECKING, NamedTuple
@@ -21,13 +23,13 @@ _logger = logging.getLogger(__name__)
 
 class RebuildGameFromMovesResult(NamedTuple):
     chess_board: chess.Board
-    teams: "GameTeams"
-    piece_role_by_square: "PieceRoleBySquare"
-    moves: "Sequence[UCIMove]"
+    teams: GameTeams
+    piece_role_by_square: PieceRoleBySquare
+    moves: Sequence[UCIMove]
 
 
 def rebuild_game_from_moves(
-    *, uci_moves: "Sequence[UCIMove]", factions: "GameFactions"
+    *, uci_moves: Sequence[UCIMove], factions: GameFactions
 ) -> RebuildGameFromMovesResult:
     from ._create_teams_and_piece_role_by_square_for_starting_position import (
         create_teams_and_piece_role_by_square_for_starting_position,

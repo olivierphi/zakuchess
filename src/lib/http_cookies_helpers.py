@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Literal, NamedTuple
 
 if TYPE_CHECKING:
@@ -8,14 +10,14 @@ if TYPE_CHECKING:
 
 class HttpCookieAttributes(NamedTuple):
     name: str
-    max_age: "dt.timedelta | None"
+    max_age: dt.timedelta | None
     http_only: bool
     # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#samesitesamesite-value
     same_site: Literal["Strict", "Lax", "None", None] = "Lax"
 
 
 def set_http_cookie_on_django_response(
-    *, response: "HttpResponse", attributes: HttpCookieAttributes, value: str
+    *, response: HttpResponse, attributes: HttpCookieAttributes, value: str
 ) -> None:
     response.set_cookie(
         attributes.name,

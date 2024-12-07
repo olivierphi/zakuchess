@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from django.http import HttpResponse
@@ -13,7 +15,7 @@ if TYPE_CHECKING:
 
 
 @require_http_methods(["HEAD", "GET", "POST"])
-def htmx_user_prefs_modal(request: "HttpRequest") -> HttpResponse:
+def htmx_user_prefs_modal(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
         # As user preferences updates can have an impact on any part of the UI
         # (changing the way the chess board is displayed, for example), we'd better

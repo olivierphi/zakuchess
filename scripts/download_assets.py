@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import annotations
 
 import asyncio
 from pathlib import Path
@@ -83,7 +84,7 @@ ASSETS_MAP: dict[URL, Path] = {
 
 
 async def download_assets(*, even_if_exists: bool) -> None:
-    download_coros: list["Coroutine"] = []
+    download_coros: list[Coroutine] = []
 
     limits = httpx.Limits(
         max_connections=DOWNLOADS_CONCURRENCY,

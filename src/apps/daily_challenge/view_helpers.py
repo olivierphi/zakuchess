@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import dataclasses
 from typing import TYPE_CHECKING, cast
 
@@ -21,20 +23,20 @@ class GameContext:
     and some other data that is useful for our Views (aka "Controllers" in MVC).
     """
 
-    challenge: "DailyChallenge"
+    challenge: DailyChallenge
 
     is_preview: bool
     is_staff_user: bool
     """`is_preview` is True if we're in admin preview mode"""
-    game_state: "PlayerGameState"
-    stats: "PlayerStats"
-    user_prefs: "UserPrefs"
+    game_state: PlayerGameState
+    stats: PlayerStats
+    user_prefs: UserPrefs
     created: bool
     """if the game state was created on the fly as we were initialising that object"""
     board_id: str = "main"
 
     @classmethod
-    def create_from_request(cls, request: "HttpRequest") -> "GameContext":
+    def create_from_request(cls, request: HttpRequest) -> GameContext:
         is_staff_user: bool = request.user.is_staff
         challenge, is_preview = get_current_daily_challenge_or_admin_preview(request)
         game_state, stats, created = (
@@ -64,8 +66,8 @@ class GameContext:
 
 
 def get_current_daily_challenge_or_admin_preview(
-    request: "HttpRequest",
-) -> tuple["DailyChallenge", bool]:
+    request: HttpRequest,
+) -> tuple[DailyChallenge, bool]:
     from .business_logic import get_current_daily_challenge
     from .models import DailyChallenge
 

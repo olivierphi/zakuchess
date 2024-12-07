@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from math import ceil
 from typing import TYPE_CHECKING
 
@@ -24,8 +26,8 @@ if TYPE_CHECKING:
 
 
 def stats_modal(
-    *, stats: "PlayerStats", game_state: "PlayerGameState", challenge: "DailyChallenge"
-) -> "dom_tag":
+    *, stats: PlayerStats, game_state: PlayerGameState, challenge: DailyChallenge
+) -> dom_tag:
     return modal_container(
         header=h3(
             "Statistics ",
@@ -41,8 +43,8 @@ def stats_modal(
     )
 
 
-def _main_stats(stats: "PlayerStats") -> "dom_tag":
-    def stat(name: str, value: int) -> "dom_tag":
+def _main_stats(stats: PlayerStats) -> dom_tag:
+    def stat(name: str, value: int) -> dom_tag:
         return div(
             div(str(value), cls="font-bold text-lg text-center"),
             div(name, cls="text-sm text-center"),
@@ -58,8 +60,8 @@ def _main_stats(stats: "PlayerStats") -> "dom_tag":
 
 
 def _today_s_results(
-    *, stats: "PlayerStats", game_state: "PlayerGameState", challenge: "DailyChallenge"
-) -> "dom_tag":
+    *, stats: PlayerStats, game_state: PlayerGameState, challenge: DailyChallenge
+) -> dom_tag:
     if not has_player_won_today(stats):
         return div()  # empty <div>
 
@@ -98,18 +100,18 @@ def _today_s_results(
     )
 
 
-def _wins_distribution(stats: "PlayerStats") -> "dom_tag":
+def _wins_distribution(stats: PlayerStats) -> dom_tag:
     max_value: int = max(stats.wins_distribution.values())
 
     if max_value == 0:
-        content: "dom_tag" = div(
+        content: dom_tag = div(
             "No victories yet",
             cls="text-center",
         )
     else:
         min_width_percentage = 8
 
-        def row(distribution_slice: "WinsDistributionSlice", count: int) -> "dom_tag":
+        def row(distribution_slice: WinsDistributionSlice, count: int) -> dom_tag:
             slice_label = (
                 f"{ordinal(distribution_slice)} attempt"
                 if distribution_slice < stats.WINS_DISTRIBUTION_SLICE_COUNT

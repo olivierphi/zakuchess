@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, TypedDict
 
 from django.conf import settings
@@ -47,7 +49,7 @@ _NON_GAME_PAGE_SECTION_INNER_CONTAINER_CSS = "px-8 pb-8 md:px-0 md:w-8/12 md:mx-
 
 def lichess_no_account_linked_page(
     *,
-    request: "HttpRequest",
+    request: HttpRequest,
 ) -> str:
     return page(
         section(
@@ -69,9 +71,9 @@ def lichess_no_account_linked_page(
 
 def lichess_my_current_games_list_page(
     *,
-    request: "HttpRequest",
-    me: "LichessAccountInformation",
-    ongoing_games: "list[LichessOngoingGameData]",
+    request: HttpRequest,
+    me: LichessAccountInformation,
+    ongoing_games: list[LichessOngoingGameData],
 ) -> str:
     return page(
         section(
@@ -101,9 +103,9 @@ def lichess_my_current_games_list_page(
 
 
 def lichess_correspondence_game_creation_page(
-    request: "HttpRequest",
+    request: HttpRequest,
     *,
-    me: "LichessAccountInformation",
+    me: LichessAccountInformation,
     form_errors: dict,
 ) -> str:
     return page(
@@ -127,9 +129,9 @@ def lichess_correspondence_game_creation_page(
 
 def lichess_correspondence_game_page(
     *,
-    request: "HttpRequest",
-    me: "LichessAccountInformation",
-    game_presenter: "LichessCorrespondenceGamePresenter",
+    request: HttpRequest,
+    me: LichessAccountInformation,
+    game_presenter: LichessCorrespondenceGamePresenter,
 ) -> str:
     return page(
         chess_arena(
@@ -146,46 +148,44 @@ def lichess_correspondence_game_page(
 
 def lichess_game_moving_parts_fragment(
     *,
-    game_presenter: "LichessCorrespondenceGamePresenter",
-    request: "HttpRequest",
+    game_presenter: LichessCorrespondenceGamePresenter,
+    request: HttpRequest,
     board_id: str,
 ) -> str:
     return "\n".join(
-        (
-            dom_tag.render(pretty=settings.DEBUG)
-            for dom_tag in (
-                chess_pieces(
-                    game_presenter=game_presenter,
-                    board_id=board_id,
-                ),
-                chess_available_targets(
+        dom_tag.render(pretty=settings.DEBUG)
+        for dom_tag in (
+            chess_pieces(
+                game_presenter=game_presenter,
+                board_id=board_id,
+            ),
+            chess_available_targets(
+                game_presenter=game_presenter,
+                board_id=board_id,
+                data_hx_swap_oob="outerHTML",
+            ),
+            (
+                chess_last_move(
                     game_presenter=game_presenter,
                     board_id=board_id,
                     data_hx_swap_oob="outerHTML",
+                )
+                if game_presenter.refresh_last_move
+                else div("")
+            ),
+            div(
+                speech_bubble_container(
+                    game_presenter=game_presenter,
+                    board_id=board_id,
                 ),
-                (
-                    chess_last_move(
-                        game_presenter=game_presenter,
-                        board_id=board_id,
-                        data_hx_swap_oob="outerHTML",
-                    )
-                    if game_presenter.refresh_last_move
-                    else div("")
-                ),
-                div(
-                    speech_bubble_container(
-                        game_presenter=game_presenter,
-                        board_id=board_id,
-                    ),
-                    id=f"chess-speech-container-{board_id}",
-                    data_hx_swap_oob="innerHTML",
-                ),
-            )
+                id=f"chess-speech-container-{board_id}",
+                data_hx_swap_oob="innerHTML",
+            ),
         )
     )
 
 
-def _lichess_account_footer(me: "LichessAccountInformation") -> "dom_tag":
+def _lichess_account_footer(me: LichessAccountInformation) -> dom_tag:
     return div(
         p(
             "Your Lichess account: ",
@@ -203,8 +203,8 @@ def _lichess_account_footer(me: "LichessAccountInformation") -> "dom_tag":
 
 
 class _PageHeaderButtons(TypedDict):
-    left_side_buttons: list["dom_tag"]
-    right_side_buttons: list["dom_tag"]
+    left_side_buttons: list[dom_tag]
+    right_side_buttons: list[dom_tag]
 
 
 def _get_page_header_buttons(lichess_profile_linked: bool) -> _PageHeaderButtons:
@@ -214,7 +214,7 @@ def _get_page_header_buttons(lichess_profile_linked: bool) -> _PageHeaderButtons
     )
 
 
-def _user_account_button() -> "dom_tag":
+def _user_account_button() -> dom_tag:
     htmx_attributes = {
         "data_hx_get": reverse("lichess_bridge:htmx_modal_user_account"),
         "data_hx_target": "#modals-container",

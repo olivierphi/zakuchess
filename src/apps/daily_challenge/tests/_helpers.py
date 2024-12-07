@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import re
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Literal
@@ -19,7 +21,7 @@ _PIECE_SELECTION_PATTERN = re.compile(
 )
 
 
-def assert_response_waiting_for_bot_move(response: "HttpResponse") -> None:
+def assert_response_waiting_for_bot_move(response: HttpResponse) -> None:
     response_html = response.content.decode()
     assert_response_contains_a_bot_move_to_play(response_html)
     assert_response_does_not_contain_pieces_selection(response_html)
@@ -35,11 +37,11 @@ def assert_response_does_not_contain_pieces_selection(response_content: str) -> 
 
 
 def play_player_move(
-    client: "DjangoClient",
-    move: "str | MoveTuple",
+    client: DjangoClient,
+    move: str | MoveTuple,
     *,
     expected_status_code: HTTPStatus = HTTPStatus.OK,
-) -> "HttpResponse":
+) -> HttpResponse:
     if isinstance(move, str):
         move = uci_move_squares(move)
     assert isinstance(move, tuple) and len(move) == 2
@@ -52,11 +54,11 @@ def play_player_move(
 
 
 def play_bot_move(
-    client: "DjangoClient",
-    move: "str | MoveTuple",
+    client: DjangoClient,
+    move: str | MoveTuple,
     *,
     expected_status_code: HTTPStatus = HTTPStatus.OK,
-) -> "HttpResponse":
+) -> HttpResponse:
     if isinstance(move, str):
         move = uci_move_squares(move)
     assert isinstance(move, tuple) and len(move) == 2
@@ -68,7 +70,7 @@ def play_bot_move(
     return response
 
 
-def start_new_attempt(client: "DjangoClient") -> None:
+def start_new_attempt(client: DjangoClient) -> None:
     restarts_count = get_today_server_stats().restarts_count
     response = client.post("/htmx/daily-challenge/restart/do/")
     assert response.status_code == HTTPStatus.OK
@@ -76,8 +78,8 @@ def start_new_attempt(client: "DjangoClient") -> None:
 
 
 def play_moves(
-    client: "DjangoClient",
-    moves: list["MoveTuple"],
+    client: DjangoClient,
+    moves: list[MoveTuple],
     starting_side=Literal["bot", "player"],
 ) -> None:
     current_side = starting_side
@@ -91,6 +93,6 @@ def get_today_server_stats() -> DailyChallengeStats:
     return DailyChallengeStats.objects.get(day=now().date())
 
 
-def get_session_content(client: "DjangoClient") -> PlayerSessionContent:
+def get_session_content(client: DjangoClient) -> PlayerSessionContent:
     session_cookie_content: str = client.session.get("pc")
     return PlayerSessionContent.from_cookie_content(session_cookie_content)

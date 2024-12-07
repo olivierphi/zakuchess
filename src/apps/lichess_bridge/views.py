@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 from typing import TYPE_CHECKING
 
@@ -53,7 +55,7 @@ if TYPE_CHECKING:
 @require_safe
 @with_lichess_access_token
 async def lichess_home_page(
-    request: "HttpRequest", lichess_access_token: "LichessAccessToken | None"
+    request: HttpRequest, lichess_access_token: LichessAccessToken | None
 ) -> HttpResponse:
     if not lichess_access_token:
         page_content = lichess_pages.lichess_no_account_linked_page(request=request)
@@ -70,7 +72,7 @@ async def lichess_home_page(
 @with_lichess_access_token
 @redirect_if_no_lichess_access_token
 async def lichess_my_games_list_page(
-    request: "HttpRequest", lichess_access_token: "LichessAccessToken"
+    request: HttpRequest, lichess_access_token: LichessAccessToken
 ) -> HttpResponse:
     page_content = await _get_my_games_list_page_content(
         request=request,
@@ -84,7 +86,7 @@ async def lichess_my_games_list_page(
 @with_lichess_access_token
 @redirect_if_no_lichess_access_token
 async def lichess_game_create_form_page(
-    request: "HttpRequest", *, lichess_access_token: "LichessAccessToken"
+    request: HttpRequest, *, lichess_access_token: LichessAccessToken
 ) -> HttpResponse:
     me = await _get_me_from_lichess(lichess_access_token)
 
@@ -118,11 +120,11 @@ async def lichess_game_create_form_page(
 @with_user_prefs
 @redirect_if_no_lichess_access_token
 async def lichess_correspondence_game_page(
-    request: "HttpRequest",
+    request: HttpRequest,
     *,
-    lichess_access_token: "LichessAccessToken",
-    game_id: "LichessGameId",
-    user_prefs: "UserPrefs | None",
+    lichess_access_token: LichessAccessToken,
+    game_id: LichessGameId,
+    user_prefs: UserPrefs | None,
 ) -> HttpResponse:
     me, game_data = await _get_game_context_from_lichess(
         lichess_access_token, game_id, use_game_cache=False
@@ -148,11 +150,11 @@ async def lichess_correspondence_game_page(
 @with_user_prefs
 @redirect_if_no_lichess_access_token
 async def htmx_lichess_correspondence_game_no_selection(
-    request: "HttpRequest",
+    request: HttpRequest,
     *,
-    lichess_access_token: "LichessAccessToken",
-    game_id: "LichessGameId",
-    user_prefs: "UserPrefs | None",
+    lichess_access_token: LichessAccessToken,
+    game_id: LichessGameId,
+    user_prefs: UserPrefs | None,
 ) -> HttpResponse:
     me, game_data = await _get_game_context_from_lichess(lichess_access_token, game_id)
     game_presenter = LichessCorrespondenceGamePresenter(
@@ -173,12 +175,12 @@ async def htmx_lichess_correspondence_game_no_selection(
 @redirect_if_no_lichess_access_token
 @handle_chess_logic_exceptions
 async def htmx_game_select_piece(
-    request: "HttpRequest",
+    request: HttpRequest,
     *,
-    lichess_access_token: "LichessAccessToken",
-    game_id: "LichessGameId",
-    location: "Square",
-    user_prefs: "UserPrefs | None",
+    lichess_access_token: LichessAccessToken,
+    game_id: LichessGameId,
+    location: Square,
+    user_prefs: UserPrefs | None,
 ) -> HttpResponse:
     me, game_data = await _get_game_context_from_lichess(lichess_access_token, game_id)
     game_presenter = LichessCorrespondenceGamePresenter(
@@ -200,13 +202,13 @@ async def htmx_game_select_piece(
 @redirect_if_no_lichess_access_token
 @handle_chess_logic_exceptions
 async def htmx_game_move_piece(
-    request: "HttpRequest",
+    request: HttpRequest,
     *,
-    lichess_access_token: "LichessAccessToken",
-    game_id: "LichessGameId",
-    from_: "Square",
-    to: "Square",
-    user_prefs: "UserPrefs | None",
+    lichess_access_token: LichessAccessToken,
+    game_id: LichessGameId,
+    from_: Square,
+    to: Square,
+    user_prefs: UserPrefs | None,
 ) -> HttpResponse:
     if from_ == to:
         raise ChessInvalidMoveException("Not a move")
@@ -259,9 +261,9 @@ async def htmx_game_move_piece(
 @with_lichess_access_token
 @redirect_if_no_lichess_access_token
 async def htmx_user_account_modal(
-    request: "HttpRequest",
+    request: HttpRequest,
     *,
-    lichess_access_token: "LichessAccessToken",
+    lichess_access_token: LichessAccessToken,
 ) -> HttpResponse:
     me = await _get_me_from_lichess(lichess_access_token)
 
@@ -272,7 +274,7 @@ async def htmx_user_account_modal(
 
 @require_POST
 def lichess_redirect_to_oauth2_flow_starting_url(
-    request: "HttpRequest",
+    request: HttpRequest,
 ) -> HttpResponse:
     lichess_oauth2_process_context = LichessTokenRetrievalProcessContext.create_afresh(
         zakuchess_hostname=request.get_host(),
@@ -293,7 +295,7 @@ def lichess_redirect_to_oauth2_flow_starting_url(
 
 
 @require_safe
-def lichess_webhook_oauth2_token_callback(request: "HttpRequest") -> HttpResponse:
+def lichess_webhook_oauth2_token_callback(request: HttpRequest) -> HttpResponse:
     # Retrieve a context from the HTTP-only cookie we created above:
     lichess_oauth2_process_context = (
         cookie_helpers.get_oauth2_token_retrieval_context_from_request(request)
@@ -331,7 +333,7 @@ def lichess_webhook_oauth2_token_callback(request: "HttpRequest") -> HttpRespons
 
 
 @require_POST
-def lichess_detach_account(request: "HttpRequest") -> HttpResponse:
+def lichess_detach_account(request: HttpRequest) -> HttpResponse:
     response = redirect("lichess_bridge:homepage")
 
     cookie_helpers.delete_lichess_api_access_token_from_cookies(response=response)
@@ -342,7 +344,7 @@ def lichess_detach_account(request: "HttpRequest") -> HttpResponse:
 def _lichess_game_moving_parts_fragment_response(
     *,
     game_presenter: LichessCorrespondenceGamePresenter,
-    request: "HttpRequest",
+    request: HttpRequest,
     board_id: str,
 ) -> HttpResponse:
     return HttpResponse(
@@ -354,8 +356,8 @@ def _lichess_game_moving_parts_fragment_response(
 
 async def _get_my_games_list_page_content(
     *,
-    request: "HttpRequest",
-    lichess_access_token: "LichessAccessToken",
+    request: HttpRequest,
+    lichess_access_token: LichessAccessToken,
 ) -> str:
     async with lichess_api.get_lichess_api_client(
         access_token=lichess_access_token
@@ -377,8 +379,8 @@ async def _get_my_games_list_page_content(
 
 
 async def _get_me_from_lichess(
-    lichess_access_token: "LichessAccessToken",
-) -> "LichessAccountInformation":
+    lichess_access_token: LichessAccessToken,
+) -> LichessAccountInformation:
     async with lichess_api.get_lichess_api_client(
         access_token=lichess_access_token
     ) as lichess_api_client:
@@ -386,10 +388,10 @@ async def _get_me_from_lichess(
 
 
 async def _get_game_context_from_lichess(
-    lichess_access_token: "LichessAccessToken",
-    game_id: "LichessGameId",
+    lichess_access_token: LichessAccessToken,
+    game_id: LichessGameId,
     use_game_cache: bool = True,
-) -> tuple["LichessAccountInformation", "LichessGameFullFromStreamWithMetadata"]:
+) -> tuple[LichessAccountInformation, LichessGameFullFromStreamWithMetadata]:
     async with lichess_api.get_lichess_api_client(
         access_token=lichess_access_token
     ) as lichess_api_client:

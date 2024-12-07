@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 import contextlib
 import datetime as dt
@@ -100,7 +102,7 @@ async def get_my_ongoing_games(
 async def get_game_export_by_id(
     *,
     api_client: httpx.AsyncClient,
-    game_id: "LichessGameId",
+    game_id: LichessGameId,
     try_fetching_from_cache: bool = True,
 ) -> LichessGameExport:
     """
@@ -143,7 +145,7 @@ async def get_game_export_by_id(
 async def get_game_by_id_from_stream(
     *,
     api_client: httpx.AsyncClient,
-    game_id: "LichessGameId",
+    game_id: LichessGameId,
     try_fetching_from_cache: bool = True,
 ) -> LichessGameFullFromStream:
     """
@@ -181,7 +183,7 @@ async def get_game_by_id_from_stream(
     return msgspec.json.decode(response_content, type=LichessGameFullFromStream)
 
 
-async def clear_game_by_id_cache(game_id: "LichessGameId") -> None:
+async def clear_game_by_id_cache(game_id: LichessGameId) -> None:
     """
     Clear the cached data of `get_game_export_by_id` and `get_game_by_id_from_stream` for
     a given game ID.
@@ -202,9 +204,9 @@ async def clear_game_by_id_cache(game_id: "LichessGameId") -> None:
 async def move_lichess_game_piece(
     *,
     api_client: httpx.AsyncClient,
-    game_id: "LichessGameId",
-    from_: "Square",
-    to: "Square",
+    game_id: LichessGameId,
+    from_: Square,
+    to: Square,
     offering_draw: bool = False,
 ) -> bool:
     """
@@ -228,7 +230,7 @@ async def move_lichess_game_piece(
 
 async def create_correspondence_game(
     *, api_client: httpx.AsyncClient, days_per_turn: int
-) -> "LichessGameSeekId":
+) -> LichessGameSeekId:
     # https://lichess.org/api#tag/Board/operation/apiBoardSeek
     # TODO: give more customisation options to the user
     endpoint = "/api/board/seek"
@@ -247,12 +249,12 @@ async def create_correspondence_game(
     return str(response.json()["id"])
 
 
-def get_lichess_api_client(access_token: "LichessAccessToken") -> httpx.AsyncClient:
+def get_lichess_api_client(access_token: LichessAccessToken) -> httpx.AsyncClient:
     return _create_lichess_api_client(access_token)
 
 
 @contextlib.contextmanager
-def _lichess_api_monitoring(method, target_endpoint) -> "Iterator[None]":
+def _lichess_api_monitoring(method, target_endpoint) -> Iterator[None]:
     start_time = time.monotonic()
     yield
     _logger.info(
@@ -265,7 +267,7 @@ def _lichess_api_monitoring(method, target_endpoint) -> "Iterator[None]":
 
 # This is the function we'll mock during tests - as it's private, we don't have to
 # mind about it being directly imported by other modules when we mock it.
-def _create_lichess_api_client(access_token: "LichessAccessToken") -> httpx.AsyncClient:
+def _create_lichess_api_client(access_token: LichessAccessToken) -> httpx.AsyncClient:
     client = httpx.AsyncClient(
         base_url=settings.LICHESS_HOST,
         headers={

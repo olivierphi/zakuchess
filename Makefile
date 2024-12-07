@@ -2,7 +2,9 @@ PYTHON_BINS ?= ./.venv/bin
 PYTHON ?= ${PYTHON_BINS}/python
 DJANGO_SETTINGS_MODULE ?= project.settings.development
 SUB_MAKE = ${MAKE} --no-print-directory
+UV_PYTHON ?= ${PYTHON}
 UV ?= bin/uv
+UVX ?= bin/uvx
 
 .DEFAULT_GOAL := help
 
@@ -90,7 +92,7 @@ test: ## Launch the pytest tests suite
 		${PYTHON_BINS}/pytest ${pytest_opts}
 
 .PHONY: code-quality/all
-code-quality/all: code-quality/ruff_check code-quality/ruff_lint code-quality/mypy  ## Run all our code quality tools
+code-quality/all: code-quality/ruff_check code-quality/ruff_lint code-quality/mypy code-quality/fix-future-annotations ## Run all our code quality tools
 
 .PHONY: code-quality/ruff_check
 code-quality/ruff_check: ruff_opts ?=
@@ -109,6 +111,13 @@ code-quality/mypy: mypy_opts ?=
 code-quality/mypy: ## Python's equivalent of TypeScript
 # @link https://mypy.readthedocs.io/en/stable/
 	@${PYTHON_BINS}/mypy src/ ${mypy_opts}
+
+.PHONY: code-quality/fix-future-annotations
+code-quality/fix-future-annotations: fix_future_annotations_opts ?=
+code-quality/fix-future-annotations: ## Make sure we're using PEP 585 and PEP 604
+# @link https://github.com/frostming/fix-future-annotations
+	@UV_PYTHON=${UV_PYTHON} \
+		${UVX} fix-future-annotations ${fix_future_annotations_opts} src/ 
 
 # Here starts the frontend stuff
 

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import enum
 from typing import TYPE_CHECKING, NamedTuple, Self
 
@@ -68,17 +70,17 @@ class UserPrefs(
 
 
 class GameFactions(NamedTuple):
-    w: "Faction"  # the faction for the "w" player
-    b: "Faction"  # the faction for the "b" player
+    w: Faction  # the faction for the "w" player
+    b: Faction  # the faction for the "b" player
 
-    def get_faction_for_side(self, item: "PlayerSide") -> "Faction":
+    def get_faction_for_side(self, item: PlayerSide) -> Faction:
         return getattr(self, item)
 
 
 class TeamMember(NamedTuple):
-    role: "TeamMemberRole"
-    name: "Sequence[str]"
-    faction: "Faction | None" = None
+    role: TeamMemberRole
+    name: Sequence[str]
+    faction: Faction | None = None
 
 
 class GameTeams(NamedTuple):
@@ -86,20 +88,20 @@ class GameTeams(NamedTuple):
     We'll use this immutable class to store the team members for each player side.
     """
 
-    w: tuple["TeamMember", ...]  # the team members for the "w" player
-    b: tuple["TeamMember", ...]  # the team members for the "b" player
+    w: tuple[TeamMember, ...]  # the team members for the "w" player
+    b: tuple[TeamMember, ...]  # the team members for the "b" player
 
-    def get_team_for_side(self, item: "PlayerSide") -> "tuple[TeamMember]":
+    def get_team_for_side(self, item: PlayerSide) -> tuple[TeamMember]:
         return getattr(self, item)
 
-    def to_dict(self) -> "GameTeamsDict":
+    def to_dict(self) -> GameTeamsDict:
         """
         Used to store that in the database
         """
         return {"w": list(self.w), "b": list(self.b)}
 
     @classmethod
-    def from_dict(cls, data: "GameTeamsDict") -> "GameTeams":
+    def from_dict(cls, data: GameTeamsDict) -> GameTeams:
         """
         Used to re-hydrate the data from the database.
         """

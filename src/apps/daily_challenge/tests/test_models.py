@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from contextlib import nullcontext as noraise
 from typing import TYPE_CHECKING
 
@@ -25,9 +27,9 @@ if TYPE_CHECKING:
     ],
 )
 def test_solution_turns_counter_computation(
-    challenge_minimalist: "DailyChallenge",
+    challenge_minimalist: DailyChallenge,
     solution: str,
-    context: "AbstractContextManager",
+    context: AbstractContextManager,
     expected_moves_count: int | None,
 ):
     assert challenge_minimalist.solution_turns_count == 1

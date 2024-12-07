@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from django.urls import reverse
@@ -16,7 +18,7 @@ if TYPE_CHECKING:
 _SHOWN_UNITS_FACTIONS = GameFactions(w="humans", b="undeads")
 
 
-def no_linked_account_content(request: "HttpRequest") -> "dom_tag":
+def no_linked_account_content(request: HttpRequest) -> dom_tag:
     return div(
         p(
             "You can play games with your friends and other people all around the world on ZakuChess, "

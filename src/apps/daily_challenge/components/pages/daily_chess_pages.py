@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import functools
 from string import Template
 from typing import TYPE_CHECKING
@@ -40,8 +42,8 @@ if TYPE_CHECKING:
 
 def daily_challenge_page(
     *,
-    game_presenter: "DailyChallengeGamePresenter",
-    request: "HttpRequest",
+    game_presenter: DailyChallengeGamePresenter,
+    request: HttpRequest,
     board_id: str,
 ) -> str:
     return page(
@@ -66,62 +68,60 @@ def daily_challenge_page(
 
 def daily_challenge_moving_parts_fragment(
     *,
-    game_presenter: "DailyChallengeGamePresenter",
-    request: "HttpRequest",
+    game_presenter: DailyChallengeGamePresenter,
+    request: HttpRequest,
     board_id: str,
 ) -> str:
     return "\n".join(
-        (
-            dom_tag.render(pretty=settings.DEBUG)
-            for dom_tag in (
-                chess_pieces(
-                    game_presenter=game_presenter,
-                    board_id=board_id,
-                ),
-                chess_available_targets(
-                    game_presenter=game_presenter,
-                    board_id=board_id,
-                    data_hx_swap_oob="outerHTML",
-                ),
-                (
-                    chess_last_move(
-                        game_presenter=game_presenter,
-                        board_id=board_id,
-                        data_hx_swap_oob="outerHTML",
-                    )
-                    if game_presenter.refresh_last_move
-                    else div("")
-                ),
-                daily_challenge_bar(
+        dom_tag.render(pretty=settings.DEBUG)
+        for dom_tag in (
+            chess_pieces(
+                game_presenter=game_presenter,
+                board_id=board_id,
+            ),
+            chess_available_targets(
+                game_presenter=game_presenter,
+                board_id=board_id,
+                data_hx_swap_oob="outerHTML",
+            ),
+            (
+                chess_last_move(
                     game_presenter=game_presenter,
                     board_id=board_id,
                     data_hx_swap_oob="outerHTML",
-                ),
-                status_bar(
+                )
+                if game_presenter.refresh_last_move
+                else div("")
+            ),
+            daily_challenge_bar(
+                game_presenter=game_presenter,
+                board_id=board_id,
+                data_hx_swap_oob="outerHTML",
+            ),
+            status_bar(
+                game_presenter=game_presenter,
+                board_id=board_id,
+                data_hx_swap_oob="outerHTML",
+            ),
+            div(
+                speech_bubble_container(
                     game_presenter=game_presenter,
                     board_id=board_id,
-                    data_hx_swap_oob="outerHTML",
                 ),
-                div(
-                    speech_bubble_container(
-                        game_presenter=game_presenter,
-                        board_id=board_id,
-                    ),
-                    id=f"chess-speech-container-{board_id}",
-                    data_hx_swap_oob="innerHTML",
-                ),
-                *(
-                    [reset_chess_engine_worker()]
-                    if game_presenter.challenge_current_attempt_turns_counter == 0
-                    else []
-                ),
-                *([_open_stats_modal()] if game_presenter.just_won else []),
-            )
+                id=f"chess-speech-container-{board_id}",
+                data_hx_swap_oob="innerHTML",
+            ),
+            *(
+                [reset_chess_engine_worker()]
+                if game_presenter.challenge_current_attempt_turns_counter == 0
+                else []
+            ),
+            *([_open_stats_modal()] if game_presenter.just_won else []),
         )
     )
 
 
-def _stats_button() -> "dom_tag":
+def _stats_button() -> dom_tag:
     htmx_attributes = {
         "data_hx_get": reverse("daily_challenge:htmx_daily_challenge_modal_stats"),
         "data_hx_target": "#modals-container",
@@ -136,7 +136,7 @@ def _stats_button() -> "dom_tag":
     )
 
 
-def _help_button() -> "dom_tag":
+def _help_button() -> dom_tag:
     htmx_attributes = {
         "data_hx_get": reverse("daily_challenge:htmx_daily_challenge_modal_help"),
         "data_hx_target": "#modals-container",
@@ -152,13 +152,13 @@ def _help_button() -> "dom_tag":
 
 
 @functools.cache
-def _open_stats_modal() -> "dom_tag":
+def _open_stats_modal() -> dom_tag:
     # We open the stats modal 2 seconds after the game is won.
     return _open_modal("stats", 2_000)
 
 
 @functools.cache
-def _open_help_modal() -> "dom_tag":
+def _open_help_modal() -> dom_tag:
     # We open the stats modal 4 seconds after the bot played their first move.
     return _open_modal("help", 4_000)
 
@@ -172,7 +172,7 @@ _MODAL_TEMPLATE = Template(
 )
 
 
-def _open_modal(modal_id: "Literal['stats', 'help']", delay: int) -> "dom_tag":
+def _open_modal(modal_id: Literal["stats", "help"], delay: int) -> dom_tag:
     # TODO: use a web component for this
     return div(
         script(
@@ -183,7 +183,7 @@ def _open_modal(modal_id: "Literal['stats', 'help']", delay: int) -> "dom_tag":
     )
 
 
-def _open_graph_meta_tags() -> "tuple[dom_tag, ...]":
+def _open_graph_meta_tags() -> tuple[dom_tag, ...]:
     return (
         meta(
             property="og:image",

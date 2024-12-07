@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import random
 from typing import TYPE_CHECKING, cast
 
@@ -20,7 +22,7 @@ if TYPE_CHECKING:
         TeamMemberRole,
     )
 
-CHARACTER_TYPE_TIP: dict["PieceType", str] = {
+CHARACTER_TYPE_TIP: dict[PieceType, str] = {
     # TODO: i18n
     "p": "Characters with <b>swords</b>",
     "n": "<b>Mounted</b> characters",
@@ -31,7 +33,7 @@ CHARACTER_TYPE_TIP: dict["PieceType", str] = {
 }
 _CHARACTER_TYPE_TIP_KEYS = tuple(CHARACTER_TYPE_TIP.keys())
 
-_CHARACTER_TYPE_ROLE_MAPPING: dict["PieceType", "TeamMemberRole"] = {
+_CHARACTER_TYPE_ROLE_MAPPING: dict[PieceType, TeamMemberRole] = {
     "p": "p1",
     "n": "n1",
     "b": "b1",
@@ -43,11 +45,11 @@ _CHARACTER_TYPE_ROLE_MAPPING: dict["PieceType", "TeamMemberRole"] = {
 
 def chess_status_bar_tip(
     *,
-    factions: "GameFactions",
-    piece_type: "PieceType | None" = None,
+    factions: GameFactions,
+    piece_type: PieceType | None = None,
     additional_classes: str = "",
     row_counter: int | None = None,
-) -> "dom_tag":
+) -> dom_tag:
     if piece_type is None:
         piece_type = random.choice(_CHARACTER_TYPE_TIP_KEYS)
     piece_name = PIECE_TYPE_TO_NAME[piece_type]
@@ -76,11 +78,11 @@ def chess_status_bar_tip(
 
 def unit_display_container(
     *,
-    piece_role: "PieceRole",
-    factions: "GameFactions",
+    piece_role: PieceRole,
+    factions: GameFactions,
     row_counter: int | None = None,
     additional_classes: str = "",
-) -> "dom_tag":
+) -> dom_tag:
     from apps.chess.components.chess_board import chess_unit_display_with_ground_marker
 
     unit_display = chess_unit_display_with_ground_marker(
@@ -100,15 +102,15 @@ def unit_display_container(
     )
 
 
-def character_type_tip(piece_type: "PieceType") -> "dom_tag":
+def character_type_tip(piece_type: PieceType) -> dom_tag:
     return raw(
         f"{CHARACTER_TYPE_TIP[piece_type]} are chess <b>{PIECE_TYPE_TO_NAME[piece_type]}s</b>"
     )
 
 
 def chess_unit_symbol_display(
-    *, player_side: "PlayerSide", piece_name: "PieceName"
-) -> "dom_tag":
+    *, player_side: PlayerSide, piece_name: PieceName
+) -> dom_tag:
     classes = (
         "inline-block",
         "w-5",

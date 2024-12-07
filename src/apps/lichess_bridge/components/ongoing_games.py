@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from textwrap import dedent
 from typing import TYPE_CHECKING
 
@@ -45,7 +47,7 @@ _CLICK_ON_TR_SCRIPT = script(
 )
 
 
-def lichess_ongoing_games(ongoing_games: "list[LichessOngoingGameData]") -> "html_tag":
+def lichess_ongoing_games(ongoing_games: list[LichessOngoingGameData]) -> html_tag:
     th_classes = "p-2"
 
     return div(
@@ -81,7 +83,7 @@ def lichess_ongoing_games(ongoing_games: "list[LichessOngoingGameData]") -> "htm
     )
 
 
-def _ongoing_game_row(game: "LichessOngoingGameData") -> tr:
+def _ongoing_game_row(game: LichessOngoingGameData) -> tr:
     td_classes = "border border-slate-300 dark:border-slate-700 p-1 text-slate-500 dark:text-slate-400"
     return tr(
         td(

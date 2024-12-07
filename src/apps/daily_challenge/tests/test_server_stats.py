@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 from unittest import mock
 
@@ -25,8 +27,8 @@ def test_server_stats_played_challenges_count(
     # Mocks
     get_current_challenge_mock: mock.MagicMock,
     # Test dependencies
-    challenge_minimalist: "DailyChallenge",
-    client: "DjangoClient",
+    challenge_minimalist: DailyChallenge,
+    client: DjangoClient,
     cleared_django_default_cache,
 ):
     # TODO: simplify this test? 😅
@@ -40,16 +42,16 @@ def test_server_stats_played_challenges_count(
         assert sut() == expected_played_challenges_count
 
         # player 1st move:
-        player_move_1: "MoveTuple" = ("a1", "b1")
+        player_move_1: MoveTuple = ("a1", "b1")
         play_player_move(client, player_move_1)
         assert sut() == expected_played_challenges_count
 
-        bot_move: "MoveTuple" = ("a7", "a6")
+        bot_move: MoveTuple = ("a7", "a6")
         play_bot_move(client, bot_move)
         assert sut() == expected_played_challenges_count
 
         # player 2nd move:
-        player_move_2: "MoveTuple" = ("b1", "a1")
+        player_move_2: MoveTuple = ("b1", "a1")
         play_player_move(client, player_move_2)
 
     def play_day_session():
@@ -116,8 +118,8 @@ def test_server_stats_returning_players_count(
     # Mocks
     get_current_challenge_mock: mock.MagicMock,
     # Test dependencies
-    challenge_minimalist: "DailyChallenge",
-    client: "DjangoClient",
+    challenge_minimalist: DailyChallenge,
+    client: DjangoClient,
     cleared_django_default_cache,
     # Test parameters
     previous_game_date: str | None,
@@ -141,16 +143,16 @@ def test_server_stats_returning_players_count(
         assert sut() == 0
 
         # player 1st move:
-        player_move_1: "MoveTuple" = ("a1", "b1")
+        player_move_1: MoveTuple = ("a1", "b1")
         play_player_move(client, player_move_1)
         assert sut() == 0
 
-        bot_move: "MoveTuple" = ("a7", "a6")
+        bot_move: MoveTuple = ("a7", "a6")
         play_bot_move(client, bot_move)
         assert sut() == 0
 
         # player 2nd move:
         # --> that's where we keep a record of whether it's a returning player or not
-        player_move_2: "MoveTuple" = ("b1", "a1")
+        player_move_2: MoveTuple = ("b1", "a1")
         play_player_move(client, player_move_2)
         assert sut() == expected_returning_players_count

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import copy
 from typing import TYPE_CHECKING
 
@@ -10,11 +12,11 @@ if TYPE_CHECKING:
 
 def see_daily_challenge_solution(
     *,
-    challenge: "DailyChallenge",
-    stats: "PlayerStats",
-    game_state: "PlayerGameState",
+    challenge: DailyChallenge,
+    stats: PlayerStats,
+    game_state: PlayerGameState,
     is_staff_user: bool = False,
-) -> "PlayerGameState":
+) -> PlayerGameState:
     # This field is always set on a published challenge - let's make the
     # type checker happy:
     assert challenge.piece_role_by_square

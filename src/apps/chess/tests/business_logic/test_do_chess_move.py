@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 import pytest
@@ -40,15 +42,13 @@ if TYPE_CHECKING:
     ),
 )
 def test_can_manage_en_passant_correctly(
-    starting_fen: "FEN",
-    move: "tuple[Square, Square]",
-    expected_fen_after_en_passant: "FEN",
-    expected_moves: list["MoveTuple"],
-    expected_captured: "Square",
+    starting_fen: FEN,
+    move: tuple[Square, Square],
+    expected_fen_after_en_passant: FEN,
+    expected_moves: list[MoveTuple],
+    expected_captured: Square,
 ):
-    result: "ChessMoveResult" = do_chess_move(
-        fen=starting_fen, from_=move[0], to=move[1]
-    )
+    result: ChessMoveResult = do_chess_move(fen=starting_fen, from_=move[0], to=move[1])
 
     assert result["is_capture"] is True
     assert result["fen"] == expected_fen_after_en_passant

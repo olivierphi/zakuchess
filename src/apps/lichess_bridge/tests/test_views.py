@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import contextlib
 import json
 from http import HTTPStatus
@@ -27,7 +29,7 @@ class HttpClientResponseMockBase:
         pass
 
 
-def test_lichess_homepage_no_access_token_smoke_test(client: "DjangoClient"):
+def test_lichess_homepage_no_access_token_smoke_test(client: DjangoClient):
     """Just a quick smoke test for now"""
 
     response = client.get("/lichess/")
@@ -40,7 +42,7 @@ def test_lichess_homepage_no_access_token_smoke_test(client: "DjangoClient"):
 
 @pytest.mark.django_db  # just because we use the DatabaseCache
 async def test_lichess_homepage_with_access_token_smoke_test(
-    async_client: "DjangoAsyncClient",
+    async_client: DjangoAsyncClient,
     acleared_django_default_cache,
 ):
     """Just a quick smoke test for now"""
@@ -92,7 +94,7 @@ async def test_lichess_homepage_with_access_token_smoke_test(
 
 
 async def test_lichess_create_game_without_access_token_should_redirect(
-    async_client: "DjangoAsyncClient",
+    async_client: DjangoAsyncClient,
 ):
     response = await async_client.get("/lichess/games/new/")
 
@@ -101,7 +103,7 @@ async def test_lichess_create_game_without_access_token_should_redirect(
 
 @pytest.mark.django_db  # just because we use the DatabaseCache
 async def test_lichess_create_game_with_access_token_smoke_test(
-    async_client: "DjangoAsyncClient",
+    async_client: DjangoAsyncClient,
 ):
     """Just a quick smoke test for now"""
 
@@ -114,7 +116,7 @@ async def test_lichess_create_game_with_access_token_smoke_test(
 
 
 async def test_lichess_correspondence_game_without_access_token_should_redirect(
-    async_client: "DjangoAsyncClient",
+    async_client: DjangoAsyncClient,
 ):
     response = await async_client.get("/lichess/games/correspondence/tFXGsEvq/")
 
@@ -208,7 +210,7 @@ _LICHESS_CORRESPONDENCE_GAME_EXPORT_JSON_RESPONSE = {
 
 @pytest.mark.django_db  # just because we use the DatabaseCache
 async def test_lichess_correspondence_game_with_access_token_smoke_test(
-    async_client: "DjangoAsyncClient",
+    async_client: DjangoAsyncClient,
     acleared_django_default_cache,
 ):
     """Just a quick smoke test for now"""

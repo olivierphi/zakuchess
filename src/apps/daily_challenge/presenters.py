@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from functools import cached_property
 from typing import TYPE_CHECKING
 from urllib.parse import urlencode
@@ -32,21 +34,21 @@ class DailyChallengeGamePresenter(GamePresenter):
     def __init__(
         self,
         *,
-        challenge: "DailyChallenge",
-        game_state: "PlayerGameState",
+        challenge: DailyChallenge,
+        game_state: PlayerGameState,
         refresh_last_move: bool,
         is_htmx_request: bool,
-        forced_bot_move: tuple["Square", "Square"] | None = None,
-        forced_speech_bubble: tuple["Square", str] | None = None,
-        selected_piece_square: "Square | None" = None,
-        target_to_confirm: "Square | None" = None,
+        forced_bot_move: tuple[Square, Square] | None = None,
+        forced_speech_bubble: tuple[Square, str] | None = None,
+        selected_piece_square: Square | None = None,
+        target_to_confirm: Square | None = None,
         is_bot_move: bool = False,
         force_square_info: bool = False,
-        captured_team_member_role: "PieceRole | None" = None,
+        captured_team_member_role: PieceRole | None = None,
         just_won: bool = False,
         is_preview: bool = False,
         is_very_first_game: bool = False,
-        user_prefs: "UserPrefs | None" = None,
+        user_prefs: UserPrefs | None = None,
     ):
         # A published challenge always has a `teams` non-null field:
         assert challenge.teams
@@ -75,11 +77,11 @@ class DailyChallengeGamePresenter(GamePresenter):
         self._forced_speech_bubble = forced_speech_bubble
 
     @cached_property
-    def board_orientation(self) -> "BoardOrientation":
+    def board_orientation(self) -> BoardOrientation:
         return "1->8" if self._challenge.my_side == "w" else "8->1"
 
     @cached_property
-    def urls(self) -> "DailyChallengeGamePresenterUrls":
+    def urls(self) -> DailyChallengeGamePresenterUrls:
         return DailyChallengeGamePresenterUrls(game_presenter=self)
 
     @cached_property
@@ -87,7 +89,7 @@ class DailyChallengeGamePresenter(GamePresenter):
         return not self.is_bot_turn
 
     @cached_property
-    def my_side(self) -> "PlayerSide | None":
+    def my_side(self) -> PlayerSide | None:
         return self._challenge.my_side
 
     @cached_property
@@ -107,7 +109,7 @@ class DailyChallengeGamePresenter(GamePresenter):
         return self.game_state.attempts_counter
 
     @cached_property
-    def game_phase(self) -> "GamePhase":
+    def game_phase(self) -> GamePhase:
         if (winner := self.winner) is not None:
             return (
                 "game_over:won"
@@ -144,7 +146,7 @@ class DailyChallengeGamePresenter(GamePresenter):
         return str(self._challenge.id)
 
     @cached_property
-    def factions(self) -> "GameFactions":
+    def factions(self) -> GameFactions:
         return self._challenge.factions
 
     @cached_property
@@ -160,31 +162,31 @@ class DailyChallengeGamePresenter(GamePresenter):
         return not self.is_bot_move
 
     @cached_property
-    def player_side_to_highlight_all_pieces_for(self) -> "PlayerSide | None":
+    def player_side_to_highlight_all_pieces_for(self) -> PlayerSide | None:
         if self.is_intro_turn:
             return self._challenge.my_side
         return None
 
     @cached_property
-    def speech_bubble(self) -> "SpeechBubbleData | None":
+    def speech_bubble(self) -> SpeechBubbleData | None:
         return get_speech_bubble(self)
 
     @property
-    def chess_board(self) -> "chess.Board":
+    def chess_board(self) -> chess.Board:
         return self._chess_board
 
     @property
-    def challenge(self) -> "DailyChallenge":
+    def challenge(self) -> DailyChallenge:
         return self._challenge
 
     @property
-    def forced_speech_bubble(self) -> tuple["Square", str] | None:
+    def forced_speech_bubble(self) -> tuple[Square, str] | None:
         return self._forced_speech_bubble
 
     @staticmethod
     def _last_move_from_game_state(
-        game_state: "PlayerGameState",
-    ) -> tuple["Square", "Square"] | None:
+        game_state: PlayerGameState,
+    ) -> tuple[Square, Square] | None:
         if (moves := game_state.moves) and len(moves) >= 4:
             return uci_move_squares(moves[-4:])
         return None
@@ -200,7 +202,7 @@ class DailyChallengeGamePresenterUrls(GamePresenterUrls):
             )
         )
 
-    def htmx_game_select_piece_url(self, *, square: "Square", board_id: str) -> str:
+    def htmx_game_select_piece_url(self, *, square: Square, board_id: str) -> str:
         return "".join(
             (
                 reverse(
@@ -214,7 +216,7 @@ class DailyChallengeGamePresenterUrls(GamePresenterUrls):
             )
         )
 
-    def htmx_game_move_piece_url(self, *, square: "Square", board_id: str) -> str:
+    def htmx_game_move_piece_url(self, *, square: Square, board_id: str) -> str:
         assert self._game_presenter.selected_piece is not None  # type checker: happy
         return "".join(
             (

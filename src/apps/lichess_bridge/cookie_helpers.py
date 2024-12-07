@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import datetime as dt
 import logging
 from typing import TYPE_CHECKING, cast
@@ -43,7 +45,7 @@ _logger = logging.getLogger(__name__)
 
 
 def store_oauth2_token_retrieval_context_in_response_cookie(
-    *, context: LichessTokenRetrievalProcessContext, response: "HttpResponse"
+    *, context: LichessTokenRetrievalProcessContext, response: HttpResponse
 ) -> None:
     """
     Store OAuth2 token retrieval context into a short-lived response cookie.
@@ -57,7 +59,7 @@ def store_oauth2_token_retrieval_context_in_response_cookie(
 
 
 def get_oauth2_token_retrieval_context_from_request(
-    request: "HttpRequest",
+    request: HttpRequest,
 ) -> LichessTokenRetrievalProcessContext | None:
     """
     Returns a context created from the "CSRF state" and "code verifier" found in the request's cookies.
@@ -81,13 +83,13 @@ def get_oauth2_token_retrieval_context_from_request(
 
 
 def delete_oauth2_token_retrieval_context_from_cookies(
-    response: "HttpResponse",
+    response: HttpResponse,
 ) -> None:
     response.delete_cookie(_OAUTH2_TOKEN_RETRIEVAL_CONTEXT_COOKIE_ATTRS.name)
 
 
 def store_lichess_api_access_token_in_response_cookie(
-    *, token: "LichessToken", response: "HttpResponse"
+    *, token: LichessToken, response: HttpResponse
 ) -> None:
     """
     Store a Lichess API token into a long-lived response cookie.
@@ -107,8 +109,8 @@ def store_lichess_api_access_token_in_response_cookie(
 
 
 def get_lichess_api_access_token_from_request(
-    request: "HttpRequest",
-) -> "LichessAccessToken | None":
+    request: HttpRequest,
+) -> LichessAccessToken | None:
     """
     Returns a Lichess API token found in the request's cookies.
     """
@@ -127,6 +129,6 @@ def get_lichess_api_access_token_from_request(
 
 
 def delete_lichess_api_access_token_from_cookies(
-    response: "HttpResponse",
+    response: HttpResponse,
 ) -> None:
     response.delete_cookie(_API_ACCESS_TOKEN_COOKIE_ATTRS.name)

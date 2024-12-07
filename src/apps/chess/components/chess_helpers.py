@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from functools import cache
 from typing import TYPE_CHECKING
 
@@ -23,9 +25,7 @@ if TYPE_CHECKING:
         Square,
     )
 
-_PIECE_FILE_TO_TAILWIND_POSITIONING_CLASS: dict[
-    "BoardOrientation", dict["File", str]
-] = {
+_PIECE_FILE_TO_TAILWIND_POSITIONING_CLASS: dict[BoardOrientation, dict[File, str]] = {
     "1->8": {
         "a": "translate-y-0/1",
         "b": "translate-y-1/1",
@@ -47,9 +47,7 @@ _PIECE_FILE_TO_TAILWIND_POSITIONING_CLASS: dict[
         "h": "translate-y-0/1",
     },
 }
-_PIECE_RANK_TO_TAILWIND_POSITIONING_CLASS: dict[
-    "BoardOrientation", dict["Rank", str]
-] = {
+_PIECE_RANK_TO_TAILWIND_POSITIONING_CLASS: dict[BoardOrientation, dict[Rank, str]] = {
     "1->8": {
         "1": "translate-x-0/1",
         "2": "translate-x-1/1",
@@ -72,7 +70,7 @@ _PIECE_RANK_TO_TAILWIND_POSITIONING_CLASS: dict[
     },
 }
 
-_SQUARE_FILE_TO_TAILWIND_POSITIONING_CLASS: dict["File", str] = {
+_SQUARE_FILE_TO_TAILWIND_POSITIONING_CLASS: dict[File, str] = {
     "a": "top-1/8%",
     "b": "top-2/8%",
     "c": "top-3/8%",
@@ -82,7 +80,7 @@ _SQUARE_FILE_TO_TAILWIND_POSITIONING_CLASS: dict["File", str] = {
     "g": "top-7/8%",
     "h": "top-8/8%",
 }
-_SQUARE_RANK_TO_TAILWIND_POSITIONING_CLASS: dict["Rank", str] = {
+_SQUARE_RANK_TO_TAILWIND_POSITIONING_CLASS: dict[Rank, str] = {
     "1": "left-1/8%",
     "2": "left-2/8%",
     "3": "left-3/8%",
@@ -93,7 +91,7 @@ _SQUARE_RANK_TO_TAILWIND_POSITIONING_CLASS: dict["Rank", str] = {
     "8": "left-8/8%",
 }
 
-_PIECE_UNITS_CLASSES: "dict[Faction, dict[PieceName, str]]" = {
+_PIECE_UNITS_CLASSES: dict[Faction, dict[PieceName, str]] = {
     # We need Tailwind to see these classes, so that it bundles them in the final CSS file.
     "humans": {
         "pawn": "bg-humans-pawn",
@@ -113,7 +111,7 @@ _PIECE_UNITS_CLASSES: "dict[Faction, dict[PieceName, str]]" = {
     },
 }
 
-_PIECE_SYMBOLS_CLASSES: "dict[PlayerSide, dict[PieceName, str]]" = {
+_PIECE_SYMBOLS_CLASSES: dict[PlayerSide, dict[PieceName, str]] = {
     # Ditto.
     "w": {
         "pawn": "bg-w-pawn",
@@ -136,8 +134,8 @@ _PIECE_SYMBOLS_CLASSES: "dict[PlayerSide, dict[PieceName, str]]" = {
 
 @cache
 def square_to_positioning_tailwind_classes(
-    board_orientation: "BoardOrientation", square: "Square"
-) -> "Sequence[str]":
+    board_orientation: BoardOrientation, square: Square
+) -> Sequence[str]:
     file, rank = file_and_rank_from_square(square)
     return (
         _PIECE_FILE_TO_TAILWIND_POSITIONING_CLASS[board_orientation][file],
@@ -146,7 +144,7 @@ def square_to_positioning_tailwind_classes(
 
 
 @cache
-def square_to_square_center_tailwind_classes(square: "Square") -> "Sequence[str]":
+def square_to_square_center_tailwind_classes(square: Square) -> Sequence[str]:
     file, rank = file_and_rank_from_square(square)
     return (
         _SQUARE_FILE_TO_TAILWIND_POSITIONING_CLASS[file],
@@ -156,7 +154,7 @@ def square_to_square_center_tailwind_classes(square: "Square") -> "Sequence[str]
 
 @cache
 def piece_should_face_left(
-    board_orientation: "BoardOrientation", player_side: "PlayerSide"
+    board_orientation: BoardOrientation, player_side: PlayerSide
 ) -> bool:
     return (board_orientation == "1->8" and player_side == "b") or (
         board_orientation == "8->1" and player_side == "w"
@@ -166,10 +164,10 @@ def piece_should_face_left(
 @cache
 def piece_character_classes(
     *,
-    board_orientation: "BoardOrientation",
-    piece_role: "PieceRole",
-    factions: "GameFactions",
-) -> "Sequence[str]":
+    board_orientation: BoardOrientation,
+    piece_role: PieceRole,
+    factions: GameFactions,
+) -> Sequence[str]:
     player_side = player_side_from_piece_role(piece_role)
     piece_name = PIECE_TYPE_TO_NAME[type_from_piece_role(piece_role)]
     faction = factions.get_faction_for_side(player_side)
@@ -182,7 +180,5 @@ def piece_character_classes(
 
 
 @cache
-def chess_unit_symbol_class(
-    *, player_side: "PlayerSide", piece_name: "PieceName"
-) -> str:
+def chess_unit_symbol_class(*, player_side: PlayerSide, piece_name: PieceName) -> str:
     return _PIECE_SYMBOLS_CLASSES[player_side][piece_name]

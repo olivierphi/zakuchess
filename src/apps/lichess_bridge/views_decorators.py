@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import functools
 from typing import TYPE_CHECKING
 
@@ -19,7 +21,7 @@ def with_lichess_access_token(func):
     if iscoroutinefunction(func):
 
         @functools.wraps(func)
-        async def wrapper(request: "HttpRequest", *args, **kwargs):
+        async def wrapper(request: HttpRequest, *args, **kwargs):
             lichess_access_token = (
                 cookie_helpers.get_lichess_api_access_token_from_request(request)
             )
@@ -30,7 +32,7 @@ def with_lichess_access_token(func):
     else:
 
         @functools.wraps(func)
-        def wrapper(request: "HttpRequest", *args, **kwargs):
+        def wrapper(request: HttpRequest, *args, **kwargs):
             lichess_access_token = (
                 cookie_helpers.get_lichess_api_access_token_from_request(request)
             )
@@ -45,14 +47,14 @@ def with_user_prefs(func):
     if iscoroutinefunction(func):
 
         @functools.wraps(func)
-        async def wrapper(request: "HttpRequest", *args, **kwargs):
+        async def wrapper(request: HttpRequest, *args, **kwargs):
             user_prefs = get_user_prefs_from_request(request)
             return await func(request, *args, user_prefs=user_prefs, **kwargs)
 
     else:
 
         @functools.wraps(func)
-        def wrapper(request: "HttpRequest", *args, **kwargs):
+        def wrapper(request: HttpRequest, *args, **kwargs):
             user_prefs = get_user_prefs_from_request(request)
             return func(request, *args, user_prefs=user_prefs, **kwargs)
 
@@ -64,9 +66,9 @@ def redirect_if_no_lichess_access_token(func):
 
         @functools.wraps(func)
         async def wrapper(
-            request: "HttpRequest",
+            request: HttpRequest,
             *args,
-            lichess_access_token: "LichessAccessToken | None",
+            lichess_access_token: LichessAccessToken | None,
             **kwargs,
         ):
             if not lichess_access_token:
@@ -79,9 +81,9 @@ def redirect_if_no_lichess_access_token(func):
 
         @functools.wraps(func)
         def wrapper(
-            request: "HttpRequest",
+            request: HttpRequest,
             *args,
-            lichess_access_token: "LichessAccessToken | None",
+            lichess_access_token: LichessAccessToken | None,
             **kwargs,
         ):
             if not lichess_access_token:

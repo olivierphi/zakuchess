@@ -87,11 +87,12 @@ select = [
     # https://docs.astral.sh/ruff/rules/#flake8-type-checking-tch
     "TCH001", 
     "TCH002", 
-    "TCH003", 
+    "TCH003",
+    "FA100", # future-rewritable-type-annotation
+    "FA102", # future-required-type-annotation 
 ]
 [tool.ruff.lint.per-file-ignores]
 "src/project/settings/*" = ["F405"]
-"src/lib/chess_engines/sunfish/sunfish.py" = ["F841", "F821"]
 
 [tool.ruff.lint.isort]
 # https://docs.astral.sh/ruff/settings/#lintisort

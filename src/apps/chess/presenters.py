@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from functools import cached_property
 from typing import TYPE_CHECKING, NamedTuple, cast
@@ -39,7 +41,7 @@ if TYPE_CHECKING:
 
 # Presenters are the objects we pass to our templates.
 
-_PIECES_VALUES: dict["PieceType", int] = {
+_PIECES_VALUES: dict[PieceType, int] = {
     "p": 1,
     "n": 3,
     "b": 3,
@@ -59,18 +61,18 @@ class GamePresenter(ABC):
     def __init__(
         self,
         *,
-        fen: "FEN",
-        piece_role_by_square: "PieceRoleBySquare",
-        teams: "GameTeams",
+        fen: FEN,
+        piece_role_by_square: PieceRoleBySquare,
+        teams: GameTeams,
         refresh_last_move: bool,
         is_htmx_request: bool,
-        selected_square: "Square | None" = None,
-        selected_piece_square: "Square | None" = None,
-        target_to_confirm: "Square | None" = None,
-        forced_bot_move: tuple["Square", "Square"] | None = None,
+        selected_square: Square | None = None,
+        selected_piece_square: Square | None = None,
+        target_to_confirm: Square | None = None,
+        forced_bot_move: tuple[Square, Square] | None = None,
         force_square_info: bool = False,
-        last_move: tuple["Square", "Square"] | None = None,
-        captured_piece_role: "PieceRole | None" = None,
+        last_move: tuple[Square, Square] | None = None,
+        captured_piece_role: PieceRole | None = None,
         is_preview: bool = False,
         bot_depth: int = 1,
         user_prefs: UserPrefs | None = None,
@@ -108,11 +110,11 @@ class GamePresenter(ABC):
 
     @property
     @abstractmethod
-    def board_orientation(self) -> "BoardOrientation": ...
+    def board_orientation(self) -> BoardOrientation: ...
 
     @property
     @abstractmethod
-    def urls(self) -> "GamePresenterUrls": ...
+    def urls(self) -> GamePresenterUrls: ...
 
     @property
     @abstractmethod
@@ -120,11 +122,11 @@ class GamePresenter(ABC):
 
     @property
     @abstractmethod
-    def my_side(self) -> "PlayerSide | None": ...
+    def my_side(self) -> PlayerSide | None: ...
 
     @property
     @abstractmethod
-    def game_phase(self) -> "GamePhase": ...
+    def game_phase(self) -> GamePhase: ...
 
     # Properties derived from the chess board:
     @cached_property
@@ -140,7 +142,7 @@ class GamePresenter(ABC):
         return self.winner is not None
 
     @cached_property
-    def winner(self) -> "PlayerSide | None":
+    def winner(self) -> PlayerSide | None:
         return (
             None
             if (outcome := self._chess_board.outcome()) is None
@@ -148,19 +150,19 @@ class GamePresenter(ABC):
         )
 
     @cached_property
-    def active_player(self) -> "PlayerSide":
+    def active_player(self) -> PlayerSide:
         return get_active_player_side_from_chess_board(self._chess_board)
 
     @cached_property
-    def squares_with_pieces_that_can_move(self) -> set["Square"]:
-        return set(
+    def squares_with_pieces_that_can_move(self) -> set[Square]:
+        return {
             chess_lib_square_to_square(move.from_square)
             for move in self._chess_board.legal_moves
-        )
+        }
 
     # Properties derived from the Game model:
     @cached_property
-    def active_player_side(self) -> "PlayerSide":
+    def active_player_side(self) -> PlayerSide:
         return chess_lib_color_to_player_side(self._chess_board.turn)
 
     @property
@@ -181,7 +183,7 @@ class GamePresenter(ABC):
 
     @property
     @abstractmethod
-    def factions(self) -> "GameFactions": ...
+    def factions(self) -> GameFactions: ...
 
     @property
     @abstractmethod
@@ -189,17 +191,17 @@ class GamePresenter(ABC):
 
     @property
     @abstractmethod
-    def player_side_to_highlight_all_pieces_for(self) -> "PlayerSide | None": ...
+    def player_side_to_highlight_all_pieces_for(self) -> PlayerSide | None: ...
 
     @property
     @abstractmethod
-    def speech_bubble(self) -> "SpeechBubbleData | None": ...
+    def speech_bubble(self) -> SpeechBubbleData | None: ...
 
     @cached_property
-    def piece_role_by_square(self) -> "PieceRoleBySquare":
+    def piece_role_by_square(self) -> PieceRoleBySquare:
         return self._piece_role_by_square
 
-    def piece_role_at_square(self, square: "Square") -> "PieceRole":
+    def piece_role_at_square(self, square: Square) -> PieceRole:
         try:
             return self._piece_role_by_square[square]
         except KeyError as exc:
@@ -208,8 +210,8 @@ class GamePresenter(ABC):
     @cached_property
     def team_members_by_role_by_side(
         self,
-    ) -> "dict[PlayerSide, dict[TeamMemberRole, TeamMember]]":
-        result: "dict[PlayerSide, dict[TeamMemberRole, TeamMember]]" = {}
+    ) -> dict[PlayerSide, dict[TeamMemberRole, TeamMember]]:
+        result: dict[PlayerSide, dict[TeamMemberRole, TeamMember]] = {}
         for player_side in PLAYER_SIDES:
             result[player_side] = {}
             for team_member in self._teams.get_team_for_side(player_side):
@@ -251,11 +253,11 @@ class GamePresenterUrls(ABC):
         pass
 
     @abstractmethod
-    def htmx_game_select_piece_url(self, *, square: "Square", board_id: str) -> str:
+    def htmx_game_select_piece_url(self, *, square: Square, board_id: str) -> str:
         pass
 
     @abstractmethod
-    def htmx_game_move_piece_url(self, *, square: "Square", board_id: str) -> str:
+    def htmx_game_move_piece_url(self, *, square: Square, board_id: str) -> str:
         pass
 
     @abstractmethod
@@ -273,14 +275,14 @@ class SelectedSquarePresenter:
         *,
         game_presenter: GamePresenter,
         chess_board: chess.Board,
-        square: "Square",
+        square: Square,
     ):
         self._game_presenter = game_presenter
         self._chess_board = chess_board
         self.square = square
 
     @cached_property
-    def team_member(self) -> "TeamMember":
+    def team_member(self) -> TeamMember:
         player_side = (
             self._game_presenter.selected_piece.player_side
             if self._game_presenter.selected_piece
@@ -291,21 +293,21 @@ class SelectedSquarePresenter:
         ]
 
     @cached_property
-    def player_side(self) -> "PlayerSide":
+    def player_side(self) -> PlayerSide:
         return player_side_from_piece_role(
             self._game_presenter.piece_role_at_square(self.square)
         )
 
     @cached_property
-    def symbol(self) -> "PieceSymbol":
+    def symbol(self) -> PieceSymbol:
         return symbol_from_piece_role(self.piece_role)
 
     @cached_property
-    def piece_role(self) -> "PieceRole":
+    def piece_role(self) -> PieceRole:
         return self._game_presenter.piece_role_by_square[self.square]
 
     @cached_property
-    def piece_at(self) -> "chess.Piece":
+    def piece_at(self) -> chess.Piece:
         return cast("chess.Piece", self._chess_board.piece_at(self._chess_lib_square))
 
     @cached_property
@@ -325,8 +327,8 @@ class SelectedPiecePresenter(SelectedSquarePresenter):
         *,
         game_presenter: GamePresenter,
         chess_board: chess.Board,
-        piece_square: "Square",
-        target_to_confirm: "Square | None",
+        piece_square: Square,
+        target_to_confirm: Square | None,
     ):
         super().__init__(
             game_presenter=game_presenter,
@@ -336,7 +338,7 @@ class SelectedPiecePresenter(SelectedSquarePresenter):
         self.target_to_confirm = target_to_confirm
 
     @cached_property
-    def available_targets(self) -> frozenset["Square"]:
+    def available_targets(self) -> frozenset[Square]:
         chess_board_active_player_side = chess_lib_color_to_player_side(
             self._chess_board.turn
         )
@@ -357,7 +359,7 @@ class SelectedPiecePresenter(SelectedSquarePresenter):
             chess_board=chess_board, piece_square=self.square
         )
 
-    def is_potential_capture(self, square: "Square") -> bool:
+    def is_potential_capture(self, square: Square) -> bool:
         return square in self.available_targets and self.piece_at is not None
 
     @cached_property
@@ -375,7 +377,7 @@ class SelectedPiecePresenter(SelectedSquarePresenter):
 
 
 class SpeechBubbleData(NamedTuple):
-    text: "str | text"
-    square: "Square"
+    text: str | text
+    square: Square
     time_out: float | None = None  # if it's None, should be expressed in seconds
-    character_display: "PieceRole | None" = None
+    character_display: PieceRole | None = None

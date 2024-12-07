@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import functools
 import logging
 from typing import TYPE_CHECKING
@@ -54,7 +56,7 @@ _logger = logging.getLogger(__name__)
 
 @require_safe
 @with_game_context
-def game_view(request: "HttpRequest", *, ctx: "GameContext") -> HttpResponse:
+def game_view(request: HttpRequest, *, ctx: GameContext) -> HttpResponse:
     if ctx.created:
         # The player hasn't played this challenge before,
         # so we need to start from the beginning, with the bot's first move:
@@ -106,9 +108,7 @@ def game_view(request: "HttpRequest", *, ctx: "GameContext") -> HttpResponse:
 @require_safe
 @with_game_context
 @redirect_if_game_not_started
-def htmx_game_no_selection(
-    request: "HttpRequest", *, ctx: "GameContext"
-) -> HttpResponse:
+def htmx_game_no_selection(request: HttpRequest, *, ctx: GameContext) -> HttpResponse:
     game_presenter = DailyChallengeGamePresenter(
         challenge=ctx.challenge,
         game_state=ctx.game_state,
@@ -127,7 +127,7 @@ def htmx_game_no_selection(
 @with_game_context
 @redirect_if_game_not_started
 def htmx_game_select_piece(
-    request: "HttpRequest", *, ctx: "GameContext", location: "Square"
+    request: HttpRequest, *, ctx: GameContext, location: Square
 ) -> HttpResponse:
     game_presenter = DailyChallengeGamePresenter(
         challenge=ctx.challenge,
@@ -148,7 +148,7 @@ def htmx_game_select_piece(
 @with_game_context
 @redirect_if_game_not_started
 def htmx_game_move_piece(
-    request: "HttpRequest", *, ctx: "GameContext", from_: "Square", to: "Square"
+    request: HttpRequest, *, ctx: GameContext, from_: Square, to: Square
 ) -> HttpResponse:
     if from_ == to:
         raise ChessInvalidMoveException("Not a move")
@@ -223,7 +223,7 @@ def htmx_game_move_piece(
 @require_safe
 @with_game_context
 def htmx_daily_challenge_stats_modal(
-    request: "HttpRequest", *, ctx: "GameContext"
+    request: HttpRequest, *, ctx: GameContext
 ) -> HttpResponse:
     modal_content = stats_modal(
         stats=ctx.stats, game_state=ctx.game_state, challenge=ctx.challenge
@@ -235,7 +235,7 @@ def htmx_daily_challenge_stats_modal(
 @require_safe
 @with_game_context
 def htmx_daily_challenge_help_modal(
-    request: "HttpRequest", *, ctx: "GameContext"
+    request: HttpRequest, *, ctx: GameContext
 ) -> HttpResponse:
     game_presenter = DailyChallengeGamePresenter(
         challenge=ctx.challenge,
@@ -254,7 +254,7 @@ def htmx_daily_challenge_help_modal(
 @with_game_context
 @redirect_if_game_not_started
 def htmx_restart_daily_challenge_ask_confirmation(
-    request: "HttpRequest", *, ctx: "GameContext"
+    request: HttpRequest, *, ctx: GameContext
 ) -> HttpResponse:
     from .components.misc_ui.daily_challenge_bar import (
         daily_challenge_bar,
@@ -278,7 +278,7 @@ def htmx_restart_daily_challenge_ask_confirmation(
 @with_game_context
 @redirect_if_game_not_started
 def htmx_restart_daily_challenge_do(
-    request: "HttpRequest", *, ctx: "GameContext"
+    request: HttpRequest, *, ctx: GameContext
 ) -> HttpResponse:
     # This field is always set on a published challenge:
     assert ctx.challenge.bot_first_move
@@ -315,7 +315,7 @@ def htmx_restart_daily_challenge_do(
 @with_game_context
 @redirect_if_game_not_started
 def htmx_undo_last_move_ask_confirmation(
-    request: "HttpRequest", *, ctx: "GameContext"
+    request: HttpRequest, *, ctx: GameContext
 ) -> HttpResponse:
     from .components.misc_ui.daily_challenge_bar import (
         daily_challenge_bar,
@@ -336,9 +336,7 @@ def htmx_undo_last_move_ask_confirmation(
 @require_POST
 @with_game_context
 @redirect_if_game_not_started
-def htmx_undo_last_move_do(
-    request: "HttpRequest", *, ctx: "GameContext"
-) -> HttpResponse:
+def htmx_undo_last_move_do(request: HttpRequest, *, ctx: GameContext) -> HttpResponse:
     new_game_state = undo_last_move(
         challenge=ctx.challenge,
         game_state=ctx.game_state,
@@ -368,7 +366,7 @@ def htmx_undo_last_move_do(
 @with_game_context
 @redirect_if_game_not_started
 def htmx_see_daily_challenge_solution_ask_confirmation(
-    request: "HttpRequest", *, ctx: "GameContext"
+    request: HttpRequest, *, ctx: GameContext
 ) -> HttpResponse:
     from .components.misc_ui.daily_challenge_bar import (
         daily_challenge_bar,
@@ -392,7 +390,7 @@ def htmx_see_daily_challenge_solution_ask_confirmation(
 @with_game_context
 @redirect_if_game_not_started
 def htmx_see_daily_challenge_solution_do(
-    request: "HttpRequest", *, ctx: "GameContext"
+    request: HttpRequest, *, ctx: GameContext
 ) -> HttpResponse:
     new_game_state = see_daily_challenge_solution(
         challenge=ctx.challenge,
@@ -427,7 +425,7 @@ def htmx_see_daily_challenge_solution_do(
 @with_game_context
 @redirect_if_game_not_started
 def htmx_see_daily_challenge_solution_play(
-    request: "HttpRequest", *, ctx: "GameContext"
+    request: HttpRequest, *, ctx: GameContext
 ) -> HttpResponse:
     if (solution_index := ctx.game_state.solution_index) is None:
         # This is a fishy request 😅
@@ -474,7 +472,7 @@ def htmx_see_daily_challenge_solution_play(
 @with_game_context
 @redirect_if_game_not_started
 def htmx_game_bot_move(
-    request: "HttpRequest", *, ctx: "GameContext", from_: "Square", to: "Square"
+    request: HttpRequest, *, ctx: GameContext, from_: Square, to: Square
 ) -> HttpResponse:
     if from_ == to:
         raise ChessInvalidMoveException("Not a move")
@@ -498,7 +496,7 @@ def htmx_game_bot_move(
 @require_safe
 @user_passes_test(user_is_staff)
 @with_game_context
-def debug_reset_today(request: "HttpRequest", *, ctx: "GameContext") -> HttpResponse:
+def debug_reset_today(request: HttpRequest, *, ctx: GameContext) -> HttpResponse:
     clear_daily_challenge_game_state_in_session(request=request, player_stats=ctx.stats)
 
     return redirect("daily_challenge:daily_game_view")
@@ -507,7 +505,7 @@ def debug_reset_today(request: "HttpRequest", *, ctx: "GameContext") -> HttpResp
 @require_safe
 @user_passes_test(user_is_staff)
 @with_game_context
-def debug_reset_stats(request: "HttpRequest", *, ctx: "GameContext") -> HttpResponse:
+def debug_reset_stats(request: HttpRequest, *, ctx: GameContext) -> HttpResponse:
     # This function is VERY dangerous, so let's make sure we're not using it
     # in another view accidentally 😅
     from .cookie_helpers import clear_daily_challenge_stats_in_session
@@ -519,7 +517,7 @@ def debug_reset_stats(request: "HttpRequest", *, ctx: "GameContext") -> HttpResp
 
 @require_safe
 @user_passes_test(user_is_staff)
-def debug_view_cookie(request: "HttpRequest") -> HttpResponse:
+def debug_view_cookie(request: HttpRequest) -> HttpResponse:
     import msgspec
 
     from .cookie_helpers import get_player_session_content_from_request
@@ -548,9 +546,9 @@ def debug_view_cookie(request: "HttpRequest") -> HttpResponse:
 
 def _play_bot_move(
     *,
-    request: "HttpRequest",
-    ctx: "GameContext",
-    move: "MoveTuple",
+    request: HttpRequest,
+    ctx: GameContext,
+    move: MoveTuple,
     board_id: str,
 ) -> HttpResponse:
     game_over_already = ctx.game_state.game_over != PlayerGameOverState.PLAYING
@@ -595,7 +593,7 @@ def _play_bot_move(
 def _daily_challenge_moving_parts_fragment_response(
     *,
     game_presenter: DailyChallengeGamePresenter,
-    request: "HttpRequest",
+    request: HttpRequest,
     board_id: str,
 ) -> HttpResponse:
     return HttpResponse(
@@ -608,5 +606,5 @@ def _daily_challenge_moving_parts_fragment_response(
 @functools.lru_cache(maxsize=20)
 def _daily_challenge_move_for_solution_index(
     challenge_solution: str, solution_index: int
-) -> tuple["Square", "Square"]:
+) -> tuple[Square, Square]:
     return uci_move_squares(challenge_solution.split(",")[solution_index])

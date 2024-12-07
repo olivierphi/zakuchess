@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 import chess
@@ -11,10 +13,10 @@ if TYPE_CHECKING:
 def calculate_fen_before_move(
     # TODO: change move_uci to a MoveTuple type
     *,
-    fen_after_move: "FEN",
+    fen_after_move: FEN,
     move_uci: str,
-    moving_player_side: "PlayerSide",
-) -> "FEN":
+    moving_player_side: PlayerSide,
+) -> FEN:
     """
     Calculate the FEN of the chess board before the given move.
     Raises a ValueError if the move is invalid.

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from dominate.tags import b, button, div, p
@@ -26,8 +28,8 @@ if TYPE_CHECKING:
 
 
 def status_bar(
-    *, game_presenter: "DailyChallengeGamePresenter", board_id: str, **extra_attrs: str
-) -> "dom_tag":
+    *, game_presenter: DailyChallengeGamePresenter, board_id: str, **extra_attrs: str
+) -> dom_tag:
     from apps.chess.components.chess_board import INFO_BARS_COMMON_CLASSES
 
     # TODO: split this function into smaller ones
@@ -98,8 +100,8 @@ def status_bar(
 
 
 def _chess_status_bar_selected_piece(
-    game_presenter: "DailyChallengeGamePresenter",
-) -> "dom_tag":
+    game_presenter: DailyChallengeGamePresenter,
+) -> dom_tag:
     assert game_presenter.selected_piece is not None
 
     selected_piece = game_presenter.selected_piece
@@ -141,6 +143,6 @@ def _chess_status_bar_selected_piece(
 
 
 def _chess_status_bar_waiting_for_bot_turn(
-    game_presenter: "DailyChallengeGamePresenter",
-) -> "dom_tag":
+    game_presenter: DailyChallengeGamePresenter,
+) -> dom_tag:
     return div("Waiting for opponent's turn 🛡", cls="w-full text-center items-center")

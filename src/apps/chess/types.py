@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Literal, TypeAlias, TypedDict
 
 if TYPE_CHECKING:
@@ -125,17 +127,17 @@ Faction = Literal[
 
 
 class GameOverDescription(TypedDict):
-    winner: "PlayerSide | None"
-    reason: "GameEndReason"
+    winner: PlayerSide | None
+    reason: GameEndReason
 
 
 class ChessMoveResult(TypedDict):
-    fen: "FEN"
+    fen: FEN
     moves: list[MoveTuple]
     is_capture: bool
     captured: Square | None
     is_castling: bool
-    promotion: "PieceType | None"
+    promotion: PieceType | None
     game_over: GameOverDescription | None
 
 

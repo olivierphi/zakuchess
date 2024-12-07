@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, NamedTuple, cast
 
 from ..chess_helpers import (
@@ -20,18 +22,18 @@ if TYPE_CHECKING:
 
 
 class ChessMoveWithPieceRoleBySquareResult(NamedTuple):
-    move_result: "ChessMoveResult"
-    piece_role_by_square: "PieceRoleBySquare"
-    captured_piece: "PieceRole | None"
+    move_result: ChessMoveResult
+    piece_role_by_square: PieceRoleBySquare
+    captured_piece: PieceRole | None
 
 
 def do_chess_move_with_piece_role_by_square(
     *,
-    from_: "Square",
-    to: "Square",
-    piece_role_by_square: "PieceRoleBySquare",
-    fen: "FEN | None" = None,
-    chess_board: "chess.Board | None" = None,
+    from_: Square,
+    to: Square,
+    piece_role_by_square: PieceRoleBySquare,
+    fen: FEN | None = None,
+    chess_board: chess.Board | None = None,
 ) -> ChessMoveWithPieceRoleBySquareResult:
     from ._do_chess_move import do_chess_move
 
@@ -63,7 +65,7 @@ def do_chess_move_with_piece_role_by_square(
         )
         piece_role_by_square[from_] += piece_promotion  # type: ignore
 
-    captured_piece: "PieceRole | None" = None
+    captured_piece: PieceRole | None = None
     if captured := move_result["captured"]:
         assert move_result["is_capture"]
         captured_piece = piece_role_by_square[captured]

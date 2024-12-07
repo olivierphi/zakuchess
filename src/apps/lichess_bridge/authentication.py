@@ -7,6 +7,7 @@
 # https://github.com/lakinwecker/lichess-oauth-flask/blob/master/app.py
 # Authlib "vanilla Python" usage:
 # https://docs.authlib.org/en/latest/client/oauth2.html
+from __future__ import annotations
 
 import functools
 from typing import TYPE_CHECKING, Literal
@@ -57,7 +58,7 @@ class LichessTokenRetrievalProcessContext(
         *,
         zakuchess_hostname: str,
         zakuchess_protocol: str = "https",
-    ) -> "Self":
+    ) -> Self:
         cookie_content_dict = msgspec.json.decode(cookie_content)
         redirect_uri = _get_lichess_oauth2_zakuchess_redirect_uri(
             zakuchess_protocol,
@@ -76,7 +77,7 @@ class LichessTokenRetrievalProcessContext(
         *,
         zakuchess_hostname: str,
         zakuchess_protocol: str = "https",
-    ) -> "Self":
+    ) -> Self:
         """
         Returns a context with randomly generated "CSRF state" and "code verifier".
         """
@@ -96,7 +97,7 @@ class LichessTokenRetrievalProcessContext(
 
 class LichessToken(msgspec.Struct):
     token_type: Literal["Bearer"]
-    access_token: "LichessAccessToken"
+    access_token: LichessAccessToken
     expires_in: int  # number of seconds
     expires_at: int  # a Unix timestamp
 
@@ -121,7 +122,7 @@ def get_lichess_token_retrieval_via_oauth2_process_starting_url(
 
 
 def check_csrf_state_from_oauth2_callback(
-    *, request: "HttpRequest", context: LichessTokenRetrievalProcessContext
+    *, request: HttpRequest, context: LichessTokenRetrievalProcessContext
 ):
     """
     Raises a SuspiciousOperation if the state from the request's query string

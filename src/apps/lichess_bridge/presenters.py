@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from functools import cached_property
 from typing import TYPE_CHECKING, cast
 from urllib.parse import urlencode
@@ -25,11 +27,11 @@ class LichessCorrespondenceGamePresenter(GamePresenter):
     def __init__(
         self,
         *,
-        game_data: "LichessGameFullFromStreamWithMetadata",
+        game_data: LichessGameFullFromStreamWithMetadata,
         refresh_last_move: bool,
         is_htmx_request: bool,
-        selected_piece_square: "Square | None" = None,
-        user_prefs: "UserPrefs | None" = None,
+        selected_piece_square: Square | None = None,
+        user_prefs: UserPrefs | None = None,
     ):
         self._game_data = game_data
 
@@ -53,11 +55,11 @@ class LichessCorrespondenceGamePresenter(GamePresenter):
         )
 
     @cached_property
-    def board_orientation(self) -> "BoardOrientation":
+    def board_orientation(self) -> BoardOrientation:
         return self._game_data.board_orientation
 
     @cached_property
-    def urls(self) -> "GamePresenterUrls":
+    def urls(self) -> GamePresenterUrls:
         return LichessCorrespondenceGamePresenterUrls(game_presenter=self)
 
     @cached_property
@@ -65,11 +67,11 @@ class LichessCorrespondenceGamePresenter(GamePresenter):
         return self._game_data.players_from_my_perspective.active_player == "me"
 
     @cached_property
-    def my_side(self) -> "PlayerSide | None":
+    def my_side(self) -> PlayerSide | None:
         return self._game_data.players_from_my_perspective.me.player_side
 
     @cached_property
-    def game_phase(self) -> "GamePhase":
+    def game_phase(self) -> GamePhase:
         # TODO: manage "game over" situations
         if self.is_my_turn:
             if self.selected_piece is None:
@@ -92,7 +94,7 @@ class LichessCorrespondenceGamePresenter(GamePresenter):
         return self._game_data.raw_data.id
 
     @cached_property
-    def factions(self) -> "GameFactions":
+    def factions(self) -> GameFactions:
         return self._game_data.game_factions
 
     @property
@@ -100,11 +102,11 @@ class LichessCorrespondenceGamePresenter(GamePresenter):
         return False
 
     @cached_property
-    def player_side_to_highlight_all_pieces_for(self) -> "PlayerSide | None":
+    def player_side_to_highlight_all_pieces_for(self) -> PlayerSide | None:
         return None
 
     @cached_property
-    def speech_bubble(self) -> "SpeechBubbleData | None":
+    def speech_bubble(self) -> SpeechBubbleData | None:
         return None
 
 
@@ -123,7 +125,7 @@ class LichessCorrespondenceGamePresenterUrls(GamePresenterUrls):
             )
         )
 
-    def htmx_game_select_piece_url(self, *, square: "Square", board_id: str) -> str:
+    def htmx_game_select_piece_url(self, *, square: Square, board_id: str) -> str:
         return "".join(
             (
                 reverse(
@@ -138,7 +140,7 @@ class LichessCorrespondenceGamePresenterUrls(GamePresenterUrls):
             )
         )
 
-    def htmx_game_move_piece_url(self, *, square: "Square", board_id: str) -> str:
+    def htmx_game_move_piece_url(self, *, square: Square, board_id: str) -> str:
         assert self._game_presenter.selected_piece is not None  # type checker: happy
         return "".join(
             (

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import datetime as dt
 import enum
 import math
@@ -70,13 +72,13 @@ class DailyChallenge(models.Model):
     status: DailyChallengeStatus = models.IntegerField(
         choices=DailyChallengeStatus.choices, default=DailyChallengeStatus.PENDING
     )
-    created_at: "dt.datetime" = models.DateTimeField(auto_now_add=True)
-    updated_at: "dt.datetime" = models.DateTimeField(auto_now=True)
+    created_at: dt.datetime = models.DateTimeField(auto_now_add=True)
+    updated_at: dt.datetime = models.DateTimeField(auto_now=True)
     # ---
     # The following 2 fields carry the state of the game we want
     # the daily challenge to start with...
-    fen: "FEN" = models.CharField(max_length=_FEN_MAX_LEN)
-    piece_role_by_square: "PieceRoleBySquare|None" = models.JSONField(
+    fen: FEN = models.CharField(max_length=_FEN_MAX_LEN)
+    piece_role_by_square: PieceRoleBySquare | None = models.JSONField(
         null=True, editable=False
     )
     # ---
@@ -94,7 +96,7 @@ class DailyChallenge(models.Model):
         default=5,
         help_text="The depth of the player's simulated search. 5 is a good value for modeling a 'casual' chess player (like myself ^_^).",
     )
-    intro_turn_speech_square: "Square|None" = models.CharField(null=True, max_length=2)
+    intro_turn_speech_square: Square | None = models.CharField(null=True, max_length=2)
     starting_advantage: int | None = models.IntegerField(
         null=True,
         help_text="positive number means the human player has an advantage, "
@@ -112,13 +114,13 @@ class DailyChallenge(models.Model):
     # Fields that are inferred from the above fields:
     # We want the bot to play first, in a deterministic way,
     # so we also need to store the state of the game before that first move.
-    fen_before_bot_first_move: "FEN | None" = models.CharField(
+    fen_before_bot_first_move: FEN | None = models.CharField(
         max_length=_FEN_MAX_LEN, null=True, editable=False
     )
-    piece_role_by_square_before_bot_first_move: "PieceRoleBySquare | None" = (
+    piece_role_by_square_before_bot_first_move: PieceRoleBySquare | None = (
         models.JSONField(null=True, editable=False)
     )
-    teams: "GameTeamsDict | None" = models.JSONField(null=True, editable=False)
+    teams: GameTeamsDict | None = models.JSONField(null=True, editable=False)
     intro_turn_speech_text: str = models.CharField(max_length=100, blank=True)
     solution_turns_count: int = models.PositiveSmallIntegerField(
         null=True, editable=False
@@ -136,7 +138,7 @@ class DailyChallenge(models.Model):
         return BOT_SIDE
 
     @property
-    def factions(self) -> "GameFactions":
+    def factions(self) -> GameFactions:
         return FACTIONS
 
     def clean(self) -> None:
@@ -266,7 +268,7 @@ class DailyChallengeStatsManager(models.Manager):
         self.filter(day=self._today()).update(**{field_name: F(field_name) + 1})
 
     @staticmethod
-    def _today() -> "dt.date":
+    def _today() -> dt.date:
         return now().date()
 
 
@@ -359,7 +361,7 @@ class PlayerGameState(
     # These are the moves *of the current attempt* only.
     moves: str
     undo_used: bool = False
-    game_over: "PlayerGameOverState" = PlayerGameOverState.PLAYING
+    game_over: PlayerGameOverState = PlayerGameOverState.PLAYING
     victory_turns_count: int | None = None
     # is a half-move index when the player gave up to see the solution:
     solution_index: int | None = None

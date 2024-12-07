@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from django.urls import reverse
@@ -12,7 +14,7 @@ if TYPE_CHECKING:
     from django.http import HttpRequest
 
 
-def game_creation_form(*, request: "HttpRequest", form_errors: dict) -> form:
+def game_creation_form(*, request: HttpRequest, form_errors: dict) -> form:
     return form(
         csrf_hidden_input(request),
         div(

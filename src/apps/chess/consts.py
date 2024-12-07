@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Final
 
 import chess
@@ -13,9 +15,9 @@ if TYPE_CHECKING:
         Square,
     )
 
-PLAYER_SIDES: Final[tuple["PlayerSide", "PlayerSide"]] = ("w", "b")
+PLAYER_SIDES: Final[tuple[PlayerSide, PlayerSide]] = ("w", "b")
 
-PIECES_VALUES: Final[dict["PieceType", int]] = {
+PIECES_VALUES: Final[dict[PieceType, int]] = {
     "p": 1,
     "n": 3,
     "b": 3,
@@ -24,7 +26,7 @@ PIECES_VALUES: Final[dict["PieceType", int]] = {
 }
 
 # fmt: off
-SQUARES: Final[tuple["Square", ...]] = (
+SQUARES: Final[tuple[Square, ...]] = (
     # The order matters here, as we use that for the board visual representation.
     "a1", "a2", "a3", "a4", "a5", "a6", "a7", "a8",
     "b1", "b2", "b3", "b4", "b5", "b6", "b7", "b8",
@@ -36,18 +38,18 @@ SQUARES: Final[tuple["Square", ...]] = (
     "h1", "h2", "h3", "h4", "h5", "h6", "h7", "h8",
 )
 # fmt: on
-FILES: Final[tuple["File", ...]] = ("a", "b", "c", "d", "e", "f", "g", "h")
-RANKS: Final[tuple["Rank", ...]] = ("1", "2", "3", "4", "5", "6", "7", "8")
+FILES: Final[tuple[File, ...]] = ("a", "b", "c", "d", "e", "f", "g", "h")
+RANKS: Final[tuple[Rank, ...]] = ("1", "2", "3", "4", "5", "6", "7", "8")
 
 
 # MOVES = frozenset(f"{sq1}{sq2}" for sq1 in SQUARES for sq2 in SQUARES if sq1 != sq2)
 
-STARTING_PIECES: dict["PlayerSide", tuple["PieceSymbol"]] = {
+STARTING_PIECES: dict[PlayerSide, tuple[PieceSymbol]] = {
     "w": (*("P" * 8), *("N" * 2), *("B" * 2), *("R" * 2), "Q", "K"),  # type: ignore
     "b": (*("p" * 8), *("n" * 2), *("b" * 2), *("r" * 2), "q", "k"),  # type: ignore
 }
 
-PIECE_INT_TO_PIECE_TYPE: dict[int, "PieceType"] = {
+PIECE_INT_TO_PIECE_TYPE: dict[int, PieceType] = {
     chess.PAWN: "p",
     chess.KNIGHT: "n",
     chess.BISHOP: "b",
@@ -56,7 +58,7 @@ PIECE_INT_TO_PIECE_TYPE: dict[int, "PieceType"] = {
     chess.KING: "k",
 }
 
-PIECE_TYPE_TO_NAME: dict["PieceType", "PieceName"] = {
+PIECE_TYPE_TO_NAME: dict[PieceType, PieceName] = {
     "p": "pawn",
     "n": "knight",
     "b": "bishop",
@@ -65,7 +67,7 @@ PIECE_TYPE_TO_NAME: dict["PieceType", "PieceName"] = {
     "k": "king",
 }
 
-PIECE_TYPE_TO_UNICODE: dict["PieceType", str] = {
+PIECE_TYPE_TO_UNICODE: dict[PieceType, str] = {
     "p": "♟",
     "n": "♞",
     "b": "♝",

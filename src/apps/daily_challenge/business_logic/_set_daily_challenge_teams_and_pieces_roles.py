@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import random
 from typing import TYPE_CHECKING, TypeAlias, cast
 
@@ -22,7 +24,7 @@ if TYPE_CHECKING:
         TeamMemberRole,
     )
 
-_CHESS_LIB_PIECE_TYPE_TO_PIECE_TYPE_MAPPING: dict[int, "PieceType"] = {
+_CHESS_LIB_PIECE_TYPE_TO_PIECE_TYPE_MAPPING: dict[int, PieceType] = {
     chess.PAWN: "p",
     chess.KNIGHT: "n",
     chess.BISHOP: "b",
@@ -36,17 +38,17 @@ TeamsDict: TypeAlias = "dict[PlayerSide, list[TeamMember]]"
 
 def set_daily_challenge_teams_and_pieces_roles(
     *,
-    fen: "FEN",
-    default_faction_w: "Faction" = "humans",
-    default_faction_b: "Faction" = "undeads",
-    bot_side: "PlayerSide" = "b",
+    fen: FEN,
+    default_faction_w: Faction = "humans",
+    default_faction_b: Faction = "undeads",
+    bot_side: PlayerSide = "b",
     # TODO: allow partial customisation of team members?
     # custom_team_members: "GameTeams | None" = None,
-) -> tuple[GameTeams, "PieceRoleBySquare"]:
+) -> tuple[GameTeams, PieceRoleBySquare]:
     chess_board = chess.Board(fen)
 
     # fmt: off
-    team_members_counters: dict["PlayerSide", dict["PieceType", list[int]]] = {
+    team_members_counters: dict[PlayerSide, dict[PieceType, list[int]]] = {
         #  - First int of the tuple is the current counter
         #  - Second int is the maximum value for that counter
         # (9 knights/bishops/rooks/queens on a player's side is quite an extreme case,
@@ -60,9 +62,9 @@ def set_daily_challenge_teams_and_pieces_roles(
     }
     # fmt: on
 
-    piece_role_by_square: "PieceRoleBySquare" = {}
+    piece_role_by_square: PieceRoleBySquare = {}
 
-    piece_faction: dict["PlayerSide", "Faction"] = {
+    piece_faction: dict[PlayerSide, Faction] = {
         "w": default_faction_w,
         "b": default_faction_b,
     }
@@ -115,7 +117,7 @@ def set_daily_challenge_teams_and_pieces_roles(
     )
 
 
-def _set_character_names_for_team(teams: TeamsDict, side: "PlayerSide") -> None:
+def _set_character_names_for_team(teams: TeamsDict, side: PlayerSide) -> None:
     anonymous_team_members = teams[side]
     first_names = random.sample(FIRST_NAMES, k=len(anonymous_team_members))
     last_names = random.sample(LAST_NAMES, k=len(anonymous_team_members))

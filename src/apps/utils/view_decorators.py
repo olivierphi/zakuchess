@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -6,5 +8,5 @@ if TYPE_CHECKING:
     from apps.authentication.models import User
 
 
-def user_is_staff(user: "User | AnonymousUser") -> bool:
+def user_is_staff(user: User | AnonymousUser) -> bool:
     return user.is_staff

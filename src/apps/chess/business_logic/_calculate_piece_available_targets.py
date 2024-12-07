@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 import chess
@@ -9,10 +11,10 @@ if TYPE_CHECKING:
 
 
 def calculate_piece_available_targets(
-    *, chess_board: chess.Board, piece_square: "Square"
-) -> frozenset["Square"]:
+    *, chess_board: chess.Board, piece_square: Square
+) -> frozenset[Square]:
     square_index = chess.parse_square(piece_square)
-    result: list["Square"] = []
+    result: list[Square] = []
     for move in chess_board.legal_moves:
         if move.from_square == square_index:
             result.append(chess_lib_square_to_square(move.to_square))

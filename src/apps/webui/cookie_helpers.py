@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import datetime as dt
 import logging
 from typing import TYPE_CHECKING
@@ -24,7 +26,7 @@ _USER_PREFS_COOKIE_ATTRS = HttpCookieAttributes(
 _logger = logging.getLogger(__name__)
 
 
-def get_user_prefs_from_request(request: "HttpRequest") -> UserPrefs:
+def get_user_prefs_from_request(request: HttpRequest) -> UserPrefs:
     def new_content():
         return UserPrefs()
 
@@ -42,7 +44,7 @@ def get_user_prefs_from_request(request: "HttpRequest") -> UserPrefs:
         return new_content()
 
 
-def save_user_prefs(*, user_prefs: "UserPrefs", response: "HttpResponse") -> None:
+def save_user_prefs(*, user_prefs: UserPrefs, response: HttpResponse) -> None:
     set_http_cookie_on_django_response(
         response=response,
         attributes=_USER_PREFS_COOKIE_ATTRS,

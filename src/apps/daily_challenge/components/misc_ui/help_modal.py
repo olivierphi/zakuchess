@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from dominate.tags import div, h3
@@ -14,7 +16,7 @@ if TYPE_CHECKING:
 # TODO: manage i18n
 
 
-def help_modal(*, game_presenter: "DailyChallengeGamePresenter") -> "dom_tag":
+def help_modal(*, game_presenter: DailyChallengeGamePresenter) -> dom_tag:
     return modal_container(
         header=h3(
             "How to play ",

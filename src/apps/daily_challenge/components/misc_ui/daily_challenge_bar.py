@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import functools
 import math
 from typing import TYPE_CHECKING
@@ -27,11 +29,11 @@ if TYPE_CHECKING:
 
 def daily_challenge_bar(
     *,
-    game_presenter: "DailyChallengeGamePresenter | None",
+    game_presenter: DailyChallengeGamePresenter | None,
     board_id: str,
-    inner_content: "dom_tag | None" = None,
+    inner_content: dom_tag | None = None,
     **extra_attrs: str,
-) -> "dom_tag":
+) -> dom_tag:
     from apps.chess.components.chess_board import INFO_BARS_COMMON_CLASSES
 
     if not inner_content:
@@ -49,7 +51,7 @@ def daily_challenge_bar(
     )
 
 
-def retry_confirmation_display(*, board_id: str) -> "dom_tag":
+def retry_confirmation_display(*, board_id: str) -> dom_tag:
     htmx_attributes_confirm = {
         "data_hx_post": "".join(
             (
@@ -80,7 +82,7 @@ def retry_confirmation_display(*, board_id: str) -> "dom_tag":
     )
 
 
-def undo_confirmation_display(*, board_id: str) -> "dom_tag":
+def undo_confirmation_display(*, board_id: str) -> dom_tag:
     htmx_attributes_confirm = {
         "data_hx_post": "".join(
             (
@@ -115,7 +117,7 @@ def undo_confirmation_display(*, board_id: str) -> "dom_tag":
     )
 
 
-def see_solution_confirmation_display(*, board_id: str) -> "dom_tag":
+def see_solution_confirmation_display(*, board_id: str) -> dom_tag:
     htmx_attributes_confirm = {
         "data_hx_post": "".join(
             (
@@ -152,10 +154,10 @@ def see_solution_confirmation_display(*, board_id: str) -> "dom_tag":
 
 def _confirmation_dialog(
     *,
-    question: "dom_tag",
+    question: dom_tag,
     htmx_attributes_confirm: dict[str, str],
     htmx_attributes_cancel: dict[str, str],
-) -> "dom_tag":
+) -> dom_tag:
     return div(
         question,
         div(
@@ -179,8 +181,8 @@ def _confirmation_dialog(
 
 
 def _current_state_display(
-    *, game_presenter: "DailyChallengeGamePresenter", board_id: str
-) -> "dom_tag":
+    *, game_presenter: DailyChallengeGamePresenter, board_id: str
+) -> dom_tag:
     if game_presenter.solution_index is not None:
         return _see_solution_mode_display(
             game_presenter=game_presenter, board_id=board_id
@@ -216,8 +218,8 @@ def _current_state_display(
 
 
 def _undo_button(
-    *, game_presenter: "DailyChallengeGamePresenter", board_id: str
-) -> "dom_tag":
+    *, game_presenter: DailyChallengeGamePresenter, board_id: str
+) -> dom_tag:
     game_state = game_presenter.game_state
     can_undo: bool = game_presenter.is_preview or (
         game_state.current_attempt_turns_counter > 0
@@ -257,8 +259,8 @@ def _undo_button(
 
 
 def _retry_button(
-    *, game_presenter: "DailyChallengeGamePresenter", board_id: str
-) -> "dom_tag":
+    *, game_presenter: DailyChallengeGamePresenter, board_id: str
+) -> dom_tag:
     can_retry: bool = game_presenter.game_state.current_attempt_turns_counter > 0
 
     htmx_attributes = (
@@ -296,7 +298,7 @@ def _retry_button(
 
 def _see_solution_button(
     board_id: str, *, full_width: bool, see_it_again: bool = False
-) -> "dom_tag":
+) -> dom_tag:
     target_route = (
         "daily_challenge:htmx_see_daily_challenge_solution_do"
         if see_it_again
@@ -338,7 +340,7 @@ def _see_solution_button(
     )
 
 
-def _user_prefs_button(board_id: str) -> "dom_tag":
+def _user_prefs_button(board_id: str) -> dom_tag:
     htmx_attributes = {
         "data_hx_get": reverse("webui:htmx_modal_user_prefs"),
         "data_hx_target": "#modals-container",
@@ -370,8 +372,8 @@ def _button_classes(*, full_width: bool = True, disabled: bool = False) -> str:
 
 
 def _see_solution_mode_display(
-    *, game_presenter: "DailyChallengeGamePresenter", board_id: str
-) -> "dom_tag":
+    *, game_presenter: DailyChallengeGamePresenter, board_id: str
+) -> dom_tag:
     assert game_presenter.game_state.solution_index is not None
 
     is_game_over = game_presenter.is_game_over

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from django.urls import reverse
@@ -17,8 +19,8 @@ if TYPE_CHECKING:
 
 
 def user_profile_modal(
-    *, request: "HttpRequest", me: "LichessAccountInformation"
-) -> "dom_tag":
+    *, request: HttpRequest, me: LichessAccountInformation
+) -> dom_tag:
     return modal_container(
         header=h3(
             "Lichess account ",
@@ -32,7 +34,7 @@ def user_profile_modal(
     )
 
 
-def _user_profile_form(request: "HttpRequest", me: "LichessAccountInformation") -> form:
+def _user_profile_form(request: HttpRequest, me: LichessAccountInformation) -> form:
     spacing = "mb-3"
 
     return form(

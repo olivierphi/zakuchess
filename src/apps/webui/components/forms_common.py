@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from django.middleware.csrf import get_token as get_csrf_token
@@ -7,7 +9,7 @@ if TYPE_CHECKING:
     from django.http import HttpRequest
 
 
-def csrf_hidden_input(request: "HttpRequest") -> input_:
+def csrf_hidden_input(request: HttpRequest) -> input_:
     return input_(
         type="hidden", name="csrfmiddlewaretoken", value=get_csrf_token(request)
     )
