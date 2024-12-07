@@ -1,11 +1,12 @@
+from __future__ import annotations
+
 import dataclasses
 from typing import TYPE_CHECKING, cast
 
+from apps.webui.cookie_helpers import get_user_prefs_from_request
+
+from . import cookie_helpers
 from .business_logic import manage_new_daily_challenge_stats_logic
-from .cookie_helpers import (
-    get_or_create_daily_challenge_state_for_player,
-    get_user_prefs_from_request,
-)
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
@@ -22,24 +23,26 @@ class GameContext:
     and some other data that is useful for our Views (aka "Controllers" in MVC).
     """
 
-    challenge: "DailyChallenge"
+    challenge: DailyChallenge
 
     is_preview: bool
     is_staff_user: bool
     """`is_preview` is True if we're in admin preview mode"""
-    game_state: "PlayerGameState"
-    stats: "PlayerStats"
-    user_prefs: "UserPrefs"
+    game_state: PlayerGameState
+    stats: PlayerStats
+    user_prefs: UserPrefs
     created: bool
     """if the game state was created on the fly as we were initialising that object"""
     board_id: str = "main"
 
     @classmethod
-    def create_from_request(cls, request: "HttpRequest") -> "GameContext":
+    def create_from_request(cls, request: HttpRequest) -> GameContext:
         is_staff_user: bool = request.user.is_staff
         challenge, is_preview = get_current_daily_challenge_or_admin_preview(request)
-        game_state, stats, created = get_or_create_daily_challenge_state_for_player(
-            request=request, challenge=challenge
+        game_state, stats, created = (
+            cookie_helpers.get_or_create_daily_challenge_state_for_player(
+                request=request, challenge=challenge
+            )
         )
         user_prefs = get_user_prefs_from_request(request)
         # TODO: validate the "board_id" data?
@@ -63,8 +66,8 @@ class GameContext:
 
 
 def get_current_daily_challenge_or_admin_preview(
-    request: "HttpRequest",
-) -> tuple["DailyChallenge", bool]:
+    request: HttpRequest,
+) -> tuple[DailyChallenge, bool]:
     from .business_logic import get_current_daily_challenge
     from .models import DailyChallenge
 

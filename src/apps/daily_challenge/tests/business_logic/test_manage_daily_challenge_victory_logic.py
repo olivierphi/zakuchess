@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import datetime as dt
 from typing import TYPE_CHECKING
 from unittest import mock
@@ -30,7 +32,7 @@ def dummy_daily_challenge():
 def test_manage_daily_challenge_victory_wins_count(
     # Test dependencies
     dummy_daily_challenge,
-    player_game_state_minimalist: "PlayerGameState",
+    player_game_state_minimalist: PlayerGameState,
 ):
     game_state = player_game_state_minimalist
     game_state.turns_counter = 8
@@ -72,7 +74,7 @@ def test_manage_daily_challenge_victory_wins_count(
 def test_manage_daily_challenge_victory_logic_wins_distribution(
     # Test dependencies
     dummy_daily_challenge,
-    player_game_state_minimalist: "PlayerGameState",
+    player_game_state_minimalist: PlayerGameState,
     # Test parameters
     attempts_counter: int,
     expected_wins_distribution: list[int],
@@ -115,7 +117,7 @@ def test_manage_daily_challenge_victory_logic_wins_distribution(
 def test_manage_daily_challenge_victory_logic_streak_management(
     # Test dependencies
     dummy_daily_challenge,
-    player_game_state_minimalist: "PlayerGameState",
+    player_game_state_minimalist: PlayerGameState,
     # Test parameters
     current_streak: int,
     max_streak: int,

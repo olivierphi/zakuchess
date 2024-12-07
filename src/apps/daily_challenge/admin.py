@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import json
 import re
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any, Callable, Literal, TypeAlias, TypedDict, cast
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias, TypedDict, cast
 
 import chess
 from django import forms
@@ -26,6 +28,8 @@ from .presenters import DailyChallengeGamePresenter
 from .view_helpers import GameContext
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from django.db.models import QuerySet
     from django.http import HttpRequest
 
@@ -51,7 +55,7 @@ _GAME_UPDATE_COMMAND_PATTERNS: dict[GameUpdateCommandType, re.Pattern] = {
 
 _FUTURE_DAILY_CHALLENGE_COOKIE_DURATION = timedelta(minutes=20)
 
-_INVALID_FEN_FALLBACK: "FEN" = "3k4/p7/8/8/8/8/7P/3K4 w - - 0 1"
+_INVALID_FEN_FALLBACK: FEN = "3k4/p7/8/8/8/8/7P/3K4 w - - 0 1"
 
 
 class DailyChallengeAdminForm(forms.ModelForm):
@@ -106,13 +110,13 @@ class SourceTypeListFilter(admin.SimpleListFilter):
     title = _("source type")
     parameter_name = "source_type"
 
-    def lookups(self, request: "HttpRequest", model_admin: admin.ModelAdmin):
+    def lookups(self, request: HttpRequest, model_admin: admin.ModelAdmin):
         return [
             ("none", _("None")),
             ("lichess", _("Lichess")),
         ]
 
-    def queryset(self, request: "HttpRequest", queryset: "QuerySet[DailyChallenge]"):
+    def queryset(self, request: HttpRequest, queryset: QuerySet[DailyChallenge]):
         match self.value():
             case "none":
                 return queryset.filter(source__isnull=True)
@@ -186,7 +190,7 @@ class DailyChallengeAdmin(ImportExportModelAdmin):
 
     @staticmethod
     def play_future_daily_challenge_view(
-        request: "HttpRequest", lookup_key: str
+        request: HttpRequest, lookup_key: str
     ) -> HttpResponse:
         ctx = GameContext.create_from_request(request)
         clear_daily_challenge_game_state_in_session(
@@ -199,12 +203,13 @@ class DailyChallengeAdmin(ImportExportModelAdmin):
             lookup_key,
             expires=now() + _FUTURE_DAILY_CHALLENGE_COOKIE_DURATION,
             httponly=True,
+            samesite="Lax",
         )
 
         return response
 
     @method_decorator(xframe_options_exempt)
-    def preview_daily_challenge_view(self, request: "HttpRequest") -> HttpResponse:
+    def preview_daily_challenge_view(self, request: HttpRequest) -> HttpResponse:
         from dominate.util import raw
 
         from apps.chess.components.chess_board import chess_arena
@@ -297,9 +302,7 @@ class DailyChallengeAdmin(ImportExportModelAdmin):
                     else ""
                 ),
                 # Last but certainly not least, display the chess board:
-                chess_arena(
-                    game_presenter=game_presenter, status_bars=[], board_id=board_id
-                ),
+                chess_arena(game_presenter=game_presenter, board_id=board_id),
                 request=request,
             )
         )
@@ -367,7 +370,7 @@ class DailyChallengeStatsAdmin(admin.ModelAdmin):
     list_display_links = None
     view_on_site = False
 
-    def get_queryset(self, request: "HttpRequest") -> "QuerySet[DailyChallengeStats]":
+    def get_queryset(self, request: HttpRequest) -> QuerySet[DailyChallengeStats]:
         return super().get_queryset(request).select_related("challenge")
 
     def challenge_link(self, obj: DailyChallengeStats) -> str:
@@ -386,24 +389,24 @@ class DailyChallengeStatsAdmin(admin.ModelAdmin):
         return f"{obj.wins_count/total:.1%}" if total else "-"
 
     # Stats are read-only:
-    def has_add_permission(self, request: "HttpRequest") -> bool:
+    def has_add_permission(self, request: HttpRequest) -> bool:
         return False
 
     def has_change_permission(
-        self, request: "HttpRequest", obj: DailyChallengeStats | None = None
+        self, request: HttpRequest, obj: DailyChallengeStats | None = None
     ) -> bool:
         return False
 
     def has_delete_permission(
-        self, request: "HttpRequest", obj: DailyChallengeStats | None = None
+        self, request: HttpRequest, obj: DailyChallengeStats | None = None
     ) -> bool:
         return False
 
 
 def _get_game_presenter(
-    fen: "FEN | None",
+    fen: FEN | None,
     bot_first_move: str | None,
-    intro_turn_speech_square: "Square | None",
+    intro_turn_speech_square: Square | None,
     game_update_cmd: GameUpdateCommand | None,
 ) -> DailyChallengeGamePresenter:
     from .models import PlayerGameState
@@ -418,7 +421,7 @@ def _get_game_presenter(
     )
     challenge_preview = DailyChallenge(
         fen=fen,
-        teams=game_teams,
+        teams=game_teams.to_dict(),
         piece_role_by_square=piece_role_by_square,
     )
     setattr(challenge_preview, "max_turns_count", 40)  # we need this to return a value
@@ -444,20 +447,20 @@ def _get_game_presenter(
     )
 
 
-def _apply_game_update(*, fen: "FEN", game_update_cmd: GameUpdateCommand) -> "FEN":
+def _apply_game_update(*, fen: FEN, game_update_cmd: GameUpdateCommand) -> FEN:
     """Dispatches the game update command to the appropriate function."""
     cmd_type, params = game_update_cmd
     return _GAME_UPDATE_MAPPING[cmd_type](fen=fen, **params)
 
 
-def _add_piece_to_square(*, fen: "FEN", target: "Square", piece: "PieceSymbol") -> str:
+def _add_piece_to_square(*, fen: FEN, target: Square, piece: PieceSymbol) -> str:
     chess_board = chess.Board(fen)
     square_int = chess.parse_square(target.lower())
     chess_board.set_piece_at(square_int, chess.Piece.from_symbol(piece))
     return cast("FEN", chess_board.fen())
 
 
-def _move_piece_to_square(*, fen: "FEN", from_: "Square", to: "Square") -> str:
+def _move_piece_to_square(*, fen: FEN, from_: Square, to: Square) -> str:
     chess_board = chess.Board(fen)
     square_from_int = chess.parse_square(from_.lower())
     square_to_int = chess.parse_square(to.lower())
@@ -467,21 +470,21 @@ def _move_piece_to_square(*, fen: "FEN", from_: "Square", to: "Square") -> str:
     return cast("FEN", chess_board.fen())
 
 
-def _remove_piece_from_square(*, fen: "FEN", target: "Square") -> str:
+def _remove_piece_from_square(*, fen: FEN, target: Square) -> str:
     chess_board = chess.Board(fen)
     square_int = chess.parse_square(target.lower())
     chess_board.remove_piece_at(square_int)
     return cast("FEN", chess_board.fen())
 
 
-def _mirror_board(*, fen: "FEN") -> str:
+def _mirror_board(*, fen: FEN) -> str:
     chess_board = chess.Board(fen)
     chess_board.apply_mirror()
     chess_board.turn = chess.WHITE  # it's still the human player's turn
     return cast("FEN", chess_board.fen())
 
 
-def _solve_problem(*, fen: "FEN") -> str:
+def _solve_problem(*, fen: FEN) -> str:
     # This is a no-op on the server, as we solve problems on the frontend side
     chess_board = chess.Board(fen)
     return cast("FEN", chess_board.fen())
@@ -530,7 +533,7 @@ class DailyChallengePreviewForm(forms.Form):
             raise ValidationError(exc) from exc
         return bot_first_move
 
-    def clean_intro_turn_speech_square(self) -> "Square | None":
+    def clean_intro_turn_speech_square(self) -> Square | None:
         intro_turn_speech_square = self.cleaned_data.get("intro_turn_speech_square", "")
         if not intro_turn_speech_square or len(intro_turn_speech_square) != 2:
             return None
@@ -560,11 +563,11 @@ class DailyChallengePreviewForm(forms.Form):
     if TYPE_CHECKING:
 
         class CleanedData(TypedDict):
-            fen: "FEN"
+            fen: FEN
             bot_first_move: str | None
             bot_depth: int
             player_simulated_depth: int
-            intro_turn_speech_square: "Square | None"
+            intro_turn_speech_square: Square | None
             game_update: GameUpdateCommand
 
         @property

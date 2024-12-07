@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import random
 from typing import TYPE_CHECKING
 
 from dominate.util import raw
 
-from apps.chess.helpers import (
+from apps.chess.chess_helpers import (
     chess_lib_square_to_square,
     player_side_to_chess_lib_color,
     team_member_role_from_piece_role,
@@ -13,7 +15,8 @@ from apps.chess.presenters import SpeechBubbleData
 if TYPE_CHECKING:
     import chess
 
-    from apps.chess.types import PlayerSide, Square, TeamMember
+    from apps.chess.models import TeamMember
+    from apps.chess.types import PlayerSide, Square
     from apps.daily_challenge.presenters import DailyChallengeGamePresenter
 
 # This code was originally part of the DailyChallengeGamePresenter class,
@@ -36,7 +39,7 @@ _UNIT_LOST_REACTIONS: tuple[tuple[str, float], ...] = (
 
 
 def get_speech_bubble(
-    game_presenter: "DailyChallengeGamePresenter",
+    game_presenter: DailyChallengeGamePresenter,
 ) -> SpeechBubbleData | None:
     if game_presenter.game_state.solution_index is not None:
         return None
@@ -86,16 +89,10 @@ def get_speech_bubble(
         team_member_role = team_member_role_from_piece_role(
             game_presenter.captured_piece_role
         )
-        captured_team_member: "TeamMember" = (
-            game_presenter.team_members_by_role_by_side[
-                game_presenter.challenge.my_side
-            ][team_member_role]
-        )
-        if isinstance(name := captured_team_member["name"], str):
-            # TODO: remove that code when we finished migrating to a list-name
-            captured_team_member_display = name.split(" ")[0]
-        else:
-            captured_team_member_display = name[0]
+        captured_team_member: TeamMember = game_presenter.team_members_by_role_by_side[
+            game_presenter.challenge.my_side
+        ][team_member_role]
+        captured_team_member_display = captured_team_member.name[0]
         reaction, reaction_time_out = random.choice(_UNIT_LOST_REACTIONS)
         return SpeechBubbleData(
             text=reaction.format(captured_team_member_display),
@@ -130,7 +127,7 @@ def get_speech_bubble(
         )
 
     if (
-        game_presenter.is_player_turn
+        game_presenter.is_my_turn
         and game_presenter.is_htmx_request
         and not game_presenter.selected_piece
         and game_presenter.naive_score < -3
@@ -151,10 +148,10 @@ def get_speech_bubble(
 
 
 def _bot_leftmost_piece_square(
-    chess_board: "chess.Board", bot_side: "PlayerSide"
-) -> "Square":
+    chess_board: chess.Board, bot_side: PlayerSide
+) -> Square:
     leftmost_rank = 9  # *will* be overridden by our loop
-    leftmost_square: "Square" = "h8"  # ditto
+    leftmost_square: Square = "h8"  # ditto
     bot_color = player_side_to_chess_lib_color(bot_side)
     for square_int, piece in chess_board.piece_map().items():
         if piece.color != bot_color:
@@ -167,11 +164,11 @@ def _bot_leftmost_piece_square(
     return leftmost_square
 
 
-def _my_king_square(game_presenter: "DailyChallengeGamePresenter") -> "Square":
+def _my_king_square(game_presenter: DailyChallengeGamePresenter) -> Square:
     return _king_square(game_presenter.chess_board, game_presenter.challenge.my_side)
 
 
-def _king_square(chess_board: "chess.Board", player_side: "PlayerSide") -> "Square":
+def _king_square(chess_board: chess.Board, player_side: PlayerSide) -> Square:
     return chess_lib_square_to_square(
         chess_board.king(player_side_to_chess_lib_color(player_side))
     )

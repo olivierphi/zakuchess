@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import copy
 from typing import TYPE_CHECKING
 
@@ -9,10 +11,10 @@ if TYPE_CHECKING:
 
 def restart_daily_challenge(
     *,
-    challenge: "DailyChallenge",
-    game_state: "PlayerGameState",
+    challenge: DailyChallenge,
+    game_state: PlayerGameState,
     is_staff_user: bool = False,
-) -> "PlayerGameState":
+) -> PlayerGameState:
     # These fields are always set on a published challenge - let's make the
     # type checker happy:
     assert (

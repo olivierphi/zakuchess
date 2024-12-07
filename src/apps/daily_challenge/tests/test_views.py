@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from http import HTTPStatus
 from typing import TYPE_CHECKING
 from unittest import mock
@@ -35,8 +37,8 @@ def test_game_smoke_test(
     # Mocks
     get_current_challenge_mock: mock.MagicMock,
     # Test dependencies
-    challenge_minimalist: "DailyChallenge",
-    client: "DjangoClient",
+    challenge_minimalist: DailyChallenge,
+    client: DjangoClient,
 ):
     get_current_challenge_mock.return_value = challenge_minimalist
 
@@ -108,8 +110,8 @@ def test_htmx_game_select_piece_input_validation(
     # Mocks
     get_current_challenge_mock: mock.MagicMock,
     # Test dependencies
-    challenge_minimalist: "DailyChallenge",
-    client: "DjangoClient",
+    challenge_minimalist: DailyChallenge,
+    client: DjangoClient,
     # Test parameters
     location: str,
     expected_status_code: int,
@@ -130,7 +132,7 @@ def test_htmx_game_select_piece_input_validation(
         "expected_team_member_name_display",
     ),
     (
-        ("a1", "KING 1"),
+        ("a1", "KING"),
         ("f7", "QUEEN 1"),
     ),
 )
@@ -140,10 +142,10 @@ def test_htmx_game_select_piece_returned_html(
     # Mocks
     get_current_challenge_mock: mock.MagicMock,
     # Test dependencies
-    challenge_minimalist: "DailyChallenge",
-    client: "DjangoClient",
+    challenge_minimalist: DailyChallenge,
+    client: DjangoClient,
     # Test parameters
-    square: "Square",
+    square: Square,
     expected_team_member_name_display: str,
 ):
     get_current_challenge_mock.return_value = challenge_minimalist
@@ -157,7 +159,7 @@ def test_htmx_game_select_piece_returned_html(
 
     response_html = response.content.decode()
     assert expected_team_member_name_display in response_html
-    not_expected_team_member_names_display = {"KING 1", "QUEEN 1", "BISHOP 1"} - {
+    not_expected_team_member_names_display = {"KING", "QUEEN 1", "BISHOP 1"} - {
         expected_team_member_name_display
     }
     for other_team_member_name in not_expected_team_member_names_display:
@@ -184,8 +186,8 @@ def test_htmx_game_move_piece_input_validation(
     # Mocks
     get_current_challenge_mock: mock.MagicMock,
     # Test dependencies
-    challenge_minimalist: "DailyChallenge",
-    client: "DjangoClient",
+    challenge_minimalist: DailyChallenge,
+    client: DjangoClient,
     # Test parameters
     input_: dict,
     expected_status_code: HTTPStatus,
@@ -230,8 +232,8 @@ def test_htmx_game_play_bot_move_validation(
     # Mocks
     get_current_challenge_mock: mock.MagicMock,
     # Test dependencies
-    challenge_minimalist: "DailyChallenge",
-    client: "DjangoClient",
+    challenge_minimalist: DailyChallenge,
+    client: DjangoClient,
     # Test parameters
     input_: dict,
     expected_status_code: int,
@@ -251,8 +253,8 @@ def test_htmx_game_select_piece_should_fail_on_empty_square(
     # Mocks
     get_current_challenge_mock: mock.MagicMock,
     # Test dependencies
-    challenge_minimalist: "DailyChallenge",
-    client: "DjangoClient",
+    challenge_minimalist: DailyChallenge,
+    client: DjangoClient,
 ):
     get_current_challenge_mock.return_value = challenge_minimalist
 
@@ -271,8 +273,8 @@ def test_stats_modal_smoke_test(
     # Mocks
     get_current_challenge_mock: mock.MagicMock,
     # Test dependencies
-    challenge_minimalist: "DailyChallenge",
-    client: "DjangoClient",
+    challenge_minimalist: DailyChallenge,
+    client: DjangoClient,
 ):
     get_current_challenge_mock.return_value = challenge_minimalist
 
@@ -289,9 +291,9 @@ def test_stats_modal_can_display_todays_victory_metrics_test(
     # Mocks
     get_current_challenge_mock: mock.MagicMock,
     # Test dependencies
-    challenge_minimalist: "DailyChallenge",
-    client: "DjangoClient",
-    cleared_django_cache,
+    challenge_minimalist: DailyChallenge,
+    client: DjangoClient,
+    cleared_django_default_cache,
 ):
     get_current_challenge_mock.return_value = challenge_minimalist
 
@@ -311,12 +313,12 @@ def test_stats_modal_can_display_todays_victory_metrics_test(
 
     # Now let's win the game in 2 attempts, and re-open that modal:
     # 1st attempt:
-    attempt_1_moves: "list[MoveTuple]" = [("b8", "a8"), ("h2", "g1"), ("a8", "b8")]
+    attempt_1_moves: list[MoveTuple] = [("b8", "a8"), ("h2", "g1"), ("a8", "b8")]
     play_moves(client, attempt_1_moves, starting_side="bot")
     start_new_attempt(client)
     # 2nd attempt, ends with a mate:
     # fmt:off
-    attempt_2_moves:"list[MoveTuple]" = [("b8", "a8"), ("h2", "g1"), ("a8", "b8"), ("g1", "h2"), ("b8", "a8"), ("f7", "f8")]
+    attempt_2_moves:list[MoveTuple] = [("b8", "a8"), ("h2", "g1"), ("a8", "b8"), ("g1", "h2"), ("b8", "a8"), ("f7", "f8")]
     # fmt:on
     play_moves(client, attempt_2_moves, starting_side="bot")
 
@@ -335,8 +337,8 @@ def test_help_modal_smoke_test(
     # Mocks
     get_current_challenge_mock: mock.MagicMock,
     # Test dependencies
-    challenge_minimalist: "DailyChallenge",
-    client: "DjangoClient",
+    challenge_minimalist: DailyChallenge,
+    client: DjangoClient,
 ):
     get_current_challenge_mock.return_value = challenge_minimalist
 

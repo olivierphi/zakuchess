@@ -33,20 +33,15 @@ urlpatterns = [
         name="htmx_daily_challenge_modal_stats",
     ),
     path(
-        "htmx/daily-challenge/modals/user-prefs/",
-        views.htmx_daily_challenge_user_prefs_modal,
-        name="htmx_daily_challenge_modal_user_prefs",
-    ),
-    path(
         "htmx/daily-challenge/modals/help/",
         views.htmx_daily_challenge_help_modal,
         name="htmx_daily_challenge_modal_help",
     ),
     # Restart views
     path(
-        "htmx/daily-challenge/restart/ask-confirmation/",
-        views.htmx_restart_daily_challenge_ask_confirmation,
-        name="htmx_restart_daily_challenge_ask_confirmation",
+        "htmx/daily-challenge/restart/confirmation-dialog/",
+        views.htmx_restart_daily_challenge_confirmation_dialog,
+        name="htmx_restart_daily_challenge_confirmation_dialog",
     ),
     path(
         "htmx/daily-challenge/restart/do/",
@@ -55,26 +50,20 @@ urlpatterns = [
     ),
     # Undo views
     path(
-        "htmx/daily-challenge/undo/ask-confirmation/",
-        views.htmx_undo_last_move_ask_confirmation,
-        name="htmx_undo_last_move_ask_confirmation",
+        "htmx/daily-challenge/undo/confirmation-dialog/",
+        views.htmx_undo_last_move_confirmation_dialog,
+        name="htmx_undo_last_move_confirmation_dialog",
     ),
     path(
         "htmx/daily-challenge/undo/do/",
         views.htmx_undo_last_move_do,
         name="htmx_undo_last_move_do",
     ),
-    # User prefs views
-    path(
-        "htmx/daily-challenge/user-prefs/",
-        views.htmx_daily_challenge_user_prefs_save,
-        name="htmx_daily_challenge_user_prefs_save",
-    ),
     # "See the solution" views
     path(
-        "htmx/daily-challenge/see-solution/ask-confirmation/",
-        views.htmx_see_daily_challenge_solution_ask_confirmation,
-        name="htmx_see_daily_challenge_solution_ask_confirmation",
+        "htmx/daily-challenge/see-solution/confirmation-dialog/",
+        views.htmx_see_daily_challenge_solution_confirmation_dialog,
+        name="htmx_see_daily_challenge_solution_confirmation_dialog",
     ),
     path(
         "htmx/daily-challenge/see-solution/do/",

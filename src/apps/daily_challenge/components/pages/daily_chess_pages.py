@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import functools
 from string import Template
 from typing import TYPE_CHECKING
@@ -5,7 +7,7 @@ from typing import TYPE_CHECKING
 from django.conf import settings
 from django.templatetags.static import static
 from django.urls import reverse
-from dominate.tags import button, div, meta, script
+from dominate.tags import div, meta, script
 from dominate.util import raw
 
 from apps.chess.components.chess_board import (
@@ -18,11 +20,18 @@ from apps.chess.components.misc_ui import (
     reset_chess_engine_worker,
     speech_bubble_container,
 )
+from apps.daily_challenge.components.companion_bars.bottom_companion_bar import (
+    status_bar,
+)
+from apps.daily_challenge.components.companion_bars.top_companion_bar import (
+    daily_challenge_bar,
+)
+from apps.webui.components.atoms.buttons import zc_header_icon_button
 from apps.webui.components.layout import page
+from apps.webui.components.misc_ui.svg_icons import ICON_SVG_HELP
+from apps.webui.components.misc_ui.user_prefs_modal import user_prefs_button
 
-from ..misc_ui.daily_challenge_bar import daily_challenge_bar
-from ..misc_ui.status_bar import status_bar
-from ..misc_ui.svg_icons import ICON_SVG_COG, ICON_SVG_HELP, ICON_SVG_STATS
+from ..misc_ui.svg_icons import ICON_SVG_STATS
 
 if TYPE_CHECKING:
     from typing import Literal
@@ -37,95 +46,95 @@ if TYPE_CHECKING:
 
 def daily_challenge_page(
     *,
-    game_presenter: "DailyChallengeGamePresenter",
-    request: "HttpRequest",
+    game_presenter: DailyChallengeGamePresenter,
+    request: HttpRequest,
     board_id: str,
 ) -> str:
     return page(
         chess_arena(
             game_presenter=game_presenter,
             board_id=board_id,
-            status_bars=[
-                daily_challenge_bar(game_presenter=game_presenter, board_id=board_id),
-                status_bar(
+            companion_bars={
+                "top": daily_challenge_bar(
+                    game_presenter=game_presenter, board_id=board_id
+                ),
+                "bottom": status_bar(
                     game_presenter=game_presenter,
                     board_id=board_id,
                 ),
-            ],
+            },
         ),
         _open_help_modal() if game_presenter.is_very_first_game else div(""),
         request=request,
         left_side_buttons=[_stats_button()],
-        right_side_buttons=[_user_prefs_button(), _help_button()],
+        right_side_buttons=[user_prefs_button(), _help_button()],
         head_children=_open_graph_meta_tags(),
     )
 
 
 def daily_challenge_moving_parts_fragment(
     *,
-    game_presenter: "DailyChallengeGamePresenter",
-    request: "HttpRequest",
+    game_presenter: DailyChallengeGamePresenter,
+    request: HttpRequest,
     board_id: str,
 ) -> str:
     return "\n".join(
-        (
-            dom_tag.render(pretty=settings.DEBUG)
-            for dom_tag in (
-                chess_pieces(
-                    game_presenter=game_presenter,
-                    board_id=board_id,
-                ),
-                chess_available_targets(
-                    game_presenter=game_presenter,
-                    board_id=board_id,
-                    data_hx_swap_oob="outerHTML",
-                ),
-                (
-                    chess_last_move(
-                        game_presenter=game_presenter,
-                        board_id=board_id,
-                        data_hx_swap_oob="outerHTML",
-                    )
-                    if game_presenter.refresh_last_move
-                    else div("")
-                ),
-                daily_challenge_bar(
+        dom_tag.render(pretty=settings.DEBUG)
+        for dom_tag in (
+            chess_pieces(
+                game_presenter=game_presenter,
+                board_id=board_id,
+            ),
+            chess_available_targets(
+                game_presenter=game_presenter,
+                board_id=board_id,
+                data_hx_swap_oob="outerHTML",
+            ),
+            (
+                chess_last_move(
                     game_presenter=game_presenter,
                     board_id=board_id,
                     data_hx_swap_oob="outerHTML",
-                ),
-                status_bar(
+                )
+                if game_presenter.refresh_last_move
+                else div("")
+            ),
+            daily_challenge_bar(
+                game_presenter=game_presenter,
+                board_id=board_id,
+                htmx_attrs={"data_hx_swap_oob": "outerHTML"},
+            ),
+            status_bar(
+                game_presenter=game_presenter,
+                board_id=board_id,
+                htmx_attrs={"data_hx_swap_oob": "outerHTML"},
+            ),
+            div(
+                speech_bubble_container(
                     game_presenter=game_presenter,
                     board_id=board_id,
-                    data_hx_swap_oob="outerHTML",
                 ),
-                div(
-                    speech_bubble_container(
-                        game_presenter=game_presenter,
-                        board_id=board_id,
-                    ),
-                    id=f"chess-speech-container-{board_id}",
-                    data_hx_swap_oob="innerHTML",
-                ),
-                *(
-                    [reset_chess_engine_worker()]
-                    if game_presenter.challenge_current_attempt_turns_counter == 0
-                    else []
-                ),
-                *([_open_stats_modal()] if game_presenter.just_won else []),
-            )
+                id=f"chess-speech-container-{board_id}",
+                data_hx_swap_oob="innerHTML",
+            ),
+            *(
+                [reset_chess_engine_worker()]
+                if game_presenter.challenge_current_attempt_turns_counter == 0
+                else []
+            ),
+            *([_open_stats_modal()] if game_presenter.just_won else []),
         )
     )
 
 
-def _stats_button() -> "dom_tag":
+def _stats_button() -> dom_tag:
     htmx_attributes = {
         "data_hx_get": reverse("daily_challenge:htmx_daily_challenge_modal_stats"),
         "data_hx_target": "#modals-container",
         "data_hx_swap": "outerHTML",
     }
 
-    return _header_button(
+    return zc_header_icon_button(
         icon=ICON_SVG_STATS,
         title="Visualise your stats for daily challenges",
         id_="stats-button",
@@ -133,29 +142,14 @@ def _stats_button() -> "dom_tag":
     )
 
 
-def _user_prefs_button() -> "dom_tag":
-    htmx_attributes = {
-        "data_hx_get": reverse("daily_challenge:htmx_daily_challenge_modal_user_prefs"),
-        "data_hx_target": "#modals-container",
-        "data_hx_swap": "outerHTML",
-    }
-
-    return _header_button(
-        icon=ICON_SVG_COG,
-        title="Edit preferences",
-        id_="user-prefs-button",
-        htmx_attributes=htmx_attributes,
-    )
-
-
-def _help_button() -> "dom_tag":
+def _help_button() -> dom_tag:
     htmx_attributes = {
         "data_hx_get": reverse("daily_challenge:htmx_daily_challenge_modal_help"),
         "data_hx_target": "#modals-container",
         "data_hx_swap": "outerHTML",
     }
 
-    return _header_button(
+    return zc_header_icon_button(
         icon=ICON_SVG_HELP,
         title="How to play",
         id_="help-button",
@@ -163,26 +157,14 @@ def _help_button() -> "dom_tag":
     )
 
 
-def _header_button(
-    *, icon: str, title: str, id_: str, htmx_attributes: dict[str, str]
-) -> "dom_tag":
-    return button(
-        icon,
-        cls="block px-1 py-1 text-sm text-slate-50 hover:text-slate-400",
-        title=title,
-        id=id_,
-        **htmx_attributes,
-    )
-
-
 @functools.cache
-def _open_stats_modal() -> "dom_tag":
+def _open_stats_modal() -> dom_tag:
     # We open the stats modal 2 seconds after the game is won.
     return _open_modal("stats", 2_000)
 
 
 @functools.cache
-def _open_help_modal() -> "dom_tag":
+def _open_help_modal() -> dom_tag:
     # We open the stats modal 4 seconds after the bot played their first move.
     return _open_modal("help", 4_000)
 
@@ -196,7 +178,8 @@ _MODAL_TEMPLATE = Template(
 )
 
 
-def _open_modal(modal_id: "Literal['stats', 'help']", delay: int) -> "dom_tag":
+def _open_modal(modal_id: Literal["stats", "help"], delay: int) -> dom_tag:
+    # TODO: use a web component for this
     return div(
         script(
             raw(_MODAL_TEMPLATE.substitute(MODAL_ID=modal_id, DELAY=delay)),
@@ -206,7 +189,7 @@ def _open_modal(modal_id: "Literal['stats', 'help']", delay: int) -> "dom_tag":
     )
 
 
-def _open_graph_meta_tags() -> "tuple[dom_tag, ...]":
+def _open_graph_meta_tags() -> tuple[dom_tag, ...]:
     return (
         meta(
             property="og:image",

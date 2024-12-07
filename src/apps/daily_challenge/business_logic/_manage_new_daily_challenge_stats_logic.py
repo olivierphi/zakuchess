@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from ..models import DailyChallengeStats
@@ -8,7 +10,7 @@ if TYPE_CHECKING:
 
 
 def manage_new_daily_challenge_stats_logic(
-    stats: "PlayerStats", *, is_preview: bool = False, is_staff_user: bool = False
+    stats: PlayerStats, *, is_preview: bool = False, is_staff_user: bool = False
 ) -> None:
     """
     When a player starts a new daily challenge,

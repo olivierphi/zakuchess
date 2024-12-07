@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from django.utils.timezone import now
@@ -10,8 +12,8 @@ if TYPE_CHECKING:
 
 def manage_daily_challenge_moved_piece_logic(
     *,
-    game_state: "PlayerGameState",
-    stats: "PlayerStats",
+    game_state: PlayerGameState,
+    stats: PlayerStats,
     is_preview: bool = False,
     is_staff_user: bool = False,
 ) -> None:

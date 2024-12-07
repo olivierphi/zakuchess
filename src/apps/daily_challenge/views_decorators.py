@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import functools
 from typing import TYPE_CHECKING
 
 from django.core.exceptions import BadRequest
 
-from apps.chess.types import ChessLogicException
-
+from ..chess.exceptions import ChessLogicException
 from ..utils.views_helpers import htmx_aware_redirect
 from .cookie_helpers import clear_daily_challenge_game_state_in_session
 from .view_helpers import GameContext
@@ -28,7 +29,7 @@ def handle_chess_logic_exceptions(func):
 
 def with_game_context(func):
     @functools.wraps(func)
-    def wrapper(request: "HttpRequest", *args, **kwargs):
+    def wrapper(request: HttpRequest, *args, **kwargs):
         ctx = GameContext.create_from_request(request)
         return func(request, *args, ctx=ctx, **kwargs)
 
@@ -37,7 +38,7 @@ def with_game_context(func):
 
 def redirect_if_game_not_started(func):
     @functools.wraps(func)
-    def wrapper(request: "HttpRequest", *args, ctx: GameContext, **kwargs):
+    def wrapper(request: HttpRequest, *args, ctx: GameContext, **kwargs):
         if ctx.created:
             return _redirect_to_game_view_screen_with_brand_new_game(request, ctx.stats)
         return func(request, *args, ctx=ctx, **kwargs)
@@ -46,8 +47,8 @@ def redirect_if_game_not_started(func):
 
 
 def _redirect_to_game_view_screen_with_brand_new_game(
-    request: "HttpRequest", player_stats: "PlayerStats"
-) -> "HttpResponse":
+    request: HttpRequest, player_stats: PlayerStats
+) -> HttpResponse:
     clear_daily_challenge_game_state_in_session(
         request=request, player_stats=player_stats
     )

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import csv
 import re
 from pathlib import Path
@@ -134,7 +136,7 @@ class Command(BaseCommand):
 
 def get_bot_first_move_and_resulting_fen(
     csv_row: dict,
-) -> "BotFirstMoveAndResultingFen":
+) -> BotFirstMoveAndResultingFen:
     fen_before_bot_first_move = csv_row["FEN"]
     bot_first_move_uci = csv_row["Moves"][0:4]
 

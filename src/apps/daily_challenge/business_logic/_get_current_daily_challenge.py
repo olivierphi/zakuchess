@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING
 
@@ -11,7 +13,7 @@ if TYPE_CHECKING:
 _logger = logging.getLogger("apps.daily_challenge")
 
 
-def get_current_daily_challenge() -> "DailyChallenge":
+def get_current_daily_challenge() -> DailyChallenge:
     from ..models import DailyChallenge
 
     today = timezone.now().date()

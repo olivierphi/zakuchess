@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from ..models import PlayerGameOverState
@@ -7,7 +9,7 @@ if TYPE_CHECKING:
 
 
 def manage_daily_challenge_defeat_logic(
-    *, game_state: "PlayerGameState", is_preview: bool = False
+    *, game_state: PlayerGameState, is_preview: bool = False
 ) -> None:
     """
     When a player loses a daily challenge, we may need to update part of their game state.

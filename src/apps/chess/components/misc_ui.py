@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import random
 from typing import TYPE_CHECKING, Literal
 
@@ -27,7 +29,7 @@ if TYPE_CHECKING:
 # TODO: manage i18n
 
 
-def modal_container(*, header: "h3", body: div) -> "dom_tag":
+def modal_container(*, header: h3, body: div) -> dom_tag:
     # Converted from https://flowbite.com/docs/components/modal/
 
     modal_header = div(
@@ -79,8 +81,8 @@ def modal_container(*, header: "h3", body: div) -> "dom_tag":
 
 
 def speech_bubble_container(
-    *, game_presenter: "GamePresenter", board_id: str, **extra_attrs: str
-) -> "dom_tag":
+    *, game_presenter: GamePresenter, board_id: str, **extra_attrs: str
+) -> dom_tag:
     if speech_bubble_data := game_presenter.speech_bubble:
         return speech_bubble(
             game_presenter=game_presenter,
@@ -97,14 +99,14 @@ def speech_bubble_container(
 
 def speech_bubble(
     *,
-    game_presenter: "GamePresenter",
-    text: "str | dominate_text",
-    square: "Square",
+    game_presenter: GamePresenter,
+    text: str | dominate_text,
+    square: Square,
     time_out: float | None,
-    character_display: "PieceRole | None" = None,
+    character_display: PieceRole | None = None,
     board_id: str,
     **extra_attrs: str,
-) -> "dom_tag":
+) -> dom_tag:
     from .chess_board import chess_character_display
 
     relative_position: Literal["left", "right"] = "right" if square[1] < "5" else "left"
@@ -222,5 +224,5 @@ def speech_bubble(
     )
 
 
-def reset_chess_engine_worker() -> "dom_tag":
+def reset_chess_engine_worker() -> dom_tag:
     return script(raw("""window.resetChessEngineWorker()"""))

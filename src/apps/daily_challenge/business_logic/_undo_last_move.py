@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import logging
 import textwrap
 from typing import TYPE_CHECKING
 
-from apps.chess.helpers import uci_move_squares
+from apps.chess.chess_helpers import uci_move_squares
 
 from ..models import DailyChallengeStats
 from ._move_daily_challenge_piece import move_daily_challenge_piece
@@ -20,10 +22,10 @@ _MOVES_STR_MIN_LENGTH = (
 
 def undo_last_move(
     *,
-    challenge: "DailyChallenge",
-    game_state: "PlayerGameState",
+    challenge: DailyChallenge,
+    game_state: PlayerGameState,
     is_staff_user: bool = False,
-) -> "PlayerGameState":
+) -> PlayerGameState:
     # A published challenge always has a `piece_role_by_square`:
     assert challenge.piece_role_by_square
 

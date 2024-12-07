@@ -12,8 +12,7 @@
 # uv-related stuff:
 /bin/uv
 /bin/uvx
-/.uv.env
-/.uv.env.fish
+*.egg-info
 
 /.docker/*
 !/.docker/.gitkeep

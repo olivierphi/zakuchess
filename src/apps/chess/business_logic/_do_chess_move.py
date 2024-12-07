@@ -1,15 +1,16 @@
-from functools import lru_cache
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Literal, cast
 
 import chess
 
-from apps.chess.helpers import (
+from ..chess_helpers import (
     chess_lib_piece_to_piece_type,
     file_and_rank_from_square,
     square_from_file_and_rank,
 )
-from apps.chess.types import (
-    ChessInvalidMoveException,
+from ..exceptions import ChessInvalidMoveException
+from ..types import (
     ChessMoveResult,
     GameOverDescription,
 )
@@ -19,12 +20,12 @@ if TYPE_CHECKING:
 
     from apps.chess.types import FEN, GameEndReason, MoveTuple, PlayerSide, Rank, Square
 
-_CHESS_COLOR_TO_PLAYER_SIDE_MAPPING: "Mapping[chess.Color, PlayerSide]" = {
+_CHESS_COLOR_TO_PLAYER_SIDE_MAPPING: Mapping[chess.Color, PlayerSide] = {
     True: "w",
     False: "b",
 }
 
-_CHESS_OUTCOME_TO_GAME_END_REASON_MAPPING: "Mapping[chess.Termination, GameEndReason]" = {
+_CHESS_OUTCOME_TO_GAME_END_REASON_MAPPING: Mapping[chess.Termination, GameEndReason] = {
     chess.Termination.CHECKMATE: "checkmate",
     chess.Termination.STALEMATE: "stalemate",
     chess.Termination.INSUFFICIENT_MATERIAL: "insufficient_material",
@@ -45,7 +46,7 @@ _CASTLING_KING_MOVES: tuple[tuple[_CastlingPossibleFrom, _CastlingPossibleTo], .
     ("e8", "c8"),
 )
 
-_CASTLING_ROOK_MOVE: "Mapping[_CastlingPossibleTo, tuple[Square, Square]]" = {
+_CASTLING_ROOK_MOVE: Mapping[_CastlingPossibleTo, tuple[Square, Square]] = {
     # {king new square: (rook previous square, rook new square)} dict:
     "g1": ("h1", "f1"),
     "c1": ("a1", "d1"),
@@ -53,7 +54,7 @@ _CASTLING_ROOK_MOVE: "Mapping[_CastlingPossibleTo, tuple[Square, Square]]" = {
     "c8": ("a8", "d8"),
 }
 
-_EN_PASSANT_CAPTURED_PIECES_RANK_CONVERSION: dict["Rank", "Rank"] = {
+_EN_PASSANT_CAPTURED_PIECES_RANK_CONVERSION: dict[Rank, Rank] = {
     # if a pawn was captured by en passant targeting a6, its position on the board
     # before at the moment it's been captured was a5:
     "6": "5",
@@ -62,12 +63,27 @@ _EN_PASSANT_CAPTURED_PIECES_RANK_CONVERSION: dict["Rank", "Rank"] = {
 }
 
 
-@lru_cache(maxsize=512)
-def do_chess_move(*, fen: "FEN", from_: "Square", to: "Square") -> ChessMoveResult:
-    moves: list["MoveTuple"] = []
-    captured: "Square | None" = None
+def do_chess_move(
+    *,
+    from_: Square,
+    to: Square,
+    fen: FEN | None = None,
+    chess_board: chess.Board | None = None,
+) -> ChessMoveResult:
+    """
+    Execute a move on the given board and return the result of that move.
+    The board can be passed as a FEN string *or* as a `chess.Board` object.
+    """
+    if (not fen and not chess_board) or (fen and chess_board):
+        raise ValueError(
+            "You must provide either a FEN string or a `chess.Board` object"
+        )
 
-    chess_board = chess.Board(fen)
+    moves: list[MoveTuple] = []
+    captured: Square | None = None
+
+    if not chess_board:
+        chess_board = chess.Board(fen)
     chess_from = chess.parse_square(from_)
     chess_to = chess.parse_square(to)
 

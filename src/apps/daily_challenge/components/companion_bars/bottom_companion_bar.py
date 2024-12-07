@@ -1,22 +1,26 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
-from dominate.tags import b, button, div, p
+from dominate.tags import b, div, p
 from dominate.util import raw
 
-from apps.chess.helpers import (
+from apps.chess.chess_helpers import (
     piece_name_from_piece_role,
     player_side_from_piece_role,
     type_from_piece_role,
 )
 from apps.daily_challenge.components.misc_ui.help import (
-    character_type_tip,
     chess_status_bar_tip,
-    chess_unit_symbol_display,
     help_content,
     unit_display_container,
 )
-
-from .common_styles import BUTTON_CLASSES
+from apps.webui.components.atoms.buttons import zc_button
+from apps.webui.components.chess_units import (
+    character_type_tip,
+    chess_unit_symbol_display,
+)
+from apps.webui.components.molecules.chess_arena_companion_bars import companion_bar
 
 if TYPE_CHECKING:
     from dominate.tags import dom_tag
@@ -25,11 +29,12 @@ if TYPE_CHECKING:
 
 
 def status_bar(
-    *, game_presenter: "DailyChallengeGamePresenter", board_id: str, **extra_attrs: str
-) -> "dom_tag":
-    from apps.chess.components.chess_board import INFO_BARS_COMMON_CLASSES
-
-    # TODO: split this function into smaller ones
+    *,
+    game_presenter: DailyChallengeGamePresenter,
+    board_id: str,
+    htmx_attrs: dict[str, str] | None = None,
+) -> dom_tag:
+    # TODO: split this function into smaller ones?
 
     inner_content: dom_tag = div("status to implement")
 
@@ -42,13 +47,15 @@ def status_bar(
         inner_content = div(
             help_content(
                 challenge_solution_turns_count=game_presenter.challenge_solution_turns_count,
-                factions_tuple=tuple(game_presenter.factions.items()),
+                factions=game_presenter.factions,
             ),
             div(
-                button(
+                zc_button(
                     "⇧ Scroll up to the board",
-                    cls=BUTTON_CLASSES,
-                    onclick="""window.scrollTo({ top: 0, behavior: "smooth" })""",
+                    button_type="action",
+                    extra_attrs={
+                        "onclick": """"window.scrollTo({ top: 0, behavior: "smooth" })"""
+                    },
                 ),
                 cls="w-full flex justify-center",
             ),
@@ -88,17 +95,17 @@ def status_bar(
             case "waiting_for_bot_turn":
                 inner_content = _chess_status_bar_waiting_for_bot_turn(game_presenter)
 
-    return div(
+    return companion_bar(
         inner_content,
-        id=f"chess-board-status-bar-{board_id}",
-        cls=f"min-h-[4rem] flex items-center {INFO_BARS_COMMON_CLASSES} border-t-0 rounded-b-md",
-        **extra_attrs,
+        id_=f"chess-board-status-bar-{board_id}",
+        position="bottom",
+        htmx_attrs=htmx_attrs,
     )
 
 
 def _chess_status_bar_selected_piece(
-    game_presenter: "DailyChallengeGamePresenter",
-) -> "dom_tag":
+    game_presenter: DailyChallengeGamePresenter,
+) -> dom_tag:
     assert game_presenter.selected_piece is not None
 
     selected_piece = game_presenter.selected_piece
@@ -110,12 +117,7 @@ def _chess_status_bar_selected_piece(
     unit_display = unit_display_container(
         piece_role=piece_role, factions=game_presenter.factions
     )
-    team_member_name = team_member.get("name", "")
-    name_display = (
-        " ".join(team_member_name)
-        if isinstance(team_member_name, list)
-        else team_member_name
-    )
+    name_display = " ".join(team_member.name)
 
     unit_about = div(
         div("> ", b(name_display, cls="text-yellow-400"), " <") if name_display else "",
@@ -145,6 +147,6 @@ def _chess_status_bar_selected_piece(
 
 
 def _chess_status_bar_waiting_for_bot_turn(
-    game_presenter: "DailyChallengeGamePresenter",
-) -> "dom_tag":
+    game_presenter: DailyChallengeGamePresenter,
+) -> dom_tag:
     return div("Waiting for opponent's turn 🛡", cls="w-full text-center items-center")

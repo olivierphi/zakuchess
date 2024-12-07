@@ -1,22 +1,21 @@
+from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING, NamedTuple
 
 from django.utils.timezone import now
 from msgspec import MsgspecError
 
-from apps.chess.models import UserPrefs
-
 from .models import PlayerGameState, PlayerSessionContent, PlayerStats
 
 if TYPE_CHECKING:
-    from django.http import HttpRequest, HttpResponse
+    from django.http import HttpRequest
 
     from .models import DailyChallenge
 
 
 _PLAYER_CONTENT_SESSION_KEY = "pc"
-_USER_PREFS_COOKIE_NAME = "uprefs"
-_USER_PREFS_COOKIE_MAX_AGE = 3600 * 24 * 30 * 6  # approximately 6 months
+
 
 _logger = logging.getLogger(__name__)
 
@@ -28,7 +27,7 @@ class DailyChallengeStateForPlayer(NamedTuple):
 
 
 def get_or_create_daily_challenge_state_for_player(
-    *, request: "HttpRequest", challenge: "DailyChallenge"
+    *, request: HttpRequest, challenge: DailyChallenge
 ) -> DailyChallengeStateForPlayer:
     """
     Returns the game state for the given challenge, creating it if it doesn't exist yet.
@@ -72,7 +71,7 @@ def get_or_create_daily_challenge_state_for_player(
 
 
 def get_player_session_content_from_request(
-    request: "HttpRequest",
+    request: HttpRequest,
 ) -> PlayerSessionContent:
     def new_content():
         return PlayerSessionContent(games={}, stats=PlayerStats())
@@ -94,26 +93,8 @@ def get_player_session_content_from_request(
         return new_content()
 
 
-def get_user_prefs_from_request(request: "HttpRequest") -> UserPrefs:
-    def new_content():
-        return UserPrefs()
-
-    cookie_content: str | None = request.COOKIES.get(_USER_PREFS_COOKIE_NAME)
-    if cookie_content is None or len(cookie_content) < 5:
-        return new_content()
-
-    try:
-        user_prefs = UserPrefs.from_cookie_content(cookie_content)
-        return user_prefs
-    except MsgspecError:
-        _logger.exception(
-            "Could not decode cookie content; restarting with a blank one."
-        )
-        return new_content()
-
-
 def save_daily_challenge_state_in_session(
-    *, request: "HttpRequest", game_state: PlayerGameState, player_stats: PlayerStats
+    *, request: HttpRequest, game_state: PlayerGameState, player_stats: PlayerStats
 ) -> None:
     # Erases other games data!
     challenge_id = today_daily_challenge_id(request)
@@ -123,17 +104,8 @@ def save_daily_challenge_state_in_session(
     _store_player_session_content(request, session_content)
 
 
-def save_user_prefs(*, user_prefs: "UserPrefs", response: "HttpResponse") -> None:
-    response.set_cookie(
-        _USER_PREFS_COOKIE_NAME,
-        user_prefs.to_cookie_content(),
-        max_age=_USER_PREFS_COOKIE_MAX_AGE,
-        httponly=True,
-    )
-
-
 def clear_daily_challenge_game_state_in_session(
-    *, request: "HttpRequest", player_stats: PlayerStats
+    *, request: HttpRequest, player_stats: PlayerStats
 ) -> None:
     # Erases current games data!
     session_content = PlayerSessionContent(games={}, stats=player_stats)
@@ -141,7 +113,7 @@ def clear_daily_challenge_game_state_in_session(
 
 
 def clear_daily_challenge_stats_in_session(
-    *, request: "HttpRequest", game_state: PlayerGameState
+    *, request: HttpRequest, game_state: PlayerGameState
 ) -> None:
     # Erases all-time stats data!
     challenge_id = today_daily_challenge_id(request)
@@ -151,7 +123,7 @@ def clear_daily_challenge_stats_in_session(
     _store_player_session_content(request, session_content)
 
 
-def today_daily_challenge_id(request: "HttpRequest") -> str:
+def today_daily_challenge_id(request: HttpRequest) -> str:
     if request.user.is_staff:
         admin_daily_challenge_lookup_key = request.get_signed_cookie(
             "admin_daily_challenge_lookup_key", default=None
@@ -162,7 +134,7 @@ def today_daily_challenge_id(request: "HttpRequest") -> str:
 
 
 def _store_player_session_content(
-    request: "HttpRequest", session_content: PlayerSessionContent
+    request: HttpRequest, session_content: PlayerSessionContent
 ) -> None:
     cookie_content = session_content.to_cookie_content()
     request.session[_PLAYER_CONTENT_SESSION_KEY] = cookie_content
