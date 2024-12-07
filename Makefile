@@ -18,6 +18,7 @@ install: backend/install frontend/install ## Install the Python and frontend dep
 dev: .env.local db.sqlite3
 dev: ## Start Django in "development" mode, as well as our frontend assets compilers in "watch" mode
 	@${SUB_MAKE} frontend/img
+	${UV} pip install --no-build -e .
 	@./node_modules/.bin/concurrently --names "django,css,js" --prefix-colors "blue,yellow,green" \
 		"${SUB_MAKE} backend/watch" \
 		"${SUB_MAKE} frontend/css/watch" \
@@ -36,7 +37,7 @@ backend/install: bin/uv .venv ## Install the Python dependencies (via uv) and in
 # Install Python dependencies:
 	${UV} sync ${uv_sync_opts}
 # Install the project in editable mode, so we don't have to add "src/" to the Python path:
-	${UV} pip install -e .
+	${UV} pip install --no-build -e .
 # Install pre-commit hooks:
 	${PYTHON_BINS}/pre-commit install
 # Create a shim for Black (actually using Ruff), so the IDE can use it:

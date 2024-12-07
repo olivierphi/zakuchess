@@ -32,7 +32,7 @@ jobs:
       - name: "Install dependencies via uv"
         run: uv sync --all-extras
       - name: "Install the project in 'editable' mode"
-        run: uv pip install -e .
+        run: uv pip install --no-build -e .
         
       # Code quality checks
       - name: "Run linting checks: Ruff checker"
