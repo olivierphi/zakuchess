@@ -19,29 +19,36 @@ jobs:
     runs-on: "ubuntu-latest"
 
     steps:
+      # Setup
       - uses: "actions/checkout@v4"
       - name: Install uv
-        uses: astral-sh/setup-uv@v2
+        uses: astral-sh/setup-uv@v4
         with:
-          version: "0.4.9"
+          version: "0.5.7"
           enable-cache: true
           cache-dependency-glob: "uv.lock"
-      - name: Set up Python
+      - name: Install Python, via uv
         run: uv python install
       - name: "Install dependencies via uv"
         run: uv sync --all-extras
       - name: "Install the project in 'editable' mode"
         run: uv pip install -e .
+        
+      # Code quality checks
       - name: "Run linting checks: Ruff checker"
         run: uv run --no-sync ruff format --check --quiet src/
       - name: "Run linting checks: Ruff linter"
         run: uv run --no-sync ruff check --quiet src/
       - name: "Run linting checks: Mypy"
         run: uv run --no-sync mypy src/
+      - name: "Run linting checks: fix-future-annotations"
+        run: uv run --no-sync fix-future-annotations src/
       - name: "Check that Django DB migrations are up to date"
-        run: uv run --no-sync python manage.py makemigrations | grep "No changes detected"
+        run: uv run --no-sync python manage.py makemigrations --check
+        
+      # Test suite & code coverage
       - name: "Run tests"
-        # TODO: progressively  increase minimum coverage to something closer to 80%
+        # TODO: progressively increase minimum coverage to something closer to 80%
         run: uv run --no-sync pytest --cov=src --cov-report xml:coverage.xml
         # --cov-fail-under=60 --> we'll actually do that with the "Report coverage" step
       - name: "Report coverage"

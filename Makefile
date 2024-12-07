@@ -2,9 +2,7 @@ PYTHON_BINS ?= ./.venv/bin
 PYTHON ?= ${PYTHON_BINS}/python
 DJANGO_SETTINGS_MODULE ?= project.settings.development
 SUB_MAKE = ${MAKE} --no-print-directory
-UV_PYTHON ?= ${PYTHON}
 UV ?= bin/uv
-UVX ?= bin/uvx
 
 .DEFAULT_GOAL := help
 
@@ -116,8 +114,7 @@ code-quality/mypy: ## Python's equivalent of TypeScript
 code-quality/fix-future-annotations: fix_future_annotations_opts ?=
 code-quality/fix-future-annotations: ## Make sure we're using PEP 585 and PEP 604
 # @link https://github.com/frostming/fix-future-annotations
-	@UV_PYTHON=${UV_PYTHON} \
-		${UVX} fix-future-annotations ${fix_future_annotations_opts} src/ 
+	@${PYTHON_BINS}/fix-future-annotations ${fix_future_annotations_opts} src/ 
 
 # Here starts the frontend stuff
 
@@ -185,10 +182,10 @@ frontend/img/copy_assets:
 
 # Here starts the "misc util targets" stuff
 
-bin/uv: uv_version ?= 0.4.9
+bin/uv: uv_version ?= 0.5.7
 bin/uv: # Install `uv` and `uvx` locally in the "bin/" folder
 	curl -LsSf "https://astral.sh/uv/${uv_version}/install.sh" | \
-		CARGO_DIST_FORCE_INSTALL_DIR="$$(pwd)" INSTALLER_NO_MODIFY_PATH=1 sh
+		UV_INSTALL_DIR="$$(pwd)/bin" UV_NO_MODIFY_PATH=1 sh
 	@echo "We'll use 'bin/uv' to manage Python dependencies." 
 
 .venv: ## Initialises the Python virtual environment in a ".venv" folder, via uv
