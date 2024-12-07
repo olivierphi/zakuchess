@@ -20,13 +20,17 @@ from apps.chess.components.misc_ui import (
     reset_chess_engine_worker,
     speech_bubble_container,
 )
-from apps.webui.components.atoms.button import zc_header_icon_button
+from apps.daily_challenge.components.companion_bars.bottom_companion_bar import (
+    status_bar,
+)
+from apps.daily_challenge.components.companion_bars.top_companion_bar import (
+    daily_challenge_bar,
+)
+from apps.webui.components.atoms.buttons import zc_header_icon_button
 from apps.webui.components.layout import page
 from apps.webui.components.misc_ui.svg_icons import ICON_SVG_HELP
 from apps.webui.components.misc_ui.user_prefs_modal import user_prefs_button
 
-from ..misc_ui.daily_challenge_bar import daily_challenge_bar
-from ..misc_ui.status_bar import status_bar
 from ..misc_ui.svg_icons import ICON_SVG_STATS
 
 if TYPE_CHECKING:
@@ -96,12 +100,12 @@ def daily_challenge_moving_parts_fragment(
             daily_challenge_bar(
                 game_presenter=game_presenter,
                 board_id=board_id,
-                data_hx_swap_oob="outerHTML",
+                htmx_attrs={"data_hx_swap_oob": "outerHTML"},
             ),
             status_bar(
                 game_presenter=game_presenter,
                 board_id=board_id,
-                data_hx_swap_oob="outerHTML",
+                htmx_attrs={"data_hx_swap_oob": "outerHTML"},
             ),
             div(
                 speech_bubble_container(

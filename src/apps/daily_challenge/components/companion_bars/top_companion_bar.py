@@ -10,15 +10,17 @@ from django.urls import reverse
 from dominate.tags import b, div, p
 from dominate.util import raw
 
-from apps.chess.components.svg_icons import ICON_SVG_CANCEL, ICON_SVG_CONFIRM
-from apps.webui.components.atoms.button import zc_button
-from apps.webui.components.misc_ui.svg_icons import ICON_SVG_COG
-
-from ...models import PlayerGameOverState
-from .svg_icons import (
+from apps.daily_challenge.components.misc_ui.svg_icons import (
     ICON_SVG_LIGHT_BULB,
     ICON_SVG_RESTART,
     ICON_SVG_UNDO,
+)
+from apps.daily_challenge.models import PlayerGameOverState
+from apps.webui.components.atoms.buttons import zc_button
+from apps.webui.components.misc_ui.svg_icons import ICON_SVG_COG
+from apps.webui.components.molecules.chess_arena_companion_bars import (
+    companion_bar,
+    confirmation_dialog_bar,
 )
 
 if TYPE_CHECKING:
@@ -26,35 +28,29 @@ if TYPE_CHECKING:
 
     from dominate.tags import dom_tag
 
-    from ...presenters import DailyChallengeGamePresenter
+    from apps.daily_challenge.presenters import DailyChallengeGamePresenter
 
 
 def daily_challenge_bar(
     *,
-    game_presenter: DailyChallengeGamePresenter | None,
+    game_presenter: DailyChallengeGamePresenter,
     board_id: str,
-    inner_content: dom_tag | None = None,
-    **extra_attrs: str,
+    htmx_attrs: dict[str, str] | None = None,
 ) -> dom_tag:
-    from apps.chess.components.chess_board import INFO_BARS_COMMON_CLASSES
+    inner_content = _current_state_display(
+        game_presenter=game_presenter, board_id=board_id
+    )
 
-    if not inner_content:
-        assert game_presenter is not None
-        inner_content = _current_state_display(
-            game_presenter=game_presenter, board_id=board_id
-        )
-
-    return div(
+    return companion_bar(
         inner_content,
-        id=f"chess-board-daily-challenge-bar-{board_id}",
-        cls=f"min-h-[4rem] flex items-center justify-center {INFO_BARS_COMMON_CLASSES} "
-        "border-t-0 xl:border-2 xl:rounded-t-md",
-        **extra_attrs,
+        id_=f"chess-board-daily-challenge-bar-{board_id}",
+        position="top",
+        htmx_attrs=htmx_attrs,
     )
 
 
-def retry_confirmation_display(*, board_id: str) -> dom_tag:
-    htmx_attributes_confirm = {
+def retry_confirmation_dialog_bar(*, board_id: str) -> dom_tag:
+    htmx_attrs_confirm = {
         "data_hx_post": "".join(
             (
                 reverse("daily_challenge:htmx_restart_daily_challenge_do"),
@@ -65,7 +61,7 @@ def retry_confirmation_display(*, board_id: str) -> dom_tag:
         "data_hx_target": f"#chess-board-pieces-{board_id}",
         "data_hx_swap": "outerHTML",
     }
-    htmx_attributes_cancel = {
+    htmx_attrs_cancel = {
         "data_hx_get": "".join(
             (
                 reverse("daily_challenge:htmx_game_no_selection"),
@@ -77,15 +73,16 @@ def retry_confirmation_display(*, board_id: str) -> dom_tag:
         "data_hx_swap": "outerHTML",
     }
 
-    return _confirmation_dialog(
+    return confirmation_dialog_bar(
         question=div("Retry today's challenge from the start?", cls="text-center"),
-        htmx_attributes_confirm=htmx_attributes_confirm,
-        htmx_attributes_cancel=htmx_attributes_cancel,
+        htmx_attrs_confirm=htmx_attrs_confirm,
+        htmx_attrs_cancel=htmx_attrs_cancel,
+        id_=f"chess-board-daily-challenge-bar-{board_id}",
     )
 
 
-def undo_confirmation_display(*, board_id: str) -> dom_tag:
-    htmx_attributes_confirm = {
+def undo_confirmation_dialog_bar(*, board_id: str) -> dom_tag:
+    htmx_attrs_confirm = {
         "data_hx_post": "".join(
             (
                 reverse("daily_challenge:htmx_undo_last_move_do"),
@@ -96,7 +93,7 @@ def undo_confirmation_display(*, board_id: str) -> dom_tag:
         "data_hx_target": f"#chess-board-pieces-{board_id}",
         "data_hx_swap": "outerHTML",
     }
-    htmx_attributes_cancel = {
+    htmx_attrs_cancel = {
         "data_hx_get": "".join(
             (
                 reverse("daily_challenge:htmx_game_no_selection"),
@@ -108,19 +105,20 @@ def undo_confirmation_display(*, board_id: str) -> dom_tag:
         "data_hx_swap": "outerHTML",
     }
 
-    return _confirmation_dialog(
+    return confirmation_dialog_bar(
         question=div(
             p("Undo your last move?"),
             b("⚠️ You will not be able to undo a move for today's challenge again."),
             cls="text-center",
         ),
-        htmx_attributes_confirm=htmx_attributes_confirm,
-        htmx_attributes_cancel=htmx_attributes_cancel,
+        htmx_attrs_confirm=htmx_attrs_confirm,
+        htmx_attrs_cancel=htmx_attrs_cancel,
+        id_=f"chess-board-daily-challenge-bar-{board_id}",
     )
 
 
-def see_solution_confirmation_display(*, board_id: str) -> dom_tag:
-    htmx_attributes_confirm = {
+def see_solution_confirmation_dialog_bar(*, board_id: str) -> dom_tag:
+    htmx_attrs_confirm = {
         "data_hx_post": "".join(
             (
                 reverse("daily_challenge:htmx_see_daily_challenge_solution_do"),
@@ -131,7 +129,7 @@ def see_solution_confirmation_display(*, board_id: str) -> dom_tag:
         "data_hx_target": f"#chess-board-pieces-{board_id}",
         "data_hx_swap": "outerHTML",
     }
-    htmx_attributes_cancel = {
+    htmx_attrs_cancel = {
         "data_hx_get": "".join(
             (
                 reverse("daily_challenge:htmx_game_no_selection"),
@@ -143,40 +141,15 @@ def see_solution_confirmation_display(*, board_id: str) -> dom_tag:
         "data_hx_swap": "outerHTML",
     }
 
-    return _confirmation_dialog(
+    return confirmation_dialog_bar(
         question=div(
             p("Give up for today, and see a solution?"),
             b("⚠️ You will not be able to try today's challenge again."),
             cls="text-center",
         ),
-        htmx_attributes_confirm=htmx_attributes_confirm,
-        htmx_attributes_cancel=htmx_attributes_cancel,
-    )
-
-
-def _confirmation_dialog(
-    *,
-    question: dom_tag,
-    htmx_attributes_confirm: dict[str, str],
-    htmx_attributes_cancel: dict[str, str],
-) -> dom_tag:
-    return div(
-        question,
-        div(
-            zc_button(
-                "Confirm",
-                button_type="confirm",
-                svg_icon=ICON_SVG_CONFIRM,
-                htmx_attributes=htmx_attributes_confirm,
-            ),
-            zc_button(
-                "Cancel",
-                svg_icon=ICON_SVG_CANCEL,
-                button_type="cancel",
-                htmx_attributes=htmx_attributes_cancel,
-            ),
-            cls="text-center",
-        ),
+        htmx_attrs_confirm=htmx_attrs_confirm,
+        htmx_attrs_cancel=htmx_attrs_cancel,
+        id_=f"chess-board-daily-challenge-bar-{board_id}",
     )
 
 
@@ -227,7 +200,7 @@ def _undo_button(
         and game_state.game_over != PlayerGameOverState.WON
     )
 
-    htmx_attributes = (
+    htmx_attrs = (
         {
             "data_hx_post": "".join(
                 (
@@ -243,7 +216,7 @@ def _undo_button(
         else {}
     )
 
-    additional_attributes = {"disabled": True} if not can_undo else {}
+    additional_attrs = {"disabled": True} if not can_undo else {}
     classes = _button_classes(disabled=not can_undo)
 
     return zc_button(
@@ -252,9 +225,9 @@ def _undo_button(
         button_type="action",
         title="Undo your last move",
         id_=f"chess-board-undo-daily-challenge-{board_id}",
-        htmx_attributes=htmx_attributes,
-        additional_classes=classes,
-        additional_attributes=additional_attributes,
+        htmx_attrs=htmx_attrs,
+        extra_classes=classes,
+        extra_attrs=additional_attrs,
     )
 
 
@@ -263,7 +236,7 @@ def _retry_button(
 ) -> dom_tag:
     can_retry: bool = game_presenter.game_state.current_attempt_turns_counter > 0
 
-    htmx_attributes = (
+    htmx_attrs = (
         {
             "data_hx_post": "".join(
                 (
@@ -281,18 +254,18 @@ def _retry_button(
         else {}
     )
 
-    additional_attributes = {"disabled": True} if not can_retry else {}
+    additional_attrs = {"disabled": True} if not can_retry else {}
     classes = _button_classes(disabled=not can_retry)
 
     return zc_button(
         "Retry",
         svg_icon=ICON_SVG_RESTART,
         button_type="action",
-        additional_classes=classes,
+        extra_classes=classes,
         title="Try this daily challenge again, from the beginning",
         id_=f"chess-board-restart-daily-challenge-{board_id}",
-        additional_attributes=additional_attributes,
-        htmx_attributes=htmx_attributes,
+        extra_attrs=additional_attrs,
+        htmx_attrs=htmx_attrs,
     )
 
 
@@ -315,7 +288,7 @@ def _see_solution_button(
         else "Give up for today, and see a solution"
     )
 
-    htmx_attributes = {
+    htmx_attrs = {
         "data_hx_post": "".join(
             (
                 reverse(target_route),
@@ -333,15 +306,15 @@ def _see_solution_button(
         "See solution",
         svg_icon=ICON_SVG_LIGHT_BULB,
         button_type="action",
-        additional_classes=classes,
+        extra_classes=classes,
         title=title,
         id_=f"chess-board-restart-daily-challenge-{board_id}",
-        htmx_attributes=htmx_attributes,
+        htmx_attrs=htmx_attrs,
     )
 
 
 def _user_prefs_button(board_id: str) -> dom_tag:
-    htmx_attributes = {
+    htmx_attrs = {
         "data_hx_get": reverse("webui:htmx_modal_user_prefs"),
         "data_hx_target": "#modals-container",
         "data_hx_swap": "outerHTML",
@@ -353,10 +326,10 @@ def _user_prefs_button(board_id: str) -> dom_tag:
         "Preferences",
         svg_icon=ICON_SVG_COG,
         button_type="action",
-        additional_classes=classes,
+        extra_classes=classes,
         title="Edit preferences",
         id_=f"chess-board-preferences-daily-challenge-{board_id}",
-        htmx_attributes=htmx_attributes,
+        htmx_attrs=htmx_attrs,
     )
 
 

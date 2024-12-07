@@ -19,7 +19,7 @@ from apps.chess.components.chess_board import (
     chess_pieces,
 )
 from apps.chess.components.misc_ui import speech_bubble_container
-from apps.webui.components.atoms.button import zc_button, zc_header_icon_button
+from apps.webui.components.atoms.buttons import zc_button, zc_header_icon_button
 from apps.webui.components.layout import page
 from apps.webui.components.misc_ui.user_prefs_modal import user_prefs_button
 

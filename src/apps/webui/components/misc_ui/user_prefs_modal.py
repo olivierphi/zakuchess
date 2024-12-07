@@ -9,7 +9,7 @@ from apps.chess.components.misc_ui import modal_container
 from apps.chess.components.svg_icons import ICON_SVG_CONFIRM
 from apps.chess.models import UserPrefsBoardTextureChoices, UserPrefsGameSpeedChoices
 
-from ..atoms.button import zc_button, zc_header_icon_button
+from ..atoms.buttons import zc_button, zc_header_icon_button
 from .svg_icons import ICON_SVG_COG
 
 if TYPE_CHECKING:

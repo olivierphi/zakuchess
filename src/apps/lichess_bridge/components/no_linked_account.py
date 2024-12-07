@@ -7,7 +7,7 @@ from dominate.tags import b, br, div, form, p
 
 from apps.chess.models import GameFactions
 from apps.lichess_bridge.components.svg_icons import ICON_SVG_LOG_IN
-from apps.webui.components.atoms.button import zc_button
+from apps.webui.components.atoms.buttons import zc_button
 from apps.webui.components.chess_units import unit_display_container
 from apps.webui.components.forms_common import csrf_hidden_input
 

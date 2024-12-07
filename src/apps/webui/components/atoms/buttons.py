@@ -6,7 +6,7 @@ from dominate.dom_tag import dom_tag
 from dominate.tags import a, button, span
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Mapping, Sequence
 
     from dominate.tags import dom_tag
 
@@ -33,18 +33,18 @@ def zc_button(
     *,
     button_type: ButtonType,
     svg_icon: str | None = None,
-    href: str | None = None,  # if href is not None, the button will be an HTML anchor
+    href: str | None = None,  # if href is not None, the button will be a <a href="...">
     id_: str | None = None,
     title: str | None = None,
     html_type: str | None = None,
-    additional_classes: Sequence[str] | None = None,
-    additional_attributes: dict | None = None,
-    htmx_attributes: dict | None = None,
-    is_a_help_for_actual_button: bool = False,
+    extra_classes: Sequence[str] | None = None,
+    extra_attrs: Mapping[str, str | bool] | None = None,
+    htmx_attrs: Mapping[str, str | bool] | None = None,
+    is_a_help_for_actual_button: bool = False,  # if True, the button will be a <span>
 ) -> dom_tag:
     """A 'zakuchess' (`zc_*`) button."""
 
-    if is_a_help_for_actual_button and htmx_attributes is not None:
+    if is_a_help_for_actual_button and htmx_attrs is not None:
         raise ValueError(
             "Elements that are not actual buttons but "
             "an help for them should not have htmx attributes"
@@ -55,12 +55,12 @@ def zc_button(
         children.extend((" ", svg_icon))
 
     classes: list[str] = [_BUTTON_TYPE_TO_CLASS_MAPPING[button_type]]
-    if additional_classes:
-        classes.extend(additional_classes)
+    if extra_classes:
+        classes.extend(extra_classes)
 
     attributes: dict = {
-        **(additional_attributes or {}),
-        **(htmx_attributes or {}),
+        **(extra_attrs or {}),
+        **(htmx_attrs or {}),
     }
     if id_:
         attributes["id"] = id_

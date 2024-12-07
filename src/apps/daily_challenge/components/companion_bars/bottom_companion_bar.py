@@ -15,11 +15,12 @@ from apps.daily_challenge.components.misc_ui.help import (
     help_content,
     unit_display_container,
 )
-from apps.webui.components.atoms.button import zc_button
+from apps.webui.components.atoms.buttons import zc_button
 from apps.webui.components.chess_units import (
     character_type_tip,
     chess_unit_symbol_display,
 )
+from apps.webui.components.molecules.chess_arena_companion_bars import companion_bar
 
 if TYPE_CHECKING:
     from dominate.tags import dom_tag
@@ -28,11 +29,12 @@ if TYPE_CHECKING:
 
 
 def status_bar(
-    *, game_presenter: DailyChallengeGamePresenter, board_id: str, **extra_attrs: str
+    *,
+    game_presenter: DailyChallengeGamePresenter,
+    board_id: str,
+    htmx_attrs: dict[str, str] | None = None,
 ) -> dom_tag:
-    from apps.chess.components.chess_board import INFO_BARS_COMMON_CLASSES
-
-    # TODO: split this function into smaller ones
+    # TODO: split this function into smaller ones?
 
     inner_content: dom_tag = div("status to implement")
 
@@ -51,7 +53,7 @@ def status_bar(
                 zc_button(
                     "⇧ Scroll up to the board",
                     button_type="action",
-                    additional_attributes={
+                    extra_attrs={
                         "onclick": """"window.scrollTo({ top: 0, behavior: "smooth" })"""
                     },
                 ),
@@ -93,11 +95,11 @@ def status_bar(
             case "waiting_for_bot_turn":
                 inner_content = _chess_status_bar_waiting_for_bot_turn(game_presenter)
 
-    return div(
+    return companion_bar(
         inner_content,
-        id=f"chess-board-status-bar-{board_id}",
-        cls=f"min-h-[4rem] flex items-center {INFO_BARS_COMMON_CLASSES} border-t-0 rounded-b-md",
-        **extra_attrs,
+        id_=f"chess-board-status-bar-{board_id}",
+        position="bottom",
+        htmx_attrs=htmx_attrs,
     )
 
 

@@ -6,7 +6,7 @@ from django.urls import reverse
 from dominate.tags import div, form, h3, h4, p, span
 
 from apps.chess.components.misc_ui import modal_container
-from apps.webui.components.atoms.button import zc_button
+from apps.webui.components.atoms.buttons import zc_button
 from apps.webui.components.forms_common import csrf_hidden_input
 
 from ..svg_icons import ICON_SVG_LOG_OUT, ICON_SVG_USER

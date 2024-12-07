@@ -7,7 +7,7 @@ from django.conf import settings
 from dominate.tags import div, h4, p, span
 from dominate.util import raw
 
-from apps.webui.components.atoms.button import zc_button
+from apps.webui.components.atoms.buttons import zc_button
 from apps.webui.components.chess_units import (
     CHARACTER_TYPE_TIP,
     chess_status_bar_tip,

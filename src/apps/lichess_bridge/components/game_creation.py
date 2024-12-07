@@ -7,7 +7,7 @@ from dominate.tags import div, fieldset, form, input_, label, legend, p
 
 from apps.lichess_bridge.components.svg_icons import ICON_SVG_CREATE
 from apps.lichess_bridge.models import LichessCorrespondenceGameDaysChoice
-from apps.webui.components.atoms.button import zc_button
+from apps.webui.components.atoms.buttons import zc_button
 from apps.webui.components.forms_common import csrf_hidden_input
 
 if TYPE_CHECKING:

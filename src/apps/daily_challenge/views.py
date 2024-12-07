@@ -256,22 +256,11 @@ def htmx_daily_challenge_help_modal(
 def htmx_restart_daily_challenge_ask_confirmation(
     request: HttpRequest, *, ctx: GameContext
 ) -> HttpResponse:
-    from .components.misc_ui.daily_challenge_bar import (
-        daily_challenge_bar,
-        retry_confirmation_display,
+    from apps.daily_challenge.components.companion_bars.top_companion_bar import (
+        retry_confirmation_dialog_bar,
     )
 
-    daily_challenge_bar_inner_content = retry_confirmation_display(
-        board_id=ctx.board_id
-    )
-
-    return HttpResponse(
-        daily_challenge_bar(
-            game_presenter=None,
-            inner_content=daily_challenge_bar_inner_content,
-            board_id=ctx.board_id,
-        )
-    )
+    return HttpResponse(retry_confirmation_dialog_bar(board_id=ctx.board_id))
 
 
 @require_POST
@@ -317,20 +306,11 @@ def htmx_restart_daily_challenge_do(
 def htmx_undo_last_move_ask_confirmation(
     request: HttpRequest, *, ctx: GameContext
 ) -> HttpResponse:
-    from .components.misc_ui.daily_challenge_bar import (
-        daily_challenge_bar,
-        undo_confirmation_display,
+    from apps.daily_challenge.components.companion_bars.top_companion_bar import (
+        undo_confirmation_dialog_bar,
     )
 
-    daily_challenge_bar_inner_content = undo_confirmation_display(board_id=ctx.board_id)
-
-    return HttpResponse(
-        daily_challenge_bar(
-            game_presenter=None,
-            inner_content=daily_challenge_bar_inner_content,
-            board_id=ctx.board_id,
-        )
-    )
+    return HttpResponse(undo_confirmation_dialog_bar(board_id=ctx.board_id))
 
 
 @require_POST
@@ -368,22 +348,11 @@ def htmx_undo_last_move_do(request: HttpRequest, *, ctx: GameContext) -> HttpRes
 def htmx_see_daily_challenge_solution_ask_confirmation(
     request: HttpRequest, *, ctx: GameContext
 ) -> HttpResponse:
-    from .components.misc_ui.daily_challenge_bar import (
-        daily_challenge_bar,
-        see_solution_confirmation_display,
+    from apps.daily_challenge.components.companion_bars.top_companion_bar import (
+        see_solution_confirmation_dialog_bar,
     )
 
-    daily_challenge_bar_inner_content = see_solution_confirmation_display(
-        board_id=ctx.board_id
-    )
-
-    return HttpResponse(
-        daily_challenge_bar(
-            game_presenter=None,
-            inner_content=daily_challenge_bar_inner_content,
-            board_id=ctx.board_id,
-        )
-    )
+    return HttpResponse(see_solution_confirmation_dialog_bar(board_id=ctx.board_id))
 
 
 @require_POST
