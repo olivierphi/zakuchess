@@ -1,0 +1,26 @@
+{
+    "name": "nuxt-app",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "nuxt build",
+        "dev": "nuxt dev",
+        "format": "prettier --write --list-different .",
+        "generate": "nuxt generate",
+        "preview": "nuxt preview",
+        "postinstall": "nuxt prepare"
+    },
+    "dependencies": {
+        "@pinia/nuxt": "^0.9.0",
+        "chess.js": "^1.0.0",
+        "nuxt": "^3.15.2",
+        "pinia": "^2.3.0",
+        "vue": "latest",
+        "vue-router": "latest"
+    },
+    "devDependencies": {
+        "@nuxtjs/tailwindcss": "^6.13.1",
+        "@trivago/prettier-plugin-sort-imports": "^5.2.1",
+        "prettier": "^3.4.2"
+    }
+}
