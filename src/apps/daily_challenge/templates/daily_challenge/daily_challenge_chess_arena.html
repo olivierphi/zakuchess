@@ -1,0 +1,32 @@
+{% extends "chess/_chess_arena.html" %}
+
+{% load humanize %}
+{% load chess_chrome %}
+{% load daily_challenge %}
+
+{% block companion_bar_top %}
+    {% chess_arena_companion_bar position="top" board_id=board_id id_pattern="chess-board-daily-challenge-bar-{board_id}" %}
+        <div class="w-full">
+            <div class="text-center">
+                <b>{{ game_presenter.challenge_attempts_counter|add:"1"|ordinal }}</b> attempt:
+                turn <b>#{{ game_presenter.challenge_current_attempt_turns_counter|add:"1" }}</b>
+            </div>
+            <div>
+                <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-2">
+                    {% companion_bar_undo_button %}
+                    {% companion_bar_retry_button %}
+                    {% companion_bar_see_solution_button full_width=True %}
+                    {% companion_bar_user_prefs_button %}
+                </div>
+            </div>
+        </div>
+    {% endchess_arena_companion_bar %}
+{% endblock %}
+
+{% block companion_bar_bottom %}
+    {% chess_arena_companion_bar position="bottom" board_id=board_id id_pattern="chess-board-status-bar-{board_id}" %}
+        <div class="text-slate-300">
+            [status bar: TODO]
+        </div>
+    {% endchess_arena_companion_bar %}
+{% endblock %}

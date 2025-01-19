@@ -25,6 +25,7 @@ if TYPE_CHECKING:
 
 
 def user_prefs_button() -> dom_tag:
+    # TODO: remove this (now a template tag)
     htmx_attributes = {
         "data_hx_get": reverse("webui:htmx_modal_user_prefs"),
         "data_hx_target": "#modals-container",

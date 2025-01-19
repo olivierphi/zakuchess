@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST, require_safe
 
 from apps.chess.chess_helpers import get_active_player_side_from_fen, uci_move_squares
@@ -27,7 +27,6 @@ from .components.misc_ui.help_modal import help_modal
 from .components.misc_ui.stats_modal import stats_modal
 from .components.pages.daily_chess_pages import (
     daily_challenge_moving_parts_fragment,
-    daily_challenge_page,
 )
 from .cookie_helpers import (
     clear_daily_challenge_game_state_in_session,
@@ -98,11 +97,19 @@ def game_view(request: HttpRequest, *, ctx: GameContext) -> HttpResponse:
         is_very_first_game=is_very_first_game,
     )
 
-    return HttpResponse(
-        daily_challenge_page(
-            game_presenter=game_presenter, request=request, board_id=ctx.board_id
-        )
+    return render(
+        request,
+        "daily_challenge/game_page.html",
+        {
+            "game_presenter": game_presenter,
+            "board_id": ctx.board_id,
+        },
     )
+    # return HttpResponse(
+    #     daily_challenge_page(
+    #         game_presenter=game_presenter, request=request, board_id=ctx.board_id
+    #     )
+    # )
 
 
 @require_safe

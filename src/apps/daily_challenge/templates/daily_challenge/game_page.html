@@ -1,0 +1,17 @@
+{% extends "webui/layout.html" %}
+
+{% load daily_challenge %}
+{% load chess_arena %}
+
+{% block header_left_side_buttons %}
+    {% header_stats_button %}
+{% endblock %}
+
+{% block header_right_side_buttons %}
+    {% header_user_prefs_button %}
+    {% header_help_button %}
+{% endblock %}
+
+{% block content %}
+    {% chess_arena template_name="daily_challenge/daily_challenge_chess_arena.html" game_presenter=game_presenter board_id=board_id %}
+{% endblock content %}

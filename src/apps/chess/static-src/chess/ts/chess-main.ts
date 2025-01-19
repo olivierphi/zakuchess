@@ -106,6 +106,7 @@ function playBotMove({
 
     const doPlayBotMove = (from: string, to: string) => {
         const targeUrlPattern = htmxElement.dataset.hxPost!
+        console.log("bot targeUrlPattern: ", targeUrlPattern)
         const targeUrl = targeUrlPattern.replace("<from>", from).replace("<to>", to)
         htmxElement.dataset.hxPost = targeUrl
         window.htmx.process(htmxElement)

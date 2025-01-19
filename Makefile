@@ -56,7 +56,7 @@ backend/watch: uvicorn_opts ?= --use-colors --access-log
 backend/watch: ## Start Django via Uvicorn, in "watch" mode
 	@DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE} ${env_vars} \
 		${UV} run uvicorn \
-		--reload --reload-dir src/ \
+		--reload --reload-dir src/ --reload-include '*.py' --reload-include '*.html' \
 		--host ${address} --port ${port} \
 		--env-file ${dotenv_file} \
 		${uvicorn_opts} \
