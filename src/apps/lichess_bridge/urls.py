@@ -7,6 +7,11 @@ app_name = "lichess_bridge"
 urlpatterns = [
     path("", views.lichess_home_page, name="homepage"),
     path("games/", views.lichess_my_games_list_page, name="my_games"),
+    path(
+        "htmx/games/<str:game_id>/preview/",
+        views.htmx_lichess_game_preview,
+        name="htmx_game_preview",
+    ),
     # Gameplay Views:
     path(
         "games/new/",

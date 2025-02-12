@@ -1,0 +1,27 @@
+{% extends "chess/_chess_arena.html" %}
+
+{% load humanize %}
+{% load chess_chrome %}
+
+{% block companion_bar_top %}
+    {% chess_arena_companion_bar position="top" board_id=board_id id_pattern="chess-board-daily-challenge-bar-{board_id}" %}
+        <div class="w-full">
+            <div class="text-center">
+                [TODO]
+            </div>
+            <div>
+                <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-2">
+                    [buttons - TODO too]
+                </div>
+            </div>
+        </div>
+    {% endchess_arena_companion_bar %}
+{% endblock %}
+
+{% block companion_bar_bottom %}
+    {% chess_arena_companion_bar position="bottom" board_id=board_id id_pattern="chess-board-status-bar-{board_id}" %}
+        <div class="text-slate-300">
+            [status bar: TODO]
+        </div>
+    {% endchess_arena_companion_bar %}
+{% endblock %}

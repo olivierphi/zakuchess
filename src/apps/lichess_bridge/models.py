@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
+import datetime as dt
 import functools
 import io
 from abc import ABC, abstractmethod
@@ -167,6 +168,20 @@ class LichessOngoingGameData(msgspec.Struct):
     variant: dict[str, str]
 
 
+class LichessFinishedGameData(msgspec.Struct):
+    """
+    Information about a finished game, as returned by the Lichess API.
+    There's actually more data than this, but we only use these fields at the moment.
+    """
+
+    id: LichessGameId
+    fullId: LichessGameFullId
+    lastMoveAt: int  # a Unix timestamp
+    players: LichessGamePlayers
+    status: LichessGameStatus
+    winner: LichessPlayerSide
+
+
 class LichessGameUser(msgspec.Struct):
     id: LichessPlayerId
     name: LichessGameFullId
@@ -201,8 +216,8 @@ class LichessGameExport(msgspec.Struct):
     variant: str
     speed: LichessGameSpeed
     perf: LichessGamePerf
-    createdAt: int
-    lastMoveAt: int
+    createdAt: int  # a Unix timestamp
+    lastMoveAt: int  # ditto
     status: LichessGameStatus
     source: LichessGameSource
     players: LichessGamePlayers
@@ -462,6 +477,73 @@ class LichessGameExportWithMetadata(LichessGameWithMetadataBase):
         )
 
 
+@dataclasses.dataclass(frozen=True)
+class LichessFinishedGameWithMetadata:
+    """
+    Wraps a LichessFinishedGameData object with some additional metadata related to the
+    current player, and some cached properties describing the state of the game.
+    """
+
+    raw_data: LichessFinishedGameData
+    my_player_id: LichessPlayerId
+
+    @functools.cached_property
+    def finished_at(self) -> dt.datetime:
+        return dt.datetime.fromtimestamp(self.raw_data.lastMoveAt / 1000)
+
+    @functools.cached_property
+    def result(self) -> Literal["win", "loss", "draw"]:
+        raw_data = self.raw_data
+        if raw_data.status == "draw":
+            return "draw"
+        if raw_data.winner == "white":
+            return (
+                "win" if raw_data.players.white.user.id == self.my_player_id else "loss"
+            )
+        return "win" if raw_data.players.black.user.id == self.my_player_id else "loss"
+
+    @functools.cached_property
+    def players_from_my_perspective(self) -> LichessGameMetadataPlayers:
+        my_side, their_side, _ = self._players_sides
+
+        my_player: LichessGameUser = getattr(self.raw_data.players, my_side).user
+        their_player: LichessGameUser = getattr(self.raw_data.players, their_side).user
+
+        result = LichessGameMetadataPlayers(
+            me=LichessGameMetadataPlayer(
+                id=my_player.id,
+                username=my_player.name,
+                player_side=_LICHESS_PLAYER_SIDE_TO_PLAYER_SIDE_MAPPING[my_side],
+                faction="humans",
+            ),
+            them=LichessGameMetadataPlayer(
+                id=their_player.id,
+                username=their_player.name,
+                player_side=_LICHESS_PLAYER_SIDE_TO_PLAYER_SIDE_MAPPING[their_side],
+                faction="undeads",
+            ),
+            active_player=None,
+        )
+
+        return result
+
+    @functools.cached_property
+    def _players_sides(self) -> LichessGameMetadataPlayerSides:
+        my_side: LichessPlayerSide = (
+            "white"
+            if self.raw_data.players.white.user.id == self.my_player_id
+            else "black"
+        )
+        their_side: LichessPlayerSide = "black" if my_side == "white" else "white"
+        board_orientation: BoardOrientation = "1->8" if my_side == "white" else "8->1"
+
+        return LichessGameMetadataPlayerSides(
+            me=my_side,
+            them=their_side,
+            board_orientation=board_orientation,
+        )
+
+
 class LichessGameMetadataPlayerSides(NamedTuple):
     me: LichessPlayerSide
     them: LichessPlayerSide
@@ -487,4 +569,4 @@ class LichessGameMetadataPlayers(NamedTuple):
 
     me: LichessGameMetadataPlayer
     them: LichessGameMetadataPlayer
-    active_player: Literal["me", "them"]
+    active_player: Literal["me", "them", None]  # `None` is used when the game is over

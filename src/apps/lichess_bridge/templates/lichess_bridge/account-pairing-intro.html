@@ -1,0 +1,47 @@
+{% extends "lichess_bridge/nongame-page-layout.html" %}
+
+{% load common_ui %}
+{% load chess_arena %}
+{% load lichess_bridge %}
+
+
+{% block page_title %}Play your Lichess games on ZakuChess{% endblock %}
+
+{% block main_content %}
+<div>
+    <p class="mb-4 text-center">
+        You can play games with your friends and other people all around the world on ZakuChess, 
+        by pairing your Lichess account here.
+    </p>
+    <p class="mb-4 text-center">
+        This will allow you to play Lichess games via ZakuChess' boards, 
+        where chess pieces are played by pixel art characters 🙂
+    </p>
+    <div class="flex justify-center items-center gap-1 md:gap-3">
+        {% unit_display_container  piece_role="K" factions="humans,undeads" row_counter=0 %}
+        {% unit_display_container  piece_role="Q" factions="humans,undeads" row_counter=1 %}
+        {# We don't have enough space on small screens to display all the units #}
+        {% unit_display_container  piece_role="N1" factions="humans,undeads" row_counter=0 additional_classes="hidden md:block" %}
+        <div class="grow px-4 text-center">VS</div>
+        {% unit_display_container  piece_role="n1" factions="humans,undeads" row_counter=0 additional_classes="hidden md:block" %}
+        {% unit_display_container  piece_role="q" factions="humans,undeads" row_counter=1 %}
+        {% unit_display_container  piece_role="k" factions="humans,undeads" row_counter=0 %}
+    </div>
+    <form action="{% url 'lichess_bridge:oauth2_start_flow' %}" method="POST" class="my-8">
+        {% csrf_token %}
+        <p class="mb-4 text-center font-bold">
+            <b>Click here to log in to Lichess</b>
+        </p>
+        <p class="mb-4 text-center">
+            {% zc_button "Log in via Lichess" icon="log_in" html_type="submit" button_type="action" %}
+        </p>
+    </form>
+    <p class="mt-8 text-center text-sm">
+        You will be able to disconnect your Lichess account from ZakuChess at any time.
+        <br>
+        <b>None of your Lichess data is stored on our end: it is only stored in your web browser.</b>
+    </p>
+</div>
+
+    
+{% endblock main_content %}

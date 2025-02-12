@@ -1,0 +1,8 @@
+{% extends "webui/layout.html" %}
+
+{% block content %}
+    <main class="w-full mx-auto py-4 bg-slate-900 text-slate-50 min-h-48 md:max-w-3xl md:px-4">
+        <h3 class="mb-8 text-center font-bold text-yellow-400">{% block page_title %}{% endblock %}</h3>
+        {% block main_content %}{% endblock %}
+    </main>
+{% endblock content %}

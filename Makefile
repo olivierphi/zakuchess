@@ -49,18 +49,13 @@ backend/install: bin/uv .venv ## Install the Python dependencies (via uv) and in
 
 .PHONY: backend/watch
 backend/watch: env_vars ?=
-backend/watch: address ?= localhost
+backend/watch: address ?= zakuchess.localhost
 backend/watch: port ?= 8000
 backend/watch: dotenv_file ?= .env.local
-backend/watch: uvicorn_opts ?= --use-colors --access-log
 backend/watch: ## Start Django via Uvicorn, in "watch" mode
-	@DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE} ${env_vars} \
-		${UV} run uvicorn \
-		--reload --reload-dir src/ --reload-include '*.py' --reload-include '*.html' \
-		--host ${address} --port ${port} \
-		--env-file ${dotenv_file} \
-		${uvicorn_opts} \
-		project.asgi:application
+	@${SUB_MAKE} django/manage \
+		dotenv_file=${dotenv_file} env_vars=${env_vars} \
+		cmd='runserver "${address}:${port}"'
 
 .PHONY: backend/resetdb
 backend/resetdb: .confirm # Destroys the SQLite database and recreates it from scratch

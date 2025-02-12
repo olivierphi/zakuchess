@@ -16,6 +16,7 @@ from django.core.cache import cache
 from .models import (
     LICHESS_ACCESS_TOKEN_PREFIX,
     LichessAccountInformation,
+    LichessFinishedGameData,
     LichessGameExport,
     LichessGameFullFromStream,
     LichessOngoingGameData,
@@ -26,7 +27,12 @@ if TYPE_CHECKING:
 
     from apps.chess.types import Square
 
-    from .models import LichessAccessToken, LichessGameId, LichessGameSeekId
+    from .models import (
+        LichessAccessToken,
+        LichessGameId,
+        LichessGameSeekId,
+        LichessPlayerId,
+    )
 
 _logger = logging.getLogger(__name__)
 
@@ -97,6 +103,45 @@ async def get_my_ongoing_games(
         nowPlaying: list[LichessOngoingGameData]
 
     return msgspec.json.decode(response.content, type=ResponseDataWrapper).nowPlaying
+
+
+async def get_player_last_finished_games(
+    *,
+    api_client: httpx.AsyncClient,
+    player_id: LichessPlayerId,
+    count: int = 3,
+) -> list[LichessFinishedGameData]:
+    # https://lichess.org/api#tag/Games/operation/apiGamesUser
+    games = []
+    endpoint = f"/api/games/user/{player_id}"
+    with _lichess_api_monitoring("GET", endpoint):
+        async with api_client.stream(
+            "GET",
+            endpoint,
+            params={
+                "max": count,
+                "moves": "false",
+                "ongoing": "false",
+                "sort": "dateDesc",
+            },
+        ) as response:
+            response.raise_for_status()
+            async for line in response.aiter_lines():
+                game = msgspec.json.decode(line, type=LichessFinishedGameData)
+                # game = json.loads(line)
+                games.append(game)
+
+    # t = response.json()
+    return games
+    # test = 3
+    # t = 1
+    #
+    # class ResponseDataWrapper(msgspec.Struct):
+    #     """The ongoing games are wrapped in a "nowPlaying" root object's key"""
+    #
+    #     nowPlaying: list[LichessOngoingGameData]
+    #
+    # return msgspec.json.decode(response.content, type=ResponseDataWrapper).nowPlaying
 
 
 async def get_game_export_by_id(

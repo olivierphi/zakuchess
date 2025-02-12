@@ -25,8 +25,8 @@ from apps.webui.components.misc_ui.user_prefs_modal import user_prefs_button
 
 from ..companion_bars.top_companion_bar import lichess_bridge_bar
 from ..game_creation import game_creation_form
+from ..games_list import lichess_ongoing_games
 from ..no_linked_account import no_linked_account_content
-from ..ongoing_games import lichess_ongoing_games
 from ..svg_icons import ICON_SVG_USER
 
 if TYPE_CHECKING:
@@ -35,6 +35,7 @@ if TYPE_CHECKING:
 
     from ...models import (
         LichessAccountInformation,
+        LichessFinishedGameWithMetadata,
         LichessOngoingGameData,
     )
     from ...presenters import LichessCorrespondenceGamePresenter
@@ -73,6 +74,7 @@ def lichess_my_current_games_list_page(
     request: HttpRequest,
     me: LichessAccountInformation,
     ongoing_games: list[LichessOngoingGameData],
+    last_finished_games: list[LichessFinishedGameWithMetadata],
 ) -> str:
     return page(
         section(

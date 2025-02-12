@@ -1,0 +1,15 @@
+{% extends "webui/layout.html" %}
+
+{% load chess_arena %}
+{% load lichess_bridge %}
+
+{% block content %}
+    {{ game.raw_data|pprint }}
+    <div class="text-sm text-center text-slate-100 w-full mx-auto md:max-w-3xl xl:max-w-7xl">
+        Game versus <b>{{ game.players_from_my_perspective.them.username }}</b>
+{#        {{ game.raw_data.secondsLeft|game_time_left_display }} left#}
+        -
+{#        {% if game.raw_data.isMyTurn %}<b class="text-slate-50">my turn</b>{% else %}their turn{% endif %}#}
+    </div>
+    {% chess_arena template_name="lichess_bridge/lichess_correspondence_game_chess_arena.html" game_presenter=game_presenter board_id=board_id %}
+{% endblock content %}

@@ -4,17 +4,20 @@ import asyncio
 from typing import TYPE_CHECKING
 
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
+from django.template import loader
 from django.views.decorators.http import (
     require_http_methods,
     require_POST,
     require_safe,
 )
 
+from apps.chess.components.chess_board import chess_arena
 from apps.chess.exceptions import (
     ChessInvalidActionException,
     ChessInvalidMoveException,
 )
+from apps.chess.models import GAME_PREVIEW_USER_PREFS
 
 from . import cookie_helpers, lichess_api
 from .authentication import (
@@ -24,10 +27,14 @@ from .authentication import (
     get_lichess_token_retrieval_via_oauth2_process_starting_url,
 )
 from .components.misc_ui.user_profile_modal import user_profile_modal
-from .components.pages import lichess_pages as lichess_pages
+
+# from .components.pages import lichess_pages as lichess_pages
 from .components.pages.lichess_pages import lichess_game_moving_parts_fragment
 from .forms import LichessCorrespondenceGameCreationForm
-from .models import LichessGameFullFromStreamWithMetadata
+from .models import (
+    LichessFinishedGameWithMetadata,
+    LichessGameFullFromStreamWithMetadata,
+)
 from .presenters import LichessCorrespondenceGamePresenter
 from .views_decorators import (
     handle_chess_logic_exceptions,
@@ -46,6 +53,7 @@ if TYPE_CHECKING:
         LichessAccessToken,
         LichessAccountInformation,
         LichessGameId,
+        LichessOngoingGameData,
     )
 
 # TODO: use Django message framework for everything that happens outside of the chess
@@ -59,12 +67,12 @@ async def lichess_home_page(
     request: HttpRequest, lichess_access_token: LichessAccessToken | None
 ) -> HttpResponse:
     if not lichess_access_token:
-        page_content = lichess_pages.lichess_no_account_linked_page(request=request)
-    else:
-        page_content = await _get_my_games_list_page_content(
-            request=request,
-            lichess_access_token=lichess_access_token,
-        )
+        return render(request, "lichess_bridge/account-pairing-intro.html")
+
+    page_content = await _get_my_games_list_page_content(
+        request=request,
+        lichess_access_token=lichess_access_token,
+    )
 
     return HttpResponse(page_content)
 
@@ -72,7 +80,7 @@ async def lichess_home_page(
 @require_safe
 @redirect_if_no_lichess_access_token
 async def lichess_my_games_list_page(
-    request: HttpRequest, lichess_access_token: LichessAccessToken
+    request: HttpRequest, *, lichess_access_token: LichessAccessToken
 ) -> HttpResponse:
     page_content = await _get_my_games_list_page_content(
         request=request,
@@ -80,6 +88,35 @@ async def lichess_my_games_list_page(
     )
 
     return HttpResponse(page_content)
+
+
+@require_safe
+@redirect_if_no_lichess_access_token
+async def htmx_lichess_game_preview(
+    request: HttpRequest,
+    *,
+    lichess_access_token: LichessAccessToken,
+    game_id: LichessGameId,
+) -> HttpResponse:
+    me, game_data = await _get_game_context_from_lichess(
+        lichess_access_token, game_id, use_game_cache=False
+    )
+    game_presenter = LichessCorrespondenceGamePresenter(
+        game_data=game_data,
+        is_interactive=False,
+        is_thumbnail=True,
+        is_htmx_request=True,
+        refresh_last_move=True,
+        user_prefs=GAME_PREVIEW_USER_PREFS,
+    )
+
+    game_preview = chess_arena(
+        game_presenter=game_presenter,
+        companion_bars=None,
+        board_id=f"preview-{game_data.raw_data.id}",
+    )
+
+    return HttpResponse(game_preview.render())
 
 
 @require_http_methods(["GET", "POST"])
@@ -108,9 +145,11 @@ async def lichess_game_create_form_page(
             return redirect("lichess_bridge:homepage")
 
     return HttpResponse(
-        lichess_pages.lichess_correspondence_game_creation_page(
-            request=request, me=me, form_errors=form_errors
-        )
+        # TODO
+        f"{request=}, {me=}, {form_errors=}",
+        # lichess_pages.lichess_correspondence_game_creation_page(
+        #     request=request, me=me, form_errors=form_errors
+        # )
     )
 
 
@@ -134,12 +173,15 @@ async def lichess_correspondence_game_page(
         user_prefs=user_prefs,
     )
 
-    return HttpResponse(
-        lichess_pages.lichess_correspondence_game_page(
-            request=request,
-            me=me,
-            game_presenter=game_presenter,
-        )
+    return render(
+        request,
+        "lichess_bridge/correspondence-game.html",
+        {
+            "game": game_data,
+            "me": me,
+            "game_presenter": game_presenter,
+            "board_id": "main",
+        },
     )
 
 
@@ -397,17 +439,32 @@ async def _get_my_games_list_page_content(
     ) as lichess_api_client:
         # As the queries are unrelated, let's run them in parallel:
         async with asyncio.TaskGroup() as tg:
-            me = tg.create_task(
+            me_task = tg.create_task(
                 lichess_api.get_my_account(api_client=lichess_api_client)
             )
-            ongoing_games = tg.create_task(
+            ongoing_games_task = tg.create_task(
                 lichess_api.get_my_ongoing_games(api_client=lichess_api_client)
             )
+        me: LichessAccountInformation = me_task.result()
+        ongoing_games: list[LichessOngoingGameData] = ongoing_games_task.result()
 
-    return lichess_pages.lichess_my_current_games_list_page(
-        request=request,
-        me=me.result(),
-        ongoing_games=ongoing_games.result(),
+        last_finished_games = await lichess_api.get_player_last_finished_games(
+            api_client=lichess_api_client, player_id=me.id
+        )
+
+    last_finished_games_with_metadata = [
+        LichessFinishedGameWithMetadata(raw_data=finished_game, my_player_id=me.id)
+        for finished_game in last_finished_games
+    ]
+
+    context = {
+        "me": me,
+        "ongoing_games": ongoing_games,
+        "last_finished_games": last_finished_games_with_metadata,
+    }
+
+    return loader.render_to_string(
+        "lichess_bridge/games-list.html", context, request=request
     )
 
 

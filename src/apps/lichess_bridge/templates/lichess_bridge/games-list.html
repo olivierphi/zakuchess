@@ -1,0 +1,39 @@
+{% extends "lichess_bridge/nongame-page-layout.html" %}
+
+{% load chess_arena %}
+{% load lichess_bridge %}
+
+{% block page_title %}Your Lichess games{% endblock %}
+
+{% block main_content %}
+    <section>
+        <h3 class="text-xl font-bold mb-2">Ongoing games</h3>
+        {% for game in ongoing_games %}
+            <a id="ongoing-game-card-{{ game.gameId }}" 
+               href="{% url "lichess_bridge:correspondence_game" game_id=game.gameId %}"
+               class="group flex bg-gray-950 border border-amber-400 rounded-sm mb-2">
+                <span
+                    class="aspect-square w-1/2 bg-slate-900 border-r border-solid border-slate-50 md:w-1/3 lg:w-2/5"
+                    hx-get="{% url "lichess_bridge:htmx_game_preview" game_id=game.gameId %}"
+                    hx-trigger="revealed once"
+                >
+                    <span class="block mt-2 text-center text-sm text-gray-500">loading preview...</span>
+                </span>
+                <span class="p-2 text-sm text-gray-400 group-hover:text-slate-50 md:text-base">
+                   <span class="block mb-2 text-slate-50 text-lg font-bold group-hover:text-amber-400">{{ game.opponent.username }}</span>
+                   <span class="block">
+                       {{ game.secondsLeft|game_time_left_display }} left
+                       -
+                       {% if game.isMyTurn %}<b class="text-slate-50">my turn</b>{% else %}their turn{% endif %}
+                   <span class="block test-sm">Game progress: {{ game.fen|turns_counter_from_fen }} turns</span>
+                   </span>
+                </span>
+            </a>
+        {% empty %}
+            <div class="italic p-8 text-center">
+                You have no ongoing games on Lichess at the moment.
+            </div>
+        {% endfor %}
+    </section>
+    
+{% endblock main_content %}

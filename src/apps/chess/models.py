@@ -69,6 +69,9 @@ class UserPrefs(
         return msgspec.json.decode(cookie_content.encode(), type=cls)
 
 
+GAME_PREVIEW_USER_PREFS = UserPrefs(board_texture=UserPrefsBoardTexture.NO_TEXTURE)
+
+
 class GameFactions(NamedTuple):
     w: Faction  # the faction for the "w" player
     b: Faction  # the faction for the "b" player

@@ -50,10 +50,10 @@ INFO_BARS_COMMON_CLASSES = (
 )
 _PIECE_GROUND_MARKER_COLOR_TAILWIND_CLASSES: dict[tuple[PlayerSide, bool], str] = {
     # the boolean says if the piece can move
-    ("w", False): "bg-emerald-800/40 border-2 border-emerald-800",
-    ("b", False): "bg-indigo-800/40 border-2 border-indigo-800",
-    ("w", True): "bg-emerald-600/40 border-2 border-emerald-800",
-    ("b", True): "bg-indigo-600/40 border-2 border-indigo-800",
+    ("w", False): "bg-emerald-800/40 border-emerald-800",
+    ("b", False): "bg-indigo-800/40 border-indigo-800",
+    ("w", True): "bg-emerald-600/40 border-emerald-800",
+    ("b", True): "bg-indigo-600/40 border-indigo-800",
 }
 _CHESS_PIECE_Z_INDEXES: dict[str, str] = {
     # N.B. z-indexes must be multiples of 10 in Tailwind.
@@ -113,6 +113,34 @@ def chess_arena(
         if settings.DEBUG_LAYOUT
         else ""
     )
+    if not game_presenter.is_interactive:
+        arena_additional_classes += " pointer-events-none"
+
+    if game_presenter.is_thumbnail:
+        chess_board_container_classes = ""
+        companion_bars_container_classes = ""
+    else:
+        # On "large enough" screens we will display the "companion bars" on the right
+        # of the chess board (only if the chess board is not a thumbnail)
+        chess_board_container_classes = "xl:w-2/3"
+        companion_bars_container_classes = "xl:px-2 xl:w-1/3 xl:bg-slate-950"
+        arena_additional_classes += (
+            "md:max-w-3xl xl:max-w-7xl xl:flex xl:border "
+            "xl:rounded-md xl:border-neutral-800"
+        )
+
+    arena_additional_attrs: dict[str, str] = {}
+    if game_presenter.is_interactive:
+        # When the user clicks on anything that is not an interactive element
+        # of the chess board, and the state of this chess board is not
+        # "waiting_for_player_selection", then the chess board is reset to this state.
+        arena_additional_attrs |= {
+            "data_hx_get": game_presenter.urls.htmx_game_no_selection_url(
+                board_id=board_id
+            ),
+            "data_hx_trigger": f"click[cursorIsNotOnChessBoardInteractiveElement('{board_id}')] from:document",
+            "data_hx_target": f"#chess-board-pieces-{board_id}",
+        }
 
     return section(
         div(
@@ -149,24 +177,18 @@ def chess_arena(
                 cls="aspect-square relative mx-auto max-w-[calc(100dvh-80px)]",
             ),
             id=f"chess-board-components-{board_id}",
-            cls="xl:w-2/3 bg-slate-800",
+            cls=f"bg-slate-800 {chess_board_container_classes}",
         ),
         chess_bot_data(board_id),
         div(
             companion_bars.get("top", "") if companion_bars else "",
             companion_bars.get("bottom", "") if companion_bars else "",
             id=f"chess-status-bars-{board_id}",
-            cls="xl:px-2 xl:w-1/3 xl:bg-slate-950",
+            cls=companion_bars_container_classes,
         ),
         id=f"chess-arena-{board_id}",
-        cls="w-full mx-auto bg-slate-900 "
-        f"md:max-w-3xl xl:max-w-7xl xl:flex xl:border xl:rounded-md xl:border-neutral-800 {arena_additional_classes}",
-        # When the user clicks on anything that is not an interactive element
-        # of the chess board, and the state of this chess board is not
-        # "waiting_for_player_selection", then the chess board is reset to this state.
-        data_hx_get=game_presenter.urls.htmx_game_no_selection_url(board_id=board_id),
-        data_hx_trigger=f"click[cursorIsNotOnChessBoardInteractiveElement('{ board_id }')] from:document",
-        data_hx_target=f"#chess-board-pieces-{ board_id }",
+        cls=f"w-full mx-auto bg-slate-900 {arena_additional_classes}",
+        **arena_additional_attrs,
     )
 
 
@@ -197,6 +219,7 @@ def chess_board(*, game_presenter: GamePresenter, board_id: str) -> dom_tag:
         game_presenter.force_square_info or game_presenter.is_preview
     )
     squares: list[dom_tag] = []
+    is_thumbnail = game_presenter.is_thumbnail
     match game_presenter.board_orientation:
         case "1->8":
             for file in FILE_NAMES:
@@ -206,6 +229,7 @@ def chess_board(*, game_presenter: GamePresenter, board_id: str) -> dom_tag:
                             game_presenter.board_orientation,
                             cast("Square", f"{file}{rank}"),
                             force_square_info=force_square_info,
+                            is_thumbnail=is_thumbnail,
                         )
                     )
         case "8->1":
@@ -216,6 +240,7 @@ def chess_board(*, game_presenter: GamePresenter, board_id: str) -> dom_tag:
                             game_presenter.board_orientation,
                             cast("Square", f"{file}{rank}"),
                             force_square_info=force_square_info,
+                            is_thumbnail=is_thumbnail,
                         )
                     )
 
@@ -297,6 +322,7 @@ def chess_board_square(
     square: Square,
     *,
     force_square_info: bool = False,
+    is_thumbnail: bool = False,
 ) -> dom_tag:
     file, rank = file_and_rank_from_square(square)
     square_index = FILE_NAMES.index(file) + RANK_NAMES.index(rank)
@@ -312,7 +338,7 @@ def chess_board_square(
     displayed_file, displayed_rank = None, None
     if force_square_info:
         displayed_file, displayed_rank = file, rank
-    else:
+    elif not is_thumbnail:
         match board_orientation:
             case "1->8":
                 if rank == "1":
@@ -351,25 +377,32 @@ def chess_piece(
     player_side = player_side_from_piece_role(piece_role)
 
     piece_can_be_moved_by_player = (
-        game_presenter.solution_index is not None
+        game_presenter.is_interactive
+        and game_presenter.solution_index is not None
         and game_presenter.is_my_turn
         and square in game_presenter.squares_with_pieces_that_can_move
     )
     unit_display = chess_character_display(
         piece_role=piece_role, game_presenter=game_presenter, square=square
     )
-    unit_chess_symbol_display = chess_unit_symbol_display(
-        board_orientation=game_presenter.board_orientation, piece_role=piece_role
+    unit_chess_symbol_display = (
+        ""  # no chess symbols displayed for thumbnails
+        if game_presenter.is_thumbnail
+        else chess_unit_symbol_display(
+            board_orientation=game_presenter.board_orientation, piece_role=piece_role
+        )
     )
     ground_marker = chess_unit_ground_marker(
-        player_side=player_side, can_move=piece_can_be_moved_by_player
+        player_side=player_side,
+        can_move=piece_can_be_moved_by_player,
+        is_thumbnail=game_presenter.is_thumbnail,
     )
     is_selected_piece = bool(
         square
         and game_presenter.selected_piece
         and game_presenter.selected_piece.square == square
     )
-    is_game_over = game_presenter.is_game_over
+    is_interactive = game_presenter.is_interactive and not game_presenter.is_game_over
 
     animation_speed = (
         "duration-300"
@@ -383,8 +416,8 @@ def chess_piece(
         *square_to_positioning_tailwind_classes(
             game_presenter.board_orientation, square
         ),
-        "cursor-pointer" if not is_game_over else "cursor-default",
-        "pointer-events-auto" if not is_game_over else "pointer-events-none",
+        "cursor-pointer" if is_interactive else "cursor-default",
+        "pointer-events-auto" if is_interactive else "pointer-events-none",
         # Transition-related classes:
         "transition-coordinates",
         animation_speed,
@@ -394,7 +427,7 @@ def chess_piece(
 
     additional_attributes: dict = {}
     htmx_attributes: dict[str, str] = {}
-    if not is_game_over and game_presenter.can_select_pieces:
+    if is_interactive and game_presenter.can_select_pieces:
         htmx_attributes = {
             "data_hx_trigger": "click",
             "data_hx_get": (
@@ -565,6 +598,11 @@ def chess_character_display(
         else False
     )
     is_my_turn = game_presenter.is_my_turn if game_presenter else False
+    is_interactive = (
+        game_presenter
+        and game_presenter.is_interactive
+        and not game_presenter.is_thumbnail
+    )
     is_playable = is_my_turn and (
         (
             piece_player_side == game_presenter.my_side
@@ -599,6 +637,7 @@ def chess_character_display(
         if board_orientation == "1->8"
         else piece_player_side == "b"
     )
+
     piece_type: PieceType = type_from_piece_role(piece_role)
     is_knight, is_king = piece_type == "n", piece_type == "k"
 
@@ -612,20 +651,26 @@ def chess_character_display(
         # let's always highlight a king if it's in check:
         is_potential_capture = True
 
-    horizontal_translation = (
-        ("left-2" if (is_knight or is_king) else "left-0")
-        if is_from_original_left_hand_side
-        else "right-0"
-    )
-    vertical_translation = (
-        "top-2" if is_knight and is_from_original_left_hand_side else "top-1"
-    )
+    if game_presenter and game_presenter.is_thumbnail:
+        horizontal_translation = ""
+        vertical_translation = ""
+        width = "w-full"
+    else:
+        horizontal_translation = (
+            ("left-2" if (is_knight or is_king) else "left-0")
+            if is_from_original_left_hand_side
+            else "right-0"
+        )
+        vertical_translation = (
+            "top-2" if is_knight and is_from_original_left_hand_side else "top-1"
+        )
+        width = "w-10/12" if is_knight else "w-11/12"
 
     game_factions = cast("GameFactions", factions or game_presenter.factions)  # type: ignore
 
     classes = [
         "relative",
-        "w-10/12" if is_knight else "w-11/12",
+        width,
         "aspect-square",
         "bg-no-repeat",
         "bg-cover",
@@ -637,22 +682,27 @@ def chess_character_display(
             piece_role=piece_role,
             factions=game_factions,
         ),
-        # Conditional classes:
-        (
-            (
-                "drop-shadow-playable-selected-piece"
-                if is_playable
-                else "drop-shadow-non-playable-selected-piece"
-            )
-            if is_highlighted
-            else (
-                "drop-shadow-piece-unit-w"
-                if piece_player_side == "w"
-                else "drop-shadow-piece-unit-b"
-            )
-        ),
-        "drop-shadow-potential-capture" if is_potential_capture else "",
     ]
+    if not game_presenter or is_interactive:
+        classes.extend(
+            [
+                # Conditional classes:
+                (
+                    (
+                        "drop-shadow-playable-selected-piece"
+                        if is_playable
+                        else "drop-shadow-non-playable-selected-piece"
+                    )
+                    if is_highlighted
+                    else (
+                        "drop-shadow-piece-unit-w"
+                        if piece_player_side == "w"
+                        else "drop-shadow-piece-unit-b"
+                    )
+                ),
+                "drop-shadow-potential-capture" if is_potential_capture else "",
+            ]
+        )
     if additional_classes:
         classes.extend(additional_classes)
 
@@ -663,7 +713,7 @@ def chess_character_display(
 
 
 def chess_unit_ground_marker(
-    *, player_side: PlayerSide, can_move: bool = False
+    *, player_side: PlayerSide, can_move: bool = False, is_thumbnail: bool = False
 ) -> dom_tag:
     classes = [
         "absolute",
@@ -674,6 +724,7 @@ def chess_unit_ground_marker(
         "rounded-1/2",
         _CHESS_PIECE_Z_INDEXES["ground_marker"],
         "border-solid",
+        "border" if is_thumbnail else "border-2",
         _PIECE_GROUND_MARKER_COLOR_TAILWIND_CLASSES[(player_side, can_move)],
     ]
     return div(

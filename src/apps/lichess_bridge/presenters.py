@@ -33,6 +33,8 @@ class LichessCorrespondenceGamePresenter(GamePresenter):
         target_square_to_confirm: Square | None = None,
         selected_piece_square: Square | None = None,
         user_prefs: UserPrefs | None = None,
+        is_interactive: bool = True,
+        is_thumbnail: bool = False,
     ):
         self._game_data = game_data
 
@@ -54,6 +56,8 @@ class LichessCorrespondenceGamePresenter(GamePresenter):
             selected_piece_square=selected_piece_square,
             last_move=last_move,
             user_prefs=user_prefs,
+            is_interactive=is_interactive,
+            is_thumbnail=is_thumbnail,
         )
 
     @cached_property

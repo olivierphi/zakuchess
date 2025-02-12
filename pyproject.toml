@@ -44,6 +44,7 @@ dev = [
     "django-extensions==3.*",
     "sqlite-utils==3.*",
     "fix-future-annotations>=0.5.0",
+    "django-debug-toolbar>=5.0.1",
 ]
 test = [
     "pytest==8.3.*",

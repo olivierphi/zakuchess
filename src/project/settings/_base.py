@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from __future__ import annotations
 
+import sys
 from os import environ as env
 from pathlib import Path
 
@@ -28,6 +29,7 @@ DEBUG = False
 
 ALLOWED_HOSTS: list[str] = []
 
+IS_TESTING = "test" in sys.argv or "pytest" in sys.modules
 
 # Application definition
 
@@ -42,7 +44,6 @@ INSTALLED_APPS = (
         "django.contrib.humanize",
     ]
     + [
-        "whitenoise",
         "django_htmx",
         "axes",  # https://github.com/jazzband/django-axes
         "import_export",  # https://django-import-export.readthedocs.io/
@@ -59,9 +60,6 @@ INSTALLED_APPS = (
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    # > The WhiteNoise middleware should be placed directly after the
-    # > Django SecurityMiddleware and before all other middleware
-    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",

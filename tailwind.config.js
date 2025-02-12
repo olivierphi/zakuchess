@@ -24,7 +24,7 @@ const SPEECH_BUBBLE_DROP_SHADOW_COLOR = "#fbbf24" // amber-400
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-    content: ["./src/apps/*/components/**/*.py"],
+    content: ["./src/apps/*/templates/**/*.html", "./src/apps/*/components/**/*.py"],
     safelist: chessRelatedClassesSafeList(),
     theme: {
         fontFamily: {

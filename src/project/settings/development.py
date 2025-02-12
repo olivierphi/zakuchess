@@ -6,17 +6,20 @@ ALLOWED_HOSTS = ["*"]
 
 DEBUG = True
 
-INSTALLED_APPS.insert(
-    # Make sure `runserver` doesn't try to serve static assets,
-    # even without the `--no-static` option:
-    # (https://whitenoise.readthedocs.io/en/stable/django.html#using-whitenoise-in-development)
-    INSTALLED_APPS.index("django.contrib.staticfiles"),
-    "whitenoise.runserver_nostatic",
-)
-
 INSTALLED_APPS += [
     "django_extensions",
 ]
+
+USE_DJANGO_DEBUG_TOOLBAR = bool(env.get("USE_DJANGO_DEBUG_TOOLBAR"))
+if USE_DJANGO_DEBUG_TOOLBAR and not IS_TESTING:
+    INSTALLED_APPS += [
+        "debug_toolbar",
+    ]
+    MIDDLEWARE.insert(
+        MIDDLEWARE.index("django.middleware.security.SecurityMiddleware") + 1,
+        "debug_toolbar.middleware.DebugToolbarMiddleware",
+    )
+    INTERNAL_IPS = ["127.0.0.1"]
 
 LOGGING = {
     "version": 1,

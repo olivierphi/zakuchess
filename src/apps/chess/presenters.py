@@ -76,7 +76,9 @@ class GamePresenter(ABC):
         target_square_to_confirm: Square | None = None,
         last_move: tuple[Square, Square] | None = None,
         captured_piece_role: PieceRole | None = None,
-        is_preview: bool = False,
+        is_preview: bool = False,  # is a preview of the game in the Django Admin
+        is_interactive: bool = True,
+        is_thumbnail: bool = False,  # we skip some rendering details for thumbnails
         bot_depth: int = 1,
         user_prefs: UserPrefs | None = None,
     ):
@@ -93,6 +95,8 @@ class GamePresenter(ABC):
         self.last_move = last_move
         self.captured_piece_role = captured_piece_role
         self.is_preview = is_preview
+        self.is_interactive = is_interactive
+        self.is_thumbnail = is_thumbnail
         self.bot_depth = bot_depth
         self.user_prefs = user_prefs or UserPrefs()
 
