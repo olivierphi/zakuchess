@@ -126,24 +126,6 @@ def get_speech_bubble(
             square=game_presenter.selected_piece.square,
         )
 
-    if (
-        game_presenter.is_my_turn
-        and game_presenter.is_htmx_request
-        and not game_presenter.selected_piece
-        and game_presenter.naive_score < -3
-    ):
-        probability = 0.6 if game_presenter.naive_score < -5 else 0.3
-        die_result = random.random()  # 🎲
-        if die_result > probability:
-            return SpeechBubbleData(
-                text=raw(
-                    "We're in a tough situation, folks 😬<br>"
-                    "Maybe trying again from the beginning, "
-                    "by using the 'restart' button, could be a good idea?"
-                ),
-                square=_my_king_square(game_presenter),
-            )
-
     return None
 
 
