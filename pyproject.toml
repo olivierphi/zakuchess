@@ -1,0 +1,70 @@
+[project]
+name = "zakuchess-astro"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.116.1",
+    "httpx>=0.28.1",
+    "pydantic-settings>=2.10.1",
+    "uvicorn[standard]>=0.35.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "mypy>=1.17.1",
+    "pre-commit>=4.3.0",
+    "ruff>=0.12.11",
+]
+
+# Misc tools configuration
+
+[tool.uv]
+package = false
+
+
+[tool.ruff]
+# @link https://docs.astral.sh/ruff/configuration/
+target-version = "py313"
+
+
+[tool.ruff.lint]
+ignore = ["E501"]
+select = [
+    "F", # flake8
+    "I", # isort
+    # https://docs.astral.sh/ruff/rules/#flake8-type-checking-tc
+    "TC001",
+    "TC002",
+    "TC003",
+    "DJ", # https://docs.astral.sh/ruff/rules/#flake8-django-dj
+    "FA", # flake8-future-annotations
+    "INT", # flake8-gettext
+]
+
+[tool.ruff.lint.isort]
+# https://docs.astral.sh/ruff/settings/#lintisort
+combine-as-imports = true
+# https://github.com/astral-sh/ruff/issues/11103
+# TODO: remove this once Python 3.14 is released and we start using it :-)
+required-imports = ["from __future__ import annotations"]
+
+[tool.ruff.lint.flake8-type-checking]
+# https://docs.astral.sh/ruff/settings/#lintflake8-type-checking
+quote-annotations = true
+strict = true
+
+
+[tool.mypy]
+# @link https://mypy.readthedocs.io/en/stable/config_file.html#using-a-pyproject-toml
+python_version = "3.13"
+mypy_path = "src-backend/"
+
+
+[tool.pytest.ini_options]
+pythonpath = "src-backend"
+testpaths = [
+    "src-backend/**/*/tests/",
+]
+python_files = ["test_*.py"]
