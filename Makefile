@@ -1,4 +1,5 @@
 PYTHON_BIN ?= ./.venv/bin
+NODE_BIN ?= ./node_modules/.bin
 PYTHON ?= ${PYTHON_BIN}/python
 UV ?= ./bin/uv
 SUB_MAKE = ${MAKE} --no-print-directory
@@ -15,10 +16,15 @@ install: bin/uv .venv node_modules/ .env.local ## Install the Python and fronten
 	${PYTHON_BIN}/pre-commit install
 
 .PHONY: dev
-dev:
-	@./node_modules/.bin/concurrently --names "fastapi,astro" --prefix-colors "yellow,green" \
+dev: ## Starts Astro and FastAPI, both in "developement" mode
+	@${NODE_BIN}/concurrently --names "fastapi,astro" --prefix-colors "yellow,green" \
 		"${SUB_MAKE} backend/dev" \
 		"${SUB_MAKE} frontend/dev" \
+
+.PHONY: prod
+prod: bin/uv .venv node_modules/ backend/install ## Builds the frontend, then starts FastAPI in "production" mode
+	${SUB_MAKE} frontend/build
+	${SUB_MAKE} backend/prod
 
 .PHONY: code-quality/all
 code-quality/all: code-quality/backend/ruff_format code-quality/backend/ruff_lint code-quality/backend/mypy  ## Run all our code quality tools
@@ -48,8 +54,15 @@ backend/install:
 .PHONY: backend/dev
 backend/dev: backend/install
 	@${PYTHON_BIN}/uvicorn \
+		--env-file .env.local \
 		--reload \
 		--reload-dir src-backend/zakuchess \
+		--app-dir src-backend/ \
+		zakuchess.app:app
+
+.PHONY: backend/prod
+backend/prod: backend/install
+	@${PYTHON_BIN}/uvicorn \
 		--app-dir src-backend/ \
 		zakuchess.app:app
 
@@ -63,7 +76,7 @@ frontend/lint: check/node
 
 .PHONY: frontend/build
 frontend/build: check/node
-	@node --run build
+	@${NODE_BIN}/astro build
 
 # Here starts the "misc util targets" stuff
 
@@ -82,14 +95,16 @@ bin/uv: # Install `uv` and `uvx` locally in the "bin/" folder
 node_modules/:
 	npm install
 
+.venv/bin/black: .venv ## A simple and stupid shim to use the IDE's Black integration with Ruff
+	@echo '#!/usr/bin/env sh\n$$(dirname "$$0")/ruff format $$@' > ${PYTHON_BIN}/black
+	@chmod +x ${PYTHON_BIN}/black
+
 .PHONY: check/node
 # Check Node.js version (must be 22.x)
 check/node:
 	@if command -v node > /dev/null; then \
 		node_ver=$$(node -v | cut -d'v' -f2); \
-		if echo "$$node_ver" | grep -q "^22\."; then \
-			echo "✓ Node.js version $$node_ver is correct (22.x)"; \
-		else \
+		if ! echo "$$node_ver" | grep -q "^22\."; then \
 			echo "✗ Error: Node.js version $$node_ver found, but version 22.x is required"; \
 			exit 1; \
 		fi \
