@@ -1,0 +1,70 @@
+---
+import type {
+  ChessArenaCompanionBars,
+  BoardOrientation,
+} from "@shared/chess/types.ts";
+import ChessBoard from "./ChessBoard";
+import ChessArenaDynamicIsland from "./ChessArenaDynamicIsland";
+
+interface Props {
+  initialFen: string;
+  boardOrientation?: BoardOrientation;
+  companionBars?: ChessArenaCompanionBars;
+  boardId: string;
+}
+
+const {
+  initialFen,
+  boardOrientation = "1->8",
+  companionBars,
+  boardId,
+} = Astro.props;
+
+const arenaAdditionalClasses = import.meta.env.DEV
+  ? "border-3 border-solid md:border-lime-400 xl:border-red-400"
+  : "";
+
+//TODO:
+const handleArenaClick = `
+  function handleArenaClick(e) {
+    // Handle clicks outside interactive elements to reset selection
+    // This would need to be implemented with your HTMX replacement logic
+    console.log("Arena clicked", e.target);
+  }
+`;
+---
+
+<section
+  id={`chess-arena-${boardId}`}
+  class={`w-full mx-auto bg-slate-900 md:max-w-3xl xl:max-w-7xl xl:flex xl:border xl:rounded-md xl:border-neutral-800 ${arenaAdditionalClasses}`}
+>
+  <!-- Main chess board area -->
+  <div id={`chess-board-components-${boardId}`} class="xl:w-2/3 bg-slate-800">
+    <div class="aspect-square relative mx-auto max-w-[calc(100dvh-80px)]">
+      <!-- Chess board squares (server-rendered, static) -->
+      <div
+        class="absolute inset-0 pointer-events-none z-0"
+        id={`chess-board-container-${boardId}`}
+      >
+        <ChessBoard boardOrientation={boardOrientation} boardId={boardId} />
+      </div>
+
+      <!-- All dynamic components in a single React island -->
+      <ChessArenaDynamicIsland
+        client:only="react"
+        initialFen={initialFen}
+        boardOrientation={boardOrientation}
+        boardId={boardId}
+      />
+    </div>
+  </div>
+
+  <!-- Side panel -->
+  <div
+    id={`chess-status-bars-${boardId}`}
+    class="xl:px-2 xl:w-1/3 xl:bg-slate-950"
+  >
+    {companionBars?.top && <Fragment set:html={companionBars.top} />}
+    {companionBars?.bottom && <Fragment set:html={companionBars.bottom} />}
+  </div>
+</section>

@@ -1,0 +1,21 @@
+{
+  "name": "zakuchess-backend",
+  "private": true,
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "node --watch src/index.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.1",
+    "@mojojs/path": "^1.7.0",
+    "chess.js": "^1.4.0",
+    "hono": "^4.9.6",
+    "p-limit": "^7.1.1",
+    "pino": "^9.9.4"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.1",
+    "typescript": "^5.9.2"
+  }
+}

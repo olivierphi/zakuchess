@@ -5,23 +5,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Development Commands
 
 **Primary development workflow:**
-- `make dev` - Starts both FastAPI backend and Astro frontend in development mode
-- `make install` - Install Python and Node.js dependencies
+
+- `make dev` - Starts both Hono backend and Astro frontend in development mode
+- `make install` - Install frontend and Node.js dependencies
 
 **Build and deployment:**
-- `make prod` - Build frontend and start FastAPI in production mode
+
+- `make prod` - Build frontend and start Hono in production mode
 - `make frontend/build` - Build Astro frontend only
 
-**Code quality:**
-- `make code-quality/all` - Run all linting and type checking
-- `make code-quality/frontend/oxlint` - Frontend linter
-- `make code-quality/frontend/tsc` - TypeScript type checking
-- `make code-quality/backend/ruff_format` - Python code formatting
-- `make code-quality/backend/ruff_lint` - Python linting
-- `make code-quality/backend/mypy` - Python type checking
-
 **Individual services:**
-- `make backend/dev` - FastAPI development server only
+
+- `make backend/dev` - Hono development server only
 - `make frontend/dev` - Astro development server only
 
 ## Goal of the project
@@ -30,8 +25,9 @@ The goal is to re-implement the previous version, which was almost feature-compl
 but proved to be hard to maintain in the long run.
 
 **A git worktree of the previous version can be found in the "worktrees/add-lichess-integration".**
- - The tech stack there was based on Django, with HTMX to refresh the UI.
- - HTML components were written using the Python package named "dominate".
+
+- The tech stack there was based on Django, with HTMX to refresh the UI.
+- HTML components were written using the Python package named "dominate".
 
 **What we're trying to achieve here is a rewrite of the code in "worktrees/add-lichess-integration"**,
 but with more focus on frontend technologies this time, as we rely on Astro and React islands.
@@ -40,42 +36,36 @@ but with more focus on frontend technologies this time, as we rely on Astro and 
 
 This is a full-stack chess application with a hybrid architecture.
 
-**Backend (FastAPI):**
-- Located in `src-backend/zakuchess/`
-- FastAPI serves as a proxy to Astro pages via `AstroPageProxyResponse`
-- Environment-aware: serves static files in production, proxies to Astro dev server in development
-- Python virtual environment managed by `uv`
+**Backend (Hono):**
+
+- Located in `backend/`
+- Hono serves as a proxy to Astro pages via `astro-bridge.ts`: it serves Astro static files in production, and proxies to Astro dev server in real tome in development
 
 **Frontend (Astro + React):**
-- Located in `src-frontend/`
+
+- Located in `frontend/`
 - Astro framework with React components for interactive UI
 - TypeScript configuration uses `react-jsx` and separate type imports
-- Chess game components in `src-frontend/components/chess/`
+- Chess game components in `frontend/src/components/chess/`
 - TailwindCSS for styling
 
 **Key Integration Points:**
-- In development: FastAPI proxies requests to Astro dev server
-- In production: FastAPI serves pre-built Astro static files
-- Astro builds to `dist/` which FastAPI reads from in production mode
+
+- In development: Hono proxies requests to Astro dev server
+- In production: Hono serves pre-built Astro static files
+- Astro builds to `dist/` which Hono reads from in production mode
 - Our own version of the game of chess follows the normal rules, but represents chess pieces
-   with pixel arts characters - the assets for this are in the "public/assets/chess/units" folder.
-- The chess "White" side is played by the "humans" units, in "public/assets/chess/units/humans".
-    The chess "Black" side is played by the "undead" units, in "public/assets/chess/units/undead".
+  with pixel arts characters - the assets for this are in the "frontend/public/assets/chess/units" folder.
+- The chess "White" side is played by the "humans" units, in "frontend/public/assets/chess/units/humans".
+  The chess "Black" side is played by the "undead" units, in "frontend/public/assets/chess/units/undead".
 
 ## Code Style
 
-**Frontend:**
 - TypeScript with strict configuration
 - Oxlint enforces consistent type imports: `"fixStyle": "separate-type-imports"`
 - React components use `.tsx` extension, Astro components use `.astro`
 
-**Backend:**
-- Python with Ruff for formatting and linting
-- MyPy for type checking
-- Pre-commit hooks installed via `make install`
-
 ## Requirements
 
-- Node.js 22.x (enforced by Makefile)
-- Python managed via `uv` (installed locally in `bin/`)
+- Node.js 24.x (enforced by Makefile)
 - Environment variables configured in `.env.local` (copy from `.env.dist`)

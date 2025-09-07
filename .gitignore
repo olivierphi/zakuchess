@@ -1,19 +1,8 @@
 # local-only files
 .env.local
 
-# build output
-/dist/
-
-# uv and uvx
-/bin/uv
-/bin/uvx
-
-# generated types
-/.astro/
-
 # dependencies
-/node_modules/
-/.venv/
+node_modules
 
 # logs
 /npm-debug.log*

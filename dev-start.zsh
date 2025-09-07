@@ -7,15 +7,5 @@
 
 cd ${0:A:h}/ # Change to the directory of the current file
 
-# Activate Python venv:
-source .venv/bin/activate
 # Select Node.js version:
 nvm use
-
-alias uv='bin/uv'
-alias dev='make dev'
-alias astro='./node_modules/.bin/astro'
-alias test='pytest -x'
-
-# Show the aliases we just defined:
-alias uv && alias dev && alias astro && alias test

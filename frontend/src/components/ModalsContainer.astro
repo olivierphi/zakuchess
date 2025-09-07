@@ -1,0 +1,18 @@
+---
+// Modal container component for dynamic modal content
+---
+
+<div id="modals-container" class="hidden"></div>
+
+<script>
+  function closeModal() {
+    const modal = document.getElementById("modals-container");
+    if (modal) {
+      modal.innerHTML = "";
+      modal.className = "hidden";
+    }
+  }
+
+  // Make closeModal globally available
+  (window as any).closeModal = closeModal;
+</script>

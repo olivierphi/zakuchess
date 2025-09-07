@@ -1,0 +1,4 @@
+{
+  "{frontend,backend,scripts}/**/*.{js,jsx,ts,tsx,astro}": "oxlint",
+  "**/*.{js,jsx,ts,tsx,astro,json}": "prettier --write"
+}

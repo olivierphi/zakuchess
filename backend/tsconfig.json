@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "rootDirs": ["src"],
+    "target": "ESNext",
+    "module": "NodeNext",
+    "strict": true,
+    // Allow importing TypeScript files using their native extension (.ts(x)).
+    "allowImportingTsExtensions": true,
+    // Enable JSON imports.
+    "resolveJsonModule": true,
+    // Enforce the usage of type-only imports when needed.
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": ["node"],
+    "paths": {
+      "@shared/*": ["../shared/*"]
+    }
+  },
+  "exclude": ["node_modules"]
+}
