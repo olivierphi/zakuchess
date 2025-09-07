@@ -1,14 +1,15 @@
 import React, { useMemo } from "react";
-import type { BoardOrientation, Square } from "@shared/chess/types.ts";
-import {
-  fileAndRankFromSquare,
-  squareToPositioningTailwindClasses,
-} from "@shared/chess/utils.ts";
 import {
   FILE_NAMES,
+  type BoardOrientation,
+  type Square,
   RANK_NAMES,
+} from "@shared/chess/chess-logic.ts";
+import { fileAndRankFromSquare } from "@shared/chess/utils.ts";
+import {
   SQUARE_COLOR_TAILWIND_CLASSES,
-} from "@shared/chess/consts.ts";
+  squareToPositioningTailwindClasses,
+} from "@shared/chess/chess-html-display.ts";
 
 interface ChessBoardSquareProps {
   boardOrientation: BoardOrientation;

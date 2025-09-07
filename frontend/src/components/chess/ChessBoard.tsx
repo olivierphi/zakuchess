@@ -1,7 +1,11 @@
 import React, { type JSX } from "react";
-import { type BoardOrientation, type Square } from "@shared/chess/types.ts";
+import {
+  type BoardOrientation,
+  FILE_NAMES,
+  RANK_NAMES,
+  type Square,
+} from "@shared/chess/chess-logic.ts";
 import ChessBoardSquare from "./ChessBoardSquare.tsx";
-import { FILE_NAMES, RANK_NAMES } from "@shared/chess/consts.ts";
 
 interface ChessBoardProps {
   boardOrientation: BoardOrientation;

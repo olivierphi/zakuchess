@@ -1,13 +1,13 @@
 import React from "react";
-import type { Square } from "@shared/chess/types";
+import type { Square } from "@shared/chess/chess-logic.ts";
 import { useChessArenaStore } from "./ChessArenaProvider.tsx";
-import ChessPiece from "./ChessPiece.tsx";
+import { ChessPiece } from "./ChessPiece.tsx";
 
 interface ChessPiecesProps {
   boardId: string;
 }
 
-const ChessPieces: React.FC<ChessPiecesProps> = ({ boardId }) => {
+export const ChessPieces: React.FC<ChessPiecesProps> = ({ boardId }) => {
   const { pieceRoleBySquare } = useChessArenaStore((state) => ({
     pieceRoleBySquare: state.pieceRoleBySquare,
   }));
@@ -34,5 +34,3 @@ const ChessPieces: React.FC<ChessPiecesProps> = ({ boardId }) => {
     </div>
   );
 };
-
-export default ChessPieces;

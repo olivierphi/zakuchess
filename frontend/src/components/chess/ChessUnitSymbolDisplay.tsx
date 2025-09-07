@@ -4,15 +4,14 @@ import type {
   PieceName,
   PieceRole,
   PlayerSide,
-} from "@shared/chess/types.ts";
+} from "@shared/chess/chess-logic.ts";
 import {
   playerSideFromPieceRole,
   typeFromPieceRole,
   pieceNameFromPieceRole,
-  chessUnitSymbolClass,
   pieceShouldFaceLeft,
 } from "@shared/chess/utils.ts";
-import { CHESS_PIECE_Z_INDEXES } from "@shared/chess/consts.ts";
+import { CHESS_PIECE_Z_INDEXES } from "@shared/chess/chess-html-display.ts";
 
 const PIECE_SYMBOLS_CLASSES: Record<PlayerSide, Record<PieceName, string>> = {
   // We need Tailwind to see these classes, so that it bundles them in the final CSS file.
@@ -39,7 +38,7 @@ interface ChessUnitSymbolDisplayProps {
   pieceRole: PieceRole;
 }
 
-const ChessUnitSymbolDisplay: React.FC<ChessUnitSymbolDisplayProps> = ({
+export const ChessUnitSymbolDisplay: React.FC<ChessUnitSymbolDisplayProps> = ({
   boardOrientation,
   pieceRole,
 }) => {
@@ -83,5 +82,3 @@ const ChessUnitSymbolDisplay: React.FC<ChessUnitSymbolDisplayProps> = ({
     </div>
   );
 };
-
-export default ChessUnitSymbolDisplay;

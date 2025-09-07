@@ -5,7 +5,7 @@ import type {
   Faction,
   PieceName,
   BoardOrientation,
-} from "@shared/chess/types.ts";
+} from "@shared/chess/chess-logic.ts";
 import {
   playerSideFromPieceRole,
   typeFromPieceRole,
@@ -13,7 +13,7 @@ import {
   pieceShouldFaceLeft,
 } from "@shared/chess/utils.ts";
 import { useChessArenaStore } from "./ChessArenaProvider.tsx";
-import { CHESS_PIECE_Z_INDEXES } from "@shared/chess/consts.ts";
+import { CHESS_PIECE_Z_INDEXES } from "@shared/chess/chess-html-display.ts";
 
 const PIECE_UNITS_CLASSES: Record<Faction, Record<PieceName, string>> = {
   // We need Tailwind to see these classes, so that it bundles them in the final CSS file.
@@ -42,7 +42,7 @@ interface ChessCharacterDisplayProps {
   additionalClasses?: string[];
 }
 
-const ChessCharacterDisplay: React.FC<ChessCharacterDisplayProps> = ({
+export const ChessCharacterDisplay: React.FC<ChessCharacterDisplayProps> = ({
   pieceRole,
   boardOrientation,
   square,
@@ -122,5 +122,3 @@ const ChessCharacterDisplay: React.FC<ChessCharacterDisplayProps> = ({
 
   return <div className={classes} data-piece-role={pieceRole} />;
 };
-
-export default ChessCharacterDisplay;

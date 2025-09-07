@@ -1,11 +1,10 @@
 import React from "react";
-import type { GamePresenter } from "@shared/chess/types";
 
 interface SpeechBubbleContainerProps {
   boardId: string;
 }
 
-const SpeechBubbleContainer: React.FC<SpeechBubbleContainerProps> = ({
+export const SpeechBubbleContainer: React.FC<SpeechBubbleContainerProps> = ({
   boardId,
 }) => {
   // This would contain speech bubble logic for piece interactions
@@ -19,5 +18,3 @@ const SpeechBubbleContainer: React.FC<SpeechBubbleContainerProps> = ({
     </div>
   );
 };
-
-export default SpeechBubbleContainer;

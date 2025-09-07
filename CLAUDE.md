@@ -49,6 +49,11 @@ This is a full-stack chess application with a hybrid architecture.
 - Chess game components in `frontend/src/components/chess/`
 - TailwindCSS for styling
 
+**Code style:**
+
+- React components should use named exports, rather than default ones
+- When we import our own modules, we should use file extensions (`.ts` / `.tsx`)
+
 **Key Integration Points:**
 
 - In development: Hono proxies requests to Astro dev server

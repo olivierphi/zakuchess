@@ -1,16 +1,16 @@
 import React from "react";
-import type { PlayerSide } from "@shared/chess/types.ts";
+import type { PlayerSide } from "@shared/chess/chess-logic.ts";
 import {
   CHESS_PIECE_Z_INDEXES,
   PIECE_GROUND_MARKER_COLOR_TAILWIND_CLASSES,
-} from "@shared/chess/consts.ts";
+} from "@shared/chess/chess-html-display.ts";
 
 interface ChessUnitGroundMarkerProps {
   playerSide: PlayerSide;
   canMove?: boolean;
 }
 
-const ChessUnitGroundMarker: React.FC<ChessUnitGroundMarkerProps> = ({
+export const ChessUnitGroundMarker: React.FC<ChessUnitGroundMarkerProps> = ({
   playerSide,
   canMove = false,
 }) => {
@@ -31,5 +31,3 @@ const ChessUnitGroundMarker: React.FC<ChessUnitGroundMarkerProps> = ({
 
   return <div className={classes} />;
 };
-
-export default ChessUnitGroundMarker;

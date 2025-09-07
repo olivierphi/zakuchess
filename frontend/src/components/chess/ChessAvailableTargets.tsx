@@ -1,13 +1,40 @@
 import React from "react";
-import type { Square, BoardOrientation } from "@shared/chess/types";
-import { useChessArenaStore, useChessArenaActions } from "./ChessArenaProvider";
-import { squareToPositioningTailwindClasses } from "@shared/chess/utils";
+import type { Square, BoardOrientation } from "@shared/chess/chess-logic.ts";
+import {
+  useChessArenaStore,
+  useChessArenaActions,
+} from "./ChessArenaProvider.tsx";
+import { squareToPositioningTailwindClasses } from "@shared/chess/chess-html-display.ts";
 
 interface ChessAvailableTargetsProps {
   boardId: string;
   boardOrientation: BoardOrientation;
 }
 
+export const ChessAvailableTargets: React.FC<ChessAvailableTargetsProps> = ({
+  boardId,
+  boardOrientation,
+}) => {
+  const { availableMoves } = useChessArenaStore((state) => ({
+    availableMoves: state.availableMoves,
+  }));
+
+  return (
+    <div
+      className="relative aspect-square pointer-events-none"
+      id={`chess-board-available-targets-${boardId}`}
+    >
+      {availableMoves.map((square) => (
+        <ChessAvailableTarget
+          key={square}
+          square={square}
+          boardOrientation={boardOrientation}
+          boardId={boardId}
+        />
+      ))}
+    </div>
+  );
+};
 interface ChessAvailableTargetProps {
   square: Square;
   boardOrientation: BoardOrientation;
@@ -62,30 +89,3 @@ const ChessAvailableTarget: React.FC<ChessAvailableTargetProps> = ({
     </button>
   );
 };
-
-const ChessAvailableTargets: React.FC<ChessAvailableTargetsProps> = ({
-  boardId,
-  boardOrientation,
-}) => {
-  const { availableMoves } = useChessArenaStore((state) => ({
-    availableMoves: state.availableMoves,
-  }));
-
-  return (
-    <div
-      className="relative aspect-square pointer-events-none"
-      id={`chess-board-available-targets-${boardId}`}
-    >
-      {availableMoves.map((square) => (
-        <ChessAvailableTarget
-          key={square}
-          square={square}
-          boardOrientation={boardOrientation}
-          boardId={boardId}
-        />
-      ))}
-    </div>
-  );
-};
-
-export default ChessAvailableTargets;

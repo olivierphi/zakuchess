@@ -12,7 +12,7 @@ help:
 	@grep -P '^[.a-zA-Z/_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: install
-install: node_modules/ frontend/node_modules/ backend/node_modules/ .env.local ## Install the "utils", backend and frontend dependencies
+install: node_modules/ frontend/node_modules/ backend/node_modules/ shared/node_modules/ .env.local ## Install the "shared", backend and frontend dependencies
 
 .PHONY: dev
 dev: ## Starts Astro and Hono, both in "developement" mode
@@ -78,6 +78,9 @@ frontend/node_modules/: check/node
 
 backend/node_modules/: check/node
 	@cd backend/ && npm install
+
+shared/node_modules/: check/node
+	@cd shared/ && npm install
 
 .PHONY: check/node
 # Check Node.js version (must be 24.x)

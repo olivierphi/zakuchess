@@ -1,11 +1,11 @@
 import React from "react";
-import type { BoardOrientation } from "@shared/chess/types";
-import { ChessArenaProvider } from "./ChessArenaProvider";
-import ChessLastMove from "./ChessLastMove";
-import ChessPieces from "./ChessPieces";
-import ChessAvailableTargets from "./ChessAvailableTargets";
-import SpeechBubbleContainer from "./SpeechBubbleContainer";
-import ChessBotData from "./ChessBotData";
+import type { BoardOrientation } from "@shared/chess/chess-logic.ts";
+import { ChessArenaProvider } from "./ChessArenaProvider.tsx";
+import { ChessLastMove } from "./ChessLastMove.tsx";
+import { ChessPieces } from "./ChessPieces.tsx";
+import { ChessAvailableTargets } from "./ChessAvailableTargets.tsx";
+import { SpeechBubbleContainer } from "./SpeechBubbleContainer.tsx";
+import ChessBotData from "./ChessBotData.tsx";
 
 interface ChessArenaDynamicIslandProps {
   initialFen: string;

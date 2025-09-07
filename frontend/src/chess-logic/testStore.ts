@@ -1,5 +1,8 @@
 // Simple test utility for the chess store
 import { useChessGameStore } from "./chessStore";
+import { chessBoardToPieceStateBySquare } from "@shared/chess/game-initialisation.ts";
+import { Chess } from "chess.js";
+import type { FEN } from "@shared/chess/chess-logic.ts";
 
 export function testChessStore() {
   console.log("Testing Chess Store with chess.js...");
@@ -7,14 +10,17 @@ export function testChessStore() {
   // Test with starting position
   const store = useChessGameStore.getState();
   console.log("Starting FEN:", store.fen);
-  console.log("Number of pieces:", Object.keys(store.pieceRoleBySquare).length);
+  console.log(
+    "Number of pieces:",
+    Object.keys(store.pieceStateBySquare).length,
+  );
   console.log("Sample pieces:", {
-    a1: store.pieceRoleBySquare["a1"], // Should be 'wr' (white rook)
-    e1: store.pieceRoleBySquare["e1"], // Should be 'wk' (white king)
-    e8: store.pieceRoleBySquare["e8"], // Should be 'bk' (black king)
-    a8: store.pieceRoleBySquare["a8"], // Should be 'br' (black rook)
-    a2: store.pieceRoleBySquare["a2"], // Should be 'wp' (white pawn)
-    a7: store.pieceRoleBySquare["a7"], // Should be 'bp' (black pawn)
+    a1: store.pieceStateBySquare["a1"], // Should be 'wr' (white rook)
+    e1: store.pieceStateBySquare["e1"], // Should be 'wk' (white king)
+    e8: store.pieceStateBySquare["e8"], // Should be 'bk' (black king)
+    a8: store.pieceStateBySquare["a8"], // Should be 'br' (black rook)
+    a2: store.pieceStateBySquare["a2"], // Should be 'wp' (white pawn)
+    a7: store.pieceStateBySquare["a7"], // Should be 'bp' (black pawn)
   });
 
   // Test legal moves functionality
@@ -36,17 +42,23 @@ export function testChessStore() {
   console.log("Legal moves for b1 knight after e2-e4:", newKnightMoves); // Should include more squares
 
   // Test with a different position (scholar's mate setup)
-  const scholarsMate =
+  const scholarsMate: FEN =
     "rnbqkb1r/pppp1ppp/5n2/4p3/2B1P3/8/PPPP1PPP/RNBQK1NR w KQkq - 4 4";
-  store.setFen(scholarsMate);
+  const pieceStateBySquare = chessBoardToPieceStateBySquare(
+    new Chess(scholarsMate),
+  );
+  store.initialise({ fen: scholarsMate, pieceStateBySquare });
   console.log("\nAfter setting scholar's mate FEN:");
   console.log("New FEN:", store.fen);
-  console.log("Number of pieces:", Object.keys(store.pieceRoleBySquare).length);
+  console.log(
+    "Number of pieces:",
+    Object.keys(store.pieceStateBySquare).length,
+  );
   console.log("Sample pieces:", {
-    c4: store.pieceRoleBySquare["c4"], // Should be 'wb' (white bishop)
-    f6: store.pieceRoleBySquare["f6"], // Should be 'bn' (black knight)
-    e5: store.pieceRoleBySquare["e5"], // Should be 'bp' (black pawn)
-    e4: store.pieceRoleBySquare["e4"], // Should be 'wp' (white pawn)
+    c4: store.pieceStateBySquare["c4"], // Should be 'wb' (white bishop)
+    f6: store.pieceStateBySquare["f6"], // Should be 'bn' (black knight)
+    e5: store.pieceStateBySquare["e5"], // Should be 'bp' (black pawn)
+    e4: store.pieceStateBySquare["e4"], // Should be 'wp' (white pawn)
   });
 
   // Test bishop legal moves in this position

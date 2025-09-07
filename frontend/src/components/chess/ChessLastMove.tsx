@@ -1,14 +1,22 @@
-import React, { type JSX } from "react";
-import type {
-  GamePresenter,
-  Square,
-  BoardOrientation,
-} from ".@shared/chess/types";
-import { squareToPositioningTailwindClasses } from "@shared/chess/utils";
+import React from "react";
+import type { Square, BoardOrientation } from "@shared/chess/chess-logic.ts";
+import { squareToPositioningTailwindClasses } from "@shared/chess/chess-html-display.ts";
 
 interface ChessLastMoveProps {
   boardId: string;
 }
+
+export const ChessLastMove: React.FC<ChessLastMoveProps> = ({ boardId }) => {
+  // TODO: Implement last move display using store data
+  return (
+    <div
+      className="relative aspect-square pointer-events-none"
+      id={`chess-last-move-${boardId}`}
+    >
+      {/* Last move markers would go here */}
+    </div>
+  );
+};
 
 interface ChessLastMoveMarkerProps {
   boardOrientation: BoardOrientation;
@@ -61,17 +69,3 @@ const ChessLastMoveMarker: React.FC<ChessLastMoveMarkerProps> = ({
     </div>
   );
 };
-
-const ChessLastMove: React.FC<ChessLastMoveProps> = ({ boardId }) => {
-  // TODO: Implement last move display using store data
-  return (
-    <div
-      className="relative aspect-square pointer-events-none"
-      id={`chess-last-move-${boardId}`}
-    >
-      {/* Last move markers would go here */}
-    </div>
-  );
-};
-
-export default ChessLastMove;

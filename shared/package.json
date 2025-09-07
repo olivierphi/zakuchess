@@ -1,0 +1,10 @@
+{
+  "name": "zakuchess-shared",
+  "private": true,
+  "type": "module",
+  "version": "0.0.1",
+  "devDependencies": {
+    "chess.js": "^1.4.0",
+    "typescript": "^5.9.2"
+  }
+}

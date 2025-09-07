@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useMemo } from "react";
 import { create, type StoreApi } from "zustand";
 import { Chess } from "chess.js";
-import type { Square, PieceRole, Faction } from "@shared/chess/types";
+import type { Square, PieceRole, Faction } from "@shared/chess/chess-logic.ts";
 
 interface ChessGameState {
   fen: string;
@@ -163,7 +163,16 @@ function createChessArenaStore(initialFen: string): StoreApi<ChessGameStore> {
         // If there's a piece on this square, select it and show available moves
         const piece = chess.get(square);
         if (piece) {
-          const moves = chess.moves({ square, verbose: true });
+          let chessBoard = chess;
+          // If it's the opponent's piece, let's pretend it's their turn, so we
+          // can get their own available moves for this piece:
+          const currentPlayer = chess.turn();
+          if (piece.color !== currentPlayer) {
+            chessBoard = new Chess(
+              chess.fen().replace(` ${currentPlayer} `, ` ${piece.color} `),
+            );
+          }
+          const moves = chessBoard.moves({ square, verbose: true });
           const availableMoves = moves.map((move) => move.to as Square);
           set({ selectedSquare: square, availableMoves });
         } else if (selectedSquare) {

@@ -1,13 +1,18 @@
 import React from "react";
-import type { PieceRole, Square, BoardOrientation } from "@shared/chess/types";
-import { useChessArenaStore, useChessArenaActions } from "./ChessArenaProvider";
+import type {
+  PieceRole,
+  Square,
+  BoardOrientation,
+} from "@shared/chess/chess-logic.ts";
 import {
-  playerSideFromPieceRole,
-  squareToPositioningTailwindClasses,
-} from "@shared/chess/utils";
-import ChessCharacterDisplay from "./ChessCharacterDisplay";
-import ChessUnitSymbolDisplay from "./ChessUnitSymbolDisplay";
-import ChessUnitGroundMarker from "./ChessUnitGroundMarker";
+  useChessArenaStore,
+  useChessArenaActions,
+} from "./ChessArenaProvider.tsx";
+import { playerSideFromPieceRole } from "@shared/chess/utils.ts";
+import { ChessCharacterDisplay } from "./ChessCharacterDisplay.tsx";
+import { ChessUnitSymbolDisplay } from "./ChessUnitSymbolDisplay.tsx";
+import { ChessUnitGroundMarker } from "./ChessUnitGroundMarker.tsx";
+import { squareToPositioningTailwindClasses } from "@shared/chess/chess-html-display.ts";
 
 interface ChessPieceProps {
   square: Square;
@@ -16,7 +21,7 @@ interface ChessPieceProps {
   boardOrientation?: BoardOrientation;
 }
 
-const ChessPiece: React.FC<ChessPieceProps> = ({
+export const ChessPiece: React.FC<ChessPieceProps> = ({
   square,
   pieceRole,
   boardId,
@@ -83,5 +88,3 @@ const ChessPiece: React.FC<ChessPieceProps> = ({
     </button>
   );
 };
-
-export default ChessPiece;
