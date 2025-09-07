@@ -1,0 +1,36 @@
+---
+interface Props {
+	leftSideButtons?: any[];
+	rightSideButtons?: any[];
+}
+
+const { leftSideButtons, rightSideButtons } = Astro.props;
+---
+
+<header class="bg-gray-950">
+	<div class="flex items-center p-2 w-full mx-auto md:max-w-3xl xl:max-w-7xl">
+		<!-- Left side buttons -->
+		<div class="flex w-1/6 justify-start">
+			{leftSideButtons && leftSideButtons.map(button => (
+				<Fragment set:html={button} />
+			))}
+		</div>
+
+		<!-- Center branding -->
+		<div class="grow text-center md:mx-auto md:max-w-2xl">
+			<h1 class="text-slate-50 text-2xl leading-none font-pixel">
+				ZakuChess
+			</h1>
+			<h2 class="text-slate-50 text-xl leading-none font-pixel">
+				Chess with character(s)
+			</h2>
+		</div>
+
+		<!-- Right side buttons -->
+		<div class="flex w-1/6 justify-end">
+			{rightSideButtons && rightSideButtons.map(button => (
+				<Fragment set:html={button} />
+			))}
+		</div>
+	</div>
+</header>

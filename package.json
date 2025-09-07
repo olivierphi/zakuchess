@@ -1,5 +1,6 @@
 {
-  "name": "",
+  "name": "zakuchess",
+  "private": true,
   "type": "module",
   "version": "0.0.1",
   "scripts": {
@@ -10,12 +11,16 @@
   },
   "dependencies": {
     "@astrojs/react": "^4.3.0",
+    "@fontsource-variable/open-sans": "^5.2.6",
     "@tailwindcss/vite": "^4.1.12",
     "astro": "^5.13.5",
-    "tailwindcss": "^4.1.12"
+    "chess.js": "^1.4.0",
+    "tailwindcss": "^4.1.12",
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
-    "oxlint": "^1.14.0"
+    "oxlint": "^1.14.0",
+    "prettier": "3.6.2"
   }
 }

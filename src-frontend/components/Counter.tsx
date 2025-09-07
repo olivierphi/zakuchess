@@ -1,10 +1,10 @@
-import {useState} from "react";
+import { useState } from "react";
 
 type CounterProps = {
   counter: number;
-}
+};
 
-export const Counter = ({counter}:CounterProps) => {
+export const Counter = ({ counter }: CounterProps) => {
   const [count, setCount] = useState(counter);
   return (
     <p className="border-2  solid border-slate-500">
@@ -14,5 +14,5 @@ export const Counter = ({counter}:CounterProps) => {
       &nbsp;&nbsp;&nbsp;
       <button onClick={() => setCount(count - 1)}>-</button>
     </p>
-  )
-}
+  );
+};

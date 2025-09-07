@@ -1,0 +1,5 @@
+ - The "Fibberish" font was downloaded from there:
+    > https://caffinate.itch.io/fibberish
+
+ - The "Open Sans" font was downloaded from there:
+    > https://fonts.google.com/specimen/Open+Sans

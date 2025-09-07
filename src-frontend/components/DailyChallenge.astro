@@ -1,0 +1,8 @@
+---
+import ChessArena from "./chess/ChessArena.astro";
+
+// Test FEN position as requested
+const testFEN = "6k1/7p/1Q2P2p/4P3/qb2Nr2/1n3N1P/5PP1/5RK1 w - - 3 27";
+---
+
+<ChessArena initialFen={testFEN} boardId="main" />

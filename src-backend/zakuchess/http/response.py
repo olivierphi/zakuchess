@@ -73,14 +73,22 @@ class AstroPageProxyResponse(Response):
         # If this looks like an horrible hack...
         # ...it's because it is! 😅
         absolute_url_prefix = astro_dev_url.encode()
-        for prefix in (b'"/@vite/', b'"/@fs/', b'"/@id/', b'"/src-frontend/'):
+        for prefix in (
+            b'"/@vite/',
+            b'"/@fs/',
+            b'"/@id/',
+            b'"/src-frontend/',
+            b'"/node_modules/',
+            b'"/favicon-',
+            b'"/assets/',
+        ):
             html_page = html_page.replace(
                 prefix, b'"' + absolute_url_prefix + prefix[1:]
             )
-        html_page = html_page.replace(
-            b'renderer-url="/node_modules/',
-            b'renderer-url="' + absolute_url_prefix + b"/node_modules/",
-        )
+        # html_page = html_page.replace(
+        #     b'renderer-url="/node_modules/',
+        #     b'renderer-url="' + absolute_url_prefix + b"/node_modules/",
+        # )
         return html_page
 
 

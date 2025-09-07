@@ -27,7 +27,7 @@ prod: bin/uv .venv node_modules/ backend/install ## Builds the frontend, then st
 	${SUB_MAKE} backend/prod
 
 .PHONY: code-quality/all
-code-quality/all: code-quality/backend/ruff_format code-quality/backend/ruff_lint code-quality/backend/mypy  ## Run all our code quality tools
+code-quality/all: code-quality/backend/ruff_format code-quality/backend/ruff_lint code-quality/backend/mypy code-quality/frontend/oxlint code-quality/frontend/prettier code-quality/frontend/tsc ## Run all our code quality tools
 
 .PHONY: code-quality/backend/ruff_format
 code-quality/backend/ruff_format: ruff_opts ?=
@@ -46,6 +46,18 @@ code-quality/backend/mypy: mypy_opts ?=
 code-quality/backend/mypy: ## Python's equivalent of TypeScript
 # @link https://mypy.readthedocs.io/en/stable/
 	@${PYTHON_BIN}/mypy src-backend/ ${mypy_opts}
+
+.PHONY: code-quality/frontend/oxlint
+code-quality/frontend/oxlint: ## Run frontend linter
+	@${NODE_BIN}/oxlint
+
+.PHONY: code-quality/frontend/prettier
+code-quality/frontend/prettier: ## Run Prettier on our frontend code
+	@${NODE_BIN}/prettier --write src-frontend/
+
+.PHONY: code-quality/frontend/tsc
+code-quality/frontend/tsc: ## Run a TypeScript check
+	@${NODE_BIN}/tsc --noEmit
 
 .PHONY: backend/install
 backend/install:

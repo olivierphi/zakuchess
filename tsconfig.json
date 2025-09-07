@@ -1,9 +1,19 @@
 {
   "extends": "astro/tsconfigs/strict",
-  "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist"],
-    "compilerOptions": {
+  "include": [
+    ".astro/types.d.ts",
+    "**/*"
+  ],
+  "exclude": [
+    "dist",
+    "worktrees"
+  ],
+  "compilerOptions": {
+    "rootDirs": [
+      "src-frontend"
+    ],
     "jsx": "react-jsx",
-    "jsxImportSource": "react"
+    "jsxImportSource": "react",
+    "verbatimModuleSyntax": true
   }
 }

@@ -17,3 +17,7 @@ repos:
         args: [ --fix ]
       # Run the formatter.
       - id: ruff-format
+  - repo: https://github.com/oxc-project/mirrors-oxlint
+    rev: v1.14.0
+    hooks:
+      - id: oxlint
