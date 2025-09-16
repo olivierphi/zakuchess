@@ -1,0 +1,122 @@
+[project]
+name = "zakuchess"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Olivier Philippon",email = "olivier@dunsap.com"},
+]
+readme = "README.md"
+requires-python = ">=3.13.0, <3.14"
+dependencies = [
+    "dj-database-url>=2.3.0",
+    "django>=5.2.0, <6.0", # Django doesn't follow SemVer, so we need to be restrictive here
+    "django-alive>=2.0.0",
+    "gunicorn>=23.0.0",
+    "httpx>=0.28.1",
+    "json-stream>=2.3.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "django-debug-toolbar>=5.0.1",
+    "django-stubs[compatible-mypy]>=5.1.3",
+    "ipython>=8.32.0",
+    "mypy>=1.15.0",
+    "pre-commit>=4.1.0",
+    "python-dotenv[cli]>=1.0.1",
+    "pywatchman>=2.0.0",
+    "ruff>=0.9.6",
+]
+test = [
+    "factory-boy>=3.3.3",
+    "pytest>=8.3.4",
+    "pytest-cov>=6.0.0",
+    "pytest-django>=4.10.0",
+    "respx>=0.22.0",
+    "time-machine>=2.16.0",
+]
+
+# Misc tools configuration
+
+[tool.uv]
+package = false
+
+
+[tool.ruff]
+# @link https://docs.astral.sh/ruff/configuration/
+target-version = "py313"
+exclude = [
+    "src/project/settings",
+]
+
+
+[tool.ruff.lint]
+ignore = ["E501"]
+select = [
+    "F", # flake8
+    "I", # isort
+    # https://docs.astral.sh/ruff/rules/#flake8-type-checking-tc
+    "TC001", 
+    "TC002", 
+    "TC003", 
+    "DJ", # https://docs.astral.sh/ruff/rules/#flake8-django-dj 
+    "FA", # flake8-future-annotations 
+    "INT", # flake8-gettext
+]
+[tool.ruff.lint.per-file-ignores]
+"src/project/settings/*" = ["F405"]
+
+[tool.ruff.lint.isort]
+# https://docs.astral.sh/ruff/settings/#lintisort
+combine-as-imports = true
+known-first-party = ["apps", "lib", "project"]
+# https://github.com/astral-sh/ruff/issues/11103
+# TODO: remove this once Python 3.14 is released and we start using it :-)
+required-imports = ["from __future__ import annotations"]
+
+[tool.ruff.lint.flake8-type-checking]
+# https://docs.astral.sh/ruff/settings/#lintflake8-type-checking
+quote-annotations = true
+strict = true
+
+
+[tool.mypy]
+# @link https://mypy.readthedocs.io/en/stable/config_file.html#using-a-pyproject-toml
+python_version = "3.13"
+mypy_path = "src/"
+exclude = [
+    '^src/project/settings/.*\.py$',
+    '^src/apps/[^/]+/migrations/.*\.py$',
+]
+[[tool.mypy.overrides]]
+module = [
+    "django.*",
+    "sqlparse.*",
+    "time_machine.*",
+]
+ignore_missing_imports = true
+
+
+[tool.pytest.ini_options]
+pythonpath = "src"
+testpaths = [
+    "src/apps/*/tests/",
+    "src/project/tests/",
+]
+python_files = ["test_*.py"]
+# pytest-django settings:
+# https://pytest-django.readthedocs.io/
+addopts = "--reuse-db"
+DJANGO_SETTINGS_MODULE = "project.settings.test"
+
+
+[tool.coverage.run]
+# @link https://coverage.readthedocs.io/en/latest/excluding.html
+# @link https://coverage.readthedocs.io/en/latest/source.html
+omit = [
+    # omit tests themselves from the coverage measure:
+    "src/apps/*/tests/**/*.py",
+    "src/project/tests/**/*.py",
+    # also exclude Django settings:
+    "src/project/settings/*.py",
+]

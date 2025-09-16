@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static webui_misc %}
+<head>
+    <meta charset="utf-8">
+    <title>{% block page_title %}Zakuchess{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="TODO">
+    <meta name="keywords" content="TODO">
+    <link href="{% generated_asset_static "pico_css" %}" rel="stylesheet">
+</head>
+<body class="bg-body-background" data-hx-ext="class-tools" data-hx-headers="{% htmx_csrf %}">
+    <main class="container">
+        {% block header %}
+        {% endblock header %}
+    
+        {%  block content %}
+            [content placeholder]
+        {%  endblock content %}
+        
+        {% block footer %}
+        {% endblock footer %}
+    </main>
+</body>
+</html>

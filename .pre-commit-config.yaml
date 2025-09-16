@@ -1,0 +1,35 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  
+  # -------------- Ruff: linter & "à la Black" formatter 
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.13.0
+    hooks:
+      # Run the formatter.
+      - id: ruff-format
+      # Run the linter.
+      - id: ruff-check
+        args: [ "--fix" ]
+        exclude: "^src/project/settings/.*\\.py$"
+
+  # -------------- MyPy: type checking
+  # Although MyPy has limited abilities in a pre-commit context, as it can only 
+  # type-check each file in isolation, it can still catch some errors.
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.18.1
+    hooks:
+      - id: mypy
+  
+  # -------------- pyupgrade: make sure we're using the latest Python features
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.20.0
+    hooks:
+      - id: pyupgrade
+        args: [ "--py313-plus" ]
+        
+  # -------------- validate-pyproject: does what it says on the tin ^_^
+  - repo: https://github.com/abravalheri/validate-pyproject
+    rev: v0.24.1
+    hooks:
+      - id: validate-pyproject

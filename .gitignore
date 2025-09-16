@@ -1,0 +1,21 @@
+
+# Various files our project will create that shouldn't be versioned
+/.env.local
+/*.sqlite3
+/*.sqlite3-shm
+/*.sqlite3-wal
+/.coverage
+
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+/.venv/
+
+# Git worktress
+/worktrees/

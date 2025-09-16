@@ -1,0 +1,61 @@
+---
+name: Test Suite
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  pull-requests: write
+  
+env:
+  DJANGO_SETTINGS_MODULE: "project.settings.test"
+
+jobs:
+  tests:
+    name: "Code quality and tests checks"
+    runs-on: "ubuntu-latest"
+
+    steps:
+      # Setup
+      - uses: "actions/checkout@v4"
+        
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.8.17"
+          enable-cache: true
+        
+      - name: Install Python, via uv
+        run: uv python install
+        
+      - name: "Install dependencies via uv"
+        run: uv sync --all-extras
+        
+      - name: "Run linting checks: Ruff formatter"
+        run: uv run ruff format --check src/
+        
+      - name: "Run linting checks: Ruff"
+        run: uv run ruff check --quiet src/
+        
+      - name: "Run linting checks: Mypy"
+        run: uv run mypy src/
+        
+      - name: "Check that Django DB migrations are up to date"
+        run: uv run python src/manage.py makemigrations --check
+        
+      - name: "Run tests"
+        run: uv run pytest --cov=src --cov-report xml:coverage.xml
+        # --cov-fail-under=60 --> we'll actually do that with the "Report coverage" step
+        
+      - name: "Report coverage"
+        # @link https://github.com/orgoro/coverage
+        uses: "orgoro/coverage@v3.2"
+        continue-on-error: true
+        with:
+          coverageFile: coverage.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # TODO: progressively  increase minimum coverage to something closer to 80%
+          thresholdAll: 0.25
