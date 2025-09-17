@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import datetime as dt
 import json
 from typing import TYPE_CHECKING
 
 from django import template
+from django.conf import settings
 from django.template.backends.utils import get_token as get_csrf_token
 from django.templatetags.static import static
 
@@ -31,3 +33,14 @@ def generated_asset_static(asset_id: str) -> str:
             return static(assets_generation.get_pico_css_filename())
         case _:
             raise ValueError(f"Unknown asset ID: {asset_id}")
+
+
+
+@register.simple_tag
+def current_year() -> int:
+    return dt.datetime.now().year
+
+
+@register.simple_tag
+def zakuchess_version() -> str:
+    return settings.ZAKUCHESS_VERSION

@@ -43,7 +43,9 @@ INSTALLED_APPS = (
     ]
     + [
         # 3rd-party apps:
-        "django_alive"
+        "django_alive", # https://github.com/lincolnloop/django-alive
+        "django_htmx", # https://django-htmx.readthedocs.io/en/latest/
+        "django_google_fonts",  # https://github.com/andymckay/django-google-fonts
     ]
     + [
         # Our own apps:
@@ -156,3 +158,16 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Google fonts to mirror locally:
+# https://github.com/andymckay/django-google-fonts
+GOOGLE_FONTS = (
+    "Open Sans:ital,wght@0,300..800;1,300..800",  # https://fonts.google.com/specimen/Open+Sans
+)
+GOOGLE_FONTS_DIR = REPO_ROOT_DIR / "src" / "apps" / "webui" / "static" / "webui" / "google-fonts"
+GOOGLE_FONTS_URL = f"/{STATIC_URL}webui/google-fonts/fonts/"
+
+# Our custom settings:
+ZAKUCHESS_VERSION = env.get("ZAKUCHESS_VERSION", "dev")
+MASTODON_PAGE = env.get("MASTODON_PAGE")
+CANONICAL_URL = env.get("CANONICAL_URL", "https://zakuchess.com/")

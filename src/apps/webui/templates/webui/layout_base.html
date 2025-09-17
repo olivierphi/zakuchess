@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: https://ogp.me/ns#">
+{% load static django_htmx zc_layout %}
+<head>
+    <!-- ZakuChess is open source! See https://github.com/olivierphi/zakuchess -->
+    <meta charset="utf-8">
+    <title>{{ page_title|default:"ZakuChess ♞" }}</title>
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <meta content="Play chess with character(s) - a chess game with pixel art units, with a new challenge every day." name="description">
+    <meta content="chess pixel-art roleplay" name="keywords">
+    <link href="https://zakuchess.com/" rel="canonical">
+    <link href="{% static '/webui/img/favicon-16x16.png' %}" rel="icon" sizes="16x16" type="image/png">
+    <link href="{% static '/webui/img/favicon-32x32.png' %}" rel="icon" sizes="32x32" type="image/png">
+    <style>
+        @font-face {
+            font-family: "Fibberish";
+            src: url("{% static '/webui/fonts/fibberish.ttf' %}") format('truetype');
+        }
+    </style>
+    {# this "opensans" file is automatically created by `django-google-fonts` #}
+    <link href="{% static '/webui/google-fonts/fonts/opensans:ital,wght@0,300..800;1,300..800.css' %}" rel="stylesheet">
+    <link href="{% static '/webui/css/main.css' %}" rel="stylesheet">
+    <script src="{% static '/webui/js/main.js' %}"></script>
+    <script src="{% static '/chess/js/chess-main.js' %}"></script>
+    {% django_htmx_script %}
+    <!-- Open Graph Protocol metadata - @link https://ogp.me/ -->
+    <meta property="og:title" content="ZakuChess ♞ - A daily chess challenge with pixel art units">
+    <meta property="og:description" content="Play chess with character(s) - a chess game with pixel art units, with a new challenge every day.">
+    <!-- @link https://ogp.me/#types -->
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="{% static '/daily_challenge/img/og-image-1200x630.png' %}">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630"> 
+    <meta property="og:image:alt" content="The starting screen of a new ZakuChess daily challenge">
+</head>
+<body data-hx-ext="class-tools" data-hx-headers="{% htmx_csrf %}">
+    {%  block header %}{% endblock header %}
+    {%  block content %}
+        [content placeholder]
+    {%  endblock content %}
+    {%  block footer %}{% endblock footer %}
+</body>
+</html>

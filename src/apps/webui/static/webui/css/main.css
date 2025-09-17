@@ -1,0 +1,115 @@
+@import "_preflight.css";
+
+:root {
+    --body-bg-color: #120222;
+    --gray-950: #030712;
+    --slate-100: #f1f5f9;
+    --slate-500: #f8f1fc;
+    --slate-900: #0f172a;
+    --neutral-800: #262626;
+    
+    --breakpoint-md: 768px;
+    --breakpoint-xl: 1280px;
+}
+
+
+body {
+    background-color: var(--body-bg-color);
+    font-family: "Open Sans", sans-serif;
+    font-size: 16px;
+    color: var(--slate-100);
+}
+
+header {
+    background-color: var(--gray-950);
+    
+    .header-inner {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem;
+        
+        .title-container {
+            flex-grow: 1;
+            text-align: center;
+            
+            @media (min-width: /* --breakpoint-md */ 768px) {
+                & {
+                    max-width: 42rem;
+                    margin-left: auto;
+                    margin-right: auto;
+                }
+            }
+            
+            h1, h2 {
+                margin: 0;
+                font-family: "Fibberish", monospace;
+                color: var(--slate-500);
+                line-height: 1;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            h2 {
+                font-size: 1.25rem;
+            }
+        }
+    }
+}
+
+footer {
+    margin-top: 0.25rem;
+    margin-bottom: 2.5rem;
+    text-align: center;
+    font-size: .875rem;
+    line-height: 1.25rem;
+    
+    @media (min-width: /* --breakpoint-md */ 768px) {
+        & {
+            max-width: 36rem;
+        }
+    }
+    
+    > * {
+        text-align: center;
+    }
+    
+     & a {
+         text-decoration: underline;
+         &:hover {
+             text-decoration: none;
+         }
+     }
+    
+    .credits {
+        margin-top: 0.75rem;
+    }
+    .open-source {
+        vertical-align: middle;
+        
+        .github-logo {
+            display: inline-block;
+            width: 1rem;
+            aspect-ratio: 1 / 1;
+        }
+    }
+}
+
+main {
+    background-color: var(--slate-900);
+    margin: 0 auto;
+    
+    @media (min-width: /* --breakpoint-md */ 768px) {
+        & {
+            max-width: 48rem;
+        }
+    }
+    @media (min-width: /* --breakpoint-xl */ 1280px) {
+        & {
+            display: flex;
+            max-width: 80rem;
+            border-width: 1px;
+            border-color: var(--neutral-800);
+            border-radius: 0.375rem;
+        }
+    }
+}
