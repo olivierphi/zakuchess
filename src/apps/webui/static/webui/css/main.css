@@ -3,8 +3,8 @@
 :root {
     /* Our own colors */
     --body-bg-color: #120222;
-    --chess-square-w: #e4b55d;
-    --chess-square-b: #a57713;
+    --chess-square-light: #e4b55d;
+    --chess-square-dark: #a57713;
     
     /* Tailwind CSS colors */
     --gray-950: #030712;

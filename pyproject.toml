@@ -8,6 +8,7 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.13.0, <3.14"
 dependencies = [
+    "chess>=1.11.2",
     "dj-database-url>=2.3.0",
     "django>=5.2.0, <6.0", # Django doesn't follow SemVer, so we need to be restrictive here
     "django-alive>=2.0.0",

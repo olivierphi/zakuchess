@@ -10,8 +10,8 @@ from django.utils.safestring import mark_safe
 from apps.chess.business_logic import FILES, RANKS
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
     from django.utils.safestring import SafeString
+    from apps.chess.game_state import GameState
 
 register = template.Library()
 
@@ -22,5 +22,12 @@ def chess_board_squares()->SafeString:
     squares:list[str] = []
     for file in FILES:
         for rank in RANKS:
-            squares.append(f"""<div class="square" data-square="{file}{rank}">{file}{rank}</div>""")
+            squares.append(f"""<div data-square="{file}{rank}">{file}{rank}</div>""")
     return mark_safe("\n".join(squares))
+
+@register.simple_tag()
+def chess_board_pieces(game_state:GameState)->SafeString:
+    pieces:list[str] = []
+    for square, piece in game_state.pieces.items():
+        pieces.append(f"""<div id="piece-{game_state.id}-{piece.symbol()}" data-square="{square}">{piece.unicode_symbol()}</div>""")
+    return mark_safe("\n".join(pieces))

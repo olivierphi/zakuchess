@@ -1,4 +1,5 @@
 .chess-board {
+    position: relative;
     aspect-ratio: 1/1;
     margin: 0 auto;
     max-height: calc(100dvh - 80px);
@@ -12,76 +13,169 @@
     
     & > * {
         display: block;
+        position: absolute; 
+        inset: 0;
         width: 100%;
         aspect-ratio: 1/1;
         margin: 0;
     }
     
     .squares-container {
-        position: relative;
+        pointer-events: none;
         
-        .square {
-            position: absolute;
-            aspect-ratio: 1/1;
-            width: 12.5%; /* 1/8 */
-            border: solid red 1px;
-            
-            &:nth-child(odd) {
-                background-color: var(--chess-square-w);
-            }
-            &:nth-child(even) {
-                background-color: var(--chess-square-b);
-            }
+        /* Dark squares */
+        & [data-square="a1"], & [data-square="a3"], & [data-square="a5"], & [data-square="a7"],
+        & [data-square="b2"], & [data-square="b4"], & [data-square="b6"], & [data-square="b8"],
+        & [data-square="c1"], & [data-square="c3"], & [data-square="c5"], & [data-square="c7"],
+        & [data-square="d2"], & [data-square="d4"], & [data-square="d6"], & [data-square="d8"],
+        & [data-square="e1"], & [data-square="e3"], & [data-square="e5"], & [data-square="e7"],
+        & [data-square="f2"], & [data-square="f4"], & [data-square="f6"], & [data-square="f8"],
+        & [data-square="g1"], & [data-square="g3"], & [data-square="g5"], & [data-square="g7"],
+        & [data-square="h2"], & [data-square="h4"], & [data-square="h6"], & [data-square="h8"] {
+            background-color: var(--chess-square-dark);
         }
-        
-        /* Ranks positioning */
-        .square[data-square^="a"] {
-        }
-        .square[data-square^="b"] {
-            transform: translate(0, 100%);
-        }
-        .square[data-square^="c"] {
-            transform: translate(0, 200%);
-        }
-        .square[data-square^="d"] {
-            transform: translate(0, 300%);
-        }
-        .square[data-square^="e"] {
-            transform: translate(0, 400%);
-        }
-        .square[data-square^="f"] {
-            transform: translate(0, 500%);
-        }
-        .square[data-square^="g"] {
-            transform: translate(0, 600%);
-        }
-        .square[data-square^="h"] {
-            transform: translate(0, 700%);
-        }
-        
-        /* Files positioning */
-        .square[data-square$="1"] {
-        }
-        .square[data-square$="2"] {
-            transform: translate(100%, 0);
-        }
-        .square[data-square$="3"] {
-            transform: translate(200%, 0);
-        }
-        .square[data-square$="4"] {
-            transform: translate(300%, 0);
-        }
-        .square[data-square$="5"] {
-            transform: translate(400%, 0);
-        }
-        .square[data-square$="6"] {
-            transform: translate(500%, 0);
-        }
-        .square[data-square$="7"] {
-            transform: translate(600%, 0);
-        }
-        .square[data-square$="8"] {
-            transform: translate(700%, 0);
+
+        /* Light squares */
+        & [data-square="a2"], & [data-square="a4"], & [data-square="a6"], & [data-square="a8"],
+        & [data-square="b1"], & [data-square="b3"], & [data-square="b5"], & [data-square="b7"],
+        & [data-square="c2"], & [data-square="c4"], & [data-square="c6"], & [data-square="c8"],
+        & [data-square="d1"], & [data-square="d3"], & [data-square="d5"], & [data-square="d7"],
+        & [data-square="e2"], & [data-square="e4"], & [data-square="e6"], & [data-square="e8"],
+        & [data-square="f1"], & [data-square="f3"], & [data-square="f5"], & [data-square="f7"],
+        & [data-square="g2"], & [data-square="g4"], & [data-square="g6"], & [data-square="g8"],
+        & [data-square="h1"], & [data-square="h3"], & [data-square="h5"], & [data-square="h7"] {
+            background-color: var(--chess-square-light);
         }
     }
-}
+    
+    .pieces-container {
+        color: black;
+        font-weight: bold;
+        
+        [data-square] {
+            transition-property: transform;
+            transition-duration: 0.2s;
+            
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    }
+   
+    /* Square positioning */
+    [data-square] {
+        position: absolute;
+        aspect-ratio: 1/1;
+        width: 12.5%; /* 1/8 */
+        transform: translate(var(--file-offset), var(--rank-offset));
+    }
+
+    &.direction-1-to-8 {
+        /* Ranks positioning */
+        [data-square^="a"] {
+            --rank-offset: 0;
+        }
+        [data-square^="b"] {
+            --rank-offset: 100%;
+        }
+        [data-square^="c"] {
+            --rank-offset: 200%;
+        }
+        [data-square^="d"] {
+            --rank-offset: 300%;
+        }
+        [data-square^="e"] {
+            --rank-offset: 400%;
+        }
+        [data-square^="f"] {
+            --rank-offset: 500%;
+        }
+        [data-square^="g"] {
+            --rank-offset: 600%;
+        }
+        [data-square^="h"] {
+            --rank-offset: 700%;
+        }
+
+        /* Files positioning */
+        [data-square$="1"] {
+            --file-offset: 0;
+        }
+        [data-square$="2"] {
+            --file-offset: 100%;
+        }
+        [data-square$="3"] {
+            --file-offset: 200%;
+        }
+        [data-square$="4"] {
+            --file-offset: 300%;
+        }
+        [data-square$="5"] {
+            --file-offset: 400%;
+        }
+        [data-square$="6"] {
+            --file-offset: 500%;
+        }
+        [data-square$="7"] {
+            --file-offset: 600%;
+        }
+        [data-square$="8"] {
+            --file-offset: 700%;
+        }
+    }/* end .direction-1-to-8 */   
+
+    &.direction-8-to-1 {
+        /* Ranks positioning */
+        [data-square^="a"] {
+            --rank-offset: 700%;
+        }
+        [data-square^="b"] {
+            --rank-offset: 600%;
+        }
+        [data-square^="c"] {
+            --rank-offset: 500%;
+        }
+        [data-square^="d"] {
+            --rank-offset: 400%;
+        }
+        [data-square^="e"] {
+            --rank-offset: 300%;
+        }
+        [data-square^="f"] {
+            --rank-offset: 200%;
+        }
+        [data-square^="g"] {
+            --rank-offset: 100%;
+        }
+        .square[data-square^="h"] {
+            --rank-offset: 0;
+        }
+
+        /* Files positioning */
+        [data-square$="1"] {
+            --file-offset: 700%;
+        }
+        [data-square$="2"] {
+            --file-offset: 600%;
+        }
+        [data-square$="3"] {
+            --file-offset: 500%;
+        }
+        [data-square$="4"] {
+            --file-offset: 400%;
+        }
+        [data-square$="5"] {
+            --file-offset: 300%;
+        }
+        [data-square$="6"] {
+            --file-offset: 200%;
+        }
+        [data-square$="7"] {
+            --file-offset: 100%;
+        }
+        [data-square$="8"] {
+            --file-offset: 0;
+        }
+    }/* end .direction-8-to-1 */
+    
+}/* end .chess-board */
