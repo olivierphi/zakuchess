@@ -49,6 +49,7 @@ INSTALLED_APPS = (
     ]
     + [
         # Our own apps:
+        "apps.chess",
         "apps.webui",
     ]
 )

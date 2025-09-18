@@ -1,0 +1,87 @@
+.chess-board {
+    aspect-ratio: 1/1;
+    margin: 0 auto;
+    max-height: calc(100dvh - 80px);
+    background-color: var(--slate-800);
+    
+    @media (min-width: /* --breakpoint-xl */ 1280px) {
+        & {
+            width: 66%;
+        }
+    }
+    
+    & > * {
+        display: block;
+        width: 100%;
+        aspect-ratio: 1/1;
+        margin: 0;
+    }
+    
+    .squares-container {
+        position: relative;
+        
+        .square {
+            position: absolute;
+            aspect-ratio: 1/1;
+            width: 12.5%; /* 1/8 */
+            border: solid red 1px;
+            
+            &:nth-child(odd) {
+                background-color: var(--chess-square-w);
+            }
+            &:nth-child(even) {
+                background-color: var(--chess-square-b);
+            }
+        }
+        
+        /* Ranks positioning */
+        .square[data-square^="a"] {
+        }
+        .square[data-square^="b"] {
+            transform: translate(0, 100%);
+        }
+        .square[data-square^="c"] {
+            transform: translate(0, 200%);
+        }
+        .square[data-square^="d"] {
+            transform: translate(0, 300%);
+        }
+        .square[data-square^="e"] {
+            transform: translate(0, 400%);
+        }
+        .square[data-square^="f"] {
+            transform: translate(0, 500%);
+        }
+        .square[data-square^="g"] {
+            transform: translate(0, 600%);
+        }
+        .square[data-square^="h"] {
+            transform: translate(0, 700%);
+        }
+        
+        /* Files positioning */
+        .square[data-square$="1"] {
+        }
+        .square[data-square$="2"] {
+            transform: translate(100%, 0);
+        }
+        .square[data-square$="3"] {
+            transform: translate(200%, 0);
+        }
+        .square[data-square$="4"] {
+            transform: translate(300%, 0);
+        }
+        .square[data-square$="5"] {
+            transform: translate(400%, 0);
+        }
+        .square[data-square$="6"] {
+            transform: translate(500%, 0);
+        }
+        .square[data-square$="7"] {
+            transform: translate(600%, 0);
+        }
+        .square[data-square$="8"] {
+            transform: translate(700%, 0);
+        }
+    }
+}

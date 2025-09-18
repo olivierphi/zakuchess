@@ -20,9 +20,10 @@
     {# this "opensans" file is automatically created by `django-google-fonts` #}
     <link href="{% static '/webui/google-fonts/fonts/opensans:ital,wght@0,300..800;1,300..800.css' %}" rel="stylesheet">
     <link href="{% static '/webui/css/main.css' %}" rel="stylesheet">
-    <script src="{% static '/webui/js/main.js' %}"></script>
-    <script src="{% static '/chess/js/chess-main.js' %}"></script>
+{#    <script src="{% static '/webui/js/main.js' %}"></script>#}
+{#    <script src="{% static '/chess/js/chess-main.js' %}"></script>#}
     {% django_htmx_script %}
+    {% block extra_css %}{% endblock extra_css %}
     <!-- Open Graph Protocol metadata - @link https://ogp.me/ -->
     <meta property="og:title" content="ZakuChess ♞ - A daily chess challenge with pixel art units">
     <meta property="og:description" content="Play chess with character(s) - a chess game with pixel art units, with a new challenge every day.">

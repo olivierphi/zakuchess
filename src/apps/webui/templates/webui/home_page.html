@@ -1,5 +1,11 @@
 {% extends "webui/layout.html" %}
 
+{% load static %}
+
+{% block extra_css %}
+    <link href="{% static '/chess/css/chess-board.css' %}" rel="stylesheet">
+{% endblock extra_css %}
+
 {% block header_left_side_buttons %}
     [TODO]
 {% endblock %}
@@ -10,6 +16,6 @@
 
 {% block content %}
     <main>
-        TODO
+        {% include "chess/chess-board.html" %}
     </main>
 {% endblock content %}
