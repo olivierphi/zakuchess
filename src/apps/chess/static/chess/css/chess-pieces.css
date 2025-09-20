@@ -26,7 +26,7 @@
         background-color: var(--marker-background-color);
         border-color: var(--marker-border-color);
         
-        &[data-faction="human"] {
+        &[data-faction="humans"] {
             --marker-border-color: #065f46;
             --marker-background-color: #065f4666;
         }
@@ -39,15 +39,14 @@
     
     .chess-marker-can-move {
         z-index: 5;
-        width: 94%;
-        height: 44%;
-        left: 2%;
-        bottom: 3%;
+        width: 96%;
+        height: 46%;
+        left: 1%;
+        bottom: 2%;
         
         border-radius: 50%;
         border-width: 2px;
         border-color: var(--color-highlight-dim);
-        
     }
     
     .chess-symbol {
@@ -80,7 +79,7 @@
         }
         
         /* Glow effect */
-        &[data-faction="human"] {
+        &[data-faction="humans"] {
             --drop-shadow-color: #065f46bf;
         }
         &[data-faction="undead"] {
@@ -148,7 +147,7 @@
             }
         }
         
-        &[data-faction="human"] {
+        &[data-faction="humans"] {
             &[data-symbol="p"] {
                 --character-asset: url("/static/chess/units/humans/pawn.png");
             }
