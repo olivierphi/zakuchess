@@ -46,6 +46,15 @@
         & [data-square="h1"], & [data-square="h3"], & [data-square="h5"], & [data-square="h7"] {
             background-color: var(--chess-square-light);
         }
+        
+        .square-info {
+            position: absolute;
+            top: 0;
+            color: #70510d;
+            letter-spacing: -2px;
+            line-height: 1;
+            font-weight: bold;
+        }
     }
     
     .pieces-container {
@@ -53,6 +62,7 @@
         font-weight: bold;
         
         [data-square] {
+            /* Pieces movement */
             transition-property: transform;
             transition-duration: 0.2s;
             
@@ -67,7 +77,7 @@
         position: absolute;
         aspect-ratio: 1/1;
         width: 12.5%; /* 1/8 */
-        transform: translate(var(--file-offset), var(--rank-offset));
+        transform: translate(var(--file-offset), var(--rank-offset)) translateZ(0);
     }
 
     &.direction-1-to-8 {
@@ -147,7 +157,7 @@
         [data-square^="g"] {
             --rank-offset: 100%;
         }
-        .square[data-square^="h"] {
+        [data-square^="h"] {
             --rank-offset: 0;
         }
 

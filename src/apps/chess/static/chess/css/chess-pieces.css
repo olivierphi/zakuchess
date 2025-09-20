@@ -1,0 +1,195 @@
+.chess-piece {
+    --color-highlight: #ffff00;
+    --color-highlight-dim: #ffff0090;
+    
+    position: relative;
+    aspect-ratio: 1 / 1;
+    /*image-rendering: pixelated;*/
+    
+    button& {
+        cursor: pointer;
+    }
+    
+    & > * {
+        position: absolute;
+    }
+    
+    .chess-marker {
+        z-index: 10;
+        width: 90%;
+        height: 40%;
+        left: 4%;
+        bottom: 5%;
+        
+        border-radius: 50%;
+        border-width: 2px;
+        background-color: var(--marker-background-color);
+        border-color: var(--marker-border-color);
+        
+        &[data-faction="human"] {
+            --marker-border-color: #065f46;
+            --marker-background-color: #065f4666;
+        }
+        &[data-faction="undead"] {
+            --marker-border-color: #3730a3;
+            --marker-background-color: #3730a366;
+        }
+        /*&[data-can-move] { }*/
+    }/* end .chess-marker */
+    
+    .chess-marker-can-move {
+        z-index: 5;
+        width: 94%;
+        height: 44%;
+        left: 2%;
+        bottom: 3%;
+        
+        border-radius: 50%;
+        border-width: 2px;
+        border-color: var(--color-highlight-dim);
+        
+    }
+    
+    .chess-symbol {
+        z-index: 10;
+        width: 1.75rem;
+        aspect-ratio: 1 / 1;
+        top: 0;
+        
+        opacity: 0.9;
+        
+        background-image: var(--symbol-background-image);
+        background-size: cover;
+        background-repeat: no-repeat;
+        
+        filter: drop-shadow(1px 1px 0 var(--drop-shadow-color))
+                drop-shadow(-1px 1px 0 var(--drop-shadow-color))
+                drop-shadow(1px -1px 0 var(--drop-shadow-color))
+                drop-shadow(-1px -1px 0 var(--drop-shadow-color));
+        
+        /* Positioning */
+        .chess-board.direction-1-to-8 &[data-player-side="w"],
+        .chess-board.direction-8-to-1 &[data-player-side="b"] {
+            left: 0;
+            transform: scaleX(-1);
+        }
+        
+        .chess-board.direction-1-to-8 &[data-player-side="b"],
+        .chess-board.direction-8-to-1 &[data-player-side="w"] {
+            right: 0;
+        }
+        
+        /* Glow effect */
+        &[data-faction="human"] {
+            --drop-shadow-color: #065f46bf;
+        }
+        &[data-faction="undead"] {
+            --drop-shadow-color: #a855f7bf;
+        }
+        
+        /* Chess symbol */
+        &[data-symbol="P"] {
+            --symbol-background-image: url("/static/chess/symbols/w-pawn.svg");
+        }
+        &[data-symbol="N"] {
+            --symbol-background-image: url("/static/chess/symbols/w-knight.svg");
+        }
+        &[data-symbol="B"] {
+            --symbol-background-image: url("/static/chess/symbols/w-bishop.svg");
+        }
+        &[data-symbol="R"] {
+            --symbol-background-image: url("/static/chess/symbols/w-rook.svg");
+        }
+        &[data-symbol="Q"] {
+            --symbol-background-image: url("/static/chess/symbols/w-queen.svg");
+        }
+        &[data-symbol="K"] {
+            --symbol-background-image: url("/static/chess/symbols/w-king.svg");
+        }
+        
+        &[data-symbol="p"] {
+            --symbol-background-image: url("/static/chess/symbols/b-pawn.svg");
+        }
+        &[data-symbol="n"] {
+            --symbol-background-image: url("/static/chess/symbols/b-knight.svg");
+        }
+        &[data-symbol="b"] {
+            --symbol-background-image: url("/static/chess/symbols/b-bishop.svg");
+        }
+        &[data-symbol="r"] {
+            --symbol-background-image: url("/static/chess/symbols/b-rook.svg");
+        }
+        &[data-symbol="q"] {
+            --symbol-background-image: url("/static/chess/symbols/b-queen.svg");
+        }
+        &[data-symbol="k"] {
+            --symbol-background-image: url("/static/chess/symbols/b-king.svg");
+        }
+    }/* end .chess-symbol */
+    
+    .chess-character {
+        z-index: 20;
+        width: 90%;
+        top: 0.25rem;
+        aspect-ratio: 1 / 1;
+        
+        background-image: var(--character-asset);
+        background-size: cover;
+        background-repeat: no-repeat;
+        
+        .chess-board.direction-1-to-8 & {
+            &[data-player-side="b"] {
+                transform: scaleX(-1);
+            }
+        }
+        .chess-board.direction-8-to-1 & {
+            &[data-player-side="w"] {
+                transform: scaleX(-1);
+            }
+        }
+        
+        &[data-faction="human"] {
+            &[data-symbol="p"] {
+                --character-asset: url("/static/chess/units/humans/pawn.png");
+            }
+            &[data-symbol="n"] {
+                --character-asset: url("/static/chess/units/humans/knight.png");
+            }
+            &[data-symbol="b"] {
+                --character-asset: url("/static/chess/units/humans/bishop.png");
+            }
+            &[data-symbol="r"] {
+                --character-asset: url("/static/chess/units/humans/rook.png");
+            }
+            &[data-symbol="q"] {
+                --character-asset: url("/static/chess/units/humans/queen.png");
+            }
+            &[data-symbol="k"] {
+                --character-asset: url("/static/chess/units/humans/king.png");
+            }
+        }
+        
+        &[data-faction="undead"] {
+            &[data-symbol="p"] {
+                --character-asset: url("/static/chess/units/undead/pawn.png");
+            }
+            &[data-symbol="n"] {
+                --character-asset: url("/static/chess/units/undead/knight.png");
+            }
+            &[data-symbol="b"] {
+                --character-asset: url("/static/chess/units/undead/bishop.png");
+            }
+            &[data-symbol="r"] {
+                --character-asset: url("/static/chess/units/undead/rook.png");
+            }
+            &[data-symbol="q"] {
+                --character-asset: url("/static/chess/units/undead/queen.png");
+            }
+            &[data-symbol="k"] {
+                --character-asset: url("/static/chess/units/undead/king.png");
+            }
+        }
+    }/* end .chess-character */
+    
+    
+}/* end .chess-piece */

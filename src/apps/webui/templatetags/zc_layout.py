@@ -35,7 +35,6 @@ def generated_asset_static(asset_id: str) -> str:
             raise ValueError(f"Unknown asset ID: {asset_id}")
 
 
-
 @register.simple_tag
 def current_year() -> int:
     return dt.datetime.now().year

@@ -1,8 +1,8 @@
 {% load chess_board %}
-<div class="chess-board direction-1-to-8">
+<div class="chess-board direction-{{ game_state.board_orientation }}">
     {# Static squares #}
     <div class="squares-container">
-        {% chess_board_squares %}
+        {% chess_board_squares game_state=game_state %}
     </div>
     <div class="pieces-container">
         {% chess_board_pieces game_state=game_state %}
