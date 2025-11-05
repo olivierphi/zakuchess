@@ -25,7 +25,6 @@ dev = [
     "ipython>=8.32.0",
     "mypy>=1.15.0",
     "pre-commit>=4.1.0",
-    "python-dotenv[cli]>=1.0.1",
     "pywatchman>=2.0.0",
     "ruff>=0.9.6",
 ]

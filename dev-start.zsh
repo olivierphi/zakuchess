@@ -12,7 +12,7 @@ source .venv/bin/activate
 # Select Node.js version:
 # nvm use - not yet :-)
 
-alias run_in_dotenv='dotenv -f .env.local run -- '
+alias run_in_dotenv='uv run --env-file .env.local -- '
 
 alias uv="${PWD}/bin/uv"
 alias uvx="${PWD}/bin/uvx"

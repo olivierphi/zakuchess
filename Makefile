@@ -33,8 +33,8 @@ dev: .venv .env.local db.sqlite3 ## Start the Django development server
 test: dotenv_file ?= .env.local
 test: pytest_opts ?=
 test: .env.local ## Launch the pytest tests suite
-	@${PYTHON_BIN}/dotenv -f '${dotenv_file}' run -- \
-		${PYTHON_BIN}/pytest ${pytest_opts}
+	@${UV} run --env-file '${dotenv_file}' -- \
+		pytest ${pytest_opts}
 
 .PHONY: code-quality/all
 code-quality/all: code-quality/ruff_format code-quality/ruff_lint code-quality/mypy  ## Run all our code quality tools
@@ -64,7 +64,7 @@ django/manage: cmd ?= --help
 django/manage: .venv .env.local ## Run a Django management command
 	@echo "Running Django management command: ${cmd}"
 	@DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE} ${env_vars} \
-			${PYTHON_BIN}/dotenv -f '${dotenv_file}' run -- \
+			${UV} run --env-file '${dotenv_file}' -- \
 					${PYTHON} manage.py ${cmd}
 
 .PHONY: django/createsuperuser
@@ -94,20 +94,6 @@ db.sqlite3: .env.local ## Initialises the SQLite database
 	touch db.sqlite3
 	@${SUB_MAKE} django/manage cmd='migrate'
 	@DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}
-
-data/pypi-data/serials.json:
-	## Downloads the serials.json file listing PyPI's _last-serial data for each package
-	@curl -L https://raw.githubusercontent.com/pypi-data/pypi-json-data/refs/heads/main/release_data/serials.json \
-		> data/pypi-data/serials.json
-
-data/pypi-data/dump.sqlite3:
-	## Downloads the SQLite database from "https://github.com/pypi-data/pypi-json-data"
-	@curl -L https://github.com/pypi-data/pypi-json-data/releases/download/latest/pypi-data.sqlite.gz \
-		| gzip -d \
-		> data/pypi-data/dump.sqlite3
-
-.PHONY: fetch-pypi-data
-fetch-pypi-data: data/pypi-data/serials.json data/pypi-data/dump.sqlite3
 
 .venv/bin/black: .venv ## A simple and stupid shim to use the IDE's Black integration with Ruff
 	@echo '#!/usr/bin/env sh\n$$(dirname "$$0")/ruff format $$@' > ${PYTHON_BIN}/black
